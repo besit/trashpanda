@@ -1,0 +1,67 @@
+// Shared presentation helpers: text, transitions, screen shake, hit stop, floating labels.
+import Phaser from 'phaser';
+import { GAME_W, GAME_H } from '../config';
+import { ctx } from '../core/ctx';
+
+export type FontKey = 'font' | 'font_outline' | 'font_big' | 'font_red';
+
+export function text(scene: Phaser.Scene, x: number, y: number, str: string, font: FontKey = 'font_outline', origin = 0.5) {
+  return scene.add.bitmapText(x, y, font, str.toUpperCase()).setOrigin(origin, origin);
+}
+
+/** Iris wipe. dir 'close' shrinks to black around (cx, cy); 'open' reveals. */
+export function iris(scene: Phaser.Scene, dir: 'close' | 'open', cx = GAME_W / 2, cy = GAME_H / 2, ms = 550): Promise<void> {
+  return new Promise((resolve) => {
+    const g = scene.add.graphics().setScrollFactor(0).setDepth(100000);
+    const maxR = Math.hypot(GAME_W, GAME_H);
+    const o = { r: dir === 'close' ? maxR : 0 };
+    const draw = () => {
+      g.clear();
+      const thick = maxR * 2;
+      g.lineStyle(thick, 0x16121f, 1).strokeCircle(cx, cy, Math.max(0.5, o.r) + thick / 2);
+      if (o.r < 1) g.fillStyle(0x16121f, 1).fillRect(0, 0, GAME_W, GAME_H);
+    };
+    draw();
+    scene.tweens.add({ targets: o, r: dir === 'close' ? 0 : maxR, duration: ms, ease: dir === 'close' ? 'Cubic.easeIn' : 'Cubic.easeOut', onUpdate: draw, onComplete: () => { if (dir === 'open') g.destroy(); resolve(); } });
+  });
+}
+
+/** Horizontal Sega-style blinds wipe to black. */
+export function blinds(scene: Phaser.Scene, ms = 400): Promise<void> {
+  return new Promise((resolve) => {
+    const g = scene.add.graphics().setScrollFactor(0).setDepth(100000);
+    const o = { t: 0 };
+    scene.tweens.add({ targets: o, t: 1, duration: ms, ease: 'Quad.easeIn', onUpdate: () => {
+      g.clear().fillStyle(0x16121f, 1);
+      for (let y = 0; y < GAME_H; y += 12) g.fillRect(0, y, GAME_W, Math.ceil(12 * o.t));
+    }, onComplete: () => resolve() });
+  });
+}
+
+export function shake(scene: Phaser.Scene, ms = 120, intensity = 0.006) {
+  if (ctx.settings.shake) scene.cameras.main.shake(ms, intensity);
+}
+
+/** Freeze the scene's physics/tweens for a few ms to sell impacts. */
+export function hitStop(scene: Phaser.Scene, ms = 60) {
+  const w = (scene.physics as Phaser.Physics.Arcade.ArcadePhysics | undefined)?.world;
+  if (!w || w.isPaused) return;
+  w.pause();
+  scene.time.timeScale = 0.0001; scene.anims.globalTimeScale = 0.0001;
+  setTimeout(() => { scene.time.timeScale = 1; scene.anims.globalTimeScale = 1; if (scene.scene.isActive()) w.resume(); }, ms);
+}
+
+export function floatText(scene: Phaser.Scene, x: number, y: number, str: string, font: FontKey = 'font_outline', tint = 0xffffff) {
+  const t = text(scene, x, y, str, font).setDepth(9000).setTint(tint);
+  scene.tweens.add({ targets: t, y: y - 18, alpha: 0, duration: 800, ease: 'Cubic.easeOut', onComplete: () => t.destroy() });
+  return t;
+}
+
+/** Small pooled pixel particles (dust, sparks). */
+export function puff(scene: Phaser.Scene, x: number, y: number, color: number, n = 6, spread = 30, depth = 5000) {
+  for (let i = 0; i < n; i++) {
+    const p = scene.add.rectangle(x, y, 2, 2, color).setDepth(depth);
+    const a = Math.random() * Math.PI * 2, d = spread * (0.4 + Math.random() * 0.6);
+    scene.tweens.add({ targets: p, x: x + Math.cos(a) * d, y: y + Math.sin(a) * d * 0.6 - 6, alpha: 0, duration: 300 + Math.random() * 250, ease: 'Cubic.easeOut', onComplete: () => p.destroy() });
+  }
+}

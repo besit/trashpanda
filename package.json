@@ -1,0 +1,30 @@
+{
+  "name": "trash-panda-right-of-way",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "npm run assets && vite --host",
+    "build": "npm run assets && tsc --noEmit && vite build",
+    "preview": "vite preview --host",
+    "assets": "node tools/build-assets.mjs",
+    "test": "vitest run",
+    "e2e:install": "cross-env PLAYWRIGHT_BROWSERS_PATH=0 playwright install chromium",
+    "e2e": "cross-env PLAYWRIGHT_BROWSERS_PATH=0 playwright test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.0",
+    "cross-env": "^10.1.0",
+    "pngjs": "^7.0.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.7",
+    "vitest": "^5.1.0"
+  }
+}

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#16121f" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="description" content="Trash Panda: Right of Way - a raccoon on a bicycle making Toronto a better place to live." />
+    <title>Trash Panda: Right of Way</title>
+    <style>
+      html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #16121f; overflow: hidden; touch-action: none; overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+      #game { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+      #game canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+      #rotate { display: none; position: fixed; inset: 0; background: #16121f; color: #f6f2e9; font: bold 16px monospace; align-items: center; justify-content: center; text-align: center; flex-direction: column; gap: 12px; z-index: 10; }
+      #rotate .phone { width: 36px; height: 60px; border: 3px solid #f6f2e9; border-radius: 6px; animation: rot 1.6s ease-in-out infinite; }
+      @keyframes rot { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(90deg); } }
+      @media (orientation: portrait) and (pointer: coarse) { #rotate { display: flex; } }
+    </style>
+  </head>
+  <body>
+    <div id="game"></div>
+    <div id="rotate"><div class="phone"></div><div>ROTATE YOUR DEVICE</div></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

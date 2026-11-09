@@ -1,0 +1,9 @@
+reference
+node_modules/
+.venv/
+dist/
+test-results/
+playwright-report/
+public/gen/
+*.log
+.DS_Store
