@@ -46,7 +46,7 @@ export const UPGRADES: Record<string, Upgrade> = {
     livability: 4,
     categories: { cycling: 14, safety: 8, walking: 2, carDependence: 4 },
     mapPatches: ['queen_protected_lanes'],
-    blurb: 'PHYSICAL SEPARATION MAKES PEOPLE OF ALL AGES FEEL SAFE ENOUGH TO RIDE.',
+    blurb: 'IN A TORONTO + VANCOUVER STUDY, SEPARATED CYCLE TRACKS HAD ABOUT 1/9 THE INJURY RISK OF BUSY STREETS WITH PARKED CARS.',
     stat: { key: 'bikeLanes', amount: 2 },
   },
 };

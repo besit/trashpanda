@@ -45,3 +45,58 @@ Known issues: the tail clips the frame edge, the eye is too small to emote, and 
 ![raccoon top v02](../art/history/raccoon_top/v02/preview.png)
 
 *Ivan asked to keep every version from here on. Passes 1–2 were overwritten in scratch before that.*
+
+### Rats v01 → v03
+- **v01:** SDF rats read as rats immediately, but they were too skinny, with 1px eyes, and the flagger's STOP paddle covered his face.
+- **v02:** scaled up 1.18×, bigger heads and ears, white eyes with pupils and angry brows, paddle moved to the back hand. The new ears then covered the eyes and hats.
+- **v03:** ears moved back and up.
+
+![rats v03](../art/history/rats/v03/preview.png)
+
+### Dog Fraud v01 → v05
+Taken from Ivan's street-art reference as *shape language only*: flushed pear head, horn-ears, handlebar moustache, smug grin, tiny suit. He's built as a cartoon bulldog, not a likeness.
+- **v01:** the framing bug put the head out of frame.
+- **v02:** first real look. Characterful, but closer to a pig than a dog.
+- **v03:** added a protruding muzzle with a split lip, droopy jowls over the collar, bigger horn-ears, smug arched brows (the first brows read as angry) and a smaller body. The muzzle now hid the moustache and nose.
+- **v04:** nose and moustache brought forward.
+- **v05:** the laugh frame gets a real open mouth (teeth and tongue) for FRA-HA-HA.
+
+![dog fraud v05](../art/history/dogfraud/v05/preview.png)
+
+### Environment
+- **Tiles:** asphalt, embedded streetcar tracks (E-W, N-S, crossing), sidewalks with slab seams, curbs, zebras, painted and protected bike lanes (green paint, curb, bollards), parking, grass, park path, laneway, tree pits. The bike stencil first rendered as blobs, so it was replaced with a hand-painted glyph. The flipped north-lane tiles showed an upside-down bike, so proper north-side tiles were drawn.
+- **Buildings:** a seeded Victorian storefront generator (sign bands, awnings, sash windows, cornices). Rear walls get fire escapes and graffiti. v02 calmed the noisy painted-brick texture.
+- **Props and vehicles:** the TTC stop pole vanished because it was thinner than a pixel, so it was thickened. The streetcar roof read as a white slab and is now grey with a taller window band. Side-view cars looked tiny next to the side raccoon, so they got dedicated 2.2× side renders.
+- **Side-view backgrounds:** a dithered day/dusk sky, a skyline with the CN Tower and the Dome, a back row of houses, the Queen West storefront strip, and a street strip with painted and protected variants.
+
+![side bg](../art/history/side_bg/v01/preview.png)
+
+### The game
+- **Boot → Title → Cutscene → Explore ⇄ Action**, sharing one GameState.
+- **Explore:**
+  - tilemap ground; y-sorted buildings and props; building footprints as colliders
+  - roofs fade when the raccoon rides behind them
+  - traffic on lanes with a signal cycle; cars and streetcars yield and honk or ring
+  - mission marker with a zoom + iris transition
+  - the **transformation sequence:** the camera pans along Queen while protected lanes sweep in tile by tile with sparkles and planters pop up, then Livability ticks 60 → 64 with a sourced blurb.
+- **Action:**
+  - parallax layers; arena-lock waves; parked cars to hop on
+  - coyote time, jump buffer, variable jump, air dash
+  - 3-hit trash-can-lid combo; stomps; hit-stop and shake
+  - rats with telegraphed windups; construction rats lob cones you can swat
+- **Audio:** a WebAudio chip synth (pulse waves with 12.5/25/50% duty via PeriodicWave, triangle, LFSR noise) and a lookahead sequencer. Songs: *Queen St. Cruise*, *Historic Investment* (Dog Fraud), *Rat Rush*, plus an improvement sting.
+
+### Bugs found by testing (and fixed)
+1. **Quick key taps were ignored:** a key pressed and released within one frame cleared Phaser's just-down flag before the scene read it. The input manager now latches taps from keydown events. Headless tests found this, and it would also have bitten fast human tappers.
+2. **Preview server served the wrong base path:** `vite preview` runs as "serve", so the `/trashpanda/` base wasn't applied.
+3. **The raccoon spawned inside a street tree's collider.**
+4. **The wave-clear check could never fire** once dead rats were filtered out of the list. Replaced with explicit per-wave counters.
+
+### Research
+Two entries are written in `URBAN_RESEARCH.md`, and the mission's framing changed because of the second one:
+- **Speed cameras** (Ivan's request): Ontario's Bill 56 ban took effect November 14, 2025. The SickKids/TMU study found a 45% drop in speeding vehicles in school zones.
+- **Protected bike lanes:** Bloor saw a 49% rise in cycling, and the TCAT economic study was positive. Teschke 2012 found cycle tracks had about 1/9 the injury risk. **News since planning:** the Court of Appeal overturned the Charter ruling (August 2026) and Bloor removal work began in October 2026. The in-game blurb now quotes only Teschke 2012.
+
+### Numbers
+- 60 fps even at 6× CPU throttle; about 16 MB JS heap; about 575 KB total gzipped download.
+- 10 unit tests and 3 end-to-end tests, all passing. Deployed to https://besit.github.io/trashpanda/.
