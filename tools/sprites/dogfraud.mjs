@@ -3,6 +3,7 @@
 // smug squinting grin, tiny dark suit. v06 (Ivan's review): no moustache, swept white hair,
 // more dog: longer muzzle, bigger nose, whisker spots, droopier flews.
 import { sd, scene, render, orthoCam, smin, pitchInv, norm } from '../lib/sdf.mjs';
+import { Img } from '../lib/raster.mjs';
 
 export const FW = 112, FH = 100;
 
@@ -134,4 +135,34 @@ export function dogFraudPortrait(expr = 'grin') {
 
 export function dogFraudFrames() {
   return { frames: ['grin', 'laugh', 'shock'].map((e) => dogFraudPortrait(e)), cols: 3 };
+}
+
+/**
+ * In-world Dog Fraud (side vignettes + map): the same head model rendered small on a tiny suited body.
+ * Big-head proportions are the joke. ~44 x 64.
+ */
+export function dogFraudStanding(expr = 'grin', podium = false) {
+  const W = 56, H = 74;
+  const head = render(scene(model(expr)), { w: W, h: 52, cx: W / 2 + 1, cy: 50, cam: orthoCam([-0.32, -1, -0.12]), light: norm([-0.55, 0.7, 0.75]), ambient: 0.2, scale: 0.44 });
+  const img = new Img(W, H);
+  // tiny suit: jacket, white shirt + dotted purple tie, little legs and shoes
+  const bx = W / 2 - 8, by = 48;
+  img.rect(bx, by, 16, 14, 'k'); img.rect(bx + 1, by + 1, 14, 12, 'g'); img.vline(bx + 8, by + 2, by + 11, 'k');
+  img.set(bx + 6, by + 5, 'h'); img.set(bx + 6, by + 9, 'h');
+  img.rect(bx - 3, by + 2, 3, 9, 'g'); img.rect(bx + 16, by + 2, 3, 9, 'g'); // arms
+  img.rect(bx - 3, by + 10, 3, 2, 'P'); img.rect(bx + 16, by + 10, 3, 2, 'P'); // paws
+  img.rect(bx + 3, by + 14, 4, 8, 'k'); img.rect(bx + 9, by + 14, 4, 8, 'k');
+  img.rect(bx + 2, by + 21, 6, 2, 'K'); img.rect(bx + 8, by + 21, 6, 2, 'K');
+  img.outline('K');
+  img.blit(head, 0, 0);
+  if (podium) {
+    img.rect(W / 2 - 14, 54, 28, 18, 'v'); img.rect(W / 2 - 13, 55, 26, 16, 'V'); img.hline(W / 2 - 14, W / 2 + 13, 54, 'Z');
+    img.rect(W / 2 - 6, 59, 12, 6, 'W'); img.rect(W / 2 - 4, 61, 8, 2, 'V'); // the DF crest
+  }
+  img.pivot = { x: 0.5, y: (H - 2) / H };
+  return img;
+}
+
+export function dogFraudStandingPreview() {
+  return { frames: [dogFraudStanding('grin'), dogFraudStanding('laugh'), dogFraudStanding('grin', true), dogFraudStanding('laugh', true)], cols: 4 };
 }

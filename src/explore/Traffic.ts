@@ -43,7 +43,11 @@ export class Traffic {
   private active(l: Lane) { return !l.requires || this.upgrades.has(l.requires); }
   private get protectedLanes() { return this.upgrades.has('queen_protected_lanes'); }
 
+  private has(id?: string) { return !!id && this.upgrades.has(id); }
+
   private spawn(lane: Lane, at?: number, kind: Kind = 'car') {
+    // King St corridor: no through traffic (a rare local delivery still turns in)
+    if (kind === 'car' && this.has(lane.noCars) && Math.random() < 0.88) return;
     const horiz = lane.axis === 'x';
     const f = face(lane);
     const len = kind === 'streetcar' ? 100 : kind === 'bike' ? 16 : 32;
@@ -65,7 +69,9 @@ export class Traffic {
     }
     if (horiz) s.setPosition(pos, lane.pos + off); else s.setPosition(lane.pos + off, pos);
     // cars > streetcars > cyclists > pedestrians (16-28), so a cyclist in mixed traffic visibly holds cars up
-    const speed = kind === 'streetcar' ? 52 : kind === 'bike' ? 32 + Math.random() * 7 : lane.light ? 52 + Math.random() * 14 : 72 + Math.random() * 26;
+    let speed = kind === 'streetcar' ? (this.has(lane.priority) ? 68 : 52) : kind === 'bike' ? 32 + Math.random() * 7 : lane.light ? 52 + Math.random() * 14 : 72 + Math.random() * 26;
+    if (kind === 'car' && lane.speedy && !this.has(lane.calm)) speed = 108 + Math.random() * 22; // Parkside before calming
+    if (kind === 'car' && this.has(lane.calm)) speed *= 0.5;
     this.vehicles.push({ s, lane, kind, speed, v: speed, len, honkCd: 0, stopT: 0, served: new Set(), off });
   }
 
@@ -95,7 +101,9 @@ export class Traffic {
       let target = v.speed;
       const brakeTo = (stopAt: number, k = 2.5) => { const dist = (stopAt - front) * l.dir; if (dist > -4 && dist < 44) target = Math.min(target, Math.max(0, dist - 2) * k); };
       // signals (bikes in protected lanes obey them too)
+      const priority = v.kind === 'streetcar' && this.has(l.priority); // TSP: the light waits for the streetcar
       for (const it of this.intersections) {
+        if (priority) break;
         if (l.axis === 'x') {
           if (it.tee || this.ewGreen || l.pos < it.y0 || l.pos > it.y1) continue;
           brakeTo(l.dir === 1 ? it.x0 - 2 : it.x1 + 2);

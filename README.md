@@ -23,7 +23,19 @@ npm run dev            # builds generated art, starts Vite
 npm test               # unit tests (Vitest)
 npm run build && npx playwright test   # production build + end-to-end tests
 ```
-Add `?debug` to the URL for debug keys (T on the map applies the bike-lane upgrade, V in a mission wins it). `?scene=Explore` / `?scene=Action` / `?scene=Cutscene&cs=bwl_before` jump straight to a scene, and `?touch` forces touch controls.
+Add `?debug` to the URL for debug keys:
+- T on the map applies this district's upgrades
+- V in a mission wins it
+- the title menu gets TEST entries for missions 2–4
+
+Jump straight to a scene:
+- `?scene=Explore` continues your save
+- `?scene=Action&mission=king_of_street`
+- `?scene=Cutscene&cs=calm_before`
+
+`?touch` forces touch controls.
+
+The city is three districts so far, **High Park ← Queen West → Downtown**. Ride off the map edge along Queen or Dundas/Bloor to cross.
 
 ## How the art is made
 All art is authored as code. `tools/sprites/*` paints palette-indexed grids or models characters with a tiny SDF renderer (`tools/lib/sdf.mjs`), and `npm run assets` builds the atlases. Every art iteration is kept in [`art/history/`](art/history/INDEX.md). The process is documented in [`docs/DEVLOG.md`](docs/DEVLOG.md).

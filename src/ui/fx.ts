@@ -26,15 +26,14 @@ export function iris(scene: Phaser.Scene, dir: 'close' | 'open', cx = GAME_W / 2
   });
 }
 
-/** Horizontal Sega-style blinds wipe to black. */
-export function blinds(scene: Phaser.Scene, ms = 400): Promise<void> {
+/** Horizontal Sega-style blinds wipe to black (or, with open, from black back to the scene). */
+export function blinds(scene: Phaser.Scene, ms = 400, open = false): Promise<void> {
   return new Promise((resolve) => {
     const g = scene.add.graphics().setScrollFactor(0).setDepth(100000);
-    const o = { t: 0 };
-    scene.tweens.add({ targets: o, t: 1, duration: ms, ease: 'Quad.easeIn', onUpdate: () => {
-      g.clear().fillStyle(0x16121f, 1);
-      for (let y = 0; y < GAME_H; y += 12) g.fillRect(0, y, GAME_W, Math.ceil(12 * o.t));
-    }, onComplete: () => resolve() });
+    const o = { t: open ? 1 : 0 };
+    const draw = () => { g.clear().fillStyle(0x16121f, 1); for (let y = 0; y < GAME_H; y += 12) g.fillRect(0, y, GAME_W, Math.ceil(12 * o.t)); };
+    draw();
+    scene.tweens.add({ targets: o, t: open ? 0 : 1, duration: open ? Math.max(ms, 320) : ms, ease: open ? 'Quad.easeOut' : 'Quad.easeIn', onUpdate: draw, onComplete: () => { if (open) g.destroy(); resolve(); } });
   });
 }
 

@@ -10,11 +10,22 @@ export interface MapObject {
   /** explicit collider [dx, dy, w, h] relative to the anchor */ solidBox?: [number, number, number, number];
   /** several colliders relative to the anchor (the park gates' piers) */ solids?: [number, number, number, number][];
   tag?: string; mapColor?: string; landmark?: string;
+  /** texture atlas (district building atlases); default 'world' */ atlas?: string;
+  /** collision only, nothing drawn (pond edges) */ invisible?: boolean;
   /** draw-order override (graffiti sits just in front of its wall) */ depth?: number;
 }
-export interface Lane { id: string; axis: 'x' | 'y'; dir: 1 | -1; pos: number; streetcar?: boolean; stops?: number[]; bikeOnly?: boolean; requires?: string; light?: boolean; cyclists?: 'mixed' }
+export interface Lane {
+  id: string; axis: 'x' | 'y'; dir: 1 | -1; pos: number; streetcar?: boolean; stops?: number[]; bikeOnly?: boolean; requires?: string; light?: boolean; cyclists?: 'mixed';
+  /** upgrade id: streetcars get signal priority (no red lights, faster) */ priority?: string;
+  /** upgrade id: through-car traffic removed (King St corridor) */ noCars?: string;
+  /** upgrade id: traffic calmed (slower cars) */ calm?: string;
+  /** drivers speed here until calmed */ speedy?: boolean;
+}
+export interface Exit { side: 'w' | 'e'; y0: number; y1: number; to: string }
 export interface Intersection { x0: number; x1: number; y0: number; y1: number; tee?: boolean }
 export interface MapData {
+  id?: string;
+  exits?: Exit[];
   width: number; height: number; tileSize: number;
   tileset: { png: string; margin: number; spacing: number };
   ground: number[][];
@@ -60,15 +71,19 @@ export class CityMap {
   private addObject(o: MapObject, pop = false) {
     if (o.type === 'building') {
       const base = o.y + o.d!;
-      const img = this.scene.add.image(o.x, base, 'world', o.key).setOrigin(0, 1).setDepth(base);
+      const img = this.scene.add.image(o.x, base, o.atlas ?? 'world', o.key).setOrigin(0, 1).setDepth(base);
       const h = o.imgH ?? img.height;
       this.buildings.push({ img, x: o.x, y: o.y, w: o.w!, d: o.d!, h, mapColor: o.mapColor });
       // the whole drawn block is solid: no riding "behind" a facade into its roof
       this.solid(o.x + 1, base - h + 4, o.w! - 2, h - 5);
       return img;
     }
+    if (o.invisible) {
+      if (o.solidBox) { const [dx, dy, w, h] = o.solidBox; this.solid(o.x + dx, o.y + dy, w, h); }
+      return null;
+    }
     const pv = this.pivots[o.key] ?? { x: 0.5, y: 1 };
-    const img = this.scene.add.image(o.x, o.y, 'world', o.key).setOrigin(pv.x, pv.y).setDepth(o.depth ?? o.y);
+    const img = this.scene.add.image(o.x, o.y, o.atlas ?? 'world', o.key).setOrigin(pv.x, pv.y).setDepth(o.depth ?? o.y);
     const zones: Phaser.GameObjects.Zone[] = [];
     if (o.solid) zones.push(this.solid(o.x - o.solid, o.y - o.solid / 2, o.solid * 2, o.solid));
     if (o.solidBox) { const [dx, dy, w, h] = o.solidBox; zones.push(this.solid(o.x + dx, o.y + dy, w, h)); }
@@ -88,7 +103,7 @@ export class CityMap {
   isApplied(id: string) { return this.applied.has(id); }
 
   /** Apply an improvement patch. If animate, tiles change in a sweep with sparkles; returns duration ms. */
-  applyImprovement(id: string, animate = false, sweepFromX = 0): number {
+  applyImprovement(id: string, animate = false, sweepFrom = 0, axis: 'x' | 'y' = 'x'): number {
     const imp = this.data.improvements[id];
     if (!imp || this.applied.has(id)) return 0;
     this.applied.add(id);
@@ -105,20 +120,22 @@ export class CityMap {
     let maxDelay = 0;
     // parked cars drive off just ahead of the sweep
     for (const r of removed) {
-      const delay = Math.max(0, Math.abs(r.img.x - sweepFromX) / ts / speed - 350);
+      const delay = Math.max(0, Math.abs((axis === 'x' ? r.img.x : r.img.y) - sweepFrom) / ts / speed - 350);
       r.zones.forEach((z) => z.destroy());
-      this.scene.tweens.add({ targets: r.img, delay, x: r.img.x + (r.img.frame.name.endsWith('_W') ? -260 : 260), alpha: 0, duration: 900, ease: 'Cubic.easeIn', onComplete: () => r.img.destroy() });
+      const name = r.img.frame.name, drives = name.startsWith('car_') || name.startsWith('suv_');
+      this.scene.tweens.add({ targets: r.img, delay, x: drives ? r.img.x + (name.endsWith('_W') ? -260 : 260) : r.img.x, alpha: 0, duration: drives ? 900 : 400, ease: 'Cubic.easeIn', onComplete: () => r.img.destroy() });
+      if (!drives) this.scene.time.delayedCall(delay, () => puff(this.scene, r.img.x, r.img.y - 8, 0xc9c5d1, 6, 14, -5));
     }
     for (const [x, y, t] of imp.tiles) {
-      const delay = Math.abs(x * ts - sweepFromX) / ts / speed;
+      const delay = Math.abs((axis === 'x' ? x : y) * ts - sweepFrom) / ts / speed;
       maxDelay = Math.max(maxDelay, delay);
       this.scene.time.delayedCall(delay, () => {
         this.tilemap.putTileAt(t, x, y, false, this.layer);
-        if (x % 2 === 0) puff(this.scene, x * ts + 8, y * ts + 8, 0x9bd35a, 3, 14, -5);
+        if ((axis === 'x' ? x : y) % 2 === 0) puff(this.scene, x * ts + 8, y * ts + 8, 0x9bd35a, 3, 14, -5);
       });
     }
     for (const p of imp.addProps) {
-      const delay = Math.abs(p.x - sweepFromX) / ts / speed + 80;
+      const delay = Math.abs((axis === 'x' ? p.x : p.y) - sweepFrom) / ts / speed + 80;
       this.scene.time.delayedCall(delay, () => this.addObject(p, true));
     }
     return maxDelay + 400;

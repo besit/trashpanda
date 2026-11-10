@@ -14,9 +14,9 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
 | # | Intervention | Mission | Status |
 |---|---|---|---|
 | 1 | Protected bike lanes | The Bike Lane War (main, vertical slice) | ✅ |
-| 2 | School-zone speed cameras (automated speed enforcement) | *Slow Down, Dog* (**main mission**, Ivan's call at M0 review) | 🟡 |
-| 3 | Transit signal priority | Let the Streetcar Through | ⬜ |
-| 4 | Transit-priority corridor (King St pilot) | King of the Street | ⬜ |
+| 2 | School-zone speed cameras (automated speed enforcement) + traffic calming | *Slow Down, Dog* (**main mission**, Ivan's call at M0 review) | ✅ for the game's claims |
+| 3 | Transit signal priority | Let the Streetcar Through | ✅ |
+| 4 | Transit-priority corridor (King St pilot) | King of the Street | ✅ |
 | 5 | Adaptive reuse (Science Centre) | Save the Science | ⬜ |
 | 6 | Parking → public space | The Great Parking Lot | ⬜ |
 | 7 | Waterfront public space (Ontario Place) | The Waterfront Heist | ⬜ |
@@ -28,6 +28,9 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
 | 13 | Rail Deck Park | bonus | ⬜ |
 | 14 | Induced demand ("another car lane") | Intro cutscene, Death by Highway | ✅ (qualitative) |
 | 15 | Trinity Bellwoods gates (landmark plaque) | Queen West map | ✅ |
+| 16 | The Parkside Drive speed camera | Slow Down, Dog + High Park plaque | ✅ |
+| 17 | High Park flavour (Howards, car-free roads, capybaras) | High Park map | ✅ |
+| 18 | Downtown + Roncesvalles landmark plaques | Downtown / High Park maps | 🟡 |
 
 ---
 
@@ -85,7 +88,7 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
 
 ---
 
-## 2. School-zone speed cameras (automated speed enforcement) 🟡
+## 2. School-zone speed cameras (automated speed enforcement) ✅ for the game's claims
 
 **PROJECT:** Automated speed enforcement (ASE) cameras in school and community-safety zones.
 
@@ -113,20 +116,56 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
 
 **STILL TO RESEARCH (🟡):** international ASE evidence (e.g. systematic reviews); whether the replacement fund's measures (speed humps, curb extensions) have comparable evidence; and the injury link between speed and pedestrian fatality risk, from an authoritative source.
 
-**GAME IMPLEMENTATION (proposed):** *Slow Down, Dog.* Dog Fraud's rats haul away a school-zone camera ("FREEDOM TO SPEED!"). The before scene shows a crossing guard and kids beside traffic. The player restores traffic calming: a camera plus physical measures (speed humps, curb extensions, a raised crossing), so the after scene is visible even without a camera. The after scene is nearly wordless: the same kids cross calmly as cars slow down.
+**CLAIM USED IN GAME (blurb):** "TORONTO SCHOOL-ZONE CAMERAS CUT SPEEDING 45%... AND IT CAME BACK WHEN THEY WENT. HUMPS AND RAISED CROSSINGS DON'T GO AWAY." The first two sentences are the SickKids/TMU findings; the third is a design statement, not a statistic.
 
-**GAME EFFECT (proposed):** Safety +, walking +, Livability +3.
+**GAME IMPLEMENTATION (built in M2):** see §16. Upgrade *School zone, slowed by design*: Safety +12, Walking +5, Livability +3.
 
 ---
 
-*(Entries 3–13 are researched as their missions are built, in M2–M3.)*
+## 3. Transit signal priority (TSP) ✅ (for the game's claim)
+
+**PROJECT:** Traffic signals that detect an approaching streetcar and hold the green (or shorten the red) so it doesn't wait at the light. Toronto streetcars get a separate white vertical "transit bar" signal.
+
+**TORONTO EVIDENCE**
+- **1991 TTC/MTO demonstration, six intersections:** total streetcar delay at the equipped intersections fell by about **35%**, with no significant effect on side-street queues. Bus TSP in the same era gave smaller gains (about 2–6% of round-trip time). Source: US DOT ITS Knowledge Resources, [benefit entry 2007-B00362](https://www.itskrs.its.dot.gov/2007-b00362).
+- **2025–26 City pilots (505 Dundas, 510 Spadina):** the City's initial findings report up to **5 minutes** of improvement on the modified segments in the peak periods. That covers only the changed segments, not whole routes, and the City is still monitoring. Source: [City of Toronto background file 288607 (2026)](https://www.toronto.ca/legdocs/mmis/2026/te/bgrd/backgroundfile-288607.pdf).
+- **Independent tracking is less rosy:** Steve Munro's 510 Spadina travel-time analysis found results "not as good as I had hoped" after three intersections were changed. Per-intersection effects are hard to isolate, and priority is "absent or ineffective" at many locations. Sources: [stevemunro.ca, Apr 2026](https://stevemunro.ca/2026/04/13/faster-streetcars-someday-maybe/); [How slow is my streetcar, Aug 2026](https://stevemunro.ca/2026/08/17/how-slow-is-my-streetcar-overview/).
+- **Modelling:** a 510 Spadina simulation estimates end-to-end trips **19–38% faster** if priority is extended to major intersections. This is a model result, not a measurement.
+
+**CLAIM USED IN GAME (blurb):** "WHEN TORONTO TESTED STREETCAR SIGNAL PRIORITY AT SIX INTERSECTIONS, STREETCAR DELAY THERE FELL ABOUT 35%." This is the 1991 measured result, scoped to the intersections tested.
+
+**CRITICISMS / NUANCE:** TSP works best where it's applied widely and alongside other fixes (stop consolidation, turn restrictions, all-door boarding). Side-street delay can rise at busy crossings. The game's escort shows the mechanism (the light waits for the streetcar) and doesn't claim a route-wide speed-up.
+
+**GAME IMPLEMENTATION:** *Let the Streetcar Through* (main 2, Queen West). The 501 rolls along behind you. You pump signal call boxes to grant priority (the white transit bar), move a double-parked van and a left-turner off the tracks, and swat away the cones rats drop on the rails. Delay counts against the schedule. **Map payoff:** streetcars on Queen no longer stop at red lights and run a little faster; transit-bar signal heads and detector loops appear at Ossington and Bellwoods.
+
+---
+
+## 4. Transit-priority corridor (King St) ✅
+
+**PROJECT:** The King Street Transit Pilot (November 2017) took through traffic off King between Bathurst and Jarvis. Cars must turn right at most intersections, and the curb lanes became public space and patios. Council made it permanent on **April 16, 2019**.
+
+**EVIDENCE**
+- **Ridership:** about 72,000 → **84,000** weekday riders on the 504 King (+~17%). The City calls it the **busiest surface transit route in the city**; only the two main subway lines carry more. Sources: [City of Toronto, "The future is King"](https://www.toronto.ca/news/the-future-is-king-king-street-transit-pilot-made-permanent/); [King St pilot page + dashboards](https://www.toronto.ca/services-payments/streets-parking-transportation/transportation-projects/king-street-pilot/); [2019 staff report](https://www.toronto.ca/legdocs/mmis/2019/cc/bgrd/backgroundfile-132032.pdf).
+- **Travel time:** rush-hour trips about **4 minutes** faster end to end (≈16%); afternoon peak 4–5 minutes. A Ryerson (TMU) study found 4–7 minutes off evening commutes.
+- **Reliability:** about a third fewer delayed trips; 85% of westbound AM-peak streetcars arrived within 4 minutes.
+- **Cost:** about $1.5M, using low-cost materials. Sources: [Streetsblog, Jan + Nov 2018](https://usa.streetsblog.org/2018/11/13/toronto-cleared-cars-off-a-major-transit-corridor-and-it-worked/); [NACTO case study](https://nacto.org/latest/king-street-transit-priority-corridor-toronto/).
+
+**CLAIM USED IN GAME (blurb):** "THE KING ST PILOT CUT RUSH-HOUR STREETCAR TRIPS BY ABOUT 4 MINUTES, AND RIDERSHIP GREW. COUNCIL MADE IT PERMANENT IN 2019." Briefing caption: "THE BUSIEST STREETCAR LINE IN TOWN" (City wording: busiest surface transit route).
+
+**CRITICISMS (stated fairly):** Some businesses opposed the change. Early receipts along the corridor grew only 0.3% while the city grew 3.8% over the same period, and restaurants complained about lost car traffic (some later embraced the patios). Enforcement of the turn rules was uneven at first. A TMU CUR&LD post argued the pilot still fell short of transit needs.
+
+**GAME IMPLEMENTATION:** *King of the Street* (main 3, Downtown). Arena waves of rats, then **SUV Rats** (through-traffic: stomp the roof or pump the bumper until it gives up and turns off: "RIGHT TURN ONLY!"), then the **Bureaucrat Rat** boss ("PERMIT DENIED"). **Map payoff:** red TTC lanes at intersections, through-car traffic gone from King, curb lanes turned into wooden patio decks with umbrellas.
+
+---
+
+*(Entries 5–13 are researched as their missions are built, in M3.)*
 
 
 ---
 
 ## 14. Induced demand ("another car lane") ✅ (qualitative)
 
-**CLAIM USED IN GAME:** The intro caption "SIX LANES. STILL NOT MOVING." is satire of the idea that widening a congested road fixes congestion. It is used **qualitatively**, with no statistic.
+**CLAIM USED IN GAME:** The intro's highway shot is satire of the idea that widening a congested road fixes congestion: a sixth lane is paved in and fills with the same crawl. Since the M1.1 review it is **wordless** (the "SIX LANES. STILL NOT MOVING." caption was cut as too direct), so no statistic is claimed.
 
 **EVIDENCE:** Duranton & Turner (2011), "The Fundamental Law of Road Congestion", *American Economic Review* 101(6): 2616–52. Across US metro areas, vehicle-kilometres travelled on interstates rose roughly one-for-one with lane-kilometres. New road capacity fills with new traffic, so congestion is not relieved in the long run.
 
@@ -150,3 +189,41 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
 - a graffiti laneway behind Queen, inspired by Graffiti Alley (Rush Lane), which is further east near Spadina, technically downtown, as Ivan noted. It stays here for now and may move to the Downtown district
 
 These are scenery, not factual claims.
+
+---
+
+## 16. The Parkside Drive speed camera (landmark plaque + mission 4 story) ✅
+
+The camera on Parkside Drive, along High Park's east edge, was cut down again and again:
+- First cut down days after Council approved a full Parkside redesign (November 2024).
+- In late December 2024 it was dragged about 200 m into High Park and **dumped in a pond**.
+- By September 2025 it had been cut down for the **7th time in less than a year**. Police opened a criminal investigation.
+- Parkside is a City-designated Community Safety Zone. Residents' group Safe Parkside argues that the lack of physical safety measures is the real problem.
+
+Sources: [CP24, Sept 7 2025](https://www.cp24.com/local/toronto/2025/09/07/torontos-parkside-speed-camera-cut-down-for-7th-time-in-recent-months/); [Global News, pond](https://globalnews.ca/news/10937865/toronto-speed-camera-chopped-down-thrown-into-pond); [CBC, third time + pond](https://www.cbc.ca/1.7420342); [CP24, Nov 30 2024](https://www.cp24.com/local/toronto/2024/11/30/disappointing-parkside-drive-speed-camera-cut-down-less-than-24-hours-after-being-reinstalled/).
+
+**PLAQUE:** "PARKSIDE SPEED CAMERA / CUT DOWN 7 TIMES IN / LESS THAN A YEAR. ONCE / DUMPED IN A PARK POND."
+
+**GAME IMPLEMENTATION:** *Slow Down, Dog* (main 4). The briefing shows rats sawing the camera down with Dog Fraud cheering. The mission opens with a **chase**: catch the haulers before they reach the pond. Then you **build**: pump the stakes to raise a speed hump, a raised crosswalk and a curb extension while SUV Rats speed through. Each finished piece slows the cars that cross it. **Map payoff:** humps, a raised school crosswalk, SLOW stencils, curb-extension planters, and the camera back on its pole. The game is fiction here: the camera returns even though Ontario's ban stands (§2). Parkside's traffic now drives at half speed.
+
+**WHY THE PAYOFF LEANS ON DESIGN, NOT JUST THE CAMERA:** the SickKids/TMU study (§2) found speeding returned when cameras left. Physical calming stays put. The blurb says exactly that, and nothing more: no unsourced injury numbers.
+
+---
+
+## 17. High Park (district flavour) ✅
+
+- **The Howards' land:** in 1873 John George Howard and Jemima Howard agreed to convey their High Park property to the City as a public park, in exchange for a pension, keeping Colborne Lodge for life. Sources disagree on the acreage (120 of 165 acres is the common reading). The park opened to the public in 1876. Sources: [City of Toronto, Colborne Lodge](https://www.toronto.ca/explore-enjoy/history-art-culture/museums/colborne-lodge); [High Park Nature Centre](https://highparknature.org/article-topic/cultural-history-of-toronto-high-park); [Wikipedia, J. G. Howard](https://en.wikipedia.org/wiki/John_George_Howard). Plaque wording ("AGREED IN 1873 TO PASS THEIR LAND TO THE CITY") avoids the disputed "gift" framing.
+- **Car-free roads:** park roads have been closed to visitor vehicles on weekends and holidays since March 2020. Council's High Park Movement Strategy (2023) made West Road and parts of Colborne Lodge Drive car-free at all times. Sources: [City news release](https://www.toronto.ca/news/toronto-city-council-endorses-phased-improvements-to-how-people-move-around-and-access-high-park); [CTV, phase one](https://www.ctvnews.ca/toronto/article/toronto-implements-first-phase-of-its-high-park-car-free-plan/). 🟡 2026 status not rechecked. The map draws the park roads car-free (no traffic lanes on them).
+- **Bonnie + Clyde:** two capybaras escaped the High Park Zoo on May 24, 2016 and were both recaptured weeks later. Source: [Global News](https://globalnews.ca/news/2718477/2-capybaras-on-the-lam-after-escaping-pen-at-high-park-zoo); [CP24](https://www.cp24.com/mobile/news/bonnie-and-clyde-capybaras-who-escaped-from-high-park-zoo-still-on-the-loose-1.2915880).
+- **Bloor's bike lanes:** drawn as they are today. Their removal fight is mission 5 (§1).
+
+---
+
+## 18. Downtown + Roncesvalles landmarks (plaques) 🟡
+
+These are well-known facts used on plaques. They have not yet been checked against a primary source this session, so verify before they're quoted outside the game:
+- **Toronto City Hall** (Viljo Revell) opened in **1965**. The Nathan Phillips Square pool becomes a skating rink in winter, and three concrete Freedom Arches span it.
+- **Old City Hall** (E. J. Lennox) opened in **1899**.
+- **299 Queen St W** (the CHUM-City building) has a news van bursting out of its wall at Queen + John.
+- **The Revue Cinema** on Roncesvalles opened in **1912**.
+- **Graffiti Alley** (Rush Lane) runs south of Queen, west of Spadina. It moved here from the Queen West map after Ivan's M1 note.

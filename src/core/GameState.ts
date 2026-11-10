@@ -1,7 +1,7 @@
 import { livability } from './Livability';
 import { UPGRADES } from '../data/upgrades';
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 export interface GameState {
   version: number;
@@ -11,7 +11,8 @@ export interface GameState {
   ratsDefeated: number;
   lanesAddedByDogFraud: number;
   playTimeMs: number;
-  player: { scene: 'explore'; x: number; y: number };
+  /** where the raccoon was on the map; district added in v2 (M2) */
+  player: { scene: 'explore'; district: string; x: number; y: number };
 }
 
 export function newGame(): GameState {
@@ -23,7 +24,7 @@ export function newGame(): GameState {
     ratsDefeated: 0,
     lanesAddedByDogFraud: 0,
     playTimeMs: 0,
-    player: { scene: 'explore', x: -1, y: -1 },
+    player: { scene: 'explore', district: 'queenwest', x: -1, y: -1 },
   };
 }
 
@@ -39,7 +40,8 @@ export function migrate(raw: unknown): GameState | null {
     upgrades: Array.isArray(s.upgrades) ? s.upgrades.filter((u) => typeof u === 'string' && u in UPGRADES) : [],
     completedMissions: Array.isArray(s.completedMissions) ? s.completedMissions.filter((m) => typeof m === 'string') : [],
     flags: s.flags && typeof s.flags === 'object' ? s.flags : {},
-    player: { ...base.player, ...(s.player ?? {}) },
+    // v1 saves had no district: they were always in Queen West
+    player: { ...base.player, ...(s.player ?? {}), district: typeof s.player?.district === 'string' ? s.player.district : 'queenwest' },
     version: SAVE_VERSION,
   };
 }

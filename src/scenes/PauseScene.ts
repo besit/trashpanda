@@ -1,6 +1,8 @@
 // Pause overlay: menu (resume / controls / volumes / shake / quit) and the city map.
 // Launched on top of Explore or Action, which are paused underneath.
 import Phaser from 'phaser';
+import { DISTRICTS, DISTRICT_ORDER } from '../data/districts';
+import { MISSIONS, missionAvailable } from '../data/missions';
 import { GAME_W, GAME_H } from '../config';
 import { InputManager, CONTROLS_KEYS, CONTROLS_ALT, CONTROLS_PAD, touchState } from '../input/InputManager';
 import { wantsTouch } from '../input/TouchControls';
@@ -11,7 +13,7 @@ import { sfx } from '../audio/sfx';
 import type { CityMap } from '../explore/CityMap';
 
 export interface PauseData { from: string; mode?: 'menu' | 'map' | 'controls' }
-export interface MapInfo { map: CityMap; player: { x: number; y: number }; markers: { x: number; y: number; label: string; done: boolean }[] }
+export interface MapInfo { map: CityMap; district?: string; player: { x: number; y: number }; markers: { x: number; y: number; label: string; done: boolean }[] }
 
 type Item = { label: () => string; act?: () => void; left?: () => void; right?: () => void; t?: Phaser.GameObjects.BitmapText };
 
@@ -130,7 +132,14 @@ export class PauseScene extends Phaser.Scene {
     const ex = this.scene.get('Explore') as unknown as { minimapInfo?: () => MapInfo };
     this.info = ex.minimapInfo?.();
     const cx = GAME_W / 2;
-    this.root.add(text(this, cx, 10, 'QUEEN WEST', 'font_big'));
+    const here = this.info?.district ?? 'queenwest';
+    this.root.add(text(this, cx, 10, DISTRICTS[here]?.name ?? 'TORONTO', 'font_big'));
+    // the city, west to east: where you are + how many missions are open in each district
+    const strip = DISTRICT_ORDER.map((d) => {
+      const open = Object.values(MISSIONS).filter((m) => m.district === d && !ctx.state.completedMissions.includes(m.id) && missionAvailable(m.id, ctx.state.completedMissions)).length;
+      return `${d === here ? '>' : ''}${DISTRICTS[d].name}${open ? ` (${open})` : ''}${d === here ? '<' : ''}`;
+    }).join('  -  ');
+    this.root.add(text(this, cx, 24, strip, 'font').setTint(0xc9c5d1));
     if (!this.info) return;
     const { map } = this.info;
     const md = map.data;
@@ -160,10 +169,10 @@ export class PauseScene extends Phaser.Scene {
       c.fillStyle = b.mapColor ?? '#8a7f94'; c.fillRect(b.x / ts + 0.15, b.y / ts + 0.15, b.w / ts - 0.3, b.d / ts - 0.3);
     }
     tex.refresh();
-    const availW = GAME_W - 24, availH = GAME_H - 46;
+    const availW = GAME_W - 24, availH = GAME_H - 54;
     const s = Math.max(1, Math.floor(Math.min(availW / md.width, availH / md.height) * 2) / 2);
     const w = md.width * s, h = md.height * s;
-    const x0 = Math.round(cx - w / 2), y0 = Math.round(26 + (availH - h) / 2);
+    const x0 = Math.round(cx - w / 2), y0 = Math.round(34 + (availH - h) / 2);
     this.mapRect = { x: x0, y: y0, s: s / md.tileSize };
     const frame = this.add.graphics();
     frame.fillStyle(0x16121f).fillRect(x0 - 3, y0 - 3, w + 6, h + 6).lineStyle(1, 0xf6f2e9).strokeRect(x0 - 2.5, y0 - 2.5, w + 5, h + 5);
@@ -171,7 +180,7 @@ export class PauseScene extends Phaser.Scene {
     this.root.add(this.add.image(x0, y0, key).setOrigin(0).setScale(s));
     // street + landmark labels
     for (const l of md.labels ?? []) {
-      const t = text(this, x0 + l.x * this.mapRect.s, y0 + l.y * this.mapRect.s, l.text, 'font').setTint(l.kind === 'landmark' ? 0xfff08a : 0xf6f2e9);
+      const t = text(this, x0 + l.x * this.mapRect.s, y0 + l.y * this.mapRect.s, l.text, 'font').setTint(l.kind === 'landmark' ? 0xfff08a : l.kind === 'exit' ? 0x9bd35a : 0xf6f2e9);
       if (l.vertical) t.setAngle(-90);
       this.root.add(t);
     }

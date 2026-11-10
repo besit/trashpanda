@@ -111,6 +111,68 @@ export function buildTiles() {
   { const t = base('s'); speckle(t, 'S', 10, 90); speckle(t, 'A', 6, 91); t.set(10, 9, 'A'); t.set(11, 9, 'A'); t.set(10, 10, 'A'); t.hline(0, 15, 15, 'A'); add('laneway', t); }
   // tree pit in sidewalk
   { const t = sidewalk(95); t.rect(3, 3, 10, 10, 'w'); t.rect(4, 4, 8, 8, 'x'); speckle(t, 'X', 6, 96, [4, 4, 8, 8]); add('treepit', t); }
+
+  // ---------------- M2 ----------------
+  // N-S streetcar lanes (Roncesvalles, Spadina): one track per lane, yellow centre line between the lanes
+  for (const [name, cl] of [['tracks_ns_w', 15], ['tracks_ns_e', 0]]) {
+    const t = asphalt(cl ? 125 : 126); t.rect(3, 0, 3, 16, 's'); t.rect(10, 0, 3, 16, 's'); t.vline(4, 0, 15, 'h'); t.vline(11, 0, 15, 'h'); t.vline(5, 0, 15, 'g'); t.vline(12, 0, 15, 'g');
+    t.vline(cl, 0, 15, 'y'); add(name, t);
+  }
+  // E-W tracks with a transit-signal-priority detector loop cut into the asphalt
+  for (let s = 0; s < 2; s++) {
+    const t = asphalt(127 + s); t.rect(0, 3, 16, 3, 's'); t.rect(0, 10, 16, 3, 's'); t.hline(0, 15, 4, 'h'); t.hline(0, 15, 11, 'h'); t.hline(0, 15, 5, 'g'); t.hline(0, 15, 12, 'g');
+    t.rect(2, 7, 12, 1, 'a'); t.rect(2, 9, 12, 1, 'a'); t.vline(2, 7, 9, 'a'); t.vline(13, 7, 9, 'a'); t.set(7, 8, 'W'); t.set(8, 8, 'W');
+    add(`tracks_loop${s}`, t);
+  }
+  // pond water (Grenadier Pond): two frames of ripples + shore edges
+  for (let s = 0; s < 3; s++) {
+    const t = base('U'); speckle(t, 'c', 7, 130 + s); speckle(t, 'u', 5, 133 + s);
+    const r = rng(136 + s); for (let i = 0; i < 2; i++) { const x = r.int(1, 10), y = r.int(2, 13); t.hline(x, x + 3, y, 'C'); }
+    add(`water${s}`, t);
+  }
+  const shore = (name, side) => {
+    const t = base('U'); speckle(t, 'c', 6, 140 + name.length);
+    for (let i = 0; i < 16; i++) for (let j = 0; j < 5; j++) {
+      const [x, y] = side === 'n' ? [i, j] : side === 's' ? [i, 15 - j] : side === 'w' ? [j, i] : [15 - j, i];
+      const edge = j < 3 + ((i * 7) % 3 === 0 ? 1 : 0);
+      if (edge) t.set(x, y, j === 0 ? 'E' : j === 1 ? 'x' : (i + j) % 3 ? 'X' : 'j');
+      else if (j === 3 || j === 4) t.set(x, y, (i + j) % 2 ? 'c' : 'U');
+    }
+    add(name, t);
+  };
+  shore('shore_n', 'n'); shore('shore_s', 's'); shore('shore_w', 'w'); shore('shore_e', 'e');
+  // reeds at the pond margin
+  { const t = base('U'); speckle(t, 'c', 5, 150); for (let x = 1; x < 16; x += 2) { const h = 4 + ((x * 5) % 6); t.vline(x, 15 - h, 15, x % 4 === 1 ? 'l' : 'E'); t.set(x, 15 - h, 'x'); } add('reeds', t); }
+  // plaza paving (Nathan Phillips Square): large pale slabs
+  for (let s = 0; s < 2; s++) { const t = base('H'); speckle(t, 'h', 10, 160 + s); t.hline(0, 15, 0, 'h'); t.vline(0, 0, 15, 'h'); if (s) t.hline(0, 15, 8, 'h'); add(`plaza${s}`, t); }
+  { const t = base('T'); speckle(t, 't', 10, 163); t.hline(0, 15, 0, 't'); t.vline(0, 0, 15, 't'); t.vline(8, 0, 15, 't'); add('plaza_warm', t); }
+  // a speed hump across an E-W lane / N-S lane: raised asphalt with white chevrons
+  { const t = asphalt(170); t.rect(0, 4, 16, 8, 's'); t.hline(0, 15, 4, 'S'); t.hline(0, 15, 11, 'a'); for (let x = 1; x < 16; x += 5) { t.set(x, 7, 'W'); t.set(x + 1, 8, 'W'); t.set(x, 9, 'W'); } add('hump_ns', t); }
+  { const t = asphalt(171); t.rect(4, 0, 8, 16, 's'); t.vline(4, 0, 15, 'S'); t.vline(11, 0, 15, 'a'); for (let y = 1; y < 16; y += 5) { t.set(7, y, 'W'); t.set(8, y + 1, 'W'); t.set(9, y, 'W'); } add('hump_ew', t); }
+  // raised crosswalk: red-brick table with white edge lines (pedestrians stay at sidewalk height)
+  { const t = base('B'); for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) if ((y % 4 === 0) || ((x + (Math.floor(y / 4) % 2) * 4) % 8 === 0)) t.set(x, y, 'b'); t.vline(0, 0, 15, 'W'); t.vline(15, 0, 15, 'W'); add('raised_ns', t); }
+  { const t = base('B'); for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) if ((x % 4 === 0) || ((y + (Math.floor(x / 4) % 2) * 4) % 8 === 0)) t.set(x, y, 'b'); t.hline(0, 15, 0, 'W'); t.hline(0, 15, 15, 'W'); add('raised_ew', t); }
+  // "SLOW" stencil in a N-S lane (school zone on Parkside)
+  { const t = asphalt(172); t.grid(0, 5, [
+    'WWW.W...WWW.W.W',
+    'W...W...W.W.W.W',
+    'WWW.W...W.W.W.W',
+    '..W.W...W.W.WWW',
+    'WWW.WWW.WWW.W.W'].join('|').replace(/[|]/g, String.fromCharCode(10))); add('slow_stencil', t); }
+  // King St: red "streetcar priority" lane paint at intersections
+  { const t = base('r'); speckle(t, 'R', 10, 173); speckle(t, 'b', 6, 174); add('transit_red', t); }
+  { const t = base('r'); speckle(t, 'R', 8, 175); t.grid(2, 5, [
+    'WWW.WWW.WWW',
+    '.W...W..W..',
+    '.W...W..W..',
+    '.W...W..W..',
+    '.W...W..WWW'].join('|').replace(/[|]/g, String.fromCharCode(10))); add('transit_red_stencil', t); }
+  // wooden patio / parklet deck (in a curb lane)
+  for (let s = 0; s < 2; s++) { const t = base('x'); for (let y = 0; y < 16; y += 3) t.hline(0, 15, y, 'w'); speckle(t, 'X', 8, 176 + s); t.vline(s ? 15 : 0, 0, 15, 'w'); add(`deck${s}`, t); }
+  // sand / dirt path for the park (High Park's trails)
+  { const t = base('j'); speckle(t, 'X', 12, 180); speckle(t, 'D', 6, 181); add('trail', t); }
+  // zoo pen ground (packed dirt + straw)
+  { const t = base('X'); speckle(t, 'x', 10, 182); speckle(t, 'y', 6, 183); speckle(t, 'j', 6, 184); add('pen', t); }
   return tiles;
 }
 

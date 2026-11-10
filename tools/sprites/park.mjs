@@ -208,30 +208,83 @@ export function baseballDiamond(home = 'south') {
 // ------------------------------------------------------------------
 // Classic Toronto park picnic table: green slats, two attached benches, A-frame legs.
 // ------------------------------------------------------------------
-export function picnicTable() {
-  // hand-painted: at this size the SDF legs vanish. Back bench peeks over the slatted top, front bench below.
-  const img = new Img(28, 19);
-  img.grid(0, 0, `
-...KKKKKKKKKKKKKKKKKKKKKK...
-...KllllllllllllllllllllK...
-...KEEEEEEEEEEEEEEEEEEEEK...
-..KKKKKKKKKKKKKKKKKKKKKKKK..
-..KLLLLLLLLLLLLLLLLLLLLLLK..
-..KllllllllllllllllllllllK..
-..KEEEEEEEEEEEEEEEEEEEEEEK..
-..KLLLLLLLLLLLLLLLLLLLLLLK..
-..KllllllllllllllllllllllK..
-..KEEEEEEEEEEEEEEEEEEEEEEK..
-..KeeeeeeeeeeeeeeeeeeeeeeK..
-..KKKKKKKKKKKKKKKKKKKKKKKK..
-....KeK..............KeK....
-KKKKKKKKKKKKKKKKKKKKKKKKKKKK
-KLLLLLLLLLLLLLLLLLLLLLLLLLLK
-KEEEEEEEEEEEEEEEEEEEEEEEEEEK
-KKKKKKKKKKKKKKKKKKKKKKKKKKKK
-..KeK..KeK..........KeK..KeK
-..KKK..KKK..........KKK..KKK`);
-  img.pivot = { x: 0.5, y: 0.95 };
+// v03 (Ivan M1.1: the flat version read as stacked bars): a tiny 3D build projected with the map's own
+// 3/4 oblique (screen y = ground y - height), painted back to front, so the table can sit at any angle.
+// Primitives: boxes (top + camera-facing sides, planks on tops) and thick lines (the A-frame legs).
+function projectedModel(prims, { S = 11, pad = 3 } = {}) {
+  const P = ([x, y, z]) => [x * S, (y - z) * S];
+  const items = [];
+  for (const pr of prims) {
+    if (pr.box) {
+      const { c: [cx, cy, cz], d: [dx, dy, dz], rot = 0, cols, planks = 0 } = pr;
+      const ca = Math.cos(rot), sa = Math.sin(rot);
+      const loc = (u, v, w) => [cx + u * ca - v * sa, cy + u * sa + v * ca, cz + w];
+      const hx = dx / 2, hy = dy / 2;
+      const corner = [[-hx, -hy], [hx, -hy], [hx, hy], [-hx, hy]];
+      const faces = [];
+      for (let i = 0; i < 4; i++) { // sides: outward normal must face the camera (+y)
+        const [u0, v0] = corner[i], [u1, v1] = corner[(i + 1) % 4];
+        const nu = (v1 - v0), nv = -(u1 - u0); // outward for CCW-in-screen winding
+        const ny = nu * sa + nv * ca, nx = nu * ca - nv * sa;
+        if (ny <= 1e-6) continue;
+        faces.push({ pts: [loc(u0, v0, 0), loc(u1, v1, 0), loc(u1, v1, dz), loc(u0, v0, dz)].map(P), col: nx > 0.3 ? cols[1] : nx < -0.3 ? cols[2] : cols[1] });
+      }
+      const top = corner.map(([u, v]) => P(loc(u, v, dz)));
+      const plankLines = [];
+      for (let k = 1; k < planks; k++) { const v = -hy + (dy * k) / planks; plankLines.push([P(loc(-hx, v, dz)), P(loc(hx, v, dz))]); }
+      items.push({ depth: cy + cz * 0.01 + (pr.bias ?? 0), draw: (img) => {
+        for (const f of faces) img.poly(f.pts, f.col);
+        img.poly(top, cols[0]);
+        for (const [a, b] of plankLines) img.line(a[0], a[1], b[0], b[1], cols[3] ?? cols[2]);
+      } });
+    } else if (pr.line) {
+      const [a, b] = pr.line.map(P);
+      items.push({ depth: pr.depth, draw: (img) => img.thick(a[0], a[1], b[0], b[1], pr.col, pr.t ?? 2) });
+    }
+  }
+  items.sort((a, b) => a.depth - b.depth);
+  // bounds
+  const all = [];
+  for (const pr of prims) if (pr.box) { const { c: [cx, cy, cz], d: [dx, dy, dz] } = pr; const R = Math.hypot(dx, dy) / 2; for (const [x, y, z] of [[cx - R, cy - R, cz], [cx + R, cy + R, cz], [cx - R, cy - R, cz + dz], [cx + R, cy + R, cz + dz]]) all.push(P([x, y, z])); }
+  const minX = Math.floor(Math.min(...all.map((p) => p[0]))) - pad, maxX = Math.ceil(Math.max(...all.map((p) => p[0]))) + pad;
+  const minY = Math.floor(Math.min(...all.map((p) => p[1]))) - pad, maxY = Math.ceil(Math.max(...all.map((p) => p[1]))) + pad;
+  const img = new Img(maxX - minX, maxY - minY);
+  img.tx = -minX; img.ty = -minY;
+  for (const it of items) it.draw(img);
+  img.tx = 0; img.ty = 0;
+  img.origin = [-minX, -minY];
+  return img;
+}
+
+/** Classic park picnic table: slatted top, two benches, A-frame legs. rot in radians (0 = long side faces you). */
+export function picnicTable(rot = Math.PI / 4) {
+  const ca = Math.cos(rot), sa = Math.sin(rot);
+  const W = (u, v, z) => [u * ca - v * sa, u * sa + v * ca, z];
+  const top = ['L', 'l', 'E', 'E'], bench = ['L', 'l', 'E', 'E'];
+  const prims = [];
+  const L = 1.9, legC = 'e';
+  // A-frame legs at both ends (behind-to-front order handled by depth)
+  for (const u of [-L / 2 + 0.25, L / 2 - 0.25]) {
+    for (const side of [-1, 1]) {
+      const foot = W(u, side * 0.62, 0), knee = W(u, side * 0.08, 0.72);
+      prims.push({ line: [foot, knee], col: legC, depth: (foot[1] + knee[1]) / 2 - 0.05, t: 2 });
+    }
+    // bench cross-member
+    prims.push({ line: [W(u, -0.62, 0.42), W(u, 0.62, 0.42)], col: legC, depth: W(u, 0, 0)[1] - 0.04, t: 1 });
+  }
+  for (const side of [-1, 1]) {
+    const [x, y] = W(0, side * 0.55, 0);
+    prims.push({ box: true, c: [x, y, 0.40], d: [L, 0.26, 0.06], rot, cols: bench, planks: 1 });
+  }
+  prims.push({ box: true, c: [0, 0, 0.72], d: [L, 0.78, 0.07], rot, cols: top, planks: 3, bias: 0.3 });
+  const img = projectedModel(prims, { S: 11 });
+  img.outline('K');
+  // soft ground shadow (only on empty pixels, so the outline stays crisp)
+  const [ox, oy] = img.origin, S = 11, sh = [[-L / 2, -0.5], [L / 2, -0.5], [L / 2, 0.5], [-L / 2, 0.5]].map(([u, v]) => { const [x, y] = W(u + 0.12, v + 0.18, 0); return [ox + x * S, oy + y * S]; });
+  const shadow = new Img(img.w, img.h); shadow.poly(sh, 'e');
+  for (let i = 0; i < img.px.length; i++) if (img.px[i] === null && shadow.px[i] && ((i % img.w) + Math.floor(i / img.w)) % 2 === 0) img.px[i] = 'e';
+  // ground contact: pivot at the model origin's ground point
+  img.pivot = { x: img.origin[0] / img.w, y: (img.origin[1] + 2) / img.h };
   return img;
 }
 
@@ -358,7 +411,7 @@ export function whiteSquirrel() {
 }
 
 export function parkPreview() {
-  const frames = [tbGates(), picnicTable(), bin('green'), bin('blue'), bin('grey'), parkLamp(), ...whiteSquirrel(), ...graffitiPieces()];
+  const frames = [tbGates(), picnicTable(), picnicTable(-Math.PI / 4), picnicTable(0), bin('green'), bin('blue'), bin('grey'), parkLamp(), ...whiteSquirrel(), ...graffitiPieces()];
   const H = Math.max(...frames.map((f) => f.h)) + 4;
   return { frames: frames.map((f) => { const o = new Img(f.w + 6, H); o.blit(f, 3, H - f.h - 2); return o; }), cols: frames.length };
 }
@@ -385,15 +438,22 @@ function catmull(pts, step = 2) {
   out.push(pts[pts.length - 1]);
   return out;
 }
-export function parkPaths({ w, h, paths, ox = 0, oy = 0, width = 6 }) {
+export function parkPaths({ w, h, paths, ox = 0, oy = 0, width = 6, style = 'paved', roads = [] }) {
   const img = new Img(w, h);
   const curves = paths.map((p) => catmull(p.map(([x, y]) => [x - ox, y - oy])));
-  const stamp = (c, rad) => { for (const curve of curves) for (const [x, y] of curve) img.circle(Math.round(x), Math.round(y), rad, c); };
-  stamp('E', width + 1.5); // worn grass edge
-  stamp('G', width);       // kerb shadow
-  stamp('S', width - 1);
+  const roadCurves = roads.map((p) => catmull(p.map(([x, y]) => [x - ox, y - oy])));
+  const stamp = (c, rad, list = curves) => { for (const curve of list) for (const [x, y] of curve) img.circle(Math.round(x), Math.round(y), rad, c); };
+  const [edge, kerb, fill, fleck1, fleck2] = style === 'trail' ? ['E', 'x', 'j', 'X', 'D'] : ['E', 'G', 'S', 's', 'h'];
+  stamp(edge, width + 1.5); // worn grass edge
+  stamp(kerb, width);       // kerb shadow
+  stamp(fill, width - 1);
+  // car-free park roads (High Park): asphalt with a dashed centre line
+  if (roadCurves.length) {
+    stamp('E', 13, roadCurves); stamp('g', 12, roadCurves); stamp('A', 11, roadCurves);
+    for (const c of roadCurves) c.forEach(([x, y], i) => { if (i % 6 < 3) img.set(Math.round(x), Math.round(y), 'y'); });
+  }
   const r = rng(5);
-  for (let i = 0; i < img.px.length; i++) if (img.px[i] === 'S' && r() < 0.12) img.px[i] = r() < 0.5 ? 's' : 'h';
+  for (let i = 0; i < img.px.length; i++) if (img.px[i] === fill && r() < 0.12) img.px[i] = r() < 0.5 ? fleck1 : fleck2;
   // the E edge is a soft blend: thin it out with a dither so it doesn't read as a stripe
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (img.get(x, y) === 'E' && (x + y) % 2) img.set(x, y, null);
   return img;

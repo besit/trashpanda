@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_W, GAME_H } from '../config';
+import { ctx } from '../core/ctx';
 
 export interface Manifest {
   atlases: Record<string, { png: string; json: string }>;
@@ -9,6 +10,8 @@ export interface Manifest {
   fonts: Record<string, { png: string; cw: number; ch: number; chars: string }>;
   maps: Record<string, string>;
   peds?: string[];
+  /** lazily loaded per district: building atlas, map json, ground decals */
+  districts?: Record<string, { atlas: { key: string; png: string; json: string }; map: string; images: Record<string, string> }>;
   cyclists?: string[];
 }
 
@@ -44,12 +47,14 @@ export class BootScene extends Phaser.Scene {
       this.cache.bitmapFont.add(k, Phaser.GameObjects.RetroFont.Parse(this, cfg));
     }
     for (const [k, a] of Object.entries(m.anims)) {
-      const atlas = a.atlas ?? (k.startsWith('rs_') || k.startsWith('rt_') || k.startsWith('rat_') || k.startsWith('ped_') || k.startsWith('cy_') ? 'chars' : 'world');
+      const atlas = a.atlas ?? (k.startsWith('rs_') || k.startsWith('rt_') || k.startsWith('rat_') || k.startsWith('ped_') || k.startsWith('cy_') || k.startsWith('cys_') ? 'chars' : 'world');
       this.anims.create({ key: k, frames: a.frames.map((frame) => ({ key: atlas, frame })), frameRate: a.rate, repeat: a.loop ? -1 : 0 });
     }
     this.registry.set('manifest', m);
     const q = new URLSearchParams(location.search);
     const start = q.get('scene');
+    // jumping straight into a scene (debug / tests) continues the saved game if there is one
+    if (start) ctx.continue();
     const data = q.get('cs') ? { id: q.get('cs'), next: 'Title' } : q.get('mission') ? { mission: q.get('mission') } : undefined;
     this.scene.start(start && this.scene.get(start) ? start : 'Title', data);
   }

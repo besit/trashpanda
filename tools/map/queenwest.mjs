@@ -3,9 +3,8 @@
 // Strachan Ave runs south from the park gates. Fictionalized but geographically faithful:
 // the real park does sit between Queen and Dundas, with its gates facing Strachan.
 // Output is data only; images are built in build-assets.
-import { rng } from '../lib/rng.mjs';
-import { obliqueBuilding } from '../sprites/buildings.mjs';
-import { GATE_W, tbGateSolids, graffitiPieces } from '../sprites/park.mjs';
+import { tbGateSolids } from '../sprites/park.mjs';
+import { District, nearPolyline, ellipsePts } from './common.mjs';
 
 export const W = 104, H = 76, TS = 16;
 
@@ -18,65 +17,33 @@ export const QUEEN = 54;  // Queen rows 54..57 (54 parking, 55 WB tracks, 56 EB 
 const PARK = { x0: 24, x1: 79, y0: 18, y1: 50 }; // inclusive tile bounds of the lawn
 const GATE_X = (SX + 2) * TS; // gates centred on Strachan
 
-const GRAF = graffitiPieces();
-
 export function generateQueenWest() {
-  const r = rng(2026);
-  const ground = Array.from({ length: H }, () => Array(W).fill('grass0'));
-  const set = (x, y, name) => { if (x >= 0 && y >= 0 && x < W && y < H) ground[y][x] = name; };
-  const get = (x, y) => ground[y]?.[x];
-  const objects = [];
-  const decals = [];
-  const prop = (key, px, py, extra = {}) => objects.push({ type: 'prop', key, x: Math.round(px), y: Math.round(py), ...extra });
-  const tprop = (key, tx, ty, ox = 8, oy = 12, extra = {}) => prop(key, tx * TS + ox, ty * TS + oy, extra);
-  const isNS = (x) => (x >= OX && x <= OX + 3) || (x >= BX && x <= BX + 3);
+  const D = new District('queenwest', W, H, 2026);
+  const r = D.r;
+  const set = (x, y, name) => D.set(x, y, name);
+  const decals = D.decals;
+  const prop = (...a) => D.prop(...a);
+  const tprop = (...a) => D.tprop(...a);
+  const isNS = (x) => D.isNS(x);
 
   // ---------- base ground ----------
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) set(x, y, `grass${(x * 7 + y * 3) % 3}`);
   for (let y = 0; y < 8; y++) for (let x = 0; x < W; x++) set(x, y, y < 3 ? 'laneway' : `grass${(x + y) % 3}`);
 
-  // ---------- an E-W street with streetcar tracks ----------
-  const ewStreet = (row, { parkingN = 'parking_n', parkingS = 'parking' } = {}) => {
-    for (let x = 0; x < W; x++) {
-      set(x, row - 3, `sidewalk${x % 3}`); set(x, row - 2, `sidewalk${(x + 1) % 3}`); set(x, row - 1, 'curb_n');
-      set(x, row, x % 7 === 3 ? parkingN : 'asphalt' + (x % 4));
-      set(x, row + 1, `tracks${x % 2}`); set(x, row + 2, `tracks${(x + 1) % 2}`);
-      set(x, row + 3, x % 7 === 3 ? parkingS : 'asphalt' + ((x + 2) % 4));
-      set(x, row + 4, 'curb_s'); set(x, row + 5, `sidewalk${x % 3}`); set(x, row + 6, `sidewalk${(x + 2) % 3}`);
-    }
-  };
-  ewStreet(DUNDAS);
-  ewStreet(QUEEN);
-
-  // ---------- N-S streets ----------
-  const nsStreet = (c, y0, y1) => {
-    for (let y = y0; y <= y1; y++) { set(c, y, 'curb_w'); set(c + 1, y, 'road_ns_w'); set(c + 2, y, 'road_ns_e'); set(c + 3, y, 'curb_e'); }
-  };
-  nsStreet(OX, 0, H - 1);
-  nsStreet(BX, 0, H - 1);
-  nsStreet(SX, QUEEN + 4, H - 1);
-  // intersections: crosswalks + stop bars
-  const intersections = [];
-  const cross = (c, row, tee = false) => {
-    for (let y = row; y <= row + 3; y++) {
-      if (!tee || true) { set(c, y, 'zebra_ns'); set(c + 3, y, 'zebra_ns'); }
-      set(c + 1, y, y === row + 1 || y === row + 2 ? `tracks${y % 2}` : 'asphalt1');
-      set(c + 2, y, y === row + 1 || y === row + 2 ? `tracks${(y + 1) % 2}` : 'asphalt2');
-    }
-    // crosswalks over the N-S street sit in the sidewalk band, stop bars just before them
-    if (!tee) { set(c + 1, row - 2, 'zebra_ew'); set(c + 2, row - 2, 'zebra_ew'); set(c + 1, row - 3, 'road_ns_w_stop'); }
-    set(c + 1, row + 5, 'zebra_ew'); set(c + 2, row + 5, 'zebra_ew'); set(c + 2, row + 6, 'road_ns_e_stop');
-    intersections.push({ x0: c * TS, x1: (c + 4) * TS, y0: row * TS, y1: (row + 4) * TS, tee });
-    for (const [sx, sy, oy] of [[c - 1, row - 1, 10], [c + 4, row - 1, 10], [c - 1, row + 4, 6], [c + 4, row + 4, 6]]) {
-      if (tee && sy === row - 1) continue;
-      tprop('signal', sx, sy, 8, oy);
-    }
-  };
-  cross(OX, DUNDAS); cross(BX, DUNDAS); cross(OX, QUEEN); cross(BX, QUEEN);
-  cross(SX, QUEEN, true);
+  // ---------- streets ----------
+  D.ewStreet(DUNDAS);
+  D.ewStreet(QUEEN);
+  D.nsStreet(OX, 0, H - 1);
+  D.nsStreet(BX, 0, H - 1);
+  D.nsStreet(SX, QUEEN + 4, H - 1);
+  D.cross(OX, DUNDAS); D.cross(BX, DUNDAS); D.cross(OX, QUEEN); D.cross(BX, QUEEN);
+  D.cross(SX, QUEEN, { tee: true });
   // the park side of Queen has no curb cut at Strachan: the gates sit there
   for (const c of [SX, SX + 3]) for (let y = QUEEN; y <= QUEEN + 3; y++) set(c, y, 'zebra_ns');
   for (const x of [SX + 1, SX + 2]) for (let y = QUEEN; y <= QUEEN + 3; y++) set(x, y, y === QUEEN + 1 || y === QUEEN + 2 ? `tracks${(x + y) % 2}` : 'asphalt3');
+  // Queen and Dundas continue west into High Park / Roncesvalles and east downtown
+  D.exit('w', QUEEN, 'highpark'); D.exit('w', DUNDAS, 'highpark');
+  D.exit('e', QUEEN, 'downtown'); D.exit('e', DUNDAS, 'downtown');
 
   // ---------- Trinity Bellwoods Park ----------
   for (let y = PARK.y0 - 1; y <= PARK.y1 + 1; y++) for (let x = PARK.x0 - 2; x <= PARK.x1 + 2; x++) set(x, y, `lawn${(x * 5 + y * 11) % 3}`);
@@ -86,7 +53,7 @@ export function generateQueenWest() {
   // park: R(u, v) maps the real park's normalized coords (u: Crawford -> Gore Vale, v: Dundas -> Queen).
   const R = (u, v) => [(PARK.x0 - 1.5 + u * (PARK.x1 - PARK.x0 + 3)) * TS, (PARK.y0 - 0.5 + v * (PARK.y1 - PARK.y0 + 1.5)) * TS];
   const P = (pts) => pts.map(([u, v]) => R(u, v));
-  const ellipse = (cu, cv, ru, rv, n = 22) => Array.from({ length: n + 1 }, (_, i) => [cu + Math.cos((i / n) * Math.PI * 2) * ru, cv + Math.sin((i / n) * Math.PI * 2) * rv]);
+  const ellipse = ellipsePts;
   const parkPaths = [
     P([[0.505, 1.0], [0.505, 0.895]]),                                              // gates -> the circle
     P(ellipse(0.53, 0.80, 0.19, 0.095)),                                            // the circle (picnic areas 3 + 4)
@@ -112,12 +79,7 @@ export function generateQueenWest() {
   prop('tbgates', GATE_X, (QUEEN - 3) * TS + 2, { solids: tbGateSolids(), landmark: 'TRINITY BELLWOODS GATES' });
 
   // trees: dense but leaving paths, decals and the gate approach clear
-  const nearPath = (px, py, d) => parkPaths.some((pts) => pts.some((p, i) => {
-    if (i === 0) return false;
-    const [ax, ay] = pts[i - 1], [bx, by] = p, vx = bx - ax, vy = by - ay;
-    const t = Math.max(0, Math.min(1, ((px - ax) * vx + (py - ay) * vy) / (vx * vx + vy * vy)));
-    return Math.hypot(px - (ax + vx * t), py - (ay + vy * t)) < d;
-  }));
+  const nearPath = (px, py, d) => nearPolyline(parkPaths, px, py, d);
   const inRect = (px, py, o, pad) => px > o.x - pad && px < o.x + o.w + pad && py > o.y - pad && py < o.y + o.h + pad;
   const blocked = (px, py) => nearPath(px, py, 20) || inRect(px, py, bowl, 10) || inRect(px, py, diamond, 8) || inRect(px, py, diamond2, 8) || inRect(px, py, courts, 10) || picnicSpots.some(([x, y]) => Math.hypot(px - x, py - y) < 34) || Math.hypot(px - GATE_X, py - (QUEEN - 3) * TS) < 70;
   const trees = [];
@@ -134,7 +96,7 @@ export function generateQueenWest() {
     if (!nearPath(x * TS + 8, (PARK.y0) * TS, 22)) prop('tree_b', x * TS + 8, PARK.y0 * TS + 4, { solid: 5 });
   }
   // classic green picnic tables, in pairs, at each picnic area
-  for (const [x, y] of picnicSpots) { prop('picnic', x - 14, y, { solid: 6 }); prop('picnic', x + 16, y + 10, { solid: 6 }); prop('bin_green', x + 2, y - 14); }
+  for (const [x, y] of picnicSpots) { prop('picnic', x - 16, y, { solid: 7 }); prop('picnic_l', x + 18, y + 8, { solid: 7 }); prop('bin_green', x + 2, y - 14); }
   // lamps + benches + bins along the paths
   parkPaths.forEach((pts, pi) => {
     for (let i = 1; i < pts.length; i++) {
@@ -151,39 +113,7 @@ export function generateQueenWest() {
   // ---------- buildings ----------
   const bricksQueen = ['red', 'buff', 'teal', 'darkred', 'red', 'lilac', 'buff', 'grey', 'mustard', 'cream'];
   const bricksDundas = ['azulejo', 'red', 'azulejo_g', 'cream', 'mustard', 'azulejo', 'teal', 'buff', 'lilac', 'darkred'];
-  let bid = 0;
-  const addBuilding = (x, w, gen, place) => {
-    const b = obliqueBuilding(gen);
-    const imgH = b.img.h, d = gen.d;
-    const base = place.base ?? place.top + imgH; // facade bottom (px)
-    objects.push({ type: 'building', key: `bld_${bid}`, gen, x, y: base - d, w, d, imgH });
-    bid++;
-    // graffiti from the shared sheet, sprayed over rear walls (any wall could take it: more variety, fewer pixels)
-    if (gen.kind === 'rear') {
-      const n = r.int(1, 3);
-      for (let i = 0; i < n; i++) {
-        const k = r.int(0, GRAF.length - 1), gw = GRAF[k].w;
-        if (gw > w - 4) continue;
-        objects.push({ type: 'prop', key: `graf_${k}`, x: x + r.int(2, w - gw - 2), y: base - r.int(2, 5), depth: base + 0.2 });
-      }
-    }
-    return { top: base - imgH, base };
-  };
-  /** A row of buildings between tile cols [x0, x1). Either aligned at the facade base or at the roof top. */
-  const row = (x0, x1, align, kind, floorsPick, bricks, d = 48) => {
-    let x = x0; const out = [];
-    while (x < x1) {
-      let w = r.pick([2, 3, 3, 4]);
-      if (x + w > x1) w = x1 - x;
-      if (w < 2) { if (out.length) break; w = 2; }
-      let k = Array.isArray(kind) ? r.pick(kind) : kind;
-      if (k === 'queenanne' && w < 3) k = 'baygable'; // a turret needs room
-      const gen = { w: w * TS, d, floors: r.pick(floorsPick), brick: r.pick(bricks), seed: 500 + bid, kind: k };
-      out.push(addBuilding(x * TS, w * TS, gen, align));
-      x += w;
-    }
-    return out;
-  };
+  const row = (...a) => D.row(...a);
   const strips = [[0, OX], [OX + 4, BX], [BX + 4, W]];
   // Dundas north side: Little Portugal shops + tiled houses (facades on the sidewalk)
   for (const [a, b] of strips) row(a, b, { base: (DUNDAS - 3) * TS }, 'shop', [1, 2, 2], bricksDundas);
@@ -215,18 +145,7 @@ export function generateQueenWest() {
   }
 
   // ---------- street furniture ----------
-  const furnish = (row, side, x0, x1) => { // side: 'n' (north sidewalk of a street at `row`) or 's'
-    for (let x = x0; x < x1; x++) {
-      if (isNS(x) || isNS(x - 1) || isNS(x + 1)) continue;
-      const sy = side === 'n' ? row - 2 : row + 5;
-      if (x % 6 === 2) { set(x, sy, 'treepit'); tprop(r.chance(0.5) ? 'tree_a' : 'tree_b', x, sy, 8, 10, { solid: 4 }); }
-      if (x % 8 === 5) tprop('streetlight', x, side === 'n' ? row - 1 : row + 4, 4, side === 'n' ? 8 : 6);
-      if (x % 5 === 0) tprop('bikering', x, side === 'n' ? row - 3 : row + 6, 8, 14);
-      if (x % 13 === 7) tprop('bench', x, side === 'n' ? row - 3 : row + 6, 8, 13);
-      if (x % 11 === 3) tprop('newsbox', x, sy, 12, 6);
-      if (x % 17 === 9) tprop('hydrant', x, side === 'n' ? row - 1 : row + 4, 4, 6);
-    }
-  };
+  const furnish = (...a) => D.furnish(...a);
   for (const [a, b] of [[0, PARK.x0 - 2], [PARK.x1 + 3, W]]) furnish(QUEEN, 'n', a, b);
   furnish(QUEEN, 's', 0, W);
   furnish(DUNDAS, 'n', 0, W);
@@ -244,16 +163,7 @@ export function generateQueenWest() {
   for (const c of [OX, BX]) { tprop('ttcstop', c - 2, DUNDAS - 1, 8, 8); tprop('ttcstop', c + 5, DUNDAS + 4, 8, 6); }
 
   // ---------- parked cars (Queen's parking lanes become bike lanes after the mission) ----------
-  const COLORS = ['blue', 'red', 'white', 'yellow', 'teal', 'orange'];
-  const park = (row, face, tag, avoid) => {
-    for (let x = 1; x < W - 2;) {
-      const px = x * TS + 8;
-      if (isNS(x) || isNS(x + 1) || isNS(x + 2) || avoid.some(([a, b]) => px > a && px < b) || r.chance(0.55)) { x += r.int(1, 3); continue; }
-      const key = r.chance(0.18) ? `suv_${face}` : `car_${r.pick(COLORS)}_${face}`;
-      prop(key, px + 10, row * TS + 10, { solidBox: [-15, -6, 30, 10], tag });
-      x += 3;
-    }
-  };
+  const park = (row, face, tag, avoid) => D.parkCars(row, face, tag, avoid);
   const stopZone = (xs) => xs.map((s) => [s - 112, s + 24]);
   park(QUEEN, 'W', 'parked', [...stopZone(stops.queen_wb), [(SX - 1) * TS, (SX + 5) * TS]]);
   park(QUEEN + 3, 'E', 'parked', [...stopZone(stops.queen_eb).map(([a, b]) => [a - 24 + 112 - 24, b + 112]), [(SX - 1) * TS, (SX + 5) * TS]]);
@@ -276,10 +186,19 @@ export function generateQueenWest() {
     imp.addProps.push({ type: 'prop', key: 'planter', x: x * TS + 8, y: (QUEEN + 3) * TS + 4 });
   }
 
+  // ---------- mission 2's upgrade: transit signal priority on Queen ----------
+  // white "transit bar" signal heads beside each Queen signal + TSP detector loops in the track lanes
+  const tsp = { tiles: [], addProps: [] };
+  for (const c of [OX, BX]) {
+    tsp.addProps.push({ type: 'prop', key: 'tspsignal', x: (c - 1) * TS + 2, y: (QUEEN - 1) * TS + 10 });
+    tsp.addProps.push({ type: 'prop', key: 'tspsignal', x: (c + 4) * TS + 14, y: (QUEEN + 4) * TS + 6 });
+    for (const x of [c - 4, c + 7]) for (const y of [QUEEN + 1, QUEEN + 2]) tsp.tiles.push([x, y, `tracks_loop${(x + y) % 2}`]);
+  }
+
   // ---------- traffic + walkers ----------
   const lanes = [
-    { id: 'queen_wb', axis: 'x', dir: -1, pos: (QUEEN + 1) * TS + 8, streetcar: true, stops: stops.queen_wb, cyclists: 'mixed' },
-    { id: 'queen_eb', axis: 'x', dir: 1, pos: (QUEEN + 2) * TS + 8, streetcar: true, stops: stops.queen_eb, cyclists: 'mixed' },
+    { id: 'queen_wb', axis: 'x', dir: -1, pos: (QUEEN + 1) * TS + 8, streetcar: true, stops: stops.queen_wb, cyclists: 'mixed', priority: 'queen_tsp' },
+    { id: 'queen_eb', axis: 'x', dir: 1, pos: (QUEEN + 2) * TS + 8, streetcar: true, stops: stops.queen_eb, cyclists: 'mixed', priority: 'queen_tsp' },
     { id: 'queen_bike_wb', axis: 'x', dir: -1, pos: QUEEN * TS + 7, bikeOnly: true, requires: 'queen_protected_lanes' },
     { id: 'queen_bike_eb', axis: 'x', dir: 1, pos: (QUEEN + 3) * TS + 9, bikeOnly: true, requires: 'queen_protected_lanes' },
     { id: 'dundas_wb', axis: 'x', dir: -1, pos: (DUNDAS + 1) * TS + 8, streetcar: true, stops: stops.dundas_wb },
@@ -289,7 +208,8 @@ export function generateQueenWest() {
     { id: 'bell_sb', axis: 'y', dir: 1, pos: (BX + 1) * TS + 8, light: true },
     { id: 'bell_nb', axis: 'y', dir: -1, pos: (BX + 2) * TS + 8, light: true },
   ];
-  const walkways = [
+  D.lanes.push(...lanes);
+  D.walkways.push(
     [[0, (QUEEN - 2) * TS + 6], [W * TS, (QUEEN - 2) * TS + 6]],
     [[0, (QUEEN + 5) * TS + 10], [W * TS, (QUEEN + 5) * TS + 10]],
     [[0, (DUNDAS - 2) * TS + 6], [W * TS, (DUNDAS - 2) * TS + 6]],
@@ -297,9 +217,8 @@ export function generateQueenWest() {
     [[OX * TS + 5, 0], [OX * TS + 5, H * TS]], [[(OX + 3) * TS + 11, 0], [(OX + 3) * TS + 11, H * TS]],
     [[BX * TS + 5, 0], [BX * TS + 5, H * TS]], [[(BX + 3) * TS + 11, 0], [(BX + 3) * TS + 11, H * TS]],
     ...parkPaths,
-  ];
-
-  const labels = [
+  );
+  D.labels.push(
     { text: 'QUEEN ST W', x: 30 * TS, y: (QUEEN + 2) * TS },
     { text: 'DUNDAS ST W', x: 30 * TS, y: (DUNDAS + 2) * TS },
     { text: 'OSSINGTON', x: (OX + 2) * TS, y: 33 * TS, vertical: true },
@@ -308,16 +227,16 @@ export function generateQueenWest() {
     { text: 'TRINITY BELLWOODS', x: R(0.5, 0.64)[0], y: R(0.5, 0.64)[1], kind: 'landmark' },
     { text: 'DOG BOWL', x: bowl.x + bowl.w / 2, y: bowl.y + bowl.h / 2, kind: 'landmark' },
     { text: 'GATES', x: 52 * TS, y: 49 * TS, kind: 'landmark' },
-    { text: 'GRAFFITI LANE', x: 30 * TS, y: (laneRow + 1) * TS, kind: 'landmark' },
-  ];
-
-  return {
-    width: W, height: H, tileSize: TS, ground, objects, decals,
-    improvements: { queen_protected_lanes: imp },
-    spawn: { x: 45 * TS + 8, y: (QUEEN - 2) * TS + 8 },
-    markers: [{ id: 'bike_lane_war', x: 62 * TS, y: (QUEEN - 2) * TS + 8, label: 'THE BIKE LANE WAR' }],
-    lanes, intersections, walkways, labels,
-    critters: [{ kind: 'white_squirrel', x: R(0.26, 0.48)[0], y: R(0.26, 0.48)[1] }], // where the park map draws its squirrel
-    landmarks: [{ id: 'tb_gates', x: GATE_X, y: (QUEEN - 3) * TS - 10, label: 'THE UNIVERSITY OF', fact: 'TRINITY COLLEGE\n1852 - 1925' }],
-  };
+    { text: 'BACK LANE', x: 30 * TS, y: (laneRow + 1) * TS, kind: 'landmark' },
+    { text: '< HIGH PARK', x: 3 * TS, y: (QUEEN - 4) * TS, kind: 'exit' },
+    { text: 'DOWNTOWN >', x: (W - 4) * TS, y: (QUEEN - 4) * TS, kind: 'exit' },
+  );
+  D.improvements = { queen_protected_lanes: imp, queen_tsp: tsp };
+  D.markers.push(
+    { id: 'bike_lane_war', x: 62 * TS, y: (QUEEN - 2) * TS + 8, label: 'THE BIKE LANE WAR' },
+    { id: 'streetcar_through', x: 17 * TS, y: (QUEEN - 2) * TS + 8, label: 'LET THE STREETCAR THROUGH' },
+  );
+  D.critters.push({ kind: 'white_squirrel', x: R(0.26, 0.48)[0], y: R(0.26, 0.48)[1] }); // where the park map draws its squirrel
+  D.landmarks.push({ id: 'tb_gates', x: GATE_X, y: (QUEEN - 3) * TS - 10, label: 'THE UNIVERSITY OF', fact: 'TRINITY COLLEGE\n1852 - 1925' });
+  return D.out({ spawn: { x: 45 * TS + 8, y: (QUEEN - 2) * TS + 8 } });
 }

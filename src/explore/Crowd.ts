@@ -15,6 +15,8 @@ const LINES = ['HI RACCOON!', 'NICE BELL!', 'CUTE BIKE!', 'OH! A RACCOON!', 'WAT
 
 export class Crowd {
   private walkers: Walker[] = [];
+  /** High Park zoo capybaras: amble around their pen, sit a lot, unbothered by everything */
+  private capys: { s: Phaser.GameObjects.Sprite; home: { x: number; y: number }; vx: number; vy: number; t: number }[] = [];
   private squirrel?: { s: Phaser.GameObjects.Sprite; home: { x: number; y: number }; vx: number; vy: number; t: number; spotted: boolean };
   onSquirrelSpotted?: () => void;
 
@@ -33,6 +35,10 @@ export class Crowd {
       const id = ids[Math.floor(Math.random() * ids.length)];
       const s = scene.add.sprite(0, 0, 'chars', `ped_${id}_S_0`).setOrigin(pv.x, pv.y);
       this.walkers.push({ s, path, seg, t: Math.random(), dir: Math.random() < 0.5 ? 1 : -1, speed: id === 'kid' ? 26 : 16 + Math.random() * 10, id, facing: '', off: (Math.random() - 0.5) * 6, wait: 0, reactCd: 0 });
+    }
+    for (const c of critters) if (c.kind === 'capybara') {
+      const s = scene.add.sprite(c.x, c.y, 'world', 'capy_2').setOrigin(0.5, 1).play('capy_sit');
+      this.capys.push({ s, home: { x: c.x, y: c.y }, vx: 0, vy: 0, t: Math.random() * 2 });
     }
     for (const c of critters) if (c.kind === 'white_squirrel') {
       const s = scene.add.sprite(c.x, c.y, 'world', 'sq_2').setOrigin(0.5, 1).play('sq_sit');
@@ -78,6 +84,18 @@ export class Crowd {
       if (!moving && w.s.anims.isPlaying) { w.s.anims.stop(); w.s.setFrame(`ped_${w.id}_${f}_0`); }
     }
     this.updateSquirrel(dt, px, py);
+    for (const c of this.capys) {
+      c.t -= dt;
+      if (c.t <= 0) {
+        if (Math.random() < 0.55) { c.vx = 0; c.vy = 0; c.t = 2 + Math.random() * 3; }
+        else { const back = Math.hypot(c.home.x - c.s.x, c.home.y - c.s.y) > 28; const ang = back ? Math.atan2(c.home.y - c.s.y, c.home.x - c.s.x) : Math.random() * Math.PI * 2; c.vx = Math.cos(ang) * 9; c.vy = Math.sin(ang) * 6; c.t = 1.5 + Math.random() * 2; }
+      }
+      c.s.x += c.vx * dt; c.s.y += c.vy * dt;
+      const key = Math.abs(c.vx) + Math.abs(c.vy) > 0.5 ? 'capy_walk' : 'capy_sit';
+      if (c.s.anims.currentAnim?.key !== key) c.s.play(key);
+      if (c.vx) c.s.setFlipX(c.vx < 0);
+      c.s.setDepth(c.s.y);
+    }
   }
 
   private updateSquirrel(dt: number, px: number, py: number) {

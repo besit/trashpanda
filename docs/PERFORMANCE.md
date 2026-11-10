@@ -43,6 +43,28 @@ Biggest assets:
 
 Pedestrians off-camera skip animation and rendering (visibility culling in `Crowd`).
 
+### 2026-11-10 (M2)
+Three districts now. Downtown is the heaviest: 120×92 tiles, 836 objects, glass towers, and 44 pedestrians. Each district is its own scene load, so only one district's objects exist at a time.
+
+| Scene | 1× | 4× | 6× | Heap (6×) |
+|---|---|---|---|---|
+| Explore, Queen West | 60.2 fps | 60.2 | 60.2 | 18 MB |
+| Explore, Downtown | 60.2 | 60.2 | 60.2 | 38 MB |
+| Action, M1 | 60.3 | 60.2 | 60.2 | 14 MB |
+| Action, M3 (King, SUV Rats + boss) | 60.2 | 60.1 | 60.1 | 16 MB |
+| Action, M2 (streetcar escort) | 60.1 | 60.1 | 60.2 | 14 MB |
+
+The p95 frame time is 16.7–16.8 ms everywhere.
+
+**Downloads (M2):**
+- JS: 1,331 KB raw / 362 KB gzipped
+- At boot: 875 KB of shared assets
+- Per district, loaded on entry: Queen West 538 KB, High Park 482 KB, Downtown 930 KB
+
+**First load for a new game: about 1.8 MB** (budget 2.5 MB).
+
+The Downtown building atlas (2048×1024, 810 KB) dominates: dithered glass compresses poorly. If it grows, the options are flatter glass bands or quantizing the reflection dither to 2×2 blocks.
+
 ### Bundle (M0)
 | Item | Raw | Gzipped |
 |---|---|---|
@@ -61,4 +83,5 @@ Pedestrians off-camera skip animation and rendering (visibility culling in `Crow
 
 ## Watch list
 - Phaser is about 300 KB of the gzipped JS. A custom Phaser build that strips unused systems (Matter, Spine, etc.) could save about 100 KB. Deferred to M4.
-- The full city map (6 districts) is roughly 10× the tiles of this chunk. Phaser culls tile rendering, so the risk is low, but object counts (props and buildings) need culling or chunking at that scale.
+- ~~The full city map (6 districts) is roughly 10× the tiles of this chunk.~~ Solved in M2 by loading districts as separate maps (one in memory at a time).
+- Downtown's building atlas (810 KB): see M2 notes above.

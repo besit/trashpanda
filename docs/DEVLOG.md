@@ -287,3 +287,59 @@ Per Ivan, the Bloor removals get their own main mission: **The Lane Eater** (GAM
 - 60 fps at 1×/4×/6× throttle; 22 MB heap.
 - 10 unit tests and 7 end-to-end tests, all passing.
 - Art history: 37 versions.
+
+---
+
+## 2026-11-10: Day 2 (afternoon), M2: three districts, missions 2–4
+
+Ivan's M1.1 notes came in with a screenshot of the "transparent pixels", and a go for M2.
+
+### The "transparency" was a colour, not a hole
+Ivan circled a spot right under a window on a teal building. A script had already shown there were no alpha holes anywhere, so I zoomed into his screenshot. Inside the teal wall were **single sky-blue pixels**. The teal brick's weathering speckle used palette `C` (#7cc6f2), which is *exactly* the daytime sky colour. Every speckle read as a pinhole through the building. It's a one-character fix (speckle → pale grey `H`), and it fixes every teal building in both views. New art-bible rule: no wall colour may equal a sky colour.
+
+### The other M1.1 notes
+- **Picnic tables:** Ivan suggested 3/4 at 45°. The flat sprite was replaced by a tiny 3D build: slatted top, two benches and A-frame legs as boxes and lines, projected with the map's own oblique (screen y = ground y − height) and painted back to front. Now the table can sit at any angle. Pairs alternate ±45°, with a dithered shadow.
+  ![picnic](../art/history/park/v03/preview.png)
+- **Cars from behind:** the SDF back view was mostly windshield. It's now a hand-built parametric back view, painted natively at each of the 8 depth scales: roof, tinted rear window with a third brake light, trunk shut line, glowing tail lights in dark housings, plate, bumper, reflectors, tyres, mirrors.
+  ![cars](../art/history/dvp/v03/preview.png)
+- **"Bikes and cars should move":** I had read the M1.1 note as "hold the camera still"; Ivan meant "move everything together". Vignettes are now tracking shots. Facades, sidewalk, parked cars, planters and anyone standing on the street scroll as one plane, while riders and the streetcar hold their place on screen. A new `pan` step eases the speed, so the shot can glide to a stop before the rats walk in.
+- **The jump on unlock:** found in Phaser itself. `camera.startFollow()` **snaps** the camera onto the target the moment it's called; the lerp only applies afterwards. The fix keeps the current scroll after `startFollow` and tweens the lerp up from 0.01.
+
+### Three districts, joined at their streets
+- Queen West's generator was refactored into a shared toolkit (`tools/map/common.mjs`): streets, crossings, building rows, furniture, parked cars, lanes and exits. A byte-for-byte comparison caught exactly one difference: the old code placed a tree pit on **Strachan's curb** (its local "is this a N-S street?" check forgot Strachan). That's a fix.
+- **Decision: separate district maps, not one giant tilemap.** Each district is its own generator and its own lazily loaded building atlas. Streets continue across the seam at the same rows, and a blinds wipe plays as you ride off the edge. Downtown's towers alone make an 810 KB atlas, so phones should only ever hold one district.
+- **High Park:** Grenadier Pond (the shore is solid), cherry trees along its east shore, black oak savanna, car-free park roads, the zoo with **capybaras** (plaque: Bonnie + Clyde, 2016), the HIGH PARK sign, the Parkside school zone and its **speed camera stump**, Roncesvalles with the 504 and the **Revue**'s marquee, and Bloor with its bike lanes (mission 5 will fight for them).
+- **Downtown:** **Nathan Phillips Square**, with City Hall's two curved towers cradling the saucer, the TORONTO sign, and the pool under the Freedom Arches. Also Osgoode Hall's fence, **Old City Hall**'s clock tower, **Chinatown**'s lanterns at Spadina, **Graffiti Alley** (moved here from Queen West, as Ivan noted), the **news van bursting out of 299 Queen**, and King West warehouses giving way to glass towers.
+
+![downtown](../art/history/downtown/v01/preview.png)
+![high park](../art/history/highpark/v01/preview.png)
+
+Failures along the way:
+- The capybaras v01 read as loaves until they got a head.
+- The SUV Rat's driver sat on the roof; the fix locates the glass band in the image and puts the driver behind the front window.
+- In-world Dog Fraud v01 wore two ties, because the portrait head already includes its shirt and tie.
+- The SCHOOL stencil doesn't fit in 16 px, so the lane says SLOW.
+- The font has no `[ ]`, and `*` looks like `#`.
+
+### Missions 2–4 and a playtest bot
+Research first (URBAN_RESEARCH §3, §4, §16):
+- the 1991 TTC signal-priority demonstration (−35% streetcar delay at six intersections)
+- the King St pilot (~4 minutes faster, 72k→84k weekday riders, made permanent in 2019)
+- the real Parkside camera: cut down 7 times in under a year and once dumped in a park pond, which *is* mission 4's plot
+
+The missions:
+- **Let the Streetcar Through:** an escort with no combat. Pump call boxes for priority, move a double-parked van and a left-turner, swat the cones off the tracks. Delay drains the schedule.
+- **King of the Street:** **SUV Rats** (stomp the roof or pump the bumper; "RIGHT TURN ONLY!"), then the **Bureaucrat Rat**: stamps, a shove, summoned clerks and red tape.
+- **Slow Down, Dog:** chase the camera haulers before the pond, then build a hump, a raised crosswalk and a curb extension under traffic.
+
+I wrote a **playtest bot** (`tools/scratch/bot.mjs`) that plays with real key presses. It earned its keep:
+- The chase was caught in 3 s (too easy). After a retune it could never be caught: the rubber band made the rats faster than an average boosting player. It's now **140 px/s with a gentle 1.05× near band**, catchable only by boosting smartly, in about 7 s.
+- The Bureaucrat died in 6 s, so its HP went from 18 to 32.
+- SUVs killed the bot repeatedly: a pump hit only slowed the car, which then drove into you anyway. Hits now **stall** the car (no contact damage while stalled), so the combo can land.
+- **Two rat AI bugs that M1 also had:** a ranged rat spawned off-screen could back away forever and snipe cones from outside the arena, and a rat stuck at the edge never entered. Rats now always walk in first and stay inside a locked arena.
+
+### Numbers
+- **Performance:** 60 fps everywhere at 1×/4×/6× CPU throttle, including Downtown (38 MB heap).
+- **Downloads:** first load about 1.8 MB (budget 2.5 MB); Downtown's 930 KB loads only when you ride in.
+- **Tests:** 14 unit tests (new: v1→v2 save migration, every mission's marker and patch exist, every district exit has its partner) and 11 end-to-end tests (new: crossing districts; missions 2–4 from marker to saved payoff), all passing.
+- **Art history:** 47 versions.

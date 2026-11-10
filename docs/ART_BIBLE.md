@@ -55,6 +55,24 @@ Each district gets landmarks and textures you can't mistake for anywhere else. Q
 - the Victorian house mix beside the park: bay-and-gables, Queen Annes, Second Empires
 - post-and-ring bike stands
 
+**High Park (M2):**
+- Grenadier Pond with cherry blossoms along its east shore, and black oak savanna
+- the zoo's capybaras, the wooden HIGH PARK sign, car-free park roads
+- the Parkside speed camera (and its stump), a red-brick school with its yard
+- Roncesvalles' streetcar tracks and the Revue's red marquee
+
+**Downtown (M2):**
+- City Hall's two curved towers cradling the white saucer, and the multicolour TORONTO sign
+- the pool with its three Freedom Arches, and Old City Hall's clock tower
+- King West's brick-and-beam warehouses giving way to glass towers (sky reflections, mullion grids)
+- Chinatown's red lanterns at Spadina, Graffiti Alley, the news van bursting out of 299 Queen W
+- after mission 3, King's red TTC lanes and patio decks with striped umbrellas
+
+**Rules added in M2:**
+- No wall colour may equal a sky colour: the teal brick speckle was sky blue and read as holes (Ivan's circled screenshot).
+- Vehicles seen from behind must show a trunk, a rear window and tail lights. The SDF back view read as all glass, so it's hand-built per scale now.
+- 3/4 props can sit at any angle: picnic tables are tiny 3D builds projected with the map's own oblique.
+
 ## Environment
 - **Queen West buildings** are procedural Victorian storefronts:
   - sign band with pseudo-lettering
@@ -77,3 +95,4 @@ Every version is kept in `art/history/<asset>/vNN/` (preview, 1× sheet, frozen 
 | `reference/trinity-bellwoods_gates.png` | Trinity Bellwoods gates (v02) | proportions + details: smooth white stone, domed inner piers, gabled outer piers, inscribed lintels, arched carriage gate |
 | `reference/TrinityBelwwods.jpg` | park layout | positions of paths, diamonds, courts, picnic areas, squirrel (squeezed into our wider park) |
 | `reference/CN-tower.jpg` | CN Tower profile | pod bands, SkyPod, antenna proportions |
+| `reference/glitch-transparency.png` | M1.1 bug report | Ivan circled 'transparent' pixels under a window: the teal brick's sky-blue speckle. Fixed at the palette level |

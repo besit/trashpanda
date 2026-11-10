@@ -49,7 +49,7 @@ export class TitleScene extends Phaser.Scene {
 
     this.prompt = text(this, GAME_W / 2, 128, wantsTouch() ? 'TAP TO START' : 'PRESS ENTER', 'font_outline');
     this.tweens.add({ targets: this.prompt, alpha: 0.2, duration: 500, yoyo: true, repeat: -1 });
-    text(this, GAME_W - 4, GAME_H - 4, 'M1 PREVIEW', 'font', 1).setTint(0x9793a6);
+    text(this, GAME_W - 4, GAME_H - 4, 'M2 PREVIEW', 'font', 1).setTint(0x9793a6);
 
     // menu (shown after first input)
     this.menu = this.add.container(GAME_W / 2, 118).setVisible(false);
@@ -58,7 +58,12 @@ export class TitleScene extends Phaser.Scene {
       ...(hasSave ? [{ label: 'CONTINUE', action: () => this.go(true) }] : []),
       { label: 'NEW GAME', action: () => this.go(false) },
       { label: 'CONTROLS', action: () => { this.leaving = false; openPause(this, 'controls'); } },
-      ...(DEBUG ? [{ label: 'SIDE-VIEW TEST', action: () => this.goScene('Action') }, { label: 'INTRO CUTSCENE', action: () => this.goScene('Cutscene') }] : []),
+      ...(DEBUG ? [
+        { label: 'TEST: STREETCAR (M2)', action: () => this.goScene('Action', { mission: 'streetcar_through' }) },
+        { label: 'TEST: KING ST (M3)', action: () => this.goScene('Action', { mission: 'king_of_street' }) },
+        { label: 'TEST: PARKSIDE (M4)', action: () => this.goScene('Action', { mission: 'slow_down_dog' }) },
+        { label: 'INTRO CUTSCENE', action: () => this.goScene('Cutscene') },
+      ] : []),
     ];
     this.items.forEach((it, i) => { it.t = text(this, 0, i * 11, it.label, 'font_outline'); this.menu.add(it.t); });
 
@@ -105,12 +110,12 @@ export class TitleScene extends Phaser.Scene {
       this.scene.start('Cutscene', { id: 'intro', next: 'Explore' });
     }
   }
-  private async goScene(key: string) {
+  private async goScene(key: string, data: object = { id: 'intro', next: 'Title' }) {
     if (this.leaving) return;
     this.leaving = true;
     if (!ctx.sessionStart) ctx.newGame();
     await iris(this, 'close');
-    this.scene.start(key, { id: 'intro', next: 'Title' });
+    this.scene.start(key, data);
   }
 
   update(_t: number, dt: number) {

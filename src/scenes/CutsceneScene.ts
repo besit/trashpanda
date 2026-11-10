@@ -13,6 +13,7 @@ import { ctx } from '../core/ctx';
 import type { Manifest } from './BootScene';
 
 const STAGE_W = 384;
+const GROUND_PARKED = 190; // parked cars along the curb in side vignettes
 // Highway geometry (matches tools/sprites/dvp.mjs)
 const HZ = 92, LEFT_BOTTOM = -170, LANE_BOTTOM = 62;
 const CAR_KINDS = ['red', 'blue', 'white', 'yellow', 'teal', 'suv', 'white', 'blue'];
@@ -24,7 +25,12 @@ export class CutsceneScene extends Phaser.Scene {
   private portrait?: Phaser.GameObjects.Image;
   private dark!: Phaser.GameObjects.Rectangle;
   private captions: Phaser.GameObjects.GameObject[] = [];
-  private layers: { ts: Phaser.GameObjects.TileSprite; f: number }[] = [];
+  private layers: { ts: Phaser.GameObjects.TileSprite; f: number; base: number }[] = [];
+  /** street furniture that scrolls with the street (wraps around): planters, parked cars */
+  private decor: { img: Phaser.GameObjects.Image; wx: number }[] = [];
+  private decorSpan = 0;
+  /** actors standing on the street (rats, parked cars): x = ox + wx - panX */
+  private worldActors = new Map<string, { wx: number }>();
   private bgGroup: Phaser.GameObjects.GameObject[] = [];
   private pan = 0;
   private panX = 0;
@@ -48,7 +54,7 @@ export class CutsceneScene extends Phaser.Scene {
     this.next = data?.next ?? 'Explore';
     this.nextData = data?.nextData;
     this.skipping = false;
-    this.captions = []; this.layers = []; this.bgGroup = []; this.actors.clear(); this.followers = [];
+    this.captions = []; this.layers = []; this.bgGroup = []; this.actors.clear(); this.followers = []; this.decor = []; this.worldActors.clear();
     this.portrait = undefined; this.dvp = undefined; this.pan = 0; this.panX = 0; this.boxTop = false;
     synth.unlock();
     this.dark = this.add.rectangle(0, 0, GAME_W, GAME_H, 0x16121f, 0).setOrigin(0).setDepth(5);
@@ -81,15 +87,25 @@ export class CutsceneScene extends Phaser.Scene {
   }
 
   private clearBg() {
-    this.bgGroup.forEach((o) => o.destroy()); this.bgGroup = []; this.layers = [];
+    this.bgGroup.forEach((o) => o.destroy()); this.bgGroup = []; this.layers = []; this.decor = []; this.worldActors.clear(); this.panX = 0;
     this.dvp?.g.destroy(); this.dvp?.cars.forEach((c) => c.s.destroy()); this.dvp = undefined;
     this.actors.forEach((a) => a.destroy()); this.actors.clear();
   }
 
-  private layer(key: string, y: number, h: number, f: number, depth = 0) {
-    const ts = this.add.tileSprite(0, y, GAME_W, h, key).setOrigin(0).setDepth(depth);
-    this.layers.push({ ts, f }); this.bgGroup.push(ts);
+  private layer(key: string, y: number, h: number, f: number, base = 0) {
+    const ts = this.add.tileSprite(0, y, GAME_W, h, key).setOrigin(0).setDepth(0).setTilePosition(base, 0);
+    this.layers.push({ ts, f, base }); this.bgGroup.push(ts);
     return ts;
+  }
+
+  /** a repeating row of street furniture that scrolls with the street layer */
+  private addDecor(keys: string[], y: number, spacing: number, depth: number, scale = 1) {
+    const n = Math.ceil((GAME_W + 160) / spacing);
+    this.decorSpan = n * spacing;
+    for (let i = 0; i < n; i++) {
+      const img = this.add.image(0, y, 'world', keys[i % keys.length]).setOrigin(0.5, 1).setDepth(depth).setScale(scale);
+      this.bgGroup.push(img); this.decor.push({ img, wx: 20 + i * spacing });
+    }
   }
 
   private async step(s: Step) {
@@ -98,9 +114,9 @@ export class CutsceneScene extends Phaser.Scene {
       case 'bg': {
         this.clearBg();
         this.layer(`sky_${s.sky}`, 0, GAME_H, 0);
-        this.layer(`skyline_${s.sky}`, 46, 170, 0.15).setTilePosition(-40, 0);
+        this.layer(`skyline_${s.sky}`, 46, 170, 0.15, -40);
         this.layer(`backrow_${s.sky}`, 136, 80, 0.5);
-        this.pan = 0.012; // slow drift so no layer looks frozen
+        this.pan = 0.12; // slow drift so no layer looks frozen (px/ms at f = 1)
         await iris(this, 'open', GAME_W / 2, GAME_H / 2, 700);
         break;
       }
@@ -110,13 +126,18 @@ export class CutsceneScene extends Phaser.Scene {
         this.clearBg();
         this.layer(`sky_${s.sky}`, 0, GAME_H, 0);
         this.layer(`skyline_${s.sky}`, 30, 170, 0.08);
-        this.layer(`backrow_${s.sky}`, 96, 80, 0.3);
-        this.layer('facades_qw', 72, 96, 1.0).setTilePosition(300, 0);
+        // facades (or the park), sidewalk, street furniture and standing actors all scroll as ONE layer
+        // (Ivan, M1.1): a tracking shot, so riding actors hold their place on screen and visibly move
+        const bg = s.bg ?? 'queen';
+        if (bg === 'king') this.layer('facades_dt', 28, 140, 1.0, 200);
+        else if (bg === 'parkside') this.layer('park_hp', 48, 120, 1.0, 100);
+        else { this.layer(`backrow_${s.sky}`, 96, 80, 0.3); this.layer('facades_qw', 72, 96, 1.0, 300); }
         this.layer(`street_${s.street}`, 168, 64, 1.0);
-        if (s.street === 'protected') for (let x = 20; x < GAME_W; x += 70) this.bgGroup.push(this.add.image(x, 201, 'world', 'planter').setOrigin(0.5, 1).setDepth(70).setScale(1.5));
+        if (s.street === 'protected') this.addDecor(['planter'], 201, 70, 70, 1.5);
+        if (s.parked) this.addDecor(['carside_red', 'suvside', 'carside_blue', 'carside_blue_r'], GROUND_PARKED, 150, 40);
+        if (s.patios) this.addDecor(['patio_r', 'patio_f'], 186, 90, 45, 1.6);
         this.boxTop = true;
-        // vignettes hold the camera still: actors, parked cars and planters stay planted on the street
-        this.pan = s.pan ?? 0;
+        this.pan = (s.pan ?? 0) / 1000;
         this.children.list.filter((o) => o instanceof Phaser.GameObjects.Graphics && (o as Phaser.GameObjects.Graphics).depth === 100000).forEach((o) => o.destroy());
         break;
       }
@@ -147,6 +168,11 @@ export class CutsceneScene extends Phaser.Scene {
       case 'wait':
         await this.wait(s.ms);
         break;
+      case 'pan': { // ease the tracking speed (px/s)
+        const to = s.to / 1000;
+        if (!s.ms) this.pan = to; else this.tweens.add({ targets: this, pan: to, duration: s.ms, ease: 'Sine.easeInOut' });
+        break;
+      }
       case 'portrait': {
         if (s.action === 'rise') {
           // giant villain close-up rising from the bottom of the frame
@@ -222,11 +248,13 @@ export class CutsceneScene extends Phaser.Scene {
         const atlas = s.atlas ?? 'chars';
         const a = s.anim ? this.add.sprite(ox + s.x, s.y, atlas, s.frame).play(s.anim) : this.add.image(ox + s.x, s.y, atlas, s.frame);
         const pv = (this.registry.get('manifest') as Manifest).pivots;
-        const pk = s.frame.startsWith('rs_') ? 'rs' : s.frame.startsWith('rat_') ? 'rat' : s.frame;
+        const pk = s.frame.startsWith('rs_') ? 'rs' : s.frame.startsWith('rat_bureaucrat') ? 'rat_bureaucrat' : s.frame.startsWith('rat_') ? 'rat' : s.frame.startsWith('ped_') ? 'ped' : s.frame;
         const p = pv[pk] ?? { x: 0.5, y: 1 };
-        a.setOrigin(p.x, p.y).setDepth(s.depth ?? 60).setFlipX(!!s.flip);
+        a.setOrigin(p.x, p.y).setDepth(s.depth ?? 60).setFlipX(!!s.flip).setScale(s.scale ?? 1);
         this.actors.get(s.id)?.destroy();
         this.actors.set(s.id, a);
+        this.worldActors.delete(s.id);
+        if (s.world) this.worldActors.set(s.id, { wx: s.x + this.panX });
         if (s.sign) { // a picket sign carried above the actor
           const g = this.add.container(a.x, a.y - 44).setDepth((s.depth ?? 60) + 1);
           const lines = s.sign.split('\n');
@@ -245,8 +273,18 @@ export class CutsceneScene extends Phaser.Scene {
         const a = this.actors.get(s.id);
         if (!a) break;
         if (s.x !== undefined && a.x !== ox + s.x && a instanceof Phaser.GameObjects.Sprite && a.anims.currentAnim?.key.startsWith('rs_')) a.setFlipX(ox + s.x < a.x);
-        const p = new Promise<void>((r) => this.tweens.add({ targets: a, x: ox + s.x, duration: s.ms, ease: s.ease ?? 'Linear', onComplete: () => { if (s.anim && a instanceof Phaser.GameObjects.Sprite) a.play(s.anim); r(); } }));
+        const w = this.worldActors.get(s.id);
+        const done = (r: () => void) => () => { if (s.anim && a instanceof Phaser.GameObjects.Sprite) a.play(s.anim); r(); };
+        const p = new Promise<void>((r) => w
+          ? this.tweens.add({ targets: w, wx: s.x + this.panX, duration: s.ms, ease: s.ease ?? 'Linear', onComplete: done(r) })
+          : this.tweens.add({ targets: a, x: ox + s.x, duration: s.ms, ease: s.ease ?? 'Linear', onComplete: done(r) }));
         if (s.wait) await p;
+        break;
+      }
+      case 'frame': {
+        const a = this.actors.get(s.id);
+        if (a instanceof Phaser.GameObjects.Sprite && s.anim) a.play(s.anim);
+        else a?.setFrame(s.frame);
         break;
       }
       case 'wobble': {
@@ -348,7 +386,10 @@ export class CutsceneScene extends Phaser.Scene {
   update(_t: number, dt: number) {
     this.input2.update();
     this.panX += dt * this.pan;
-    for (const l of this.layers) l.ts.tilePositionX = this.panX * l.f * 10 + (l.f === 0 ? 0 : 0);
+    for (const l of this.layers) l.ts.tilePositionX = l.base + this.panX * l.f;
+    const span = this.decorSpan;
+    for (const d of this.decor) d.img.x = Math.round(((((d.wx - this.panX) % span) + span) % span) - 80);
+    for (const [id, w] of this.worldActors) { const a = this.actors.get(id); if (a) a.x = Math.round(this.ox + w.wx - this.panX); }
     this.updateDvp(dt);
     for (const f of this.followers) if (f.a.active && f.g.active) f.g.setPosition(f.a.x, f.a.y - 40 + Math.sin(this.time.now / 150));
     if (this.input2.justPressed('back') || this.input2.justPressed('pause')) { this.skipping = true; this.advance?.(); this.time.removeAllEvents(); void this.finish(); return; }

@@ -43,5 +43,11 @@ export const sfx = {
     });
   },
   rumble() { synth.tone({ freq: 55, slideTo: 40, dur: 0.8, vol: 0.2, type: 'tri' }); synth.noise({ dur: 0.8, vol: 0.1, lp: 300 }); },
+  stamp() { synth.noise({ dur: 0.08, vol: 0.16, lp: 700 }); synth.tone({ freq: 90, slideTo: 50, dur: 0.12, vol: 0.14, type: 'tri' }); },
+  splash() { synth.noise({ dur: 0.5, vol: 0.14, hp: 600, lp: 5000 }); synth.tone({ freq: 700, slideTo: 200, dur: 0.3, vol: 0.05, type: 'sine' }); },
+  /** transit signal priority granted: a detector click + the white-bar chirp */
+  signal() { synth.noise({ dur: 0.02, vol: 0.08, hp: 4000 }); synth.tone({ freq: 1760, start: synth.now + 0.04, dur: 0.06, vol: 0.06, type: 0.25 }); synth.tone({ freq: 2349, start: synth.now + 0.11, dur: 0.1, vol: 0.06, type: 0.25 }); },
+  brake() { synth.tone({ freq: 2200, slideTo: 1700, dur: 0.35, vol: 0.035, type: 0.125, vib: 0.08 }); },
+  hammer() { synth.tone({ freq: 520, dur: 0.05, vol: 0.09, type: 0.125 }); synth.noise({ dur: 0.05, vol: 0.12, lp: 2500 }); },
   ding() { synth.tone({ freq: 1568, dur: 0.15, vol: 0.08, type: 0.25 }); synth.tone({ freq: 2093, start: synth.now + 0.08, dur: 0.25, vol: 0.08, type: 0.25 }); },
 };

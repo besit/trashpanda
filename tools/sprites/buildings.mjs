@@ -9,7 +9,7 @@ export const BRICKS = {
   red: { base: 'B', dark: 'b', light: 'n' },
   buff: { base: 'j', dark: 'X', light: 'D' },
   darkred: { base: 'b', dark: 'w', light: 'B' },
-  teal: { base: 'F', dark: 'f', light: 'C' },
+  teal: { base: 'F', dark: 'f', light: 'H' },
   lilac: { base: 'Z', dark: 'V', light: 'M' },
   grey: { base: 'h', dark: 'G', light: 'H' },
   cream: { base: 'T', dark: 't', light: 'W' },
@@ -22,7 +22,7 @@ const AWNINGS = [['R', 'W'], ['E', 'W'], ['U', 'W'], ['k', 'y'], ['V', 'Z'], ['f
 const SIGNS = [['k', 'Y'], ['u', 'W'], ['r', 'Y'], ['W', 'k'], ['E', 'Y'], ['v', 'Z'], ['g', 'O']];
 
 const PAINTED = new Set(['teal', 'lilac', 'grey', 'cream', 'mustard']);
-function brickWall(img, x, y, w, h, b, r, painted = false) {
+export function brickWall(img, x, y, w, h, b, r, painted = false) {
   img.rect(x, y, w, h, b.base);
   if (b.tile) { // 4px glazed tiles with a little cross motif
     for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
@@ -42,7 +42,7 @@ function brickWall(img, x, y, w, h, b, r, painted = false) {
   for (let i = 0; i < (w * h) / (painted ? 160 : 70); i++) img.set(x + r.int(0, w - 1), y + r.int(0, h - 1), b.light);
 }
 
-function sashWindow(img, x, y, w, h, { arch = false, lit = false, curtain = null, trim = 'T' } = {}) {
+export function sashWindow(img, x, y, w, h, { arch = false, lit = false, curtain = null, trim = 'T' } = {}) {
   img.rect(x - 1, y - 2, w + 2, 1, trim); // lintel
   img.rect(x - 1, y + h, w + 2, 1, trim); // sill
   img.rect(x - 1, y + h + 1, w + 2, 1, 'k');
@@ -60,7 +60,7 @@ function sashWindow(img, x, y, w, h, { arch = false, lit = false, curtain = null
   }
 }
 
-function storefront(img, x, y, w, h, r) {
+export function storefront(img, x, y, w, h, r) {
   // y = top of ground floor, h ~ 22
   const signH = 5, bulk = 3;
   const sign = r.pick(SIGNS);
@@ -165,7 +165,7 @@ function mural(img, x, y, w, h, r) {
   for (let i = 0; i < 3; i++) { const sx = x + r.int(1, w - 2), sy = y + r.int(1, h - 2); img.set(sx, sy, 'W'); }
 }
 
-function roof(w, d, r, kind) {
+export function roof(w, d, r, kind) {
   const img = new Img(w, d);
   img.rect(0, 0, w, d, 'g');
   for (let i = 0; i < (w * d) / 14; i++) img.set(r.int(0, w - 1), r.int(0, d - 1), r.pick(['s', 's', 'k']));

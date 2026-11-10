@@ -69,3 +69,41 @@ describe('save system', () => {
     expect(SaveSystem.load()).toBeNull();
   });
 });
+
+describe('M2: districts, missions, saves', async () => {
+  const fsMod = 'node:fs';
+  const fs = await import(/* @vite-ignore */ fsMod);
+  const { MISSIONS, missionAvailable } = await import('../../src/data/missions');
+  const { UPGRADES } = await import('../../src/data/upgrades');
+  const { DISTRICTS } = await import('../../src/data/districts');
+  const load = (id: string) => JSON.parse(fs.readFileSync(`public/gen/${id}.json`, 'utf8'));
+
+  it('v1 saves migrate into Queen West', () => {
+    const m = migrate({ version: 1, player: { scene: 'explore', x: 100, y: 200 } });
+    expect(m?.player.district).toBe('queenwest');
+    expect(m?.player.x).toBe(100);
+  });
+  it('every mission references real upgrades, a real district and a marker on its map', () => {
+    for (const m of Object.values(MISSIONS)) {
+      for (const u of m.upgrades) expect(UPGRADES[u], u).toBeTruthy();
+      expect(DISTRICTS[m.district], m.district).toBeTruthy();
+      const map = load(m.district);
+      expect(map.markers.some((k: { id: string }) => k.id === m.id), m.id).toBe(true);
+      for (const u of m.upgrades) for (const p of UPGRADES[u].mapPatches) expect(map.improvements[p], p).toBeTruthy();
+    }
+  });
+  it('missions 2-4 unlock after the Bike Lane War', () => {
+    expect(missionAvailable('streetcar_through', [])).toBe(false);
+    for (const id of ['streetcar_through', 'king_of_street', 'slow_down_dog']) expect(missionAvailable(id, ['bike_lane_war'])).toBe(true);
+  });
+  it('streets continue across district edges at the same rows', () => {
+    for (const id of Object.keys(DISTRICTS)) {
+      const map = load(id);
+      for (const e of map.exits) {
+        const other = load(e.to);
+        const back = other.exits.find((o: { side: string; to: string; y0: number }) => o.to === id && o.side !== e.side && o.y0 === e.y0);
+        expect(back, `${id} ${e.side} -> ${e.to} @${e.y0}`).toBeTruthy();
+      }
+    }
+  });
+});

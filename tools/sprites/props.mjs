@@ -162,7 +162,7 @@ export function suvModel() {
   ];
 }
 // TTC-style articulated low-floor streetcar (3 sections), red lower body, black window band, white roof.
-export function streetcar(yaw = 0, length = 96, side = false) {
+export function streetcar(yaw = 0, length = 96, side = false, vertical = false) {
   const half = length / 2, segs = 3, segL = length / segs;
   const objs = [];
   for (let s = 0; s < segs; s++) {
@@ -182,6 +182,7 @@ export function streetcar(yaw = 0, length = 96, side = false) {
   objs.push({ d: sd.capsule([2, -3, 22], [2, 3, 22], 0.4), m: mat(R.dark) });
   const w = length + 16;
   if (side) { const k = 2.0, sw = Math.ceil(w * k), sh = 96; const img = render(scene(objs), { w: sw, h: sh, cx: sw / 2, cy: sh - 6, cam: orthoCam([0, -1, -0.22]), ambient: 0.16, scale: k }); img.pivot = { x: 0.5, y: (sh - 6) / sh }; return img; }
+  if (vertical) return draw(objs, 52, length + 48, 26, length / 2 + 30, yaw);
   return draw(objs, w, 48, w / 2, 36, yaw);
 }
 

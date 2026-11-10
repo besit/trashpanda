@@ -21,6 +21,8 @@ const M = {
   red: { ramp: ['r', 'R', 'q'] },
   steel: { ramp: ['g', 'G', 'h', 'H'] },
   wood: { ramp: ['w', 'x', 'X'] },
+  suit: { ramp: ['K', 'g', 'G', 'h'] },
+  hair: { ramp: ['g', 'h', 'H'] },
 };
 
 /**
@@ -79,6 +81,17 @@ function ratModel(variant, pose) {
     objs.push({ d: (p) => Math.max(sd.ellipsoid(P(0, 9), [3.9, 3.5, 3.4])(p), -sd.ellipsoid(P(2.4, 9), [1.6, 1.8, 2.8])(p)), m: M.vest });
     objs.push({ d: sd.box(P(0, 8.6), [3.95, 3.55, 0.45]), m: M.stripe });
     if (attack !== 1 && attack !== 2) objs.push({ d: sd.cone([armA[0] + 1.2, 2.9, armA[2] - 2.8], 1.8, 4.5), m: M.cone });
+  } else if (variant === 'bureaucrat') {
+    // Dog Fraud's permit office: grey suit, red tie, round glasses, a comb-over, rubber stamp in hand
+    objs.push({ d: (p) => Math.max(smin(sd.ellipsoid(P(0, 8.6), [3.9, 3.6, 4.0])(p), sd.ellipsoid(P(0.6, 12.5), [2.9, 2.8, 2.6])(p), 1.6), -sd.ellipsoid(P(2.9, 11.5), [1.2, 1.5, 2.6])(p)), m: M.suit });
+    objs.push({ d: sd.box(P(2.5, 10.4), [0.5, 0.5, 2.2]), m: M.red });
+    objs.push({ d: sd.ellipsoid(P(2.2, 12.6), [0.8, 1.0, 0.5]), m: M.white });
+    objs.push({ d: sd.torusY([hc[0] + 1.9, 2.9, hc[2] + 0.7], 1.35, 0.32), m: { flat: 'W' } });
+    objs.push({ d: sd.capsule([hc[0] + 0.5, 2.9, hc[2] + 0.9], [hc[0] - 1.6, 2.6, hc[2] + 1.2], 0.25), m: { flat: 'W' } });
+    objs.push({ d: sd.capsule([hc[0] - 1.5, 0, hc[2] + 3.0], [hc[0] + 1.5, 0, hc[2] + 3.3], 0.6), m: M.hair });
+    objs.push({ d: sd.capsule(P(1.2, 12), [armA[0], 2.9, armA[2]], 0.85, 0.75), m: M.suit });
+    objs.push({ d: sd.box([armA[0] + 0.6, 2.9, armA[2] + 1.6], [1.0, 1.0, 1.4]), m: M.wood });
+    objs.push({ d: sd.box([armA[0] + 0.6, 2.9, armA[2] - 0.2], [1.6, 1.4, 0.5]), m: M.red });
   } else if (variant === 'traffic') {
     // flagger: white cap, purple vest, STOP paddle
     objs.push({ d: (p) => Math.max(sd.sphere([hc[0] - 0.2, 0, hc[2] + 0.9], 2.9)(p), -(p[2] - (hc[2] + 1.4))), m: M.white });
@@ -93,11 +106,23 @@ function ratModel(variant, pose) {
   return objs;
 }
 
-export function ratFrame(variant, pose = {}) {
+export function ratFrame(variant, pose = {}, S = 1.18, w = FW, h = FH) {
   const raw = scene(ratModel(variant, pose));
-  const S = 1.18;
   const sc = (p) => { const r = raw([p[0] / S, p[1] / S, p[2] / S]); return [r[0] * S, r[1]]; };
-  return render(sc, { w: FW, h: FH, cx: OX, cy: OY, cam: sideCam(), ambient: 0.15 });
+  return render(sc, { w, h, cx: Math.round((OX * w) / FW), cy: h - 1, cam: sideCam(), ambient: 0.15 });
+}
+
+/** The Bureaucrat Rat (mission 3 boss): the same rat, bigger (48x48 frames). */
+export const BOSS_FW = 48, BOSS_FH = 48;
+export function bureaucratAnims() {
+  const frames = [], anims = {};
+  const f = (pose) => ratFrame('bureaucrat', pose, 1.75, BOSS_FW, BOSS_FH);
+  const add = (name, list, rate, loop = true) => { anims[name] = { start: frames.length, count: list.length, rate, loop }; frames.push(...list); };
+  add('walk', [0, 0.25, 0.5, 0.75].map((w) => f({ walk: w })), 7);
+  add('windup', [f({ attack: 1 })], 1, false);
+  add('attack', [f({ attack: 2 })], 1, false);
+  add('hurt', [f({ hurt: true })], 1, false);
+  return { frames, anims };
 }
 
 export const RAT_VARIANTS = ['basic', 'construction', 'traffic'];
@@ -113,3 +138,5 @@ export function ratAnims(variant) {
 export function allRatsPreview() {
   return { frames: RAT_VARIANTS.flatMap((v) => ratAnims(v).frames), cols: 7 };
 }
+
+export function bureaucratPreview() { return { frames: bureaucratAnims().frames, cols: 7 }; }
