@@ -13,6 +13,9 @@ export const BRICKS = {
   grey: { base: 'h', dark: 'G', light: 'H' },
   cream: { base: 'T', dark: 't', light: 'W' },
   mustard: { base: 'y', dark: 'o', light: 'Y' },
+  // Little Portugal (Dundas West): blue-and-white azulejo tile facades
+  azulejo: { base: 'W', dark: 'U', light: 'c', tile: true },
+  azulejo_g: { base: 'W', dark: 'E', light: 'F', tile: true },
 };
 const AWNINGS = [['R', 'W'], ['E', 'W'], ['U', 'W'], ['k', 'y'], ['V', 'Z'], ['f', 'F'], ['r', 'O']];
 const SIGNS = [['k', 'Y'], ['u', 'W'], ['r', 'Y'], ['W', 'k'], ['E', 'Y'], ['v', 'Z'], ['g', 'O']];
@@ -20,6 +23,14 @@ const SIGNS = [['k', 'Y'], ['u', 'W'], ['r', 'Y'], ['W', 'k'], ['E', 'Y'], ['v',
 const PAINTED = new Set(['teal', 'lilac', 'grey', 'cream', 'mustard']);
 function brickWall(img, x, y, w, h, b, r, painted = false) {
   img.rect(x, y, w, h, b.base);
+  if (b.tile) { // 4px glazed tiles with a little cross motif
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+      const tx = i % 4, ty = j % 4;
+      if (tx === 0 || ty === 0) img.set(x + i, y + j, 'H');
+      else if ((tx === 2 && ty !== 0) || (ty === 2 && tx !== 0)) img.set(x + i, y + j, (tx === 2 && ty === 2) ? b.light : b.dark);
+    }
+    return;
+  }
   for (let j = 0; j < h; j++) {
     const Y = y + j;
     if (painted) { if (j % 3 === 2) for (let i = 0; i < w; i++) if ((i + j) % 4 === 0) img.set(x + i, Y, b.dark); continue; }
@@ -40,7 +51,12 @@ function sashWindow(img, x, y, w, h, { arch = false, lit = false, curtain = null
   if (!lit) { for (let i = 0; i < gh; i++) img.set(gx + Math.min(gw - 1, Math.floor(i / 2)), gy + i, 'U'); img.set(gx + gw - 1, gy, 'c'); }
   if (curtain) { img.rect(gx, gy, 1, gh, curtain); img.rect(gx + gw - 1, gy, 1, gh, curtain); }
   img.hline(x, x + w - 1, y + Math.floor(h / 2), 'W'); // meeting rail
-  if (arch) { img.set(x, y, null); img.set(x + w - 1, y, null); img.hline(x, x + w - 1, y - 1, trim); img.set(x - 1, y - 2, null); img.set(x + w, y - 2, null); }
+  if (arch) {
+    // round the corners by painting them back to the surrounding wall (never leave alpha holes)
+    const wallL = img.get(x - 2, y + 1) ?? 'G', wallR = img.get(x + w + 1, y + 1) ?? wallL;
+    img.set(x, y, wallL); img.set(x + w - 1, y, wallR); img.hline(x, x + w - 1, y - 1, trim);
+    img.set(x - 1, y - 2, img.get(x - 2, y - 2) ?? wallL); img.set(x + w, y - 2, img.get(x + w + 1, y - 2) ?? wallR);
+  }
 }
 
 function storefront(img, x, y, w, h, r) {
@@ -85,7 +101,7 @@ function storefront(img, x, y, w, h, r) {
 /**
  * Front elevation. opts: { w, floors (upper), brick, seed, kind: 'shop'|'house'|'rear' }
  */
-export function facade({ w = 48, floors = 2, brick = 'red', seed = 1, kind = 'shop' } = {}) {
+export function facade({ w = 48, floors = 2, brick = 'red', seed = 1, kind = 'shop', murals = false } = {}) {
   const r = rng(seed);
   const b = BRICKS[brick];
   const groundH = kind === 'shop' ? 22 : 16, floorH = 15, cornice = kind === 'rear' ? 1 : 4;
@@ -120,9 +136,32 @@ export function facade({ w = 48, floors = 2, brick = 'red', seed = 1, kind = 'sh
     img.rect(dx, gy + 4, 7, groundH - 4, 'G'); img.rect(dx + 1, gy + 5, 5, groundH - 5, 'g'); img.set(dx + 5, gy + 10, 'y');
     img.rect(w - 10, gy + 6, 7, 5, 'H'); img.rect(w - 9, gy + 7, 5, 3, 'G'); img.hline(w - 9, w - 5, gy + 8, 'h');
     if (floors > 0) { const fx = r.int(2, w - 18); for (let f = 0; f < floors; f++) { const yy = cornice + f * floorH + 12; img.hline(fx, fx + 14, yy, 'K'); img.hline(fx, fx + 14, yy + 1, 'g'); for (let i = 0; i < 15; i += 3) img.set(fx + i, yy - 1, 'K'); img.line(fx + 2, yy + 1, fx + 12, yy + floorH - 1, 'K'); } }
-    if (r.chance(0.6)) { const tx = r.int(2, w - 16), tc = r.pick(['V', 'F', 'O', 'q', 'L']); for (let i = 0; i < 12; i++) img.set(tx + i, gy + 6 + Math.round(Math.sin(i * 1.3) * 2), tc); img.set(tx + 3, gy + 4, tc); img.set(tx + 8, gy + 9, tc); }
+    if (murals) mural(img, 0, gy + 1, w, groundH - 1, r);
+    else if (r.chance(0.6)) { const tx = r.int(2, w - 16), tc = r.pick(['V', 'F', 'O', 'q', 'L']); for (let i = 0; i < 12; i++) img.set(tx + i, gy + 6 + Math.round(Math.sin(i * 1.3) * 2), tc); img.set(tx + 3, gy + 4, tc); img.set(tx + 8, gy + 9, tc); }
   }
   return img;
+}
+
+/** Graffiti-alley murals: a painted ground-floor band with bubble letters, throw-ups and drips. */
+function mural(img, x, y, w, h, r) {
+  const bg = r.pick(['v', 'f', 'u', 'k', 'p', 'E']);
+  img.rect(x, y, w, h, bg);
+  for (let i = 0; i < w; i += r.int(3, 6)) img.vline(x + i, y + h - r.int(1, 4), y + h - 1, r.pick(['V', 'F', 'C', 'P']));
+  const cols = ['y', 'O', 'q', 'L', 'C', 'Z', 'm', 'F', 'W'];
+  // big bubble letters
+  let cx = x + 3;
+  while (cx < x + w - 8) {
+    const lw = r.int(5, 8), c = r.pick(cols), top = y + r.int(1, 3), bh = h - r.int(4, 6);
+    img.rect(cx - 1, top - 1, lw + 2, bh + 2, 'K');
+    img.rect(cx, top, lw, bh, c);
+    img.hline(cx + 1, cx + lw - 2, top + 1, 'W');
+    if (r.chance(0.5)) img.rect(cx + 2, top + 2 + r.int(0, 3), lw - 4, 2, bg); // counter (letter hole)
+    if (r.chance(0.6)) img.vline(cx + r.int(1, lw - 2), top + bh, top + bh + r.int(1, 3), c); // drip
+    cx += lw + r.int(1, 3);
+  }
+  // a little character tag (eyes) and stars
+  if (r.chance(0.5)) { const ex = x + r.int(4, w - 8), ey = y + 3; img.circle(ex, ey + 4, 3, 'W'); img.set(ex - 1, ey + 3, 'K'); img.set(ex + 1, ey + 3, 'K'); img.hline(ex - 1, ex + 1, ey + 5, 'K'); }
+  for (let i = 0; i < 3; i++) { const sx = x + r.int(1, w - 2), sy = y + r.int(1, h - 2); img.set(sx, sy, 'W'); }
 }
 
 function roof(w, d, r, kind) {
@@ -143,9 +182,9 @@ function roof(w, d, r, kind) {
 }
 
 /** 3/4 building image: roof (depth d) on top, facade below. Origin = bottom-left (south-west corner on ground). */
-export function obliqueBuilding({ w = 48, d = 32, floors = 2, brick = 'red', seed = 1, kind = 'shop' } = {}) {
+export function obliqueBuilding({ w = 48, d = 32, floors = 2, brick = 'red', seed = 1, kind = 'shop', murals = false } = {}) {
   const r = rng(seed * 7 + 3);
-  const fac = facade({ w, floors, brick, seed, kind });
+  const fac = facade({ w, floors, brick, seed, kind, murals });
   const rf = roof(w, d, r, kind);
   const img = new Img(w, d + fac.h);
   img.blit(rf, 0, 0);
@@ -157,11 +196,11 @@ export function obliqueBuilding({ w = 48, d = 32, floors = 2, brick = 'red', see
 
 export function buildingsPreview() {
   const list = [];
-  const kinds = ['shop', 'shop', 'shop', 'house', 'rear', 'shop', 'rear', 'shop'];
-  const bricks = ['red', 'buff', 'teal', 'darkred', 'red', 'lilac', 'buff', 'grey'];
-  for (let i = 0; i < 8; i++) {
-    const b = obliqueBuilding({ w: 48, d: 28, floors: i % 3 === 0 ? 1 : 2, brick: bricks[i], seed: 100 + i, kind: kinds[i] });
+  const kinds = ['shop', 'shop', 'shop', 'house', 'rear', 'shop', 'rear', 'shop', 'house', 'rear'];
+  const bricks = ['red', 'buff', 'teal', 'darkred', 'red', 'azulejo', 'buff', 'grey', 'azulejo_g', 'lilac'];
+  for (let i = 0; i < kinds.length; i++) {
+    const b = obliqueBuilding({ w: 48, d: 28, floors: i % 3 === 0 ? 1 : 2, brick: bricks[i], seed: 100 + i, kind: kinds[i], murals: kinds[i] === 'rear' });
     const frame = new Img(52, 112); frame.blit(b.img, 2, 112 - b.img.h - 2); list.push(frame);
   }
-  return { frames: list, cols: 8 };
+  return { frames: list, cols: 10 };
 }

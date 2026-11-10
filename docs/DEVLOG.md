@@ -100,3 +100,111 @@ Two entries are written in `URBAN_RESEARCH.md`, and the mission's framing change
 ### Numbers
 - 60 fps even at 6× CPU throttle; about 16 MB JS heap; about 575 KB total gzipped download.
 - 10 unit tests and 3 end-to-end tests, all passing. Deployed to https://besit.github.io/trashpanda/.
+
+---
+
+## 2026-11-09: Day 1 (evening), M1 pass from Ivan's M0 review
+
+Ivan reviewed M0 on a phone and a desktop. The verdict: "I like the art!" He sent 8 issues, answered the 4 open questions, and left a pile of smaller notes. This pass works through all of it, plus the planned M1 items.
+
+### The freeze (the review's worst bug)
+*"The side-view scene hanged after the second wave, probably when the thing the rat throws hits the ground."* He was exactly right. `physics.add.collider(cones, ground, cb)` looks as if it calls `cb(cone, ground)`. But when a **group** collides with a single object, Phaser 3 internally swaps the arguments and calls `cb(ground, cone)` (World.js `collideHandler` → `collideSpriteVsGroup(object2, object1)`). My callback then called `setVelocity` on the ground's *static* body, which threw. An exception inside Phaser's game loop stops the loop, so the game froze.
+
+The e2e test never let a cone land, which is why it slipped through. The fix resolves the cone explicitly. There's also a new regression test, and that test needed its own fix: my first version **passed even with the bug put back**, because the cones hit the (invulnerable-by-HP) player and were destroyed before touching the ground. Making the player truly invulnerable lets the cones fall through. Now the test fails on the old code and passes on the new.
+
+### Smaller bugs from the review
+- **"Weird non-moving buildings in the middle-ground"** on the title and cutscene: the back row of houses was the one parallax layer that never scrolled. All layers now drift.
+- **"Transparent pixels in top-layer buildings":** arched sash windows rounded their corners by setting pixels to *transparent* instead of wall colour. A scan of 600 generated buildings now finds 0 holes.
+- **Cars on the vertical street offset to the left:** the lane centre was computed from the curb column (`XS + 1.5`) instead of the road centre (`XS + 2`), so it was off by 8px. Vertical car sprites were also clipped by a too-short frame.
+- **North-side flowerbeds in the wrong place:** the planters were on the sidewalk side of the north lane. They now sit on the separator, the traffic side, for both lanes.
+
+### Decisions applied
+| Ivan said | Done |
+|---|---|
+| K isn't natural; use E or R. What are the other controls? | Left hand on WASD: **E** act/attack (also R), **Q** dash, **Space** hop/jump, **Shift** boost, **M** map, **Esc** pause, plus an arrow-key layout (Z/X/C/V). Controls show in the first-run toast, on mission title cards, and on new Controls pages (pause and title). |
+| Small street things shouldn't be obstacles; trees are fine | Only trees, buildings, the gate piers and parked cars are solid now. |
+| "Another CAR lane" | The catchphrase, intro title and rat signs now say ANOTHER CAR LANE. |
+| The park should be Trinity Bellwoods, north of Queen, with the white gates | The whole district was rebuilt (below). |
+| Queen has no bike lanes; the mission should add them | Queen now starts with curb parking lanes. The mission turns them into protected lanes, and the parked cars drive away as the sweep passes. |
+| Dog Fraud: no moustache, white hair, a bit more dog | Dog Fraud v06 (below). |
+| Stretch to fill wide screens | The view width now adapts from 384 to 480px. An 844×390 phone gets 468px of city and no black bars. |
+| A bike pump reads better than the lid | Raccoon side v03 (below). |
+| Speed cameras: main mission | *Slow Down, Dog* is now main mission 4, in the High Park school zone. |
+| The bell ring comes from his butt | A new ring effect comes from the handlebars, in the direction he faces. |
+| Rotate-your-phone should overlay the darkened game | It's now a translucent, blurred overlay, and gameplay auto-pauses. |
+| A small map? | **M** opens a district map built from the live tilemap, so improvements show up on it. It shows streets, landmarks, missions and your position. |
+| Intro roads gag: DVP-style highway into the lake at sunset, then another lane, still jammed | New intro shot (below). |
+| Add Dundas, since the removal happens there? | Researched: the 2026 removals target Bloor, Yonge, University, Queen's Park and Avenue Road, not Dundas. Dundas is on the map anyway (it really is the park's north edge), and the removal story will move to Bloor in the High Park district. |
+
+### The new Queen West
+Real geography first: Trinity Bellwoods sits *between* Queen and Dundas, with its gates on Queen facing Strachan Ave. The map is now 104×76 tiles:
+- **Dundas St W** with the 505 and Little Portugal shops, including a new **azulejo** tiled-facade material.
+- **The park:**
+  - the **gates**, with a plaque you can read with E
+  - the **dog bowl** (the hollow left by buried Garrison Creek)
+  - tennis courts and a baseball diamond
+  - smooth paved paths (one Catmull-Rom decal instead of blocky tiles)
+  - park lamps and Toronto's raccoon-resistant **green bins** (of course)
+  - the **white squirrel**, which flees when you ride up
+- **Queen St W** with the 501.
+- **Ossington** and **Bellwoods** at signalised intersections, and **Strachan** south from the gates.
+- A **graffiti lane** behind Queen, with procedural murals: bubble letters, drips and little faces.
+
+![gates](../art/history/park/v01/preview.png)
+![decals](../art/history/park_decals/v01/preview.png)
+
+Failed first passes:
+- The gates' iron grilles came out as **solid black slabs**: the auto-outline pass filled every 1px gap between bars. The iron is now drawn *after* outlining.
+- The dog bowl's shading had hard **pie-slice sectors**. It now uses a continuous slope term with Bayer dithering.
+
+### Ambient life
+- **Pedestrians:** 9 variants, including a kid, a dog walker and a senior in a coat. They walk sidewalks and park paths, stop for you, and sometimes answer the bell ("NICE BELL!").
+- **Traffic** was rewritten around data-driven lanes and intersections:
+  - streetcars stop at TTC stops
+  - one signal cycle for all intersections
+  - **cyclists**: before the upgrade, a few brave ones ride in the streetcar lane and cars queue behind them honking. After it, they get the protected lanes, and there are more of them. The map itself makes the argument.
+
+![people](../art/history/people/v01/preview.png)
+![cyclists](../art/history/cyclists/v01/preview.png)
+
+### Dog Fraud v06
+- Removed the moustache.
+- Added a big **swept white coif**.
+- More dog: a longer muzzle, a bigger nose with nostrils, whisker spots, flews, and folded dog ears (the horns now read as ears).
+- Added an eye patch. The first one was dark pink and read as a **black eye**, so it became a tan fur patch.
+
+![dog fraud v06](../art/history/dogfraud/v06/preview.png)
+
+### Bike pump (raccoon side v03)
+- **First try:** a grey tube thrust straight forward. It read as a **gun**. Rejected immediately.
+- **Second try:** a red pump swung like a bat. It merged into the red bike, and the raised frame clipped out of the 48×36 frame.
+- **Final:** a **yellow** barrel with a black T-handle, a hose loop and a white swoosh on the big swing. Frames grew to 56×44 for headroom.
+
+![raccoon side v03](../art/history/raccoon_side/v03/preview.png)
+
+### Intro: "ANOTHER CAR LANE"
+The ROAD×8 gag is replaced by Ivan's idea. A baked backdrop shows a ravine of autumn woods, the river, the lake at sunset and the skyline with the CN Tower. The road is drawn live, so a lane can be added on screen.
+- Five lanes of back-view cars (pre-rendered at 8 depth scales), crawling.
+- Dog Fraud: "...ANOTHER CAR LANE!"
+- A sixth lane paves in from the horizon. Cars pour in for a moment of hope, then gridlock. Caption: "SIX LANES. STILL NOT MOVING." (induced demand: URBAN_RESEARCH §14).
+
+The first pass let the jam *drain* away from the camera over time, so the road emptied. Lanes now refill from behind the camera.
+
+![dvp intro](reviews/m1/06_intro_dvp_lane.png)
+
+### Before/after vignettes
+- **Before:** Queen at 8:14 am. A parent with a kid seat rides between parked cars and an approaching 501, wobbles, and gets honked at. Rats with an ANOTHER CAR LANE sign claim the curb lane. The raccoon: "WHAT QUEEN NEEDS IS A BIKE LANE. A REAL ONE, WITH A CURB."
+- **After:** the same street with green protected lanes and planters, the parent, a bike-share rider and the streetcar gliding by. Caption: "NOW A KID CAN RIDE IT."
+
+The first passes overlapped captions and let the streetcar hide the cyclist entirely. Side-view scenes now put the dialogue box at the top, so it doesn't cover the actors.
+
+### Also
+- Pause menu: resume, city map, controls, music and sound volume, screen shake, save + quit.
+- Rats no longer stack into one blob.
+- A chunkier hydrant (it read as a red gem).
+- Touch controls gained map and pause buttons.
+
+### Numbers
+- 60 fps at 1×/4×/6× CPU throttle, with a 21 MB heap (was 16 MB).
+- JS 349 KB gzipped; generated art 1.05 MB raw.
+- 10 unit tests and 6 end-to-end tests, all passing.

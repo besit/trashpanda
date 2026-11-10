@@ -1,8 +1,10 @@
 // Side-view raccoon on bicycle (facing right). Frames are composed from layers.
 import { Img } from '../lib/raster.mjs';
 
-export const FW = 48, FH = 36;
-const SHIFT = 4; // room for the tail
+export const FW = 56, FH = 44;
+const SHIFT = 8; // room for the tail (and, mirrored, for the pump swing)
+const TOP = 8;   // headroom for the raised pump
+export const PIVOT_Y = (34 + TOP) / FH;
 const GROUND = 34;
 
 // Head painted without outline (outline added for whole body later). Faces right.
@@ -130,14 +132,16 @@ function leg(img, hip, foot, near) {
 }
 
 /**
- * pose: { phase, pedal, sway, lean, lift, hurt, attack (0..3), lid, tuck }
+ * pose: { phase, pedal, sway, lean, lift, hurt, attack (0..3: bike-pump swing), tuck }
  */
 export function raccoonFrame(pose = {}) {
   const { phase = 0, pedal = 0, sway = 0, lean = 0, lift = 0, hurt = false, attack = 0, tuck = false, bob = 0 } = pose;
+  const swoosh = [];
   const back = new Img(FW, FH); // far leg (behind bike)
   const bikeL = new Img(FW, FH);
   const body = new Img(FW, FH); // tail + torso + head + near limbs, outlined together
   back.tx = bikeL.tx = body.tx = SHIFT;
+  back.ty = bikeL.ty = body.ty = TOP;
 
   const geo = bike(bikeL, phase, pedal, { lift });
   const hip = [16 + lean * 0.3, 15 + bob];
@@ -154,20 +158,33 @@ export function raccoonFrame(pose = {}) {
   // head
   const head = Img.fromGrid(hurt ? HEAD_HURT : HEAD);
   body.blit(head, sx - 4, sy - 9);
-  // near arm to grips (or swinging a trash-can lid)
+  // near arm to grips (or swinging the bike pump)
   if (attack === 0) {
     body.thick(sx, sy + 2, geo.HT[0] - 5, geo.HT[1] - 5, 'G', 2);
     body.rect(geo.HT[0] - 6, geo.HT[1] - 6, 2, 2, 'k');
   } else {
-    const swings = [null, [-0.8, -9], [7, -3], [5, 5]];
-    const [ax, ay] = swings[attack];
-    const hx = sx + ax, hy = sy + ay;
+    // bike pump swung like a bat (v03, per Ivan: reads better than the lid at this scale).
+    // Bright red barrel, black T-handle at the striking end, hose loop at the grip, white swoosh on the swing.
+    const poses = [null, { h: [-1, -1], d: [-0.75, -0.66] }, { h: [5, -2], d: [0.55, -0.83] }, { h: [6, 3], d: [0.92, 0.38] }];
+    const { h, d } = poses[attack];
+    const hx = sx + h[0], hy = sy + h[1];
     body.thick(sx, sy + 2, hx, hy, 'G', 2);
-    // trash can lid (ellipse seen edge-on depending on swing)
-    const rx = attack === 2 ? 2 : 5, ry = attack === 2 ? 6 : 2;
-    body.ellipse(Math.round(hx + (attack === 2 ? 3 : 1)), Math.round(hy), rx, ry, 'h');
-    body.ellipse(Math.round(hx + (attack === 2 ? 3 : 1)), Math.round(hy), Math.max(rx - 1, 1), Math.max(ry - 1, 1), 'H');
-    body.set(Math.round(hx + (attack === 2 ? 3 : 1)), Math.round(hy), 'G');
+    const dl = Math.hypot(d[0], d[1]), dx = d[0] / dl, dy = d[1] / dl, px = -dy, py = dx;
+    const L = 11;
+    for (let i = 0; i <= L; i++) {
+      const x = hx + dx * i, y = hy + dy * i;
+      body.set(Math.round(x + px), Math.round(y + py), 'o');
+      body.set(Math.round(x), Math.round(y), i === 0 ? 'k' : 'y');
+      body.set(Math.round(x - px), Math.round(y - py), i === 0 ? 'k' : 'Y');
+    }
+    // T-handle across the far end
+    const tx = hx + dx * (L + 1), ty = hy + dy * (L + 1);
+    for (let k = -3; k <= 3; k++) body.set(Math.round(tx + px * k), Math.round(ty + py * k), 'K');
+    body.set(Math.round(tx - dx), Math.round(ty - dy), 'g');
+    // hose loop hanging from the grip end
+    for (let a = 0; a < Math.PI * 1.4; a += 0.35) body.set(Math.round(hx - dx * 2 + Math.cos(a + 1) * 2.5), Math.round(hy - dy * 2 + 2 + Math.sin(a + 1) * 2), 'K');
+    // swoosh arc on the big swing
+    if (attack === 2) for (let a = -1.9; a < 0.2; a += 0.1) { const r = L + 3; swoosh.push([Math.round(hx + Math.cos(a) * r), Math.round(hy + Math.sin(a) * r), a > -0.4 ? 'H' : 'W']); swoosh.push([Math.round(hx + Math.cos(a) * (r - 1)), Math.round(hy + Math.sin(a) * (r - 1)), a > -1 ? 'H' : 'W']); }
   }
   // near leg
   leg(body, [hip[0] + 1, hip[1] + 1], tuck ? [geo.BB[0] + 4, geo.BB[1] - 5] : geo.p1, true);
@@ -178,6 +195,9 @@ export function raccoonFrame(pose = {}) {
   out.blit(back, 0, 0);
   out.blit(bikeL, 0, 0);
   out.blit(body, 0, 0);
+  out.tx = SHIFT; out.ty = TOP;
+  for (const [x, y, c] of swoosh) out.set(x, y, c);
+  out.tx = 0; out.ty = 0;
   return out;
 }
 
@@ -193,4 +213,7 @@ export function raccoonSideFrames() {
   add('attack', [1, 2, 3].map((a) => raccoonFrame({ pedal: 1, attack: a, sway: 1 })), 18, false);
   add('hurt', [raccoonFrame({ hurt: true, pedal: 2, sway: -2, lean: -1 })], 1, false);
   return { frames, anims, fw: FW, fh: FH };
+}
+export function attackPreview() {
+  return { frames: [0, 1, 2, 3].map((a) => raccoonFrame({ pedal: 1, attack: a, sway: 1 })), cols: 4 };
 }

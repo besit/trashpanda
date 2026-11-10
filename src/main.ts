@@ -1,10 +1,13 @@
 import Phaser from 'phaser';
-import { GAME_W, GAME_H } from './config';
+import { GAME_W, GAME_H, setGameW, viewWidthFor } from './config';
 import { BootScene } from './scenes/BootScene';
 import { TitleScene } from './scenes/TitleScene';
 import { ExploreScene } from './scenes/ExploreScene';
 import { ActionScene } from './scenes/ActionScene';
 import { CutsceneScene } from './scenes/CutsceneScene';
+import { PauseScene } from './scenes/PauseScene';
+
+setGameW(viewWidthFor(window.innerWidth, window.innerHeight));
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,
@@ -18,12 +21,20 @@ const game = new Phaser.Game({
   input: { gamepad: true, activePointers: 4 },
   scale: { mode: Phaser.Scale.NONE },
   fps: { target: 60, smoothStep: true },
-  scene: [BootScene, TitleScene, ExploreScene, ActionScene, CutsceneScene],
+  scene: [BootScene, TitleScene, ExploreScene, ActionScene, CutsceneScene, PauseScene],
 });
 
-/** Crisp pixel scaling: integer zoom when there is room, otherwise fit (still nearest-neighbour). */
+/**
+ * Pick the internal width for the window's aspect, then scale crisply:
+ * integer zoom when there is room (desktop), otherwise fit (phones; still nearest-neighbour).
+ * Scenes listen to the scale manager's 'resize' event to re-anchor HUD.
+ */
 function fit() {
   const w = window.innerWidth, h = window.innerHeight;
+  const portrait = h > w;
+  // in portrait (rotate prompt showing) keep the current width so the scene doesn't thrash
+  const vw = portrait ? GAME_W : viewWidthFor(w, h);
+  if (vw !== GAME_W || game.scale.width !== vw) { setGameW(vw); game.scale.resize(vw, GAME_H); }
   const s = Math.min(w / GAME_W, h / GAME_H);
   const z = s >= 2 ? Math.floor(s) : s;
   const c = game.canvas;

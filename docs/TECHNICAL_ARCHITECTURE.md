@@ -8,9 +8,10 @@
 - All dependencies are project-local. Nothing is installed globally.
 
 ## Rendering
-- Internal resolution **384×216**, `pixelArt: true`, `roundPixels`.
-- `main.ts:fit()` scales the canvas by an **integer** factor when the window is at least 2× (crisp on desktop) and fits otherwise (phones). CSS uses `image-rendering: pixelated`.
-- Landscape only on touch devices; portrait shows a rotate prompt.
+- Internal resolution: **height 216, width 384–480**, chosen from the window's aspect ratio (`config.viewWidthFor`). An 844×390 phone gets a 468px-wide view and no black bars. `GAME_W` is an ES-module live binding, so code must read it at use time.
+- `main.ts:fit()` resizes the game (`scale.resize`) when the width changes, then scales the canvas by an **integer** factor when the window is at least 2× (crisp on desktop) and fits otherwise (phones). CSS uses `image-rendering: pixelated`.
+- Scenes re-anchor their HUD on the scale manager's `resize` event (Title restarts; Explore and Action move centred and right-aligned HUD; the touch controls re-layout).
+- Landscape only on touch devices. Portrait shows a translucent rotate overlay over the dimmed game, and gameplay scenes auto-pause.
 
 ## Scenes (states)
 | Scene | Role |
@@ -20,6 +21,7 @@
 | `Cutscene` | interprets timeline data (`data/cutscenes.ts`) |
 | `Explore` | 3/4 city: `CityMap` + `TopDownPlayer` + `Traffic` + HUD, mission markers, transformation sequence |
 | `Action` | side-view missions: `SidePlayer` + `Rat`s, waves, parallax |
+| `Pause` | overlay launched over Explore, Action or Title: menu (volumes, shake, controls, save + quit) and the city map (rendered from the live tilemap plus decals) |
 
 Shared state lives in `core/ctx.ts`, the single `GameState` all scenes read and write. Scenes communicate through `scene.start(key, data)`. URL parameters: `?scene=` jumps to a scene, `?debug` enables debug keys, and `?touch` forces touch controls.
 
@@ -29,7 +31,8 @@ src/core      GameState (pure), Livability (pure), SaveSystem (localStorage, ver
 src/data      upgrades, missions, cutscenes            ← data-driven content
 src/input     InputManager (keyboard/gamepad/touch → actions, sub-frame taps latched via keydown events), TouchControls
 src/audio     Synth (WebAudio chip), Sequencer (lookahead tracker), songs, sfx
-src/explore   CityMap (tilemap, y-sorted objects, colliders, improvement patches, roof occlusion), TopDownPlayer, Traffic
+src/explore   CityMap (tilemap, decals, y-sorted objects, colliders, improvement patches incl. removal of tagged objects), TopDownPlayer,
+              Traffic (data lanes + intersections, shared signal cycle, streetcar stops, cyclists), Crowd (pedestrians on walkways, white squirrel)
 src/action    SidePlayer, Rat
 src/ui        fx: bitmap text, iris and blinds wipes, shake, hit-stop, float text, particles
 tools/        asset generators (never shipped): raster + SDF renderers, sprite modules, map generator, atlas packer
@@ -39,16 +42,22 @@ tools/        asset generators (never shipped): raster + SDF renderers, sprite m
 - **Map JSON** (`gen/queenwest.json`):
   - `ground[y][x]` tile indices
   - `objects[]`: buildings `{key,x,y,w,d}` with footprint and image; props `{key,x,y,solid}`
-  - `improvements{id: {tiles[[x,y,t]], addProps[]}}`
-  - `spawn`, `markers`, `lanes`
+  - `decals[]`: big ground images (park paths, dog bowl, courts, diamond)
+  - `improvements{id: {tiles[[x,y,t]], addProps[], removeTag}}`
+  - `spawn`, `markers`, `landmarks` (plaques), `labels` (minimap)
+  - `lanes[]`: `{axis, dir, pos, streetcar, stops[], bikeOnly, requires}`
+  - `intersections[]` (rects), `walkways[]` (polylines), `critters[]`
+  - `tileColors` (average colour per tile, used by the minimap)
 - **Upgrade:** `{id, livability, categories, mapPatches[], blurb (sourced), stat}`. Unlocking applies its map patches, live (animated sweep) or on load.
-- **Mission:** `{id, title, district, upgrades[], action:{sky, length, waves[{at, rats[]}], intro}}`.
+- **Mission:** `{id, title, district, upgrades[], briefing, debrief, focusY, action:{street, sky, length, waves[{at, rats[]}], intro}}`. `briefing` and `debrief` are cutscene ids played before the fight and before the map payoff.
+- **Cutscene steps:** bg, side (side-view street), caption, say, portrait, darken, music, sfx, shake, wait, title, dvp/dvpAdd (the highway shot), actor/move/wobble/bang (simple actors on a 384-wide stage, centred on wider screens).
 - **Save:** `trashpanda.save.v1` → `{version, upgrades, completedMissions, flags, ratsDefeated, lanesAddedByDogFraud, playTimeMs, player}`. `migrate()` sanitizes unknown or old data.
 
 ## Asset pipeline
 `npm run assets` → `tools/build-assets.mjs` → `public/gen/` (gitignored, rebuilt in CI, about 2 s):
-- **chars atlas:** side-view raccoon (17 frames), 3/4 raccoon (8 directions × 4 frames), 3 rats × 7 frames, Dog Fraud portraits.
-- **world atlas:** props, vehicles in 4 directions plus side-view renders, one image per generated building.
+- **chars atlas:** side-view raccoon (17 frames, 56×44), 3/4 raccoon (8 directions × 4 frames), 3 rats × 7 frames, Dog Fraud portraits, pedestrians (9 variants × 4 directions × 4 frames), cyclists (4 variants × 4 directions × 4 frames, plus side views for vignettes).
+- **world atlas:** props (incl. the gates, bins, park lamps, white squirrel), vehicles in 4 directions plus side-view renders (incl. the streetcar), back-view highway cars at 8 depth scales, one image per generated building.
+- **Standalone images:** side-view layers, the intro highway backdrop, ground decals.
 - **Tileset** with 1px extrusion (no seams); background layers; 4 RetroFont sheets; manifest with animations and pivots.
 
 Art techniques:
@@ -59,8 +68,11 @@ Snapshots go to `art/history/<asset>/vNN/` (`tools/snapshot.mjs`).
 
 ## Testing
 - `npm test`: livability math and tiers, upgrade unlocks, mission completion idempotence, save round-trip, migration, corrupt-save safety, export/import.
-- `npx playwright test` (production build):
+- `npx playwright test` (production build), with every test failing on any page error:
   1. title → new game → cutscene → explore
-  2. ride → mission → rats take damage and die → win → upgrade applied → saved to localStorage
-  3. phone viewport with touch + resize to desktop integer scale
+  2. the full intro, including the highway scene
+  3. ride → briefing → rats take damage and die → win → debrief → upgrade applied → saved
+  4. **regression:** thrown cones that land on the ground don't stop the game loop (fails on the M0 code)
+  5. pause menu and city map open and close
+  6. phone viewport stretches the view width; desktop resize keeps the integer scale
 - `tools/shots.mjs` captures scene screenshots; `tools/perf.mjs` samples FPS with CPU throttling.

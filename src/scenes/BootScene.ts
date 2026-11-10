@@ -3,11 +3,13 @@ import { GAME_W, GAME_H } from '../config';
 
 export interface Manifest {
   atlases: Record<string, { png: string; json: string }>;
-  anims: Record<string, { frames: string[]; rate: number; loop: boolean }>;
+  anims: Record<string, { frames: string[]; rate: number; loop: boolean; atlas?: string }>;
   pivots: Record<string, { x: number; y: number }>;
   images: Record<string, string>;
   fonts: Record<string, { png: string; cw: number; ch: number; chars: string }>;
   maps: Record<string, string>;
+  peds?: string[];
+  cyclists?: string[];
 }
 
 /** Loads the manifest, then every asset it lists, then builds fonts + animations. */
@@ -42,11 +44,13 @@ export class BootScene extends Phaser.Scene {
       this.cache.bitmapFont.add(k, Phaser.GameObjects.RetroFont.Parse(this, cfg));
     }
     for (const [k, a] of Object.entries(m.anims)) {
-      const atlas = k.startsWith('rs_') || k.startsWith('rt_') || k.startsWith('rat_') ? 'chars' : 'world';
+      const atlas = a.atlas ?? (k.startsWith('rs_') || k.startsWith('rt_') || k.startsWith('rat_') || k.startsWith('ped_') || k.startsWith('cy_') ? 'chars' : 'world');
       this.anims.create({ key: k, frames: a.frames.map((frame) => ({ key: atlas, frame })), frameRate: a.rate, repeat: a.loop ? -1 : 0 });
     }
     this.registry.set('manifest', m);
-    const start = new URLSearchParams(location.search).get('scene');
-    this.scene.start(start && this.scene.get(start) ? start : 'Title');
+    const q = new URLSearchParams(location.search);
+    const start = q.get('scene');
+    const data = q.get('cs') ? { id: q.get('cs'), next: 'Title' } : q.get('mission') ? { mission: q.get('mission') } : undefined;
+    this.scene.start(start && this.scene.get(start) ? start : 'Title', data);
   }
 }

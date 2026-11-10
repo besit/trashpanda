@@ -51,6 +51,8 @@ export class Sequencer {
     this.schedule();
   }
 
+  duck(on: boolean) { synth.duck(on); }
+
   stop() {
     if (this.timer !== null) clearInterval(this.timer);
     this.timer = null;

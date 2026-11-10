@@ -5,17 +5,22 @@ import { TouchControls, wantsTouch } from '../input/TouchControls';
 import { CityMap, type MapData } from '../explore/CityMap';
 import { TopDownPlayer } from '../explore/TopDownPlayer';
 import { Traffic } from '../explore/Traffic';
+import { Crowd } from '../explore/Crowd';
 import { ctx } from '../core/ctx';
 import { livability, tierName } from '../core/Livability';
 import { completeMission } from '../core/GameState';
 import { UPGRADES } from '../data/upgrades';
 import { MISSIONS } from '../data/missions';
-import { text, iris, floatText, puff, shake } from '../ui/fx';
+import { text, iris, floatText, shake, bellRing } from '../ui/fx';
 import { music } from '../audio/Sequencer';
 import { SONG_MAIN, SONG_IMPROVE } from '../audio/songs';
 import { sfx } from '../audio/sfx';
+import { openPause, type MapInfo } from './PauseScene';
 
 interface ExploreData { from?: 'mission'; missionId?: string; won?: boolean }
+type Hud = { box: Phaser.GameObjects.Graphics; meter: Phaser.GameObjects.Graphics; score: Phaser.GameObjects.BitmapText; tier: Phaser.GameObjects.BitmapText; stamina: Phaser.GameObjects.Graphics; prompt: Phaser.GameObjects.BitmapText; label: Phaser.GameObjects.BitmapText };
+
+const DIR_V = [[1, 0], [0.7, 0.7], [0, 1], [-0.7, 0.7], [-1, 0], [-0.7, -0.7], [0, -1], [0.7, -0.7]];
 
 export class ExploreScene extends Phaser.Scene {
   private input2!: InputManager;
@@ -23,28 +28,36 @@ export class ExploreScene extends Phaser.Scene {
   map!: CityMap;
   player!: TopDownPlayer;
   private traffic!: Traffic;
-  private hud!: { meter: Phaser.GameObjects.Graphics; score: Phaser.GameObjects.BitmapText; tier: Phaser.GameObjects.BitmapText; stamina: Phaser.GameObjects.Graphics; prompt: Phaser.GameObjects.BitmapText };
+  private crowd!: Crowd;
+  private hud!: Hud;
   private markers: { id: string; x: number; y: number; g: Phaser.GameObjects.Container; done: boolean }[] = [];
+  private toasts: Phaser.GameObjects.BitmapText[] = [];
   private shownLiv = 60;
   private busy = false;
-  private nearMarker: string | null = null;
+  private near: { kind: 'mission' | 'landmark'; id: string } | null = null;
 
   constructor() { super('Explore'); }
 
   create(data: ExploreData) {
     this.busy = false;
+    this.toasts = [];
     this.input2 = new InputManager(this);
     const md = this.cache.json.get('map_queenwest') as MapData;
     this.map = new CityMap(this, md);
     for (const u of ctx.state.upgrades) for (const p of UPGRADES[u]?.mapPatches ?? []) this.map.applyImprovement(p);
 
-    const start = ctx.state.player.x > 0 ? ctx.state.player : md.spawn;
+    const start = ctx.state.player.x > 0 && ctx.state.player.x < this.map.widthPx ? ctx.state.player : md.spawn;
     this.player = new TopDownPlayer(this, start.x, start.y);
     this.physics.world.setBounds(0, 0, this.map.widthPx, this.map.heightPx);
     this.physics.add.collider(this.player.sprite, this.map.solids);
 
-    this.traffic = new Traffic(this, md.lanes, this.map.widthPx, this.map.heightPx);
+    this.traffic = new Traffic(this, md.lanes, md.intersections, this.map.widthPx, this.map.heightPx, ctx.state.upgrades);
     this.traffic.setDensity(ctx.state.upgrades.length ? 0.8 : 1);
+    this.crowd = new Crowd(this, md.walkways, md.critters ?? [], 34);
+    this.crowd.onSquirrelSpotted = () => {
+      floatText(this, this.crowd.squirrelPos!.x, this.crowd.squirrelPos!.y - 16, 'THE WHITE SQUIRREL!', 'font_outline', 0xfff08a);
+      if (!ctx.state.flags.whiteSquirrel) { ctx.state.flags.whiteSquirrel = true; this.toast('A RARE WHITE SQUIRREL:\nTRINITY BELLWOODS\' LOCAL CELEBRITY.'); ctx.save(); }
+    };
 
     const cam = this.cameras.main;
     cam.setBounds(0, 0, this.map.widthPx, this.map.heightPx).setRoundPixels(true);
@@ -53,7 +66,10 @@ export class ExploreScene extends Phaser.Scene {
 
     this.buildMarkers(md);
     this.buildHud();
-    if (wantsTouch()) this.touch = new TouchControls(this);
+    if (wantsTouch()) this.touch = new TouchControls(this, { map: true });
+    this.scale.on('resize', this.layout, this);
+    this.events.on('resume', () => this.input2.swallow());
+    this.events.once('shutdown', () => { this.scale.off('resize', this.layout, this); ctx.state.player = { scene: 'explore', x: this.player.x, y: this.player.y }; });
 
     music.play(SONG_MAIN);
     this.shownLiv = livability(ctx.state.upgrades);
@@ -62,14 +78,17 @@ export class ExploreScene extends Phaser.Scene {
       void this.celebrate(data.missionId);
     } else {
       void iris(this, 'open', GAME_W / 2, GAME_H / 2);
-      if (!ctx.state.flags.exploreHint) { ctx.state.flags.exploreHint = true; this.toast(wantsTouch() ? 'STICK: RIDE   BOOST: GO FAST' : 'WASD: RIDE   SHIFT: BOOST\nSPACE: DASH   J: HOP   K: BELL'); }
+      if (!ctx.state.flags.exploreHint) {
+        ctx.state.flags.exploreHint = true;
+        this.toast(wantsTouch() ? 'LEFT THUMB: RIDE    YELLOW: BOOST\nRED: BELL    MAP + II: TOP RIGHT' : 'WASD: RIDE  SHIFT: BOOST  SPACE: HOP\nQ: DASH  E: BELL  M: MAP  ESC: PAUSE', 6000);
+      }
     }
     this.exposeDebug();
-    if (DEBUG) this.input.keyboard?.on('keydown-T', () => this.map.applyImprovement('queen_protected_lanes', true, this.player.x));
-    this.events.once('shutdown', () => { ctx.state.player = { scene: 'explore', x: this.player.x, y: this.player.y }; });
+    if (DEBUG) this.input.keyboard?.on('keydown-T', () => { this.map.applyImprovement('queen_protected_lanes', true, this.player.x); });
   }
 
   private buildMarkers(md: MapData) {
+    this.markers.forEach((m) => m.g.destroy());
     this.markers = md.markers.map((m) => {
       const done = ctx.state.completedMissions.includes(m.id);
       const g = this.add.container(m.x, m.y).setDepth(m.y);
@@ -88,14 +107,20 @@ export class ExploreScene extends Phaser.Scene {
     const box = this.add.graphics().setScrollFactor(0).setDepth(20000);
     box.fillStyle(0x16121f, 0.75).fillRoundedRect(4, 4, 118, 36, 3).lineStyle(1, 0x69657a).strokeRoundedRect(4, 4, 118, 36, 3);
     const label = text(this, 8, 8, 'LIVABILITY', 'font', 0).setScrollFactor(0).setDepth(20001).setTint(0x9bd35a);
-    void label;
     const score = text(this, 117, 8, '60', 'font', 0).setScrollFactor(0).setDepth(20001).setOrigin(1, 0);
     const meter = this.add.graphics().setScrollFactor(0).setDepth(20001);
     const tier = text(this, 8, 29, '', 'font', 0).setScrollFactor(0).setDepth(20001).setTint(0xfff08a);
     const stamina = this.add.graphics().setScrollFactor(0).setDepth(20001);
     const prompt = text(this, GAME_W / 2, GAME_H - 14, '', 'font_outline').setScrollFactor(0).setDepth(20001);
-    this.hud = { meter, score, tier, stamina, prompt };
+    this.hud = { box, meter, score, tier, stamina, prompt, label };
     this.drawMeter(this.shownLiv);
+  }
+
+  /** Re-anchor centred/right-aligned HUD when the view width changes. */
+  private layout() {
+    this.hud.prompt.setX(GAME_W / 2);
+    this.toasts.forEach((t) => t.active && t.setX(GAME_W / 2));
+    if (wantsTouch() && window.innerHeight > window.innerWidth && !this.busy) openPause(this);
   }
 
   private drawMeter(v: number) {
@@ -114,7 +139,9 @@ export class ExploreScene extends Phaser.Scene {
   }
 
   private toast(msg: string, ms = 4200) {
-    const t = text(this, GAME_W / 2, GAME_H - 34, msg, 'font_outline').setScrollFactor(0).setDepth(20002).setAlpha(0).setCenterAlign();
+    this.toasts.forEach((t) => t.destroy());
+    const t = text(this, GAME_W / 2, GAME_H - 38, msg, 'font_outline').setScrollFactor(0).setDepth(20002).setAlpha(0).setCenterAlign();
+    this.toasts = [t];
     this.tweens.add({ targets: t, alpha: 1, duration: 250, hold: ms, yoyo: true, onComplete: () => t.destroy() });
   }
 
@@ -131,33 +158,33 @@ export class ExploreScene extends Phaser.Scene {
     music.stop();
     const cam = this.cameras.main;
     cam.stopFollow();
-    // pan along the street while the improvement sweeps across it
+    // frame the street the upgrade changes, then pan along it while the improvement sweeps across
+    const focusY = mission?.focusY ?? this.player.y;
     const startX = Phaser.Math.Clamp(this.player.x - 200, GAME_W / 2, this.map.widthPx - GAME_W / 2);
-    cam.pan(startX, this.player.y, 500, 'Sine.easeInOut');
-    await this.wait(600);
+    cam.pan(startX, focusY, 600, 'Sine.easeInOut');
+    await this.wait(700);
     const banner = text(this, GAME_W / 2, 50, 'THE CITY IS CHANGING...', 'font_big').setScrollFactor(0).setDepth(20005);
     music.play(SONG_IMPROVE);
     let dur = 0;
     for (const u of mission?.upgrades ?? []) for (const p of UPGRADES[u].mapPatches) dur = Math.max(dur, this.map.applyImprovement(p, true, startX - GAME_W / 2));
-    cam.pan(startX + 380, this.player.y, Math.max(1200, dur * 0.6), 'Sine.easeInOut');
+    this.traffic.setUpgrades(ctx.state.upgrades);
+    cam.pan(startX + 420, focusY, Math.max(1400, dur * 0.6), 'Sine.easeInOut');
     this.traffic.setDensity(0.8);
-    await this.wait(Math.max(1400, dur * 0.6));
+    await this.wait(Math.max(1600, dur * 0.6));
     banner.setText(UPGRADES[mission.upgrades[0]]?.name ?? 'IMPROVED!');
     shake(this, 150, 0.004);
     sfx.ding();
-    // livability ticks up
     const o = { v: before };
     floatText(this, 63, 40, `+${after - before} LIVABILITY`, 'font_outline', 0x9bd35a).setScrollFactor(0).setDepth(20006);
     this.tweens.add({ targets: o, v: after, duration: 1200, ease: 'Cubic.easeOut', onUpdate: () => { this.drawMeter(o.v); sfx.blip(); } });
     await this.wait(1500);
-    const blurb = text(this, GAME_W / 2, 68, UPGRADES[mission.upgrades[0]]?.blurb ?? '', 'font_outline').setScrollFactor(0).setDepth(20005).setMaxWidth(300);
+    const blurb = text(this, GAME_W / 2, 68, UPGRADES[mission.upgrades[0]]?.blurb ?? '', 'font_outline').setScrollFactor(0).setDepth(20005).setMaxWidth(Math.min(340, GAME_W - 40));
     blurb.setCenterAlign();
-    await this.wait(2800);
+    await this.wait(3200);
     banner.destroy(); blurb.destroy();
     cam.pan(this.player.x, this.player.y, 600, 'Sine.easeInOut');
     await this.wait(650);
     cam.startFollow(this.player.sprite, true, 0.12, 0.12);
-    this.markers.forEach((m) => { if (m.id === missionId) { m.done = true; m.g.destroy(); } });
     this.buildMarkers(this.cache.json.get('map_queenwest'));
     music.play(SONG_MAIN);
     this.player.frozen = false;
@@ -180,26 +207,42 @@ export class ExploreScene extends Phaser.Scene {
     cam.zoomTo(2, 600, 'Cubic.easeIn');
     await this.wait(350);
     await iris(this, 'close', GAME_W / 2, GAME_H / 2 - 10, 450);
-    this.scene.start('Action', { mission: id });
+    const brief = MISSIONS[id]?.briefing;
+    if (brief) this.scene.start('Cutscene', { id: brief, next: 'Action', nextData: { mission: id } });
+    else this.scene.start('Action', { mission: id });
+  }
+
+  minimapInfo(): MapInfo {
+    return { map: this.map, player: { x: this.player.x, y: this.player.y }, markers: this.markers.map((m) => ({ x: m.x, y: m.y, label: MISSIONS[m.id]?.title ?? m.id, done: m.done })) };
   }
 
   update(_t: number, dt: number) {
     this.input2.update();
+    if (!this.busy && this.input2.justPressed('pause')) { openPause(this); return; }
+    if (!this.busy && this.input2.justPressed('map')) { openPause(this, 'map'); return; }
     this.player.update(this.input2, dt);
     this.traffic.update(dt, this.player.x, this.player.y);
+    this.crowd.update(dt, this.player.x, this.player.y, this.cameras.main.worldView);
     this.map.updateOcclusion(this.player.x, this.player.y);
-    // marker proximity
-    this.nearMarker = null;
-    for (const m of this.markers) {
-      if (m.done) continue;
-      if (Phaser.Math.Distance.Between(this.player.x, this.player.y, m.x, m.y) < 22) this.nearMarker = m.id;
-    }
-    const actLabel = wantsTouch() ? 'ACT' : 'K';
-    this.hud.prompt.setText(this.nearMarker && !this.busy ? `${actLabel}: START MISSION` : '');
-    this.touch?.setLabel('act', this.nearMarker ? 'GO!' : 'BELL');
+    // what's nearby: a mission marker or a landmark
+    this.near = null;
+    for (const m of this.markers) if (!m.done && Phaser.Math.Distance.Between(this.player.x, this.player.y, m.x, m.y) < 22) this.near = { kind: 'mission', id: m.id };
+    if (!this.near) for (const l of this.map.data.landmarks ?? []) if (Phaser.Math.Distance.Between(this.player.x, this.player.y, l.x, l.y + 24) < 40) this.near = { kind: 'landmark', id: l.id };
+    const key = wantsTouch() ? 'RED' : 'E';
+    this.hud.prompt.setText(this.busy || !this.near ? '' : this.near.kind === 'mission' ? `${key}: START MISSION` : `${key}: READ THE PLAQUE`);
+    this.touch?.setLabel('act', this.near ? (this.near.kind === 'mission' ? 'GO!' : 'READ') : 'BELL');
     if (!this.busy && this.input2.justPressed('act')) {
-      if (this.nearMarker) void this.startMission(this.nearMarker);
-      else { sfx.bell(); puff(this, this.player.x + 6, this.player.y - 18, 0xfff08a, 3, 8, this.player.y + 2); }
+      if (this.near?.kind === 'mission') void this.startMission(this.near.id);
+      else if (this.near?.kind === 'landmark') {
+        const l = this.map.data.landmarks!.find((x) => x.id === this.near!.id)!;
+        sfx.select(); this.toast(`${l.label}\n${l.fact}`, 5200);
+      } else {
+        // the bell rings at the handlebars, in front of the raccoon
+        sfx.bell();
+        const [vx, vy] = DIR_V[this.player.dir];
+        bellRing(this, this.player.x + vx * 7, this.player.y + vy * 3 - 14 - this.player.z, this.player.y + 3);
+        this.crowd.bell(this.player.x, this.player.y);
+      }
     }
     // stamina bar under the player when boosting / recovering
     const st = this.hud.stamina;
@@ -213,6 +256,6 @@ export class ExploreScene extends Phaser.Scene {
 
   private exposeDebug() {
     const w = window as unknown as { __TP?: Record<string, unknown> };
-    w.__TP = { ...(w.__TP ?? {}), scene: 'Explore', state: ctx.state, player: () => ({ x: this.player.x, y: this.player.y }), teleport: (x: number, y: number) => this.player.sprite.setPosition(x, y), startMission: (id: string) => this.startMission(id), improve: (id: string) => this.map.applyImprovement(id, true, this.player.x) };
+    w.__TP = { ...(w.__TP ?? {}), scene: 'Explore', state: ctx.state, player: () => ({ x: this.player.x, y: this.player.y }), teleport: (x: number, y: number) => this.player.sprite.setPosition(x, y), startMission: (id: string) => this.startMission(id), improve: (id: string) => this.map.applyImprovement(id, true, this.player.x), traffic: () => this.traffic.count, map: this.map.data };
   }
 }

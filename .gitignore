@@ -7,3 +7,4 @@ playwright-report/
 public/gen/
 *.log
 .DS_Store
+tools/scratch/

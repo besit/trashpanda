@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { GAME_W, GAME_H } from '../config';
+import { GAME_W, GAME_H, DEBUG } from '../config';
+import { openPause } from './PauseScene';
 import { InputManager } from '../input/InputManager';
 import { text, iris } from '../ui/fx';
 import { synth } from '../audio/Synth';
@@ -18,6 +19,7 @@ export class TitleScene extends Phaser.Scene {
   private skyline!: Phaser.GameObjects.TileSprite;
   private facades!: Phaser.GameObjects.TileSprite;
   private street!: Phaser.GameObjects.TileSprite;
+  private backrow!: Phaser.GameObjects.TileSprite;
   private rider!: Phaser.GameObjects.Sprite;
   private prompt!: Phaser.GameObjects.BitmapText;
   private menu!: Phaser.GameObjects.Container;
@@ -29,12 +31,12 @@ export class TitleScene extends Phaser.Scene {
   create() {
     this.started = false; this.leaving = false; this.sel = 0;
     this.input2 = new InputManager(this);
-    this.add.image(0, 0, 'sky_dusk').setOrigin(0);
+    this.add.tileSprite(0, 0, GAME_W, GAME_H, 'sky_dusk').setOrigin(0);
     this.skyline = this.add.tileSprite(0, 40, GAME_W, 170, 'skyline_dusk').setOrigin(0).setTilePosition(-60, 0);
-    this.add.tileSprite(0, 104, GAME_W, 80, 'backrow_dusk').setOrigin(0);
+    this.backrow = this.add.tileSprite(0, 104, GAME_W, 80, 'backrow_dusk').setOrigin(0);
     this.facades = this.add.tileSprite(0, 72, GAME_W, 96, 'facades_qw').setOrigin(0).setTint(0xc8a8d8);
     this.street = this.add.tileSprite(0, 168, GAME_W, 64, 'street_paint').setOrigin(0).setTint(0xd0b8d8);
-    this.rider = this.add.sprite(-40, 198, 'chars', 'rs_2').setOrigin(0.5, 34 / 36).play('rs_ride');
+    this.rider = this.add.sprite(-40, 198, 'chars', 'rs_2').setOrigin(0.5, 42 / 44).play('rs_ride');
     this.tweens.add({ targets: this.rider, x: GAME_W + 60, duration: 7000, repeat: -1, repeatDelay: 1500 });
 
     // logo
@@ -47,7 +49,7 @@ export class TitleScene extends Phaser.Scene {
 
     this.prompt = text(this, GAME_W / 2, 128, wantsTouch() ? 'TAP TO START' : 'PRESS ENTER', 'font_outline');
     this.tweens.add({ targets: this.prompt, alpha: 0.2, duration: 500, yoyo: true, repeat: -1 });
-    text(this, GAME_W - 4, GAME_H - 4, 'M0 PREVIEW', 'font', 1).setTint(0x9793a6);
+    text(this, GAME_W - 4, GAME_H - 4, 'M1 PREVIEW', 'font', 1).setTint(0x9793a6);
 
     // menu (shown after first input)
     this.menu = this.add.container(GAME_W / 2, 118).setVisible(false);
@@ -55,8 +57,8 @@ export class TitleScene extends Phaser.Scene {
     this.items = [
       ...(hasSave ? [{ label: 'CONTINUE', action: () => this.go(true) }] : []),
       { label: 'NEW GAME', action: () => this.go(false) },
-      { label: 'SIDE-VIEW TEST', action: () => this.goScene('Action') },
-      { label: 'DOG FRAUD CUTSCENE', action: () => this.goScene('Cutscene') },
+      { label: 'CONTROLS', action: () => { this.leaving = false; openPause(this, 'controls'); } },
+      ...(DEBUG ? [{ label: 'SIDE-VIEW TEST', action: () => this.goScene('Action') }, { label: 'INTRO CUTSCENE', action: () => this.goScene('Cutscene') }] : []),
     ];
     this.items.forEach((it, i) => { it.t = text(this, 0, i * 11, it.label, 'font_outline'); this.menu.add(it.t); });
 
@@ -69,6 +71,11 @@ export class TitleScene extends Phaser.Scene {
       });
     });
     void iris(this, 'open');
+    // re-layout for a new view width (phone rotation, window resize)
+    const onResize = () => { if (!this.leaving) this.scene.restart(); };
+    this.scale.on('resize', onResize);
+    this.events.once('shutdown', () => this.scale.off('resize', onResize));
+    this.events.on('resume', () => this.input2.swallow());
   }
 
   private begin() {
@@ -109,6 +116,7 @@ export class TitleScene extends Phaser.Scene {
   update(_t: number, dt: number) {
     this.input2.update();
     this.skyline.tilePositionX += dt * 0.004;
+    this.backrow.tilePositionX += dt * 0.012;
     this.facades.tilePositionX += dt * 0.03;
     this.street.tilePositionX += dt * 0.05;
     if (!this.started) { if (this.input2.justPressed('confirm')) this.begin(); return; }

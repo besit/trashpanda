@@ -38,9 +38,20 @@ Every sprite uses only palette keys, so consistency is guaranteed by constructio
 5. Painted facades get calm textures; brick keeps a subtle running bond.
 
 ## Characters
-- **Raccoon:** grey `G/h`, mask `k`, white brow and muzzle, ringed tail (alternating `h`/`g`). Red cruiser, wicker basket with pizza, yellow bell. Attack prop: a trash-can lid.
-- **Dog Fraud:** see GAME_DESIGN. The shape language comes from Ivan's reference: a street-art paste-up of a real politician with horns and a moustache. Only the *satirical shapes and tone* were taken: flushed pink pear head, horn-ears, handlebar moustache, smug squint, tiny suit. The character is a cartoon bulldog, and no facial features of the real person were traced or matched. The reference image lives in the gitignored `reference/` folder and isn't redistributed.
+- **Raccoon:** grey `G/h`, mask `k`, white brow and muzzle, ringed tail (alternating `h`/`g`). Red cruiser, wicker basket with pizza, yellow bell. Attack prop: a **yellow bike pump** with a black T-handle (v03). The lid didn't read; the first pump read as a gun. Rule: weapons must never look like firearms, so swing them, don't point them, and keep them bright.
+- **Dog Fraud:** see GAME_DESIGN. The shape language comes from Ivan's reference: a street-art paste-up of a real politician with horns and a moustache. Only the *satirical shapes and tone* were taken. Since v06 (Ivan's review) he has a flushed pink pear head, a **swept white coif**, folded dog ears, a big dog nose and muzzle with whisker spots, a **tan eye patch** (dog marking; a darker one read as a black eye), a smug squint and a tiny suit. **No moustache.** The character is a cartoon bulldog, and no facial features of the real person were traced or matched. The reference image lives in the gitignored `reference/` folder and isn't redistributed.
 - **Rats:** brown fur `w/x/X/j`, pink ears, nose, hands and tail, big white eyes with angry brows, buck teeth. Variants are distinguished by accessory colour: purple cap, yellow hard hat with orange vest, white cap with purple vest and red STOP paddle.
+
+## Toronto artifacts (Ivan's direction: every district unmistakable)
+Each district gets landmarks and textures you can't mistake for anywhere else. Queen West has:
+- the Trinity Bellwoods gates (pale stone piers with pinnacles, black iron gates, lantern)
+- the dog bowl
+- the white squirrel
+- the 501 and 505 streetcars and red-and-white TTC stop poles
+- Little Portugal's azulejo tile facades
+- a graffiti lane with murals
+- raccoon-resistant green bins (blue and grey bins at the curb)
+- post-and-ring bike stands
 
 ## Environment
 - **Queen West buildings** are procedural Victorian storefronts:
@@ -61,3 +72,4 @@ Every version is kept in `art/history/<asset>/vNN/` (preview, 1× sheet, frozen 
 | File (gitignored) | Used for | How |
 |---|---|---|
 | `reference/DogFraud.jpg` | Dog Fraud | shape language and tone only (see above) |
+| *(none yet)* | Trinity Bellwoods gates | drawn from memory. A photo in `reference/` would let me match them closer |

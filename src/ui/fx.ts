@@ -65,3 +65,16 @@ export function puff(scene: Phaser.Scene, x: number, y: number, color: number, n
     scene.tweens.add({ targets: p, x: x + Math.cos(a) * d, y: y + Math.sin(a) * d * 0.6 - 6, alpha: 0, duration: 300 + Math.random() * 250, ease: 'Cubic.easeOut', onComplete: () => p.destroy() });
   }
 }
+
+/** Bell "ding" rings expanding from a point (used at the bike's handlebars). */
+export function bellRing(scene: Phaser.Scene, x: number, y: number, depth = 5000) {
+  for (let i = 0; i < 2; i++) {
+    const g = scene.add.graphics().setDepth(depth);
+    const o = { r: 2, a: 1 };
+    scene.tweens.add({ targets: o, r: 11, a: 0, delay: i * 110, duration: 380, ease: 'Cubic.easeOut', onUpdate: () => {
+      g.clear().lineStyle(1, 0xfff08a, o.a);
+      g.beginPath(); g.arc(x, y, o.r, -Math.PI * 0.85, -Math.PI * 0.15); g.strokePath();
+      g.fillStyle(0xfff08a, o.a).fillRect(x - 1, y - o.r - 3, 2, 2);
+    }, onComplete: () => g.destroy() });
+  }
+}

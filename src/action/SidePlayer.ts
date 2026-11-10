@@ -30,9 +30,9 @@ export class SidePlayer {
   dead = false;
 
   constructor(private scene: Phaser.Scene, x: number, y: number) {
-    this.sprite = scene.physics.add.sprite(x, y, 'chars', 'rs_0').setOrigin(0.5, 34 / 36);
+    this.sprite = scene.physics.add.sprite(x, y, 'chars', 'rs_0').setOrigin(0.5, 42 / 44);
     const b = this.sprite.body as Phaser.Physics.Arcade.Body;
-    b.setSize(22, 16).setOffset(13, 18);
+    b.setSize(22, 16).setOffset(17, 26);
     b.setMaxVelocityY(600);
     this.sprite.play('rs_idle');
     this.sprite.setDepth(100);

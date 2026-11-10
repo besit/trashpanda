@@ -4,7 +4,7 @@ import Phaser from 'phaser';
 import { touchState } from './InputManager';
 import { GAME_W, GAME_H } from '../config';
 
-interface Btn { id: 'jump' | 'dash' | 'act' | 'boost'; x: number; y: number; r: number; label: string; color: number; g?: Phaser.GameObjects.Graphics; t?: Phaser.GameObjects.BitmapText }
+interface Btn { id: 'jump' | 'dash' | 'act' | 'boost' | 'pause' | 'map'; x: number; y: number; r: number; label: string; color: number; g?: Phaser.GameObjects.Graphics; t?: Phaser.GameObjects.BitmapText }
 
 export function wantsTouch(): boolean {
   const q = new URLSearchParams(location.search);
@@ -20,18 +20,20 @@ export class TouchControls {
   private btnPointers = new Map<number, Btn['id']>();
   private buttons: Btn[];
   private container: Phaser.GameObjects.Container;
-  labels: Record<Btn['id'], string> = { jump: 'JUMP', dash: 'DASH', act: 'ACT', boost: 'BOOST' };
+  labels: Record<Btn['id'], string> = { jump: 'JUMP', dash: 'DASH', act: 'ACT', boost: 'BOOST', pause: 'II', map: 'MAP' };
 
-  constructor(private scene: Phaser.Scene) {
+  constructor(private scene: Phaser.Scene, opts: { map?: boolean } = {}) {
     touchState.active = true;
     scene.input.addPointer(3);
-    const bx = GAME_W - 44, by = GAME_H - 46;
     this.buttons = [
-      { id: 'jump', x: bx, y: by + 18, r: 17, label: 'JUMP', color: 0x55a144 },
-      { id: 'act', x: bx - 30, y: by, r: 15, label: 'ACT', color: 0xd42a24 },
-      { id: 'dash', x: bx + 26, y: by - 8, r: 15, label: 'DASH', color: 0x3a88cf },
-      { id: 'boost', x: bx - 6, y: by - 30, r: 13, label: 'BOOST', color: 0xf5c22e },
+      { id: 'jump', x: 0, y: 0, r: 17, label: 'JUMP', color: 0x55a144 },
+      { id: 'act', x: 0, y: 0, r: 15, label: 'ACT', color: 0xd42a24 },
+      { id: 'dash', x: 0, y: 0, r: 15, label: 'DASH', color: 0x3a88cf },
+      { id: 'boost', x: 0, y: 0, r: 13, label: 'BOOST', color: 0xf5c22e },
+      { id: 'pause', x: 0, y: 0, r: 10, label: 'II', color: 0x443f54 },
+      ...(opts.map ? [{ id: 'map' as const, x: 0, y: 0, r: 11, label: 'MAP', color: 0x443f54 }] : []),
     ];
+    this.layout();
     this.container = scene.add.container(0, 0).setScrollFactor(0).setDepth(10000);
     for (const b of this.buttons) {
       b.g = scene.add.graphics();
@@ -43,12 +45,20 @@ export class TouchControls {
     this.container.add([this.stickBase, this.stickKnob]);
     this.drawButtons();
 
+    scene.scale.on('resize', this.relayout, this);
     scene.input.on('pointerdown', this.down, this);
     scene.input.on('pointermove', this.move, this);
     scene.input.on('pointerup', this.up, this);
     scene.input.on('pointerupoutside', this.up, this);
     scene.events.once('shutdown', () => this.destroy());
   }
+
+  private layout() {
+    const bx = GAME_W - 44, by = GAME_H - 46;
+    const pos: Record<string, [number, number]> = { jump: [bx, by + 18], act: [bx - 30, by], dash: [bx + 26, by - 8], boost: [bx - 6, by - 30], pause: [GAME_W - 14, 14], map: [GAME_W - 40, 14] };
+    for (const b of this.buttons) { [b.x, b.y] = pos[b.id]; b.t?.setPosition(b.x, b.y); }
+  }
+  private relayout() { this.layout(); this.drawButtons(); }
 
   setLabel(id: Btn['id'], label: string) {
     const b = this.buttons.find((x) => x.id === id);
@@ -102,6 +112,7 @@ export class TouchControls {
     this.stickKnob.clear().fillStyle(0xf6f2e9, 0.7).fillCircle(kx, ky, 9);
   }
   destroy() {
+    this.scene.scale.off('resize', this.relayout, this);
     this.scene.input.off('pointerdown', this.down, this);
     this.scene.input.off('pointermove', this.move, this);
     this.scene.input.off('pointerup', this.up, this);

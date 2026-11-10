@@ -110,17 +110,21 @@ export function backRow(kind = 'day', W = 768) {
 export function streetStrip(protectedLane = false) {
   const W = 64, H = 64;
   const img = new Img(W, H);
-  const r = rng(protectedLane ? 9 : 8);
+  const r = rng(protectedLane === true ? 9 : 8);
   img.rect(0, 0, W, 12, 't'); // sidewalk
   for (let x = 0; x < W; x += 16) img.vline(x, 0, 11, 'S');
   for (let i = 0; i < 30; i++) img.set(r.int(0, W - 1), r.int(0, 11), r.pick(['S', 'T']));
   img.hline(0, W - 1, 12, 'T'); img.rect(0, 13, W, 2, 'S'); img.hline(0, W - 1, 15, 'g'); // curb face
   img.rect(0, 16, W, H - 16, 'A'); // road
   for (let i = 0; i < 90; i++) img.set(r.int(0, W - 1), r.int(16, H - 1), r.pick(['a', 's', 'a']));
-  if (protectedLane) {
+  if (protectedLane === true) {
     img.rect(0, 16, W, 12, 'E');
     for (let i = 0; i < 20; i++) img.set(r.int(0, W - 1), r.int(16, 27), 'l');
     img.rect(0, 28, W, 3, 'T'); img.hline(0, W - 1, 31, 'S');
+  } else if (protectedLane === 'plain') {
+    // Queen as it is: curb lane (parking) + streetcar rails, no bike lane
+    for (let x = 0; x < W; x += 16) img.rect(x + 2, 17, 1, 3, 'H');
+    for (const y of [36, 44]) { img.hline(0, W - 1, y, 'h'); img.hline(0, W - 1, y + 1, 'g'); }
   } else {
     img.hline(0, W - 1, 28, 'W'); img.hline(0, W - 1, 29, 'H');
   }

@@ -18,23 +18,28 @@ RIDE → FIND PROBLEM → FIGHT RATS / CHALLENGE → SOLVE → CITY IMPROVES (sw
 | | Exploration | Action mission |
 |---|---|---|
 | Camera | 3/4 oblique top-down: ground top-down, facades face-on | Side view with parallax |
-| Player | 8-direction bike, momentum, boost (stamina), dash, hop, bell | Platformer bike: run, jump (coyote time, buffer, variable height), air dash, lid combo, stomp |
+| Player | 8-direction bike, momentum, boost (stamina), dash, hop, bell | Platformer bike: run, jump (coyote time, buffer, variable height), air dash, bike-pump combo, stomp |
 | Purpose | Navigation, discovery, landmarks, NPCs, mission markers | Combat and mission objectives |
-| Transition | Camera zooms on the marker → iris close → side view opens on the raccoon | "STREET CLEARED!" → iris → map → transformation sweep |
+| Transition | Camera zooms on the marker → iris close → before-vignette → side view opens on the raccoon | "STREET CLEARED!" → after-vignette → map → transformation sweep |
 
 Assets are shared: Queen West facades come from one generator used for both the map buildings and the side-view backdrop.
 
 ## Controls
-| Action | Keyboard | Gamepad | Touch |
-|---|---|---|---|
-| Move | WASD / arrows | stick, d-pad | floating stick (left 55% of screen) |
-| Jump / hop | J or Z | A | JUMP (largest) |
-| Dash | Space or C | B | DASH |
-| Interact (map) / Attack (missions) | K or X | X | ACT → label changes: BELL / GO! / HIT |
-| Boost | Shift or L | RB / RT | BOOST |
-| Pause / skip | Esc or P | Start | — |
+Revised after the M0 review: K felt unnatural, so the keyboard layout is now **left hand on WASD**, with an arrow-key alternative.
 
-**Decision (with Ivan):** Attack is the context use of Interact. Dash and stomp also damage rats, so mobile stays at 4 buttons.
+| Action | Keyboard | Arrow-key layout | Gamepad | Touch |
+|---|---|---|---|---|
+| Move | WASD | arrows | stick, d-pad | floating stick (left 55% of screen) |
+| Boost (hold) | Shift | V | RB / RT | yellow BOOST |
+| Hop / jump | Space | Z | A | green JUMP (largest) |
+| Dash | Q | C | B | blue DASH |
+| Interact (map) / Attack (missions) | **E** (or R) | X | X | red ACT, label changes: BELL / GO! / READ / PUMP |
+| City map | M (or Tab) | M | Select / Y | MAP (top right) |
+| Pause / settings | Esc (or P) | Esc | Start | II (top right) |
+
+The controls appear in a first-run toast on the map and on every mission title card. They are also listed in full under **Pause → Controls** and **Title → Controls**.
+
+**Decision (with Ivan):** Attack is the context use of Interact. Dash and stomp also damage rats, so mobile stays at 4 big buttons plus 2 small ones (map and pause).
 
 ## Map
 One continuous city:
@@ -47,24 +52,34 @@ HIGH PARK — QUEEN WEST — DOWNTOWN — EAST END
 ```
 16px tiles. A district is about 160×90 tiles. Adjacent districts take 15–20 s to cross, end-to-end about 50 s with boost. Vertical links only through Queen West and Downtown.
 
-**M0/M1 slice:** a Queen West chunk (72×44 tiles):
-- Queen St with streetcar tracks and painted bike lanes
-- a cross street with streetcar tracks and a signalized intersection
-- north-side Victorian storefronts
-- a Trinity-Bellwoods-inspired park (south-west)
-- laneway rear walls and houses (south-east)
+**M1 slice: Queen West (104×76 tiles)**, rebuilt after Ivan's review to be recognisably Toronto:
+- **Dundas St W** (north), with the 505 streetcar and Little Portugal's blue-and-white tiled facades.
+- **Trinity Bellwoods Park** in the middle, matching the real park's position between Queen and Dundas:
+  - the white stone-and-iron **gates** at Queen and Strachan, with a readable plaque
+  - the **dog bowl**, tennis courts and a baseball diamond
+  - paved paths, park lamps and Toronto green bins
+  - the **white squirrel**
+- **Queen St W** (south), with the 501 streetcar, curb parking lanes and **no bike lanes** on this stretch (the mission adds them).
+- **Ossington Ave** and **Bellwoods Ave** crossing the district at signalised intersections, and **Strachan Ave** running south from the gates.
+- A **graffiti laneway** behind Queen's south side.
+- Ambient life: pedestrians on sidewalks and paths (kids, dog walkers), traffic, streetcars that stop at TTC stops, and cyclists (more of them once the protected lanes exist).
+- **City map:** press M for the district map, with streets, landmarks, mission markers and your position.
+
+**Distinct artifacts per district (Ivan's direction):** every district gets landmarks you can't mistake for anywhere else. Queen West has the gates, the dog bowl, the white squirrel, azulejo facades and the graffiti lane. Later districts get the same treatment: High Park (Grenadier Pond, the High Park zoo's capybaras, Bloor West), Downtown (Union Station, the PATH, Nathan Phillips Square's TORONTO sign), the waterfront (the Gardiner, the Ontario Place pods), East End (Leslieville, the Don Valley, the Riverdale Farm silo), and North (the Science Centre's brutalism, the Don Mills ravine).
+
+**Dundas question (M0 review):** the 2026 provincial removals target Bloor, Yonge, University, Queen's Park and Avenue Road, not Dundas (see URBAN_RESEARCH §1). Dundas is on the map as the park's north edge. The bike-lane *removal* story will play out on **Bloor, in the High Park district**.
 
 ## Livability
 - Headline score starts at **60 (TORONTO)**.
 - Tiers: 65 Better · 70 Great · 75 Excellent · 80 World-Class · 90 Amsterdam/Copenhagen territory · 100 Raccoon Utopia.
 - Six visible categories: Cycling, Transit, Walking, Green + Public Space, Safety, Less Car Dependence. The master prompt's other categories fold into these.
-- Main missions are worth about +3.5 each and side missions +1–2, so a complete run lands around 94.
+- Main missions (now 9) are worth about +3–4 each and side missions +1–2, so a complete run lands around 94–100.
 
 ## Characters
-- **The raccoon:** grey, bandit mask, big ringed tail. Rides a red steel cruiser with swept bars, a bell, and a wicker basket holding a pizza slice. Attack: a trash-can lid swing.
+- **The raccoon:** grey, bandit mask, big ringed tail. Rides a red steel cruiser with swept bars, a bell, and a wicker basket holding a pizza slice. Attack: a **bike pump** swung like a bat (3-hit combo). It replaced the trash-can lid at the M0 review because the lid didn't read at this scale.
 - **Dog Fraud:** a cartoon bulldog politician and fictional parody, not a likeness of anyone.
-  - Huge flushed pink pear head, horn-like ear tufts, handlebar moustache, smug squint, tiny dark suit and dotted tie.
-  - Laugh: "FRA-HA-HA-HA-HA!" Catchphrase: "ANOTHER LANE."
+  - Huge flushed pink pear head, swept white hair, folded dog ears, big dog nose and muzzle, a tan eye patch, smug squint, tiny dark suit and dotted tie. The moustache was removed at the M0 review.
+  - Laugh: "FRA-HA-HA-HA-HA!" Catchphrase: "**ANOTHER CAR LANE.**" ("car" added at the M0 review so the joke can't be misread as pro-bike-lane).
   - Expressions so far: grin, laugh, shock.
 - **Rats** (minions; funny, not scary):
 
@@ -79,15 +94,15 @@ HIGH PARK — QUEEN WEST — DOWNTOWN — EAST END
 
 | # | Mission | District | Upgrade | Type |
 |---|---|---|---|---|
-| 1 | The Bike Lane War | Queen West | Protected bike lanes | combat (vertical slice) |
+| 1 | The Bike Lane War | Queen West | Protected bike lanes (replace curb parking on Queen) | combat (vertical slice) |
 | 2 | Let the Streetcar Through | Queen West | Transit signal priority | non-combat signal-timing escort |
 | 3 | King of the Street | Downtown | Transit-priority corridor | combat + clearing cars |
-| 4 | Save the Science | North | Adaptive reuse | stealth + combat |
-| 5 | The Great Parking Lot | East End | Parking → park | combat + park-building, SUV Rat boss |
-| 6 | The Waterfront Heist | Waterfront | Public waterfront | combat |
-| 7 | Finish the Line | Downtown → East End | Ontario Line | Mega Rat miniboss |
-| 8 | Death by Highway | Waterfront | Highway → boulevard + park | "...another lane?" scene, then Highway Mech final boss |
-| side | **Slow Down, Dog** *(added by Ivan)* | North / Queen West | School-zone safety: cameras + traffic calming | escort kids / restore camera |
+| 4 | **Slow Down, Dog** *(added by Ivan, made a main mission at the M0 review)* | High Park (school zone) | School-zone safety: cameras + traffic calming | escort kids across, chase down the rats hauling the camera away |
+| 5 | Save the Science | North | Adaptive reuse | stealth + combat |
+| 6 | The Great Parking Lot | East End | Parking → park | combat + park-building, SUV Rat boss |
+| 7 | The Waterfront Heist | Waterfront | Public waterfront | combat |
+| 8 | Finish the Line | Downtown → East End | Ontario Line | Mega Rat miniboss |
+| 9 | Death by Highway | Waterfront | Highway → boulevard + park | "...another lane?" scene, then Highway Mech final boss |
 | side | Pedestrian Takeover | Queen West (Kensington-style) | Pedestrian street | crowd-gathering |
 | side | Intersection Repair | High Park | Protected intersection | puzzle |
 | side | Public Consultation | citywide | support | signature hunt (exploration) |

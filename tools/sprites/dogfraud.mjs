@@ -1,6 +1,7 @@
 // Dog Fraud cutscene portrait. Cartoon bulldog politician (NOT a likeness of any real person).
-// Shape language from the user's street-art reference: huge flushed pear head, horn-like ear tufts,
-// handlebar moustache, smug squinting grin, tiny dark suit.
+// Shape language from the user's street-art reference: huge flushed pear head, horn-like ears,
+// smug squinting grin, tiny dark suit. v06 (Ivan's review): no moustache, swept white hair,
+// more dog: longer muzzle, bigger nose, whisker spots, droopier flews.
 import { sd, scene, render, orthoCam, smin, pitchInv, norm } from '../lib/sdf.mjs';
 
 export const FW = 112, FH = 100;
@@ -62,6 +63,8 @@ function model(expr) {
         const bz = ez + (shock ? 8 : 6.2) - 0.09 * dx * dx + (Math.abs(x) < 8.5 ? 0.6 : 0);
         if (Math.abs(dx) < 5.5 && Math.abs(z - bz) < 1.25) return 'k';
       }
+      // bull-terrier eye patch (a darker splodge around his left eye) - the strongest "dog" cue
+      { const dx = x - 9.5, dz = z - 56; const wob = Math.sin(Math.atan2(dz, dx) * 3) * 1.1; if (Math.hypot(dx * 0.9, dz * 1.05) < 7.8 + wob) return Math.hypot(dx * 0.9, dz * 1.05) > 6.6 + wob ? 'x' : 'X'; }
       // forehead worry wrinkles
       if (Math.abs(x) < 7 && (Math.abs(z - 66) < 0.45 || Math.abs(z - 69) < 0.45)) return 'p';
       return null;
@@ -86,16 +89,14 @@ function model(expr) {
     return d;
   }, m: faceMat });
   // protruding muzzle with split upper lip + dog nose
-  objs.push({ d: sd.ellipsoid([0, 19, 45], [13, 10, 8.5]), m: { ramp: PINK_LIGHT, fn: (p) => (Math.abs(p[0]) < 0.7 && p[2] < 45 && p[2] > 40 ? 'p' : null) } });
-  objs.push({ d: sd.ellipsoid([0, 28.5, 50], [6, 3.6, 4]), m: { ramp: ['K', 'K', 'k', 'g'], spec: 1 } });
-  // handlebar moustache (two curled capsule chains)
-  for (const s of [-1, 1]) {
-    const pts = [[0.5 * s, 29, 43.5], [6 * s, 28.5, 42.5], [11 * s, 26, 41.5], [15.5 * s, 22, 43], [17 * s, 19, 46.5], [15.5 * s, 17.5, 49.5]];
-    for (let i = 0; i < pts.length - 1; i++) {
-      const r1 = [2.6, 2.4, 2.0, 1.6, 1.2][i], r2 = [2.4, 2.0, 1.6, 1.2, 0.8][i];
-      objs.push({ d: sd.capsule(pts[i], pts[i + 1], r1, r2), m: { ramp: ['K', 'K', 'k', 'g'] } });
-    }
-  }
+  objs.push({ d: (p) => smin(sd.ellipsoid([0, 21, 45], [13.5, 13, 8.8])(p), sd.ellipsoid([0, 14, 44], [15, 9, 9.5])(p), 4), m: { ramp: PINK_LIGHT, fn: (p) => {
+    if (Math.abs(p[0]) < 0.7 && p[2] < 46 && p[2] > 39.5) return 'p'; // philtrum
+    for (const [wx, wz] of [[5, 44], [8, 43], [6.5, 41.5], [9.5, 45.5]]) if (Math.hypot(Math.abs(p[0]) - wx, p[2] - wz) < 0.8) return 'p'; // whisker spots
+    if (p[2] < 39.5 && Math.abs(p[0]) > 3) return 'P'; // flews curling down at the sides
+    return null;
+  } } });
+  objs.push({ d: sd.ellipsoid([0, 33, 50.5], [7.2, 4.4, 4.6]), m: { ramp: ['K', 'K', 'k', 'g'], spec: 1, fn: (p) => (p[2] < 50 && Math.abs(Math.abs(p[0]) - 2.6) < 1.2 && p[1] > 33 ? 'K' : null) } });
+  objs.push({ d: sd.sphere([-2.2, 35.5, 52.6], 1.0), m: { flat: 'G' } }); // nose shine
   if (laugh) {
     // wide-open laughing mouth: FRA-HA-HA-HA-HA!
     objs.push({ d: sd.ellipsoid([0, 21, 31], [15, 6, 7]), m: { flat: 'K', fn: (p) => {
@@ -107,14 +108,21 @@ function model(expr) {
   }
   // pointed ear tufts, tilted outward like horns
   for (const s of [-1, 1]) {
-    const base = [17 * s, 2, 66];
-    const tilt = -0.5 * s;
-    objs.push({ d: (p) => sd.cone(base, 7.5, 18)(pitchInv(p, tilt, base)), m: { ramp: ['p', 'P', 'm', 'M'] } });
-    objs.push({ d: (p) => sd.cone([base[0], 4.6, base[2] + 2], 4, 12)(pitchInv(p, tilt, base)), m: { ramp: ['v', 'p', 'P'] } });
+    const base = [19 * s, 3, 65];
+    const tilt = -0.62 * s;
+    objs.push({ d: (p) => sd.cone(base, 8.5, 22)(pitchInv(p, tilt, base)), m: { ramp: ['p', 'P', 'm', 'M'] } });
+    objs.push({ d: (p) => sd.cone([base[0], 6.4, base[2] + 2], 4.6, 15)(pitchInv(p, tilt, base)), m: { ramp: ['v', 'p', 'P'] } });
   }
-  // spiky tuft on top
-  objs.push({ d: sd.cone([0, 0, 76], 5, 7), m: { ramp: ['p', 'P', 'm'] } });
-  objs.push({ d: sd.cone([-4, 1, 75], 3.5, 5), m: { ramp: ['p', 'P', 'm'] } });
+  // swept-back white hair: a big combed coif with a forward swoop and side wings
+  const HAIR = { ramp: ['G', 'h', 'H', 'W', 'W'], fn: (p) => ((Math.round(p[0] * 0.55 + p[1] * 0.25) % 3 === 0 && p[2] > 70) ? 'h' : null) };
+  objs.push({ d: (p) => {
+    let d = sd.ellipsoid([0, -4, 73], [18, 16, 8.5])(p);
+    d = smin(d, sd.ellipsoid([4, 8, 78.5], [15, 10, 6.5])(p), 4);   // the big swoop
+    d = smin(d, sd.ellipsoid([11, 15, 77], [7, 6, 4.5])(p), 3);     // curl over the brow
+    d = smin(d, sd.ellipsoid([-15, -8, 62], [3.5, 6, 5])(p), 3);    // trimmed sides
+    d = smin(d, sd.ellipsoid([15, -8, 62], [3.5, 6, 5])(p), 3);
+    return d;
+  }, m: HAIR });
   return objs;
 }
 

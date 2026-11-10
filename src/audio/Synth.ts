@@ -50,9 +50,18 @@ export class Synth {
   get now() { return this.ctx?.currentTime ?? 0; }
   get ready() { return !!this.ctx && this.ctx.state === 'running'; }
 
+  private ducked = false;
   setVolumes(music: number, sfx: number) {
     this.volumes = { music, sfx };
-    if (this.ctx) { this.music.gain.value = music; this.sfx.gain.value = sfx; }
+    this.applyGains();
+  }
+  /** Lower the music (pause menu) without touching the saved volume. */
+  duck(on: boolean) { this.ducked = on; this.applyGains(); }
+  private applyGains() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    this.music.gain.setTargetAtTime(this.volumes.music * (this.ducked ? 0.3 : 1), t, 0.05);
+    this.sfx.gain.setTargetAtTime(this.volumes.sfx, t, 0.02);
   }
 
   private pulseWave(duty: number): PeriodicWave {

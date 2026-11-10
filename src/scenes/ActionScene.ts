@@ -7,6 +7,7 @@ import { Rat, type RatKind } from '../action/Rat';
 import { MISSIONS, type MissionDef } from '../data/missions';
 import { ctx } from '../core/ctx';
 import { text, iris, shake, hitStop, puff } from '../ui/fx';
+import { openPause } from './PauseScene';
 import { music } from '../audio/Sequencer';
 import { SONG_ACTION } from '../audio/songs';
 import { sfx } from '../audio/sfx';
@@ -55,7 +56,7 @@ export class ActionScene extends Phaser.Scene {
     layer(`skyline_${sky}`, 30, 170, 0.08);
     layer(`backrow_${sky}`, 96, 80, 0.3);
     layer('facades_qw', 72, 96, 0.7);
-    layer('street_paint', 168, 64, 1.0);
+    layer(`street_${a.street ?? 'plain'}`, 168, 64, 1.0);
 
     // ground + obstacles
     this.ground = this.add.zone(this.worldW / 2, GROUND_Y + 20, this.worldW, 40);
@@ -81,8 +82,12 @@ export class ActionScene extends Phaser.Scene {
     this.physics.add.collider(this.player.sprite, this.ground);
     this.physics.add.collider(this.player.sprite, this.platforms);
     this.cones = this.physics.add.group();
-    this.physics.add.collider(this.cones, this.ground, (c) => {
-      const cone = c as Phaser.Physics.Arcade.Image;
+    // NB: Phaser passes (sprite, groupChild) to the callback when a group collides with a single object,
+    // regardless of argument order, so resolve the cone explicitly. (M0 bug: the args were swapped and the
+    // callback threw on the ground's static body, killing the game loop.)
+    this.physics.add.collider(this.cones, this.ground, (a, b) => {
+      const cone = (a === this.ground ? b : a) as Phaser.Physics.Arcade.Image;
+      if (!cone.active || !cone.body) return;
       if (!cone.getData('landed')) { cone.setData('landed', true); (cone.body as Phaser.Physics.Arcade.Body).setVelocity(0, 0); sfx.clang(); this.tweens.add({ targets: cone, alpha: 0, delay: 1200, duration: 300, onComplete: () => cone.destroy() }); }
     });
 
@@ -91,7 +96,10 @@ export class ActionScene extends Phaser.Scene {
     cam.startFollow(this.player.sprite, true, 0.15, 0.1, -40, 0);
 
     this.buildHud();
-    if (wantsTouch()) { this.touch = new TouchControls(this); this.touch.setLabel('act', 'HIT'); }
+    if (wantsTouch()) { this.touch = new TouchControls(this); this.touch.setLabel('act', 'PUMP'); }
+    this.scale.on('resize', this.layoutHud, this);
+    this.events.on('resume', () => this.input2.swallow());
+    this.events.once('shutdown', () => this.scale.off('resize', this.layoutHud, this));
     music.play(SONG_ACTION);
     void this.intro();
     if (DEBUG) this.input.keyboard?.on('keydown-V', () => void this.win());
@@ -104,9 +112,10 @@ export class ActionScene extends Phaser.Scene {
     const t1 = text(this, GAME_W / 2, 60, this.mission.title, 'font_big').setScrollFactor(0).setDepth(1000).setScale(0.1);
     this.tweens.add({ targets: t1, scale: 1, duration: 300, ease: 'Back.easeOut' });
     const t2 = text(this, GAME_W / 2, 84, this.mission.action.intro, 'font_outline').setScrollFactor(0).setDepth(1000);
+    const t3 = text(this, GAME_W / 2, 100, wantsTouch() ? 'RED: PUMP   BLUE: DASH   GREEN: JUMP' : 'E: PUMP (3-HIT COMBO)   Q: DASH   SPACE: JUMP', 'font').setScrollFactor(0).setDepth(1000).setTint(0xfff08a);
     sfx.bell();
-    await new Promise((r) => this.time.delayedCall(1700, r));
-    t1.destroy(); t2.destroy();
+    await new Promise((r) => this.time.delayedCall(2400, r));
+    t1.destroy(); t2.destroy(); t3.destroy();
     this.flashGo('RIDE!');
     this.player.frozen = false;
   }
@@ -119,9 +128,15 @@ export class ActionScene extends Phaser.Scene {
 
   private buildHud() {
     const hearts = this.add.graphics().setScrollFactor(0).setDepth(2000);
-    const ratsLeft = text(this, GAME_W - 6, 6, '', 'font_outline', 0).setOrigin(1, 0).setScrollFactor(0).setDepth(2000);
+    const ratsLeft = text(this, GAME_W / 2, 6, '', 'font_outline', 0).setOrigin(0.5, 0).setScrollFactor(0).setDepth(2000);
     const go = text(this, GAME_W / 2, 70, '', 'font_big').setScrollFactor(0).setDepth(2000).setAlpha(0);
     this.hud = { hearts, ratsLeft, go };
+  }
+
+  private layoutHud() {
+    this.hud.ratsLeft.setX(GAME_W / 2); this.hud.go.setX(GAME_W / 2);
+    for (const l of this.layers) l.ts.setSize(GAME_W, l.ts.height);
+    if (wantsTouch() && window.innerHeight > window.innerWidth && !this.finished) openPause(this);
   }
 
   private drawHud() {
@@ -198,7 +213,9 @@ export class ActionScene extends Phaser.Scene {
     await new Promise((r) => this.time.delayedCall(2000, r));
     await iris(this, 'close', this.player.sprite.x - this.cameras.main.scrollX, this.player.sprite.y - 16, 500);
     this.physics.world.gravity.y = 0;
-    this.scene.start('Explore', { from: 'mission', missionId: this.mission.id, won: true });
+    const next = { from: 'mission', missionId: this.mission.id, won: true };
+    if (this.mission.debrief) this.scene.start('Cutscene', { id: this.mission.debrief, next: 'Explore', nextData: next });
+    else this.scene.start('Explore', next);
   }
 
   private async lose() {
@@ -214,6 +231,7 @@ export class ActionScene extends Phaser.Scene {
 
   update(_t: number, dt: number) {
     this.input2.update();
+    if (!this.finished && this.input2.justPressed('pause')) { openPause(this); return; }
     this.player.update(this.input2, dt);
     const cam = this.cameras.main;
     for (const l of this.layers) l.ts.tilePositionX = cam.scrollX * l.f;
@@ -247,9 +265,15 @@ export class ActionScene extends Phaser.Scene {
       if (rab && overlap(rab, pRect) && this.player.hurt(r.sprite.x)) { shake(this, 150, 0.01); hitStop(this, 80); }
     }
     this.rats = this.rats.filter((r) => r.alive || r.sprite.active);
+    // keep rats from stacking into one blob: gentle push apart on the ground
+    const live = this.rats.filter((r) => r.alive);
+    for (let i = 0; i < live.length; i++) for (let j = i + 1; j < live.length; j++) {
+      const a = live[i].sprite, b = live[j].sprite, dx = b.x - a.x;
+      if (Math.abs(dx) < 16) { const push = (16 - Math.abs(dx)) * 0.5 * (dx >= 0 ? 1 : -1); a.x -= push * 0.5; b.x += push * 0.5; }
+    }
 
     // thrown cones
-    for (const c of this.cones.getChildren() as Phaser.Physics.Arcade.Image[]) {
+    for (const c of [...this.cones.getChildren()] as Phaser.Physics.Arcade.Image[]) {
       if (c.getData('landed')) continue;
       const cb = c.body as Phaser.Physics.Arcade.Body, cRect = new Phaser.Geom.Rectangle(cb.x, cb.y, cb.width, cb.height);
       if (hits.some((h) => overlap(h, cRect))) { sfx.clang(); puff(this, c.x, c.y, 0xff9a2e, 6, 14, 96); c.destroy(); continue; }

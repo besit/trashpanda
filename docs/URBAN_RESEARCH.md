@@ -14,7 +14,7 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
 | # | Intervention | Mission | Status |
 |---|---|---|---|
 | 1 | Protected bike lanes | The Bike Lane War (main, vertical slice) | ✅ |
-| 2 | School-zone speed cameras (automated speed enforcement) | *Slow Down, Dog* (requested by Ivan) | 🟡 |
+| 2 | School-zone speed cameras (automated speed enforcement) | *Slow Down, Dog* (**main mission**, Ivan's call at M0 review) | 🟡 |
 | 3 | Transit signal priority | Let the Streetcar Through | ⬜ |
 | 4 | Transit-priority corridor (King St pilot) | King of the Street | ⬜ |
 | 5 | Adaptive reuse (Science Centre) | Save the Science | ⬜ |
@@ -26,6 +26,8 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
 | 11 | Protected intersections | Intersection Repair (side) | ⬜ |
 | 12 | GO electrification | bonus | ⬜ |
 | 13 | Rail Deck Park | bonus | ⬜ |
+| 14 | Induced demand ("another car lane") | Intro cutscene, Death by Highway | ✅ (qualitative) |
+| 15 | Trinity Bellwoods gates (landmark plaque) | Queen West map | ✅ |
 
 ---
 
@@ -41,6 +43,8 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
   - **July 30, 2025:** the Ontario Superior Court (Justice Schabas) found the removal provisions violated s.7 of the Charter (security of the person).
   - **August 14, 2026:** the **Ontario Court of Appeal unanimously overturned** that ruling, holding that the trial judge had effectively created a right to bike lanes.
   - **October 2026:** removal work began on a stretch of Bloor West in Etobicoke, with protests and arrests. Cycle Toronto and others applied for leave to appeal to the Supreme Court of Canada. As of writing, no decision on leave has been reported.
+
+  - **September 2026:** the province issued an RFP to restore motor-vehicle lanes on Bloor, Yonge, University Avenue, Queen's Park and Avenue Road, and to identify where lanes could be retained or reconfigured. **Dundas Street West is not on the list** (checked at Ivan's question during the M0 review: the removal fight belongs on Bloor, i.e. the High Park district, not Dundas). [insauga, Sep 1 2026](https://www.insauga.com/bike-lanes-to-be-removed-on-major-toronto-streets/); [The Eyeopener, Oct 2026](https://theeyeopener.com/2026/10/province-continues-removal-of-bike-lanes-amid-backlash-from-protestors-cyclists/)
 
   Sources: [Wikipedia: Reducing Gridlock, Saving You Time Act](https://en.wikipedia.org/wiki/Reducing_Gridlock,_Saving_You_Time_Act); [Cycle Toronto v. Ontario](https://www.cycleto.ca/cycle_toronto_v_ontario); [National Observer, Aug 14 2026](https://www.nationalobserver.com/2026/08/14/news/ontarios-court-ford-toronto-bike-lanes); [Globe and Mail](https://www.theglobeandmail.com/canada/toronto/article-ontarios-top-court-clears-way-for-toronto-bike-lane-approval/); [National Observer, Oct 13 2026](https://www.nationalobserver.com/2026/10/13/news/cyclists-court-battle-toronto-bike-lane-removals); [CP24, Oct 14 2026](https://www.cp24.com/politics/queens-park/2026/10/14/cycling-protest-blocks-toronto-bike-lane-removal-work-along-bloor-street-stretch/)
 
@@ -69,7 +73,9 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
 
 **TORONTO-SPECIFIC CONSIDERATIONS:** Streetcar tracks on many main streets (a crash risk for cyclists, and space conflicts); winter maintenance of separated lanes; deliveries and Wheel-Trans curb access; the provincial approval requirement (Bill 212) for any lane that removes car space.
 
-**GAME IMPLEMENTATION:** Mission 1, *The Bike Lane War* (Queen West). Dog Fraud's rats rip out a painted lane to add "another lane". The player defeats them, and the street is rebuilt with green-painted protected lanes, curbs, bollards and planters, swept in visually across the map.
+**QUEEN WEST TODAY (the mission's premise):** the stretch of Queen St W along Trinity Bellwoods has **no bike lanes**: cyclists ride in the curb lane between parked cars and the 501's tracks (the track hazard above: OR 3.0). Painted lanes do exist further west (Brock to Sorauren: a September 2026 TTC track-repair notice mentions them), so in-game copy says "this stretch", never "Queen has no bike lanes anywhere". [TTC notice, Queen W Brock–Sorauren](https://www.ttc.ca/service-advisories/construction-notices/Queen-and-Brock-and-Sorauren-Ave)
+
+**GAME IMPLEMENTATION:** Mission 1, *The Bike Lane War* (Queen West, M1 version after Ivan's review). The before vignette shows a parent with a child seat squeezed between a streetcar and parked cars, while Dog Fraud's rats declare the curb lane "ANOTHER CAR LANE". The player clears the rats, and the curb **parking lanes become protected bike lanes** (green paint, curb, bollards, planters on the traffic side), swept in across the map while the parked cars drive off. Afterwards, cyclists appear in the new lanes. Before it, the few cyclists ride in the streetcar lane and cars queue behind them honking.
 
 **GAME EFFECT:** Livability +4 (cycling +14, safety +8, walking +2, less car dependence +4). The game abstraction says nothing about real-world magnitudes. End-of-game stat: +2 protected bike lanes.
 
@@ -114,3 +120,33 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
 ---
 
 *(Entries 3–13 are researched as their missions are built, in M2–M3.)*
+
+
+---
+
+## 14. Induced demand ("another car lane") ✅ (qualitative)
+
+**CLAIM USED IN GAME:** The intro caption "SIX LANES. STILL NOT MOVING." is satire of the idea that widening a congested road fixes congestion. It is used **qualitatively**, with no statistic.
+
+**EVIDENCE:** Duranton & Turner (2011), "The Fundamental Law of Road Congestion", *American Economic Review* 101(6): 2616–52. Across US metro areas, vehicle-kilometres travelled on interstates rose roughly one-for-one with lane-kilometres. New road capacity fills with new traffic, so congestion is not relieved in the long run.
+
+**CRITICISMS / NUANCE:** Short-term relief can occur, and the effect size varies by context. Widening can also serve freight or safety goals. The game uses the finding as a gag in the intro and as the thesis of *Death by Highway*. Before any numeric claim ships, add a Toronto/Ontario-specific source (e.g. the Gardiner/DVP or Highway 401 widening history). 🟡
+
+---
+
+## 15. Trinity Bellwoods gates (landmark plaque) ✅
+
+**IN-GAME PLAQUE:** "THE OLD GATES OF TRINITY COLLEGE, WHICH STOOD HERE FROM 1852 TO 1925. THE COLLEGE MOVED; THE GATES STAYED."
+
+**SOURCES:** Trinity College was founded by Bishop John Strachan in 1851 and stood on the Queen St site until moving to the University of Toronto in 1925. Most college buildings were demolished in the 1950s. The stone-and-iron gates and St. Hilda's survive, and the gates were restored in 2007. [Wikipedia: Trinity Bellwoods Park](https://en.wikipedia.org/wiki/Trinity_Bellwoods_Park); [Friends of Trinity Bellwoods Park: history](https://trinitybellwoods.ca/nature-and-park-history/); [Taylor on History](https://tayloronhistory.com/2016/01/24/the-lost-trinity-college-of-bellwoods-parktoronto/)
+
+**UNCERTAIN (not used in game):** The gates' construction date. Sources give 1900 (ACO), 1903 (historical marker) and 1905–06 (Taylor on History, designed by Frank Darling), so the plaque avoids it. [ACO Toronto](https://acotoronto.ca/building.php?ID=3048); [HMdb marker](https://www.hmdb.org/m.asp?m=259655)
+
+**OTHER LOCAL DETAILS IN THE MAP:**
+- the **dog bowl**, the hollow left by buried Garrison Creek
+- the park's **white squirrel**, a local celebrity
+- **Little Portugal's** tiled facades on Dundas W
+- the **505 Dundas** and **501 Queen** streetcars
+- a graffiti laneway behind Queen, inspired by Graffiti Alley (Rush Lane), which is further east near Spadina
+
+These are scenery, not factual claims.

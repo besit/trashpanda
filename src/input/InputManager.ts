@@ -1,23 +1,38 @@
 // Maps keyboard, gamepad and touch onto abstract actions. One instance shared via the registry.
 import Phaser from 'phaser';
 
-export type Action = 'jump' | 'dash' | 'act' | 'boost' | 'pause' | 'confirm' | 'back';
-const ACTIONS: Action[] = ['jump', 'dash', 'act', 'boost', 'pause', 'confirm', 'back'];
+export type Action = 'jump' | 'dash' | 'act' | 'boost' | 'pause' | 'map' | 'confirm' | 'back';
+const ACTIONS: Action[] = ['jump', 'dash', 'act', 'boost', 'pause', 'map', 'confirm', 'back'];
 
-const KEYMAP: Record<Action, string[]> = {
-  jump: ['J', 'Z'],
-  dash: ['SPACE', 'C'],
-  act: ['K', 'X'],
-  boost: ['SHIFT', 'L'],
+// Left-hand layout around WASD (E act, Q dash, Space jump, Shift boost) + an arrow-key layout (Z X C V).
+export const KEYMAP: Record<Action, string[]> = {
+  jump: ['SPACE', 'Z'],
+  dash: ['Q', 'C'],
+  act: ['E', 'R', 'X'],
+  boost: ['SHIFT', 'V'],
   pause: ['ESC', 'P'],
-  confirm: ['ENTER', 'SPACE', 'K', 'X', 'J', 'Z'],
+  map: ['M', 'TAB'],
+  confirm: ['ENTER', 'SPACE', 'E', 'Z', 'X'],
   back: ['ESC', 'BACKSPACE'],
 };
-// Standard gamepad mapping: 0=A 1=B 2=X 3=Y 4=LB 5=RB 6=LT 7=RT 9=Start
-const PADMAP: Record<Action, number[]> = { jump: [0], dash: [1], act: [2], boost: [5, 7], pause: [9], confirm: [0, 9], back: [1] };
+// Standard gamepad mapping: 0=A 1=B 2=X 3=Y 4=LB 5=RB 6=LT 7=RT 8=Select 9=Start
+const PADMAP: Record<Action, number[]> = { jump: [0], dash: [1], act: [2], boost: [5, 7], pause: [9], map: [8, 3], confirm: [0, 9], back: [1] };
+
+/** Human-readable control list (pause menu, title, mission cards). */
+export const CONTROLS_KEYS: [string, string][] = [
+  ['WASD / ARROWS', 'RIDE'],
+  ['SHIFT (HOLD)', 'BOOST'],
+  ['SPACE', 'HOP / JUMP'],
+  ['Q', 'DASH'],
+  ['E', 'BELL / TALK / PUMP'],
+  ['M', 'MAP'],
+  ['ESC', 'PAUSE'],
+];
+export const CONTROLS_ALT = 'ARROWS + Z JUMP  X ACT  C DASH  V BOOST';
+export const CONTROLS_PAD = 'PAD: A JUMP  X ACT  B DASH  RT BOOST  SELECT MAP';
 
 /** Touch state written by TouchControls */
-export const touchState = { x: 0, y: 0, buttons: { jump: false, dash: false, act: false, boost: false, pause: false } as Record<string, boolean>, active: false };
+export const touchState = { x: 0, y: 0, buttons: { jump: false, dash: false, act: false, boost: false, pause: false, map: false } as Record<string, boolean>, active: false };
 
 export class InputManager {
   private keys = new Map<string, Phaser.Input.Keyboard.Key>();
@@ -37,7 +52,7 @@ export class InputManager {
     if (kb) {
       const names = new Set(['W', 'A', 'S', 'D', 'UP', 'DOWN', 'LEFT', 'RIGHT', ...Object.values(KEYMAP).flat()]);
       for (const n of names) { this.keys.set(n, kb.addKey(n, true, false)); this.codeOf.set(n, Phaser.Input.Keyboard.KeyCodes[n as keyof typeof Phaser.Input.Keyboard.KeyCodes]); }
-      const onDown = (e: KeyboardEvent) => { if (!e.repeat) this.taps.add(e.keyCode); };
+      const onDown = (e: KeyboardEvent) => { if (e.keyCode === 9) e.preventDefault(); if (!e.repeat) this.taps.add(e.keyCode); };
       kb.on('keydown', onDown);
       scene.events.once('shutdown', () => kb.off('keydown', onDown));
     }
@@ -85,7 +100,12 @@ export class InputManager {
     this.prevHeld = this.held;
     this.held = now;
     this.pressed = new Set([...[...now].filter((a) => !this.prevHeld.has(a)), ...tapped]);
+    if (this.skipNext) { this.skipNext = false; this.pressed.clear(); this.held.forEach((a) => this.prevHeld.add(a)); }
   }
+
+  /** Ignore presses on the next update (e.g. the key that closed a menu is still held). */
+  swallow() { this.skipNext = true; }
+  private skipNext = false;
 
   isDown(a: Action) { return this.held.has(a); }
   justPressed(a: Action) { return this.pressed.has(a); }

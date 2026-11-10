@@ -88,6 +88,19 @@ export function buildTiles() {
   { const t = base('E'); speckle(t, 'l', 6, 51); t.rect(0, 0, 16, 3, 'T'); t.hline(0, 15, 3, 'S');
     t.grid(3, 6, BIKE);
     add('bikelane_protected_stencil', t); }
+  // N-S two-lane street: west (southbound) lane carries the yellow centre line on its east edge
+  { const t = asphalt(14); t.vline(14, 0, 15, 'y'); t.vline(15, 0, 15, 'A'); add('road_ns_w', t); }
+  { const t = asphalt(15); t.vline(0, 0, 15, 'y'); add('road_ns_e', t); }
+  // E-W plain lane with yellow centre line on top (for a road without tracks)
+  { const t = asphalt(16); t.hline(0, 15, 0, 'y'); add('road_ew_s', t); }
+  { const t = asphalt(17); t.hline(0, 15, 15, 'y'); add('road_ew_n', t); }
+  // north-side parking lane (marks at the top edge)
+  { const t = asphalt(61); t.vline(0, 0, 3, 'H'); t.hline(0, 2, 0, 'H'); add('parking_n', t); }
+  // stop bars on the N-S street approaching an intersection
+  { const t = asphalt(18); t.hline(0, 15, 14, 'W'); t.hline(0, 15, 15, 'W'); t.vline(15, 0, 13, 'y'); add('road_ns_w_stop', t); }
+  { const t = asphalt(19); t.hline(0, 15, 0, 'W'); t.hline(0, 15, 1, 'W'); t.vline(0, 2, 15, 'y'); add('road_ns_e_stop', t); }
+  // park lawn variants (slightly lighter than verge grass)
+  for (let s = 0; s < 3; s++) { const t = base('l'); speckle(t, 'E', 12, 100 + s); speckle(t, 'L', 10, 110 + s); add(`lawn${s}`, t); }
   // parking lane (E-W): faint T marks
   { const t = asphalt(60); t.vline(0, 12, 15, 'H'); t.hline(0, 2, 15, 'H'); add('parking', t); }
   // grass + park path
@@ -95,7 +108,7 @@ export function buildTiles() {
   { const t = base('X'); speckle(t, 'j', 14, 80); speckle(t, 'x', 10, 81); add('path', t); }
   { const t = grass(82); t.rect(0, 0, 16, 2, 'x'); add('grass_edge_n', t); }
   // laneway (alley) concrete - darker, with oil stains
-  { const t = base('s'); speckle(t, 'S', 10, 90); speckle(t, 'A', 6, 91); t.circle(10, 9, 2, 'A'); add('laneway', t); }
+  { const t = base('s'); speckle(t, 'S', 10, 90); speckle(t, 'A', 6, 91); t.set(10, 9, 'A'); t.set(11, 9, 'A'); t.set(10, 10, 'A'); t.hline(0, 15, 15, 'A'); add('laneway', t); }
   // tree pit in sidewalk
   { const t = sidewalk(95); t.rect(3, 3, 10, 10, 'w'); t.rect(4, 4, 8, 8, 'x'); speckle(t, 'X', 6, 96, [4, 4, 8, 8]); add('treepit', t); }
   return tiles;

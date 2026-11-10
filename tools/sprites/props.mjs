@@ -22,11 +22,11 @@ function draw(objs, w, h, ox, oy, yaw = 0, opts = {}) {
 }
 
 // ---------------- props ----------------
-export function tree(seed = 1, size = 1) {
+export function tree(seed = 1, size = 1, ramp = R.green) {
   const r = rng(seed);
   const objs = [{ d: sd.capsule([0, 0, 0], [0.5, 0, 14 * size], 1.6 * size, 1.1 * size), m: mat(R.trunk) }];
   const blobs = [[0, 0, 20, 8], [-5, 1, 17, 5.5], [5, -1, 17.5, 5.5], [0, 4, 16, 5], [0, -4, 18, 5], [2, 1, 25, 5.5], [-3, -2, 24, 5]];
-  for (const [x, y, z, rad] of blobs) objs.push({ d: sd.sphere([(x + r() * 2 - 1) * size, (y + r() * 2 - 1) * size, z * size], rad * size * (0.9 + r() * 0.2)), m: mat(R.green) });
+  for (const [x, y, z, rad] of blobs) objs.push({ d: sd.sphere([(x + r() * 2 - 1) * size, (y + r() * 2 - 1) * size, z * size], rad * size * (0.9 + r() * 0.2)), m: mat(ramp) });
   return draw(objs, Math.round(36 * size), Math.round(44 * size), Math.round(18 * size), Math.round(40 * size));
 }
 export function sapling() {
@@ -60,13 +60,17 @@ export function bikeRing() { // Toronto's iconic post-and-ring bike stand
   ];
   return draw(objs, 10, 16, 5, 14);
 }
-export function hydrant() {
+export function hydrant() { // Toronto hydrant: red barrel, yellow bonnet + caps, chunky enough to read at 3/4
   const objs = [
-    { d: sd.capsule([0, 0, 0], [0, 0, 4.5], 1.5), m: mat(R.red) },
-    { d: sd.sphere([0, 0, 5], 1.6), m: mat(R.yellow) },
-    { d: sd.capsule([-2.2, 0, 3], [2.2, 0, 3], 0.6), m: mat(R.red) },
+    { d: sd.cylY([0, 0, 0.5], 2.4, 0.5), m: mat(R.red) }, // base flange
+    { d: sd.capsule([0, 0, 0.8], [0, 0, 6.2], 1.7), m: mat(R.red) },
+    { d: sd.cylY([0, 0, 6.6], 2.1, 0.5), m: mat(R.yellow) },
+    { d: sd.ellipsoid([0, 0, 7.6], [1.6, 1.6, 1.3]), m: mat(R.yellow) },
+    { d: sd.capsule([0, 0, 8.6], [0, 0, 9.3], 0.6), m: mat(R.yellow) },
+    { d: sd.capsule([-2.9, 0, 4.2], [2.9, 0, 4.2], 0.85), m: mat(R.yellow) },
+    { d: sd.capsule([0, 0, 3.6], [0, 2.6, 3.6], 1.0), m: mat(R.yellow) },
   ];
-  return draw(objs, 10, 12, 5, 10);
+  return draw(objs, 14, 18, 7, 15);
 }
 export function bench() {
   const objs = [
@@ -118,7 +122,7 @@ export function newsBox() {
 }
 
 // ---------------- vehicles ----------------
-export function car(color = 'blue', yaw = 0, seed = 1, side = false) {
+export function carModel(color = 'blue') {
   const body = { blue: R.blue, red: R.red, white: R.white, yellow: R.yellow, teal: R.teal, dark: R.dark, orange: R.orange }[color] ?? R.blue;
   const objs = [
     { d: sd.box([0, 0, 3.6], [13, 5.8, 2.4], 1.6), m: mat(body, { spec: 1 }) },
@@ -128,8 +132,12 @@ export function car(color = 'blue', yaw = 0, seed = 1, side = false) {
     { d: sd.box([13.2, 3.8, 3.8], [0.4, 1.0, 0.6]), m: { flat: 'Y' } }, { d: sd.box([13.2, -3.8, 3.8], [0.4, 1.0, 0.6]), m: { flat: 'Y' } },
     { d: sd.box([-13.2, 3.8, 4.2], [0.4, 1.0, 0.6]), m: { flat: 'R' } }, { d: sd.box([-13.2, -3.8, 4.2], [0.4, 1.0, 0.6]), m: { flat: 'R' } },
   ];
+  return objs;
+}
+export function car(color = 'blue', yaw = 0, seed = 1, side = false) {
+  const objs = carModel(color);
   if (side) return drawSide(objs, 68, 40, 34, 36);
-  return draw(objs, 36, 28, 18, 21, yaw);
+  return draw(objs, 36, 36, 18, 26, yaw);
 }
 /** Side-view (action scenes): larger scale so vehicles match the side-view raccoon. */
 function drawSide(objs, w, h, ox, oy) {
@@ -138,19 +146,23 @@ function drawSide(objs, w, h, ox, oy) {
   return img;
 }
 export function suv(yaw = 0, side = false) {
-  const objs = [
+  const objs = suvModel();
+  if (side) return drawSide(objs, 76, 50, 38, 46);
+  return draw(objs, 42, 42, 21, 31, yaw);
+}
+export function suvModel() {
+  return [
     { d: sd.box([0, 0, 5], [15, 6.6, 3.4], 1.6), m: mat(R.dark, { spec: 1 }) },
     { d: sd.box([-2, 0, 10], [10, 6, 2.4], 1.4), m: mat(R.glass, { fn: (p) => (Math.abs(p[0] + 1) < 1.2 && p[2] > 8.6 ? 'k' : null) }) },
     { d: sd.box([15.3, 0, 5], [0.5, 4, 1.4]), m: mat(R.steel) },
     { d: sd.torusY([9.5, 5.8, 2.8], 1.8, 1.1), m: mat(R.tire) }, { d: sd.torusY([9.5, -5.8, 2.8], 1.8, 1.1), m: mat(R.tire) },
     { d: sd.torusY([-9.5, 5.8, 2.8], 1.8, 1.1), m: mat(R.tire) }, { d: sd.torusY([-9.5, -5.8, 2.8], 1.8, 1.1), m: mat(R.tire) },
     { d: sd.box([15.5, 4.4, 6], [0.4, 1.2, 0.6]), m: { flat: 'Y' } }, { d: sd.box([15.5, -4.4, 6], [0.4, 1.2, 0.6]), m: { flat: 'Y' } },
+    { d: sd.box([-15.5, 4.6, 6.4], [0.4, 1.0, 1.0]), m: { flat: 'R' } }, { d: sd.box([-15.5, -4.6, 6.4], [0.4, 1.0, 1.0]), m: { flat: 'R' } },
   ];
-  if (side) return drawSide(objs, 76, 50, 38, 46);
-  return draw(objs, 42, 34, 21, 26, yaw);
 }
 // TTC-style articulated low-floor streetcar (3 sections), red lower body, black window band, white roof.
-export function streetcar(yaw = 0, length = 96) {
+export function streetcar(yaw = 0, length = 96, side = false) {
   const half = length / 2, segs = 3, segL = length / segs;
   const objs = [];
   for (let s = 0; s < segs; s++) {
@@ -169,6 +181,7 @@ export function streetcar(yaw = 0, length = 96) {
   objs.push({ d: sd.capsule([-6, 0, 17], [2, 0, 22], 0.4), m: mat(R.dark) });
   objs.push({ d: sd.capsule([2, -3, 22], [2, 3, 22], 0.4), m: mat(R.dark) });
   const w = length + 16;
+  if (side) { const k = 2.0, sw = Math.ceil(w * k), sh = 96; const img = render(scene(objs), { w: sw, h: sh, cx: sw / 2, cy: sh - 6, cam: orthoCam([0, -1, -0.22]), ambient: 0.16, scale: k }); img.pivot = { x: 0.5, y: (sh - 6) / sh }; return img; }
   return draw(objs, w, 48, w / 2, 36, yaw);
 }
 
