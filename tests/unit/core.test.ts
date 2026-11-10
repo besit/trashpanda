@@ -71,12 +71,14 @@ describe('save system', () => {
 });
 
 describe('M2: districts, missions, saves', async () => {
-  const fsMod = 'node:fs';
-  const fs = await import(/* @vite-ignore */ fsMod);
+  // generate the maps directly (no dependency on `npm run assets` having run, e.g. in CI)
+  const GEN: Record<string, string> = { queenwest: 'generateQueenWest', highpark: 'generateHighPark', downtown: 'generateDowntown' };
+  const maps: Record<string, any> = {};
+  for (const id of Object.keys(GEN)) { const path = `../../tools/map/${id}.mjs`; const m = await import(/* @vite-ignore */ path); maps[id] = m[GEN[id]](); }
   const { MISSIONS, missionAvailable } = await import('../../src/data/missions');
   const { UPGRADES } = await import('../../src/data/upgrades');
   const { DISTRICTS } = await import('../../src/data/districts');
-  const load = (id: string) => JSON.parse(fs.readFileSync(`public/gen/${id}.json`, 'utf8'));
+  const load = (id: string) => maps[id];
 
   it('v1 saves migrate into Queen West', () => {
     const m = migrate({ version: 1, player: { scene: 'explore', x: 100, y: 200 } });
