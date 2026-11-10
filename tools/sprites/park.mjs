@@ -13,78 +13,86 @@ function draw(objs, w, h, ox, oy, opts = {}) {
 }
 
 // ------------------------------------------------------------------
-// The Trinity Bellwoods gates (Queen St W at Strachan Ave): pale stone piers with
-// pinnacle caps, black iron carriage gate with an arched overthrow + lantern,
-// pedestrian gates either side. Front elevation with 3/4 tops (same cheat as facades).
+// The Trinity Bellwoods gates (Queen St W at Strachan Ave). v02 matched to Ivan's reference photo:
+// smooth white stone, domed inner piers, gabled outer piers, inscribed lintels, arched iron carriage gate.
 // ------------------------------------------------------------------
-export const GATE_W = 112, GATE_H = 60;
+export const GATE_W = 112, GATE_H = 68;
+// Layout (left → right), matched to Ivan's reference photo: outer pier | pedestrian gate under a stone
+// lintel | inner pier | arched carriage gate | inner pier | pedestrian gate | outer pier.
+const LAYOUT = { outer: 10, ped: 18, inner: 11, carriage: 30 };
+function xs() {
+  const L = LAYOUT; let x = 2;
+  const o1 = x; x += L.outer; const p1 = x; x += L.ped; const i1 = x; x += L.inner; const c = x; x += L.carriage;
+  const i2 = x; x += L.inner; const p2 = x; x += L.ped; const o2 = x;
+  return { o1, p1, i1, c, i2, p2, o2 };
+}
 export function tbGates() {
-  const W = GATE_W, H = GATE_H, g = H - 1; // ground line
+  const W = GATE_W, H = GATE_H, g = H - 1;
   const img = new Img(W, H);
-  const stone = (x, y, w, h) => {
-    img.rect(x, y, w, h, 'H');
-    img.rect(x, y, 1, h, 'W'); // lit left edge
-    img.rect(x + w - 2, y, 2, h, 'h'); // shade right
-    for (let yy = y + 3; yy < y + h; yy += 4) img.hline(x + 1, x + w - 3, yy, 't'); // ashlar courses
-    for (let yy = y + 3, k = 0; yy < y + h; yy += 4, k++) img.vline(x + (k % 2 ? 3 : Math.floor(w / 2)), yy - 3, yy - 1, 't');
-  };
-  const cap = (x, w, top, peak) => { // stone cap + pyramid pinnacle
-    img.rect(x - 1, top, w + 2, 2, 'W'); img.hline(x - 1, x + w, top + 2, 'h');
-    const cx = x + (w - 1) / 2;
-    for (let i = 0; i < peak; i++) { const half = Math.max(0, Math.round(((peak - i) / peak) * (w / 2 - 1))); img.hline(Math.round(cx - half), Math.round(cx + half), top - 1 - i, i % 3 === 0 ? 'T' : 'W'); img.set(Math.round(cx + half), top - 1 - i, 'h'); }
-    img.set(Math.round(cx), top - peak - 1, 'H'); img.set(Math.round(cx), top - peak - 2, 'W'); // finial
-  };
-  const later = [];
-  const iron = (x0, x1, top, bottom, spear = true) => later.push(() => ironNow(x0, x1, top, bottom, spear));
-  const ironNow = (x0, x1, top, bottom, spear = true) => {
-    img.hline(x0, x1, top + 2, 'K'); img.hline(x0, x1, bottom - 3, 'K'); img.hline(x0, x1, Math.round((top + bottom) / 2), 'K');
-    for (let x = x0; x <= x1; x += 2) { img.vline(x, top, bottom, 'K'); if (spear) img.set(x, top - 1, 'g'); }
-    for (let x = x0 + 1; x <= x1; x += 4) img.set(x, Math.round((top + bottom) / 2) - 1, 'k'); // scroll dots
-  };
-  // low walls + railings at the far ends
-  for (const [x0, x1] of [[0, 9], [W - 10, W - 1]]) { img.rect(x0, g - 6, x1 - x0 + 1, 7, 'H'); img.hline(x0, x1, g - 6, 'W'); iron(x0, x1, g - 16, g - 7); }
-  // outer piers
-  const outer = [[10, 8], [W - 18, 8]];
-  for (const [x, w] of outer) { stone(x, g - 26, w, 27); cap(x, w, g - 28, 5); }
-  // pedestrian gates
-  iron(18, 33, g - 20, g);
-  iron(W - 34, W - 19, g - 20, g);
-  for (const [x0, x1] of [[18, 33], [W - 34, W - 19]]) later.push(() => { // small arched overthrow
-    const cx = (x0 + x1) / 2, rx = (x1 - x0) / 2;
-    for (let x = x0; x <= x1; x++) { const t = (x - cx) / rx; img.set(x, Math.round(g - 22 - 4 * Math.sqrt(Math.max(0, 1 - t * t))), 'K'); }
-  });
-  // inner piers: tall, buttressed, carved panel, pinnacles
-  const inner = [[34, 12], [W - 46, 12]];
-  for (const [x, w] of inner) {
-    img.rect(x - 1, g - 10, w + 2, 11, 'h'); img.hline(x - 1, x + w, g - 10, 'W'); // plinth
-    stone(x, g - 40, w, 31);
-    img.rect(x + 3, g - 34, w - 6, 9, 't'); img.rect(x + 4, g - 33, w - 8, 7, 'T'); img.vline(x + Math.floor(w / 2), g - 33, g - 27, 't'); // carved panel
-    for (let i = 0; i < 3; i++) img.set(x + 3 + i * 3, g - 22, 'h');
-    cap(x, w, g - 42, 9);
+  const X = xs(), L = LAYOUT;
+  // smooth pale stone: lit left face, cream body, shaded right edge
+  const shaft = (x, y, w, h) => { img.rect(x, y, w, h, 'W'); img.vline(x + w - 1, y, y + h - 1, 'H'); img.vline(x + w - 2, y, y + h - 1, 'T'); };
+  const band = (x, y, w, h) => { img.rect(x, y, w, h, 'W'); img.hline(x, x + w - 1, y + h - 1, 'H'); };
+  // ---- outer piers: plinth, shaft, cornice, gabled pinnacle with ball finial
+  for (const ox of [X.o1, X.o2]) {
+    const w = L.outer, top = g - 40;
+    band(ox - 1, g - 5, w + 2, 6);
+    shaft(ox, top, w, 36);
+    band(ox - 1, top - 2, w + 2, 2);
+    const cx = ox + (w - 1) / 2;
+    for (let i = 0; i < 11; i++) { const hw = Math.max(0, Math.round((11 - i) / 11 * (w / 2 + 0.5))); img.hline(Math.round(cx - hw), Math.round(cx + hw), top - 3 - i, i % 4 === 3 ? 'T' : 'W'); img.set(Math.round(cx + hw), top - 3 - i, 'H'); }
+    img.rect(Math.round(cx) - 1, top - 16, 2, 2, 'W'); // ball finial
   }
-  // carriage gate (double leaves) + arched overthrow with lantern
-  const c0 = 46, c1 = W - 47;
-  iron(c0, c1, g - 26, g);
-  later.push(() => {
-  img.vline((c0 + c1) >> 1, g - 26, g, 'K'); img.vline(((c0 + c1) >> 1) + 1, g - 26, g, 'k');
-  const ccx = (c0 + c1) / 2, crx = (c1 - c0) / 2 + 0.5;
-  for (let x = c0; x <= c1; x++) { const t = (x - ccx) / crx; const yy = Math.round(g - 28 - 9 * Math.sqrt(Math.max(0, 1 - t * t))); img.set(x, yy, 'K'); img.set(x, yy + 1, 'k'); if (x % 3 === 0) img.vline(x, yy + 1, g - 28, 'K'); }
-  img.hline(c0, c1, g - 28, 'K');
-  // lantern
-  const lx = Math.round(ccx);
-  img.vline(lx, g - 41, g - 38, 'K'); img.rect(lx - 2, g - 46, 5, 5, 'K'); img.rect(lx - 1, g - 45, 3, 3, 'Y'); img.set(lx, g - 47, 'K');
-  });
+  // plaque on the left outer pier
+  img.rect(X.o1 + 2, g - 22, 6, 4, 'x'); img.rect(X.o1 + 3, g - 21, 4, 2, 'X');
+  // ---- stone lintels with inscriptions over the pedestrian gates
+  for (const px of [X.p1, X.p2]) {
+    band(px, g - 32, L.ped, 6);
+    img.hline(px, px + L.ped - 1, g - 32, 'T');
+    for (let i = px + 2; i < px + L.ped - 2; i++) if ((i * 7) % 5 < 3) img.set(i, g - 29, 'h'); // faux lettering
+  }
+  // ---- inner piers: tall plain shaft, cornice, panelled lantern stage, dome + finial
+  for (const ix of [X.i1, X.i2]) {
+    const w = L.inner;
+    band(ix - 1, g - 6, w + 2, 7);
+    shaft(ix, g - 46, w, 41);
+    band(ix - 2, g - 48, w + 4, 2); img.hline(ix - 2, ix + w + 1, g - 49, 'T');
+    shaft(ix + 1, g - 55, w - 2, 6);
+    img.rect(ix + 2, g - 53, 2, 2, 'H'); img.rect(ix + w - 4, g - 53, 2, 2, 'H'); // panels
+    band(ix, g - 56, w, 1);
+    const cx = ix + (w - 1) / 2;
+    // bell-shaped dome: narrower than the lantern, swelling then tapering to the finial
+    for (let i = 0; i < 8; i++) { const t = i / 8; const hw = (w / 2 - 1.5) * Math.sin(Math.PI * (0.35 + t * 0.65)) + 0.5; img.hline(Math.round(cx - hw), Math.round(cx + hw), g - 57 - i, 'W'); img.set(Math.round(cx + hw), g - 57 - i, 'H'); }
+    img.vline(Math.round(cx), g - 66, g - 63, 'W'); img.rect(Math.round(cx) - 1, g - 65, 3, 1, 'W'); img.set(Math.round(cx), g - 67, 'W');
+  }
   img.outline('K');
-  for (const f of later) f();
-  // ground shadow
+  // ---- ironwork (after outlining so the gaps between bars stay open)
+  const iron = (x0, x1, top, bottom) => {
+    img.hline(x0, x1, top, 'K'); img.hline(x0, x1, bottom - 2, 'K'); img.hline(x0, x1, Math.round(top + (bottom - top) * 0.45), 'K');
+    for (let x = x0; x <= x1; x += 2) img.vline(x, top, bottom, 'K');
+    // scrollwork rows: little rings between the rails
+    for (const yy of [top + 3, Math.round(top + (bottom - top) * 0.45) + 3]) for (let x = x0 + 1; x < x1; x += 4) { img.set(x, yy, 'g'); img.set(x + 1, yy - 1, 'K'); img.set(x + 1, yy + 1, 'K'); }
+  };
+  for (const px of [X.p1, X.p2]) iron(px + 1, px + L.ped - 2, g - 25, g);
+  const c0 = X.c, c1 = X.c + L.carriage - 1, ccx = (c0 + c1) / 2, crx = (c1 - c0) / 2;
+  iron(c0 + 1, c1 - 1, g - 36, g);
+  // segmental arch frame over the carriage gate
+  for (let x = c0; x <= c1; x++) {
+    const t = (x - ccx) / crx, yy = Math.round(g - 37 - 7 * Math.sqrt(Math.max(0, 1 - t * t)));
+    img.set(x, yy, 'K'); img.set(x, yy + 1, 'k'); img.set(x, yy - 1, 'K');
+    if (x % 2 === 0) img.vline(x, yy + 1, g - 37, 'K');
+  }
+  for (let x = c0 + 3; x < c1 - 2; x += 4) { const t = (x - ccx) / crx; const yy = Math.round(g - 40 - 4 * Math.sqrt(Math.max(0, 1 - t * t))); img.set(x, yy, 'g'); }
+  img.vline(Math.round(ccx), g - 36, g, 'K'); img.vline(Math.round(ccx) + 1, g - 36, g, 'k'); // the two leaves meet
+  img.rect(Math.round(ccx) - 3, g - 22, 2, 2, 'g'); img.rect(Math.round(ccx) + 2, g - 22, 2, 2, 'g'); // crests
   img.hline(0, W - 1, g, 'k');
   img.pivot = { x: 0.5, y: 1 };
   return img;
 }
-/** Collider boxes (relative to the gate's bottom-centre) for the piers + walls only, so you can ride through. */
+/** Collider boxes (relative to the gate's bottom-centre) for the piers only, so you can ride through every opening. */
 export function tbGateSolids() {
-  const W = GATE_W, half = W / 2;
-  return [[-half, -8, 18, 8], [half - 18, -8, 18, 8], [34 - half - 1, -10, 14, 10], [W - 46 - half - 1, -10, 14, 10]];
+  const X = xs(), L = LAYOUT, half = GATE_W / 2;
+  return [[X.o1 - 1, L.outer + 2], [X.i1 - 1, L.inner + 2], [X.i2 - 1, L.inner + 2], [X.o2 - 1, L.outer + 2]].map(([x, w]) => [x - half, -8, w, 8]);
 }
 
 // ------------------------------------------------------------------
@@ -164,33 +172,123 @@ export function tennisCourts() {
 // ------------------------------------------------------------------
 // Baseball diamond (top-down): skinned infield, bases, mound, backstop.
 // ------------------------------------------------------------------
-export function baseballDiamond() {
+export function baseballDiamond(home = 'south') {
+  // drawn with home at the bottom, then rotated losslessly; the standing backstop is added after rotating
   const S = 96;
-  const img = new Img(S, S);
+  let img = new Img(S, S);
   const hx = S / 2, hy = S - 12; // home plate
-  // dirt arc
   for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
     const d = Math.hypot(x - hx, y - hy);
     const ang = Math.atan2(hx - x, hy - y);
     if (d < 70 && Math.abs(ang) < Math.PI / 4 + 0.12) img.set(x, y, (x + y) % 5 ? 'X' : 'j');
   }
-  // grass infield square (rotated 45°)
   const s = 30;
   img.poly([[hx, hy - 6], [hx + s - 6, hy - s], [hx, hy - 2 * s + 6], [hx - s + 6, hy - s]], 'l');
   for (let i = 0; i < 40; i++) { const x = hx + ((i * 37) % 40) - 20, y = hy - s + ((i * 23) % 30) - 15; if (img.get(x, y) === 'l') img.set(x, y, 'L'); }
-  // foul lines
   img.line(hx, hy, hx + 46, hy - 46, 'W'); img.line(hx, hy, hx - 46, hy - 46, 'W');
-  // mound + bases
   img.circle(hx, hy - s, 3, 'X'); img.rect(hx - 1, hy - s, 2, 1, 'W');
   for (const [bx, by] of [[hx + s, hy - s], [hx, hy - 2 * s], [hx - s, hy - s]]) img.rect(bx - 1, by - 1, 3, 3, 'W');
   img.poly([[hx - 2, hy], [hx + 2, hy], [hx + 2, hy + 2], [hx, hy + 3], [hx - 2, hy + 2]], 'W');
-  // backstop (standing chain-link arc behind home)
-  for (let a = -0.9; a <= 0.9; a += 0.02) {
-    const x = hx + Math.sin(a) * 12, y = hy + 4 + Math.cos(a) * 5;
-    img.vline(Math.round(x), Math.round(y) - 8, Math.round(y), (Math.round(x) + Math.round(y)) % 2 ? 'g' : 'G');
+  let hp = [hx, hy];
+  if (home === 'east') { // rotate 90° CCW: bottom edge -> right edge
+    const r = new Img(S, S);
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) r.set(y, S - 1 - x, img.get(x, y));
+    img = r; hp = [hy, S - 1 - hx];
   }
-  for (let a = -0.9; a <= 0.95; a += 0.45) { const x = hx + Math.sin(a) * 12, y = hy + 4 + Math.cos(a) * 5; img.vline(Math.round(x), Math.round(y) - 9, Math.round(y), 'K'); }
+  // backstop: a standing chain-link arc behind home plate
+  const [px, py] = hp, dir = home === 'east' ? [1, 0] : [0, 1];
+  for (let a = -0.9; a <= 0.9; a += 0.02) {
+    const ox = dir[0] ? 2 + Math.cos(a) * 4 : Math.sin(a) * 12, oy = dir[0] ? Math.sin(a) * 12 : 4 + Math.cos(a) * 5;
+    const x = Math.round(px + ox), y = Math.round(py + oy);
+    img.vline(x, y - 8, y, (x + y) % 2 ? 'g' : 'G');
+  }
   return img;
+}
+
+// ------------------------------------------------------------------
+// Classic Toronto park picnic table: green slats, two attached benches, A-frame legs.
+// ------------------------------------------------------------------
+export function picnicTable() {
+  // hand-painted: at this size the SDF legs vanish. Back bench peeks over the slatted top, front bench below.
+  const img = new Img(28, 19);
+  img.grid(0, 0, `
+...KKKKKKKKKKKKKKKKKKKKKK...
+...KllllllllllllllllllllK...
+...KEEEEEEEEEEEEEEEEEEEEK...
+..KKKKKKKKKKKKKKKKKKKKKKKK..
+..KLLLLLLLLLLLLLLLLLLLLLLK..
+..KllllllllllllllllllllllK..
+..KEEEEEEEEEEEEEEEEEEEEEEK..
+..KLLLLLLLLLLLLLLLLLLLLLLK..
+..KllllllllllllllllllllllK..
+..KEEEEEEEEEEEEEEEEEEEEEEK..
+..KeeeeeeeeeeeeeeeeeeeeeeK..
+..KKKKKKKKKKKKKKKKKKKKKKKK..
+....KeK..............KeK....
+KKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KLLLLLLLLLLLLLLLLLLLLLLLLLLK
+KEEEEEEEEEEEEEEEEEEEEEEEEEEK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKK
+..KeK..KeK..........KeK..KeK
+..KKK..KKK..........KKK..KKK`);
+  img.pivot = { x: 0.5, y: 0.95 };
+  return img;
+}
+
+// ------------------------------------------------------------------
+// Graffiti sheet: stand-alone pieces laid over existing walls at map-build time, so any building can
+// carry them (more variety, and no graffiti pixels baked into building images).
+// ------------------------------------------------------------------
+export function graffitiPieces() {
+  const out = [];
+  const r = rng(808);
+  const cols = ['y', 'O', 'q', 'L', 'C', 'Z', 'm', 'F', 'W', 'P'];
+  // bubble-letter throw-ups of 2-4 letters
+  for (let k = 0; k < 5; k++) {
+    const n = r.int(2, 4), lw = r.int(5, 7), h = r.int(8, 11), w = n * (lw + 1) + 3;
+    const img = new Img(w, h + 3);
+    const fill = r.pick(cols), hi = 'W';
+    let x = 1;
+    for (let i = 0; i < n; i++) {
+      img.rect(x, 1 + (i % 2), lw, h - 1, fill);
+      img.hline(x + 1, x + lw - 2, 2 + (i % 2), hi);
+      if (r.chance(0.6)) img.rect(x + 2, 3 + r.int(1, 3), lw - 4, 2, null); // letter counter
+      if (r.chance(0.5)) img.vline(x + r.int(1, lw - 2), h + (i % 2), h + 1 + (i % 2) + r.int(0, 1), fill); // drip
+      x += lw + 1;
+    }
+    img.outline('K');
+    out.push(img);
+  }
+  // thin tags (scribbles)
+  for (let k = 0; k < 4; k++) {
+    const w = r.int(12, 20), img = new Img(w, 8), c = r.pick(['K', 'V', 'R', 'u', 'W']);
+    let y = r.int(2, 5);
+    for (let x = 0; x < w; x++) { img.set(x, y, c); if (r.chance(0.35)) y = Math.max(1, Math.min(6, y + r.pick([-2, -1, 1, 2]))); if (r.chance(0.15)) img.vline(x, y - 2, y, c); }
+    img.hline(1, w - 2, 7, c);
+    out.push(img);
+  }
+  // a raccoon stencil (of course) and a smiling face character
+  { const img = new Img(11, 9); img.grid(0, 0, `
+.K.....K...
+.KK...KK...
+.KKKKKKK...
+KK.KKK.KK..
+KKKKKKKKK..
+.KK.K.KK..K
+..KKKKK..KK
+...KKK..KK.
+....K..K...`); out.push(img); }
+  { const img = new Img(11, 11); img.circle(5, 5, 5, 'Y'); img.rect(3, 3, 1, 2, 'K'); img.rect(7, 3, 1, 2, 'K'); img.hline(3, 7, 7, 'K'); img.set(2, 6, 'K'); img.set(8, 6, 'K'); img.outline('K'); out.push(img); }
+  // hearts + stars
+  { const img = new Img(9, 8); img.grid(0, 0, `
+.qq.qq...
+qqqqqqq..
+qqqqqqq..
+.qqqqq...
+..qqq....
+...q.....`); img.outline('K'); out.push(img); }
+  out.forEach((im) => { im.pivot = { x: 0, y: 1 }; });
+  return out;
 }
 
 // ------------------------------------------------------------------
@@ -260,12 +358,12 @@ export function whiteSquirrel() {
 }
 
 export function parkPreview() {
-  const frames = [tbGates(), bin('green'), bin('blue'), bin('grey'), parkLamp(), ...whiteSquirrel()];
+  const frames = [tbGates(), picnicTable(), bin('green'), bin('blue'), bin('grey'), parkLamp(), ...whiteSquirrel(), ...graffitiPieces()];
   const H = Math.max(...frames.map((f) => f.h)) + 4;
   return { frames: frames.map((f) => { const o = new Img(f.w + 6, H); o.blit(f, 3, H - f.h - 2); return o; }), cols: frames.length };
 }
 export function parkDecalsPreview() {
-  const frames = [dogBowl(), tennisCourts(), baseballDiamond()];
+  const frames = [dogBowl(224, 144), tennisCourts(), baseballDiamond('east')];
   const H = Math.max(...frames.map((f) => f.h)) + 4;
   return { frames: frames.map((f) => { const o = new Img(f.w + 6, H); o.rect(0, 0, f.w + 6, H, 'E'); o.blit(f, 3, 2); return o; }), cols: 3 };
 }

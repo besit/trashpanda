@@ -10,6 +10,7 @@ export interface MapObject {
   /** explicit collider [dx, dy, w, h] relative to the anchor */ solidBox?: [number, number, number, number];
   /** several colliders relative to the anchor (the park gates' piers) */ solids?: [number, number, number, number][];
   tag?: string; mapColor?: string; landmark?: string;
+  /** draw-order override (graffiti sits just in front of its wall) */ depth?: number;
 }
 export interface Lane { id: string; axis: 'x' | 'y'; dir: 1 | -1; pos: number; streetcar?: boolean; stops?: number[]; bikeOnly?: boolean; requires?: string; light?: boolean; cyclists?: 'mixed' }
 export interface Intersection { x0: number; x1: number; y0: number; y1: number; tee?: boolean }
@@ -67,7 +68,7 @@ export class CityMap {
       return img;
     }
     const pv = this.pivots[o.key] ?? { x: 0.5, y: 1 };
-    const img = this.scene.add.image(o.x, o.y, 'world', o.key).setOrigin(pv.x, pv.y).setDepth(o.y);
+    const img = this.scene.add.image(o.x, o.y, 'world', o.key).setOrigin(pv.x, pv.y).setDepth(o.depth ?? o.y);
     const zones: Phaser.GameObjects.Zone[] = [];
     if (o.solid) zones.push(this.solid(o.x - o.solid, o.y - o.solid / 2, o.solid * 2, o.solid));
     if (o.solidBox) { const [dx, dy, w, h] = o.solidBox; zones.push(this.solid(o.x + dx, o.y + dy, w, h)); }

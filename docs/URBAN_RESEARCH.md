@@ -136,7 +136,7 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
 
 ## 15. Trinity Bellwoods gates (landmark plaque) ✅
 
-**IN-GAME PLAQUE:** "THE OLD GATES OF TRINITY COLLEGE, WHICH STOOD HERE FROM 1852 TO 1925. THE COLLEGE MOVED; THE GATES STAYED."
+**IN-GAME PLAQUE (shortened at Ivan's M1 review):** "THE UNIVERSITY OF / TRINITY COLLEGE / 1852 - 1925"
 
 **SOURCES:** Trinity College was founded by Bishop John Strachan in 1851 and stood on the Queen St site until moving to the University of Toronto in 1925. Most college buildings were demolished in the 1950s. The stone-and-iron gates and St. Hilda's survive, and the gates were restored in 2007. [Wikipedia: Trinity Bellwoods Park](https://en.wikipedia.org/wiki/Trinity_Bellwoods_Park); [Friends of Trinity Bellwoods Park: history](https://trinitybellwoods.ca/nature-and-park-history/); [Taylor on History](https://tayloronhistory.com/2016/01/24/the-lost-trinity-college-of-bellwoods-parktoronto/)
 
@@ -147,6 +147,6 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
 - the park's **white squirrel**, a local celebrity
 - **Little Portugal's** tiled facades on Dundas W
 - the **505 Dundas** and **501 Queen** streetcars
-- a graffiti laneway behind Queen, inspired by Graffiti Alley (Rush Lane), which is further east near Spadina
+- a graffiti laneway behind Queen, inspired by Graffiti Alley (Rush Lane), which is further east near Spadina, technically downtown, as Ivan noted. It stays here for now and may move to the Downtown district
 
 These are scenery, not factual claims.

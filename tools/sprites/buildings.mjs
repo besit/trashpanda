@@ -3,6 +3,7 @@
 // obliqueBuilding(): roof (top-down) + facade, used on the 3/4 exploration map.
 import { Img, sheet } from '../lib/raster.mjs';
 import { rng } from '../lib/rng.mjs';
+import { HOUSE_STYLES, styledFacade, styledRoof } from './houses.mjs';
 
 export const BRICKS = {
   red: { base: 'B', dark: 'b', light: 'n' },
@@ -184,6 +185,17 @@ function roof(w, d, r, kind) {
 /** 3/4 building image: roof (depth d) on top, facade below. Origin = bottom-left (south-west corner on ground). */
 export function obliqueBuilding({ w = 48, d = 32, floors = 2, brick = 'red', seed = 1, kind = 'shop', murals = false } = {}) {
   const r = rng(seed * 7 + 3);
+  if (HOUSE_STYLES.includes(kind)) {
+    // Victorian house styles: the gable / turret / mansard (top `topH` rows) rise in front of the roof
+    const info = styledFacade(kind, w, floors, BRICKS[brick], rng(seed));
+    const rf = styledRoof(w, d, info, r);
+    const H = d + info.img.h - info.topH;
+    const img = new Img(w, H);
+    img.blit(rf, 0, 0);
+    img.hline(0, w - 1, d, 'K');
+    img.blit(info.img, 0, d - info.topH);
+    return { img, footprint: { w, d }, facadeH: info.img.h - info.topH };
+  }
   const fac = facade({ w, floors, brick, seed, kind, murals });
   const rf = roof(w, d, r, kind);
   const img = new Img(w, d + fac.h);
@@ -196,11 +208,12 @@ export function obliqueBuilding({ w = 48, d = 32, floors = 2, brick = 'red', see
 
 export function buildingsPreview() {
   const list = [];
-  const kinds = ['shop', 'shop', 'shop', 'house', 'rear', 'shop', 'rear', 'shop', 'house', 'rear'];
-  const bricks = ['red', 'buff', 'teal', 'darkred', 'red', 'azulejo', 'buff', 'grey', 'azulejo_g', 'lilac'];
+  const kinds = ['shop', 'shop', 'house', 'rear', 'shop', 'baygable', 'baygable', 'queenanne', 'queenanne', 'secondempire', 'secondempire'];
+  const bricks = ['red', 'azulejo', 'azulejo_g', 'buff', 'teal', 'red', 'buff', 'darkred', 'red', 'grey', 'buff'];
+  const widths = [48, 48, 32, 48, 48, 32, 48, 48, 64, 48, 32];
   for (let i = 0; i < kinds.length; i++) {
-    const b = obliqueBuilding({ w: 48, d: 28, floors: i % 3 === 0 ? 1 : 2, brick: bricks[i], seed: 100 + i, kind: kinds[i], murals: kinds[i] === 'rear' });
-    const frame = new Img(52, 112); frame.blit(b.img, 2, 112 - b.img.h - 2); list.push(frame);
+    const b = obliqueBuilding({ w: widths[i], d: 32, floors: 2, brick: bricks[i], seed: 100 + i, kind: kinds[i] });
+    const frame = new Img(widths[i] + 4, 130); frame.blit(b.img, 2, 130 - b.img.h - 2); list.push(frame);
   }
-  return { frames: list, cols: 10 };
+  return { frames: list, cols: 11 };
 }

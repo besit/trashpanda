@@ -140,10 +140,27 @@ export class ExploreScene extends Phaser.Scene {
 
   private toast(msg: string, ms = 4200) {
     this.toasts.forEach((t) => t.destroy());
-    const t = text(this, GAME_W / 2, GAME_H - 38, msg, 'font_outline').setScrollFactor(0).setDepth(20002).setAlpha(0).setCenterAlign();
+    const t = text(this, GAME_W / 2, GAME_H - 38, msg, 'font_outline').setScrollFactor(0).setDepth(20002).setAlpha(0).setCenterAlign().setMaxWidth(GAME_W - 20);
     this.toasts = [t];
     this.tweens.add({ targets: t, alpha: 1, duration: 250, hold: ms, yoyo: true, onComplete: () => t.destroy() });
   }
+
+  /** A bronze plaque: short centred lines, sized to fit any view width. */
+  private plaque(lines: string[]) {
+    this.plaqueObj?.destroy();
+    const w = Math.min(GAME_W - 24, Math.max(...lines.map((l) => l.length)) * 6 + 24), h = lines.length * 11 + 14;
+    const c = this.add.container(GAME_W / 2, GAME_H - 30 - h / 2).setScrollFactor(0).setDepth(20003).setAlpha(0);
+    const g = this.add.graphics();
+    g.fillStyle(0x16121f).fillRoundedRect(-w / 2 - 2, -h / 2 - 2, w + 4, h + 4, 5);
+    g.fillStyle(0x74482a).fillRoundedRect(-w / 2, -h / 2, w, h, 4);
+    g.lineStyle(1, 0xd9a86c).strokeRoundedRect(-w / 2 + 2, -h / 2 + 2, w - 4, h - 4, 3);
+    for (const [px, py] of [[-w / 2 + 5, -h / 2 + 5], [w / 2 - 5, -h / 2 + 5], [-w / 2 + 5, h / 2 - 5], [w / 2 - 5, h / 2 - 5]]) g.fillStyle(0xd9a86c).fillCircle(px, py, 1);
+    c.add(g);
+    lines.forEach((l, i) => c.add(text(this, 0, -h / 2 + 12 + i * 11, l, 'font').setTint(i === 0 ? 0xd9a86c : 0xffd3c4)));
+    this.plaqueObj = c;
+    this.tweens.add({ targets: c, alpha: 1, duration: 200, hold: 4000, yoyo: true, onComplete: () => c.destroy() });
+  }
+  private plaqueObj?: Phaser.GameObjects.Container;
 
   /** Return-from-mission payoff: the city visibly changes. */
   private async celebrate(missionId: string) {
@@ -235,7 +252,7 @@ export class ExploreScene extends Phaser.Scene {
       if (this.near?.kind === 'mission') void this.startMission(this.near.id);
       else if (this.near?.kind === 'landmark') {
         const l = this.map.data.landmarks!.find((x) => x.id === this.near!.id)!;
-        sfx.select(); this.toast(`${l.label}\n${l.fact}`, 5200);
+        sfx.select(); this.plaque([l.label, ...l.fact.split('\n')]);
       } else {
         // the bell rings at the handlebars, in front of the raccoon
         sfx.bell();

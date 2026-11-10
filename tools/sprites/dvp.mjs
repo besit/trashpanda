@@ -5,6 +5,7 @@ import { Img } from '../lib/raster.mjs';
 import { rng } from '../lib/rng.mjs';
 import { scene, render, orthoCam } from '../lib/sdf.mjs';
 import { carModel, suvModel } from './props.mjs';
+import { cnTower, CN_PAL } from './landmarks.mjs';
 
 export const DVP_W = 480, DVP_H = 216, HZ = 92; // horizon line
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
@@ -38,8 +39,7 @@ export function dvpBackdrop() {
   const base = HZ;
   for (let i = 0; i < 18; i++) { const x = vx + 34 + i * 7 + r.int(0, 3), h = r.int(6, 20); img.rect(x, base - h, r.int(4, 7), h, 'v'); if (r.chance(0.6)) img.set(x + 2, base - h + 3, 'y'); }
   const tx = vx + 76;
-  img.rect(tx, base - 52, 2, 52, 'v'); img.rect(tx - 2, base - 34, 6, 3, 'v'); img.rect(tx - 1, base - 41, 4, 2, 'v'); img.vline(tx, base - 62, base - 52, 'v');
-  img.set(tx + 3, base - 33, 'O');
+  cnTower(img, tx, base, 66, CN_PAL.silhouette);
   // the lake: a band at the horizon with the sun's glitter path
   for (let y = HZ; y < HZ + 12; y++) for (let x = 0; x < W; x++) {
     const glitter = Math.abs(x - sx) < 26 - (y - HZ) * 0.8 && (y + (x >> 1)) % 3 === 0;
@@ -72,7 +72,7 @@ export function dvpBackdrop() {
   for (let y = HZ + 6; y < H; y++) {
     const t = (y - HZ) / (H - HZ);
     const left = vx + ROAD.leftBottom * t;
-    const cx = left - 18 - t * 80 + Math.sin(t * 9) * 8 * t, wdt = 1 + t * 20;
+    const cx = left - 34 - t * 110 + Math.sin(t * 9) * 8 * t, wdt = 3 + t * 60; // ~3x wider than v01
     for (let x = Math.round(cx - wdt); x <= Math.round(cx + wdt); x++) img.set(x, y, Math.abs(x - cx) > wdt - 1.5 ? 'x' : (x + y) % 7 === 0 ? 'C' : bay(x, y) < 0.3 ? 'c' : 'U');
   }
   return img;

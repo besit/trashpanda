@@ -51,6 +51,8 @@ Each district gets landmarks and textures you can't mistake for anywhere else. Q
 - Little Portugal's azulejo tile facades
 - a graffiti lane with murals
 - raccoon-resistant green bins (blue and grey bins at the curb)
+- classic green picnic tables
+- the Victorian house mix beside the park: bay-and-gables, Queen Annes, Second Empires
 - post-and-ring bike stands
 
 ## Environment
@@ -72,4 +74,6 @@ Every version is kept in `art/history/<asset>/vNN/` (preview, 1× sheet, frozen 
 | File (gitignored) | Used for | How |
 |---|---|---|
 | `reference/DogFraud.jpg` | Dog Fraud | shape language and tone only (see above) |
-| *(none yet)* | Trinity Bellwoods gates | drawn from memory. A photo in `reference/` would let me match them closer |
+| `reference/trinity-bellwoods_gates.png` | Trinity Bellwoods gates (v02) | proportions + details: smooth white stone, domed inner piers, gabled outer piers, inscribed lintels, arched carriage gate |
+| `reference/TrinityBelwwods.jpg` | park layout | positions of paths, diamonds, courts, picnic areas, squirrel (squeezed into our wider park) |
+| `reference/CN-tower.jpg` | CN Tower profile | pod bands, SkyPod, antenna proportions |

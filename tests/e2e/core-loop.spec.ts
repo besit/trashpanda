@@ -134,3 +134,29 @@ test('phone viewport stretches the view width; desktop keeps integer scale', asy
   expect(['Explore', '']).toContain(await tp(page));
   await ctx.close();
 });
+
+test('touch: MAP button opens an overlay that stays open until X is tapped (M1 flicker bug)', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true });
+  const page = await ctx.newPage();
+  const errors = errorsOf(page);
+  await page.goto('./?scene=Explore&touch');
+  await page.waitForFunction(() => (window as unknown as { __TP?: TP }).__TP?.scene === 'Explore');
+  await page.waitForTimeout(500);
+  // game coords -> page coords
+  const toPage = (gx: number, gy: number) => page.evaluate(([gx, gy]) => { const c = document.querySelector('canvas')!; const r = c.getBoundingClientRect(); return { x: r.left + (gx * r.width) / c.width, y: r.top + (gy * r.height) / c.height }; }, [gx, gy]);
+  const gw = await page.evaluate(() => document.querySelector('canvas')!.width);
+  const map = await toPage(gw - 40, 14);
+  await page.touchscreen.tap(map.x, map.y);
+  await active(page, 'Pause');
+  await page.waitForTimeout(800);
+  expect(await page.evaluate(() => (window as unknown as { __TP_GAME: G }).__TP_GAME.scene.isActive('Pause'))).toBe(true);
+  const close = await toPage(gw - 14, 14);
+  await page.touchscreen.tap(close.x, close.y);
+  await page.waitForFunction(() => !(window as unknown as { __TP_GAME: G }).__TP_GAME.scene.isActive('Pause'));
+  // and the pause button works again afterwards (no stuck touch state)
+  const pause = await toPage(gw - 14, 14);
+  await page.touchscreen.tap(pause.x, pause.y);
+  await active(page, 'Pause');
+  expect(errors).toEqual([]);
+  await ctx.close();
+});

@@ -2,6 +2,7 @@
 import { Img } from '../lib/raster.mjs';
 import { rng } from '../lib/rng.mjs';
 import { facade } from './buildings.mjs';
+import { cnTower, CN_PAL } from './landmarks.mjs';
 
 export const VW = 384, VH = 216;
 
@@ -35,7 +36,7 @@ export function sky(kind = 'day') {
 export function skyline(kind = 'day') {
   const W = 768, H = 170;
   const img = new Img(W, H);
-  const body = kind === 'dusk' ? 'v' : 'h', edge = kind === 'dusk' ? 'V' : 'H', win = kind === 'dusk' ? 'd' : 'C', dark = kind === 'dusk' ? 'u' : 'G';
+  const body = kind === 'dusk' ? 'v' : 'h', edge = kind === 'dusk' ? 'V' : 'H', win = kind === 'dusk' ? 'd' : 'G', dark = kind === 'dusk' ? 'u' : 'G'; // day windows darker than the sky, never sky-blue "holes"
   const r = rng(77);
   // generic towers
   let x = 0;
@@ -53,21 +54,8 @@ export function skyline(kind = 'day') {
   img.rect(sx, H - 22, sw, 22, dark);
   for (let i = 0; i < 4; i++) img.ellipse(sx + sw / 2, H - 22, sw / 2 - i * 2, 14 - i * 3, i % 2 ? body : edge, true);
   for (let i = sx + 4; i < sx + sw - 4; i += 9) img.line(i, H - 22, sx + sw / 2, H - 36, dark);
-  // CN Tower: tapering shaft, main pod with ring, SkyPod, antenna
-  const cx = 340, base = H;
-  for (let y = 0; y < 120; y++) {
-    const half = Math.round(4 - y / 40);
-    img.hline(cx - half, cx + half, base - y, body);
-    img.set(cx - half, base - y, edge);
-  }
-  img.rect(cx - 7, base - 128, 15, 4, edge); // ring deck
-  img.ellipse(cx, base - 122, 9, 4, body);
-  img.rect(cx - 6, base - 124, 13, 2, win);
-  img.ellipse(cx, base - 117, 6, 2, dark);
-  img.rect(cx - 1, base - 150, 3, 22, body);
-  img.ellipse(cx, base - 150, 3, 2, edge); // SkyPod
-  img.vline(cx, base - 169, base - 152, edge);
-  img.set(cx, base - 169, 'R');
+  // CN Tower (profile matched to the reference photo)
+  cnTower(img, 340, H, 169, kind === 'dusk' ? CN_PAL.dusk : CN_PAL.day);
   return img;
 }
 

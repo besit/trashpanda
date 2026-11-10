@@ -55,7 +55,7 @@ export class ActionScene extends Phaser.Scene {
     };
     layer(`skyline_${sky}`, 30, 170, 0.08);
     layer(`backrow_${sky}`, 96, 80, 0.3);
-    layer('facades_qw', 72, 96, 0.7);
+    layer('facades_qw', 72, 96, 1.0); // front buildings are tied to the sidewalk
     layer(`street_${a.street ?? 'plain'}`, 168, 64, 1.0);
 
     // ground + obstacles
@@ -161,9 +161,10 @@ export class ActionScene extends Phaser.Scene {
     this.locked = true;
     this.waveStartKills = this.killed;
     this.waveTotal = w.rats.length;
+    // lock the arena exactly where the camera already is: no jump
     cam.stopFollow();
-    const left = Phaser.Math.Clamp(this.player.sprite.x - 120, 0, this.worldW - GAME_W);
-    this.tweens.add({ targets: cam, scrollX: left, duration: 300, ease: 'Sine.easeOut' });
+    const left = Phaser.Math.Clamp(Math.round(cam.scrollX), 0, this.worldW - GAME_W);
+    cam.setScroll(left, cam.scrollY);
     cam.setBounds(left, 0, GAME_W, GAME_H);
     this.physics.world.setBounds(left, 0, GAME_W, GAME_H + 100);
     this.player.body.setCollideWorldBounds(true);
@@ -195,7 +196,8 @@ export class ActionScene extends Phaser.Scene {
     const cam = this.cameras.main;
     cam.setBounds(0, 0, this.worldW, GAME_H);
     this.physics.world.setBounds(0, 0, this.worldW, GAME_H + 100);
-    cam.startFollow(this.player.sprite, true, 0.15, 0.1, -40, 0);
+    cam.startFollow(this.player.sprite, true, 0.05, 0.1, -40, 0); // soft catch-up, then normal follow
+    this.time.delayedCall(900, () => { if (!this.locked) cam.setLerp(0.15, 0.1); });
     this.flashGo('GO! >>');
     sfx.ding();
   }

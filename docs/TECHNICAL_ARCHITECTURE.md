@@ -29,7 +29,7 @@ Shared state lives in `core/ctx.ts`, the single `GameState` all scenes read and 
 ```
 src/core      GameState (pure), Livability (pure), SaveSystem (localStorage, versioned + migration, export/import), ctx
 src/data      upgrades, missions, cutscenes            ← data-driven content
-src/input     InputManager (keyboard/gamepad/touch → actions, sub-frame taps latched via keydown events), TouchControls
+src/input     InputManager (keyboard/gamepad/touch → actions; sub-frame taps latched for keys AND touch buttons), TouchControls (released on scene pause/resume)
 src/audio     Synth (WebAudio chip), Sequencer (lookahead tracker), songs, sfx
 src/explore   CityMap (tilemap, decals, y-sorted objects, colliders, improvement patches incl. removal of tagged objects), TopDownPlayer,
               Traffic (data lanes + intersections, shared signal cycle, streetcar stops, cyclists), Crowd (pedestrians on walkways, white squirrel)
@@ -75,4 +75,5 @@ Snapshots go to `art/history/<asset>/vNN/` (`tools/snapshot.mjs`).
   4. **regression:** thrown cones that land on the ground don't stop the game loop (fails on the M0 code)
   5. pause menu and city map open and close
   6. phone viewport stretches the view width; desktop resize keeps the integer scale
+  7. touch: the MAP button opens an overlay that stays open until X, and touch buttons don't stick afterwards
 - `tools/shots.mjs` captures scene screenshots; `tools/perf.mjs` samples FPS with CPU throttling.

@@ -208,3 +208,82 @@ The first passes overlapped captions and let the streetcar hide the cyclist enti
 - 60 fps at 1×/4×/6× CPU throttle, with a 21 MB heap (was 16 MB).
 - JS 349 KB gzipped; generated art 1.05 MB raw.
 - 10 unit tests and 6 end-to-end tests, all passing.
+
+---
+
+## 2026-11-10: Day 2, M1.1 pass from Ivan's M1 review
+
+Ivan played M1 and sent notes on each area, plus three new references: a photo of the gates, the Friends of Trinity Bellwoods park map, and a CN Tower photo.
+
+### Intro
+- The parkway is no longer named on screen. Dog Fraud now says "STUCK IN TRAFFIC? I HAVE THE SOLUTION."
+- The "FIVE LANES / SIX LANES" captions are gone (too direct).
+- When the sixth lane appears, the cars no longer surge into it. The lane just fills with the same crawl as the others.
+- The river is about 3× wider.
+
+### Gates (photo reference)
+The memory version was close, but the photo showed what was off:
+- The stone is smooth white, not coursed ashlar.
+- The inner piers end in a panelled lantern stage and a dome with a finial.
+- The outer piers have gabled pinnacles.
+- The pedestrian openings sit under stone **lintels carrying the Latin inscriptions**.
+- The carriage gate has a segmental iron arch.
+
+The plaque is now three short lines on a bronze plate that fits any screen: THE UNIVERSITY OF / TRINITY COLLEGE / 1852 - 1925. The old one was a long toast that got cut off.
+
+![gates v02](../art/history/park/v02/preview.png)
+
+### The park, re-laid from the real map
+Everything that already existed was moved to where it actually is. The real park is tall and narrow and ours is wide, so `R(u, v)` maps the map's normalised coordinates into our rectangle:
+- the dog bowl in the middle
+- the **"Skydome" diamond** in the north-east, plus diamond #2 on the east side (home plates facing east, as on the map)
+- the tennis courts by Queen on the east
+- the **circle path**, the long diagonal, the west spine to Dundas, the Lobb Ave crossing, and the field-house path around the bowl
+- **picnic tables** at numbered picnic areas 2–8
+- the white squirrel, living where the map draws its squirrel
+
+The SDF picnic table lost its legs at this size (thin parts vanish when sampled), so it's hand-painted instead.
+
+### Buildings
+- **Three Victorian house styles** for the blocks beside the park (`tools/sprites/houses.mjs`):
+  - Gothic Revival **bay-and-gable** (Toronto's signature): a steep gable with white gingerbread bargeboard and a pointed-arch window over a two-storey bay.
+  - **Queen Anne:** a round turret with a candle-snuffer cone, a fish-scale gable and a spindle porch.
+  - **Second Empire:** a slate mansard with arched dormers, a bracketed cornice and hooded windows.
+
+  The gable or mansard is drawn *in front of* the top-down roof, because in 3/4 view it's the front plane rising. The first pass drew hip-roof lines that looked like a **TV antenna** on every Queen Anne, so they were removed.
+- **Graffiti is now a separate sheet** (bubble throw-ups, tags, a raccoon stencil, a smiley, a heart) laid over walls at map-build time, as Ivan suggested. Building images are graffiti-free again, and any wall can carry a piece.
+
+![houses](../art/history/buildings/v04/preview.png)
+
+### CN Tower (photo reference)
+Redrawn as one shared scanline profile used by every skyline:
+- a tapering shaft
+- the banded main pod: glass, the widest white rim, a window band, the cap
+- a thin upper shaft and the SkyPod
+- a long white antenna
+
+The proportions follow the real heights. The first pass tapered in 2px stair-steps; a quarter-pixel centre offset makes each side step separately.
+
+![cn tower](../art/history/cn_tower/v01/preview.png)
+
+### Feel
+- **Traffic speeds:** cars 72–98 px/s, streetcars 52, cyclists 32–39, pedestrians 16–26. A cyclist in the streetcar lane now visibly holds the cars up.
+- **Bell replies** from pedestrians now stay readable for 2 s.
+- **Side view:** the front buildings scroll with the sidewalk; they used to drift at 0.7× and looked detached. Vignettes no longer pan, so parked cars and planters stay planted on the street.
+- **Arena lock:** when rats appear, the arena locks exactly where the camera already is (no jump). After the wave, the camera catches up gently.
+- **"Transparent pixels" in the side view:** no holes exist in any facade (all 600+ map buildings and the side strip were checked by script). My best guess is that the daytime skyline towers' windows were sky-blue, so they read as see-through. They're darker now, but this one is flagged for Ivan to confirm.
+
+### Touch bugs (found by Ivan, then a second one found by the new test)
+1. **The overlay flickered closed:** the finger that tapped MAP or II was still down when the overlay opened, so its first frame saw a fresh press and closed it again. The paused gameplay scene also never saw the finger lift, which left the button stuck. Now:
+   - the overlay ignores input held at open
+   - touch state is released whenever a scene pauses or resumes
+   - map and controls stay open until the new **X** button (or M/Esc) closes them
+2. **Quick taps were dropped:** the new e2e test taps MAP the way a headless browser does (down and up within one frame) and the overlay never opened. It's the same sub-frame problem the keyboard had in M0. Touch buttons now latch taps like keys do.
+
+### Bloor
+Per Ivan, the Bloor removals get their own main mission: **The Lane Eater** (GAME_DESIGN, mission 5). It's an auto-scrolling chase ahead of a lane-eating paving machine. Ring the bell at cyclists to grow a peloton that shields you and slows the machine, then break its three weak points.
+
+### Numbers
+- 60 fps at 1×/4×/6× throttle; 22 MB heap.
+- 10 unit tests and 7 end-to-end tests, all passing.
+- Art history: 37 versions.

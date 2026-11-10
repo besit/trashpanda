@@ -32,7 +32,7 @@ export class Crowd {
       const seg = Math.floor(Math.random() * (path.length - 1));
       const id = ids[Math.floor(Math.random() * ids.length)];
       const s = scene.add.sprite(0, 0, 'chars', `ped_${id}_S_0`).setOrigin(pv.x, pv.y);
-      this.walkers.push({ s, path, seg, t: Math.random(), dir: Math.random() < 0.5 ? 1 : -1, speed: id === 'kid' ? 30 : 16 + Math.random() * 12, id, facing: '', off: (Math.random() - 0.5) * 6, wait: 0, reactCd: 0 });
+      this.walkers.push({ s, path, seg, t: Math.random(), dir: Math.random() < 0.5 ? 1 : -1, speed: id === 'kid' ? 26 : 16 + Math.random() * 10, id, facing: '', off: (Math.random() - 0.5) * 6, wait: 0, reactCd: 0 });
     }
     for (const c of critters) if (c.kind === 'white_squirrel') {
       const s = scene.add.sprite(c.x, c.y, 'world', 'sq_2').setOrigin(0.5, 1).play('sq_sit');
@@ -45,7 +45,7 @@ export class Crowd {
     for (const w of this.walkers) {
       if (w.reactCd > 0 || Phaser.Math.Distance.Between(x, y, w.s.x, w.s.y) > 56) continue;
       w.reactCd = 6;
-      if (Math.random() < 0.6) { floatText(this.scene, w.s.x, w.s.y - 30, LINES[Math.floor(Math.random() * LINES.length)], 'font', 0xfff08a); break; }
+      if (Math.random() < 0.6) { floatText(this.scene, w.s.x, w.s.y - 30, LINES[Math.floor(Math.random() * LINES.length)], 'font', 0xfff08a, 2200); break; }
     }
   }
 

@@ -32,7 +32,8 @@ export const CONTROLS_ALT = 'ARROWS + Z JUMP  X ACT  C DASH  V BOOST';
 export const CONTROLS_PAD = 'PAD: A JUMP  X ACT  B DASH  RT BOOST  SELECT MAP';
 
 /** Touch state written by TouchControls */
-export const touchState = { x: 0, y: 0, buttons: { jump: false, dash: false, act: false, boost: false, pause: false, map: false } as Record<string, boolean>, active: false };
+export const touchState = { x: 0, y: 0, buttons: { jump: false, dash: false, act: false, boost: false, pause: false, map: false } as Record<string, boolean>, active: false,
+  /** buttons pressed since the last read: quick taps (down+up inside one frame) are never lost */ taps: new Set<string>() };
 
 export class InputManager {
   private keys = new Map<string, Phaser.Input.Keyboard.Key>();
@@ -92,6 +93,8 @@ export class InputManager {
     if (touchState.active) {
       if (touchState.x || touchState.y) { x = touchState.x; y = touchState.y; this.lastDevice = 'touch'; }
       for (const [b, v] of Object.entries(touchState.buttons)) if (v) { now.add(b as Action); if (b === 'act' || b === 'jump') now.add('confirm'); this.lastDevice = 'touch'; }
+      for (const b of touchState.taps) { tapped.add(b as Action); if (b === 'act' || b === 'jump') tapped.add('confirm'); this.lastDevice = 'touch'; }
+      touchState.taps.clear();
     }
 
     const len = Math.hypot(x, y);

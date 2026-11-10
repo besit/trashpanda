@@ -54,9 +54,10 @@ HIGH PARK — QUEEN WEST — DOWNTOWN — EAST END
 
 **M1 slice: Queen West (104×76 tiles)**, rebuilt after Ivan's review to be recognisably Toronto:
 - **Dundas St W** (north), with the 505 streetcar and Little Portugal's blue-and-white tiled facades.
+- **Victorian house styles** on the blocks east and west of the park (Ivan's M1 note): Gothic Revival **bay-and-gables**, **Queen Anne** houses with turrets and **Second Empire** mansards.
 - **Trinity Bellwoods Park** in the middle, matching the real park's position between Queen and Dundas:
   - the white stone-and-iron **gates** at Queen and Strachan, with a readable plaque
-  - the **dog bowl**, tennis courts and a baseball diamond
+  - laid out from the Friends of Trinity Bellwoods park map (Ivan's reference): the **dog bowl** in the middle, the **Skydome diamond** and diamond #2 on the east side, the **tennis courts** by Queen, the **circle path**, the long diagonal, the west spine to Dundas, and **green picnic tables** at the numbered picnic areas
   - paved paths, park lamps and Toronto green bins
   - the **white squirrel**
 - **Queen St W** (south), with the 501 streetcar, curb parking lanes and **no bike lanes** on this stretch (the mission adds them).
@@ -67,13 +68,13 @@ HIGH PARK — QUEEN WEST — DOWNTOWN — EAST END
 
 **Distinct artifacts per district (Ivan's direction):** every district gets landmarks you can't mistake for anywhere else. Queen West has the gates, the dog bowl, the white squirrel, azulejo facades and the graffiti lane. Later districts get the same treatment: High Park (Grenadier Pond, the High Park zoo's capybaras, Bloor West), Downtown (Union Station, the PATH, Nathan Phillips Square's TORONTO sign), the waterfront (the Gardiner, the Ontario Place pods), East End (Leslieville, the Don Valley, the Riverdale Farm silo), and North (the Science Centre's brutalism, the Don Mills ravine).
 
-**Dundas question (M0 review):** the 2026 provincial removals target Bloor, Yonge, University, Queen's Park and Avenue Road, not Dundas (see URBAN_RESEARCH §1). Dundas is on the map as the park's north edge. The bike-lane *removal* story will play out on **Bloor, in the High Park district**.
+**Dundas question (M0 review):** the 2026 provincial removals target Bloor, Yonge, University, Queen's Park and Avenue Road, not Dundas (see URBAN_RESEARCH §1). Dundas is on the map as the park's north edge. The bike-lane *removal* story plays out on **Bloor, in the High Park district**, as main mission 5, *The Lane Eater* (below).
 
 ## Livability
 - Headline score starts at **60 (TORONTO)**.
 - Tiers: 65 Better · 70 Great · 75 Excellent · 80 World-Class · 90 Amsterdam/Copenhagen territory · 100 Raccoon Utopia.
 - Six visible categories: Cycling, Transit, Walking, Green + Public Space, Safety, Less Car Dependence. The master prompt's other categories fold into these.
-- Main missions (now 9) are worth about +3–4 each and side missions +1–2, so a complete run lands around 94–100.
+- Main missions (now 10) are worth about +3 each and side missions +1–2, so a complete run lands around 94–100.
 
 ## Characters
 - **The raccoon:** grey, bandit mask, big ringed tail. Rides a red steel cruiser with swept bars, a bell, and a wicker basket holding a pizza slice. Attack: a **bike pump** swung like a bat (3-hit combo). It replaced the trash-can lid at the M0 review because the lid didn't read at this scale.
@@ -98,17 +99,27 @@ HIGH PARK — QUEEN WEST — DOWNTOWN — EAST END
 | 2 | Let the Streetcar Through | Queen West | Transit signal priority | non-combat signal-timing escort |
 | 3 | King of the Street | Downtown | Transit-priority corridor | combat + clearing cars |
 | 4 | **Slow Down, Dog** *(added by Ivan, made a main mission at the M0 review)* | High Park (school zone) | School-zone safety: cameras + traffic calming | escort kids across, chase down the rats hauling the camera away |
-| 5 | Save the Science | North | Adaptive reuse | stealth + combat |
-| 6 | The Great Parking Lot | East End | Parking → park | combat + park-building, SUV Rat boss |
-| 7 | The Waterfront Heist | Waterfront | Public waterfront | combat |
-| 8 | Finish the Line | Downtown → East End | Ontario Line | Mega Rat miniboss |
-| 9 | Death by Highway | Waterfront | Highway → boulevard + park | "...another lane?" scene, then Highway Mech final boss |
+| 5 | **The Lane Eater** *(Bloor; Ivan's call at the M1 review)* | High Park (Bloor West) | Keeping protected lanes (community pressure) | auto-scrolling chase + rally-a-peloton + 3-part machine boss |
+| 6 | Save the Science | North | Adaptive reuse | stealth + combat |
+| 7 | The Great Parking Lot | East End | Parking → park | combat + park-building, SUV Rat boss |
+| 8 | The Waterfront Heist | Waterfront | Public waterfront | combat |
+| 9 | Finish the Line | Downtown → East End | Ontario Line | Mega Rat miniboss |
+| 10 | Death by Highway | Waterfront | Highway → boulevard + park | "...another lane?" scene, then Highway Mech final boss |
 | side | Pedestrian Takeover | Queen West (Kensington-style) | Pedestrian street | crowd-gathering |
 | side | Intersection Repair | High Park | Protected intersection | puzzle |
 | side | Public Consultation | citywide | support | signature hunt (exploration) |
 | side | Protest Delivery | Downtown | — | courier run avoiding Dog Fraud's PR rats (changed from "avoid police") |
 | side | Tree Corridor | East End | Green corridor | planting run |
 | bonus | GO Electrification, Rail Deck Park | | | if scope allows |
+
+### Mission 5: The Lane Eater (Bloor West)
+The real 2026 removals happen on Bloor (URBAN_RESEARCH §1), so this mission is about *defending* lanes rather than adding them. It must play differently from the Bike Lane War:
+- **The threat:** Dog Fraud's "Lane Eater", a huge rat-driven asphalt grinder, crawls along Bloor chewing up the protected lane and spitting out fresh car-lane paint ("ANOTHER CAR LANE" in its exhaust).
+- **The twist (auto-scroll + crowd):** the screen scrolls on its own, with the machine behind you. Riding ahead, you **ring your bell at cyclists, who join a growing peloton** behind you (a "critical mass"). Each rider in the peloton blocks one hit and slows the machine. Lose riders to rats and cones, and the machine catches up.
+- **The boss:** three weak points, each with its own pattern, broken with the pump: the conveyor (jump over the paint gobs), the rat foreman's megaphone (it summons construction rats) and the grinder (dash through when it overheats).
+- **The ending:** the peloton fills Bloor and the machine stalls. The payoff is public pressure, not a court win: the after-vignette shows a protest ride with signs.
+- **Tone:** the real dispute is live, with a Supreme Court leave application pending. The game shows the evidence and the community, and makes no claims about real people.
+- **Upgrade:** "Lanes kept + community ride". It gives a modest Livability gain plus a new stat, **Riders rallied**.
 
 Each mission has 2–4 beats: a ride section (curbs, cones, parked cars to hop), arena waves (camera locks), a mission-specific twist, then the finale. Every mission gets one twist of its own so combat doesn't repeat.
 

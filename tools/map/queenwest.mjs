@@ -5,7 +5,7 @@
 // Output is data only; images are built in build-assets.
 import { rng } from '../lib/rng.mjs';
 import { obliqueBuilding } from '../sprites/buildings.mjs';
-import { GATE_W, tbGateSolids } from '../sprites/park.mjs';
+import { GATE_W, tbGateSolids, graffitiPieces } from '../sprites/park.mjs';
 
 export const W = 104, H = 76, TS = 16;
 
@@ -17,6 +17,8 @@ export const DUNDAS = 11; // Dundas rows 11..14 (11 parking/curb lane, 12 WB tra
 export const QUEEN = 54;  // Queen rows 54..57 (54 parking, 55 WB tracks, 56 EB tracks, 57 parking)
 const PARK = { x0: 24, x1: 79, y0: 18, y1: 50 }; // inclusive tile bounds of the lawn
 const GATE_X = (SX + 2) * TS; // gates centred on Strachan
+
+const GRAF = graffitiPieces();
 
 export function generateQueenWest() {
   const r = rng(2026);
@@ -80,23 +82,32 @@ export function generateQueenWest() {
   for (let y = PARK.y0 - 1; y <= PARK.y1 + 1; y++) for (let x = PARK.x0 - 2; x <= PARK.x1 + 2; x++) set(x, y, `lawn${(x * 5 + y * 11) % 3}`);
   // side sidewalks (Crawford-ish on the west, Gore Vale-ish on the east)
   for (let y = DUNDAS + 5; y <= QUEEN - 1; y++) { for (const x of [PARK.x0 - 2, PARK.x1 + 2]) set(x, y, `sidewalk${y % 3}`); }
-  // paths (drawn as one smooth decal; listed here so walkers + the minimap can use them)
-  const P = (pts) => pts.map(([x, y]) => [x * TS, y * TS]);
+  // Layout follows the Friends of Trinity Bellwoods park map (Ivan's ref), squeezed into our wider-than-tall
+  // park: R(u, v) maps the real park's normalized coords (u: Crawford -> Gore Vale, v: Dundas -> Queen).
+  const R = (u, v) => [(PARK.x0 - 1.5 + u * (PARK.x1 - PARK.x0 + 3)) * TS, (PARK.y0 - 0.5 + v * (PARK.y1 - PARK.y0 + 1.5)) * TS];
+  const P = (pts) => pts.map(([u, v]) => R(u, v));
+  const ellipse = (cu, cv, ru, rv, n = 22) => Array.from({ length: n + 1 }, (_, i) => [cu + Math.cos((i / n) * Math.PI * 2) * ru, cv + Math.sin((i / n) * Math.PI * 2) * rv]);
   const parkPaths = [
-    P([[52, 51], [52, 46], [48, 41], [44.5, 34], [41, 26], [38.5, 17.5]]),          // gates -> Dundas (main walk)
-    P([[52, 46], [59, 42.5], [67, 37.5], [74, 33], [81, 31]]),                     // gates -> east side
-    P([[22, 33.5], [33, 33.5], [44.5, 34]]),                                       // west entrance
-    P([[44.5, 34], [52, 31.5], [60, 30.5], [66, 25], [69, 17.5]]),                 // past the bowl -> Dundas
-    P([[22, 47], [34, 46], [48, 41]]),                                             // south-west
-    P([[60, 30.5], [70, 30], [81, 31]]),
+    P([[0.505, 1.0], [0.505, 0.895]]),                                              // gates -> the circle
+    P(ellipse(0.53, 0.80, 0.19, 0.095)),                                            // the circle (picnic areas 3 + 4)
+    P([[0.0, 0.575], [0.33, 0.69], [0.53, 0.80], [0.80, 0.92], [1.0, 0.985]]),      // the long diagonal (Lobb -> Gore Vale/Queen)
+    P([[0.36, 0.89], [0.345, 0.70], [0.34, 0.57], [0.33, 0.34], [0.31, 0.18], [0.25, 0.0]]), // west spine -> Dundas
+    P([[0.0, 0.565], [0.34, 0.565], [0.72, 0.555]]),                                // the Lobb Ave crossing
+    P([[0.33, 0.0], [0.39, 0.22], [0.56, 0.235], [0.74, 0.30], [0.76, 0.45], [0.72, 0.555]]), // field house + east of the dog bowl
+    P([[0.74, 0.30], [1.0, 0.17]]),                                                 // to Gore Vale
+    P([[0.0, 0.89], [0.20, 0.85], [0.345, 0.80]]),                                  // south-west, past the rec centre
   ];
   decals.push({ key: 'park_paths', x: (PARK.x0 - 2) * TS, y: (PARK.y0 - 1) * TS, gen: { kind: 'paths', w: (PARK.x1 - PARK.x0 + 5) * TS, h: (PARK.y1 - PARK.y0 + 3) * TS, paths: parkPaths, ox: (PARK.x0 - 2) * TS, oy: (PARK.y0 - 1) * TS } });
-  const bowl = { x: 46 * TS, y: 20 * TS, w: 176, h: 112 };
+  const at = (u, v, w, h) => { const [x, y] = R(u, v); return { x: Math.round(x - w / 2), y: Math.round(y - h / 2), w, h }; };
+  const bowl = at(0.56, 0.42, 208, 128);           // the dog off-leash bowl
   decals.push({ key: 'dogbowl', x: bowl.x, y: bowl.y });
-  const diamond = { x: 26 * TS, y: 19 * TS, w: 96, h: 96 };
-  decals.push({ key: 'diamond', x: diamond.x, y: diamond.y });
-  const courts = { x: 69 * TS, y: 37 * TS, w: 86, h: 93 };
+  const diamond = at(0.64, 0.13, 96, 96);          // Baseball Diamond #1, "Skydome"
+  const diamond2 = at(0.87, 0.56, 96, 96);         // Baseball Diamond #2
+  decals.push({ key: 'diamond', x: diamond.x, y: diamond.y }, { key: 'diamond', x: diamond2.x, y: diamond2.y });
+  const courts = at(0.84, 0.83, 86, 93);           // North + South tennis courts
   decals.push({ key: 'tennis', x: courts.x, y: courts.y });
+  // picnic areas, numbered as on the park map
+  const picnicSpots = [[0.11, 0.10], [0.60, 0.76], [0.44, 0.835], [0.18, 0.92], [0.37, 0.93], [0.60, 0.955], [0.93, 0.93]].map(([u, v]) => R(u, v));
   // the gates (solid only at the piers so you can ride through the carriage + pedestrian gates)
   prop('tbgates', GATE_X, (QUEEN - 3) * TS + 2, { solids: tbGateSolids(), landmark: 'TRINITY BELLWOODS GATES' });
 
@@ -108,7 +119,7 @@ export function generateQueenWest() {
     return Math.hypot(px - (ax + vx * t), py - (ay + vy * t)) < d;
   }));
   const inRect = (px, py, o, pad) => px > o.x - pad && px < o.x + o.w + pad && py > o.y - pad && py < o.y + o.h + pad;
-  const blocked = (px, py) => nearPath(px, py, 20) || inRect(px, py, bowl, 10) || inRect(px, py, diamond, 8) || inRect(px, py, courts, 10) || Math.hypot(px - GATE_X, py - (QUEEN - 3) * TS) < 70;
+  const blocked = (px, py) => nearPath(px, py, 20) || inRect(px, py, bowl, 10) || inRect(px, py, diamond, 8) || inRect(px, py, diamond2, 8) || inRect(px, py, courts, 10) || picnicSpots.some(([x, y]) => Math.hypot(px - x, py - y) < 34) || Math.hypot(px - GATE_X, py - (QUEEN - 3) * TS) < 70;
   const trees = [];
   for (let i = 0; i < 900 && trees.length < 64; i++) {
     const px = r.int((PARK.x0) * TS, (PARK.x1 + 1) * TS), py = r.int((PARK.y0 + 1) * TS, (PARK.y1 + 1) * TS);
@@ -122,6 +133,8 @@ export function generateQueenWest() {
     prop('tree_a', x * TS + 8, (QUEEN - 4) * TS + 12, { solid: 5 });
     if (!nearPath(x * TS + 8, (PARK.y0) * TS, 22)) prop('tree_b', x * TS + 8, PARK.y0 * TS + 4, { solid: 5 });
   }
+  // classic green picnic tables, in pairs, at each picnic area
+  for (const [x, y] of picnicSpots) { prop('picnic', x - 14, y, { solid: 6 }); prop('picnic', x + 16, y + 10, { solid: 6 }); prop('bin_green', x + 2, y - 14); }
   // lamps + benches + bins along the paths
   parkPaths.forEach((pts, pi) => {
     for (let i = 1; i < pts.length; i++) {
@@ -145,6 +158,15 @@ export function generateQueenWest() {
     const base = place.base ?? place.top + imgH; // facade bottom (px)
     objects.push({ type: 'building', key: `bld_${bid}`, gen, x, y: base - d, w, d, imgH });
     bid++;
+    // graffiti from the shared sheet, sprayed over rear walls (any wall could take it: more variety, fewer pixels)
+    if (gen.kind === 'rear') {
+      const n = r.int(1, 3);
+      for (let i = 0; i < n; i++) {
+        const k = r.int(0, GRAF.length - 1), gw = GRAF[k].w;
+        if (gw > w - 4) continue;
+        objects.push({ type: 'prop', key: `graf_${k}`, x: x + r.int(2, w - gw - 2), y: base - r.int(2, 5), depth: base + 0.2 });
+      }
+    }
     return { top: base - imgH, base };
   };
   /** A row of buildings between tile cols [x0, x1). Either aligned at the facade base or at the roof top. */
@@ -154,7 +176,9 @@ export function generateQueenWest() {
       let w = r.pick([2, 3, 3, 4]);
       if (x + w > x1) w = x1 - x;
       if (w < 2) { if (out.length) break; w = 2; }
-      const gen = { w: w * TS, d, floors: r.pick(floorsPick), brick: r.pick(bricks), seed: 500 + bid, kind, murals: kind === 'rear' };
+      let k = Array.isArray(kind) ? r.pick(kind) : kind;
+      if (k === 'queenanne' && w < 3) k = 'baygable'; // a turret needs room
+      const gen = { w: w * TS, d, floors: r.pick(floorsPick), brick: r.pick(bricks), seed: 500 + bid, kind: k };
       out.push(addBuilding(x * TS, w * TS, gen, align));
       x += w;
     }
@@ -167,8 +191,8 @@ export function generateQueenWest() {
   for (const [a, b] of [[0, OX], [OX + 4, PARK.x0 - 2], [PARK.x1 + 3, BX], [BX + 4, W]]) row(a, b, { base: (QUEEN - 3) * TS }, 'shop', [1, 2, 2, 3], bricksQueen);
   // blocks between Dundas and Queen beside the park: houses facing south
   for (const [a, b] of [[0, OX], [OX + 4, PARK.x0 - 2], [PARK.x1 + 3, BX], [BX + 4, W]]) {
-    row(a, b, { top: (DUNDAS + 7) * TS }, 'house', [1, 2], bricksDundas, 40);
-    row(a, b, { base: 38 * TS }, 'house', [1, 2], ['red', 'buff', 'darkred', 'cream', 'grey'], 40);
+    row(a, b, { top: (DUNDAS + 7) * TS }, ['house', 'house', 'baygable', 'secondempire'], [1, 2], bricksDundas, 40);
+    row(a, b, { base: 38 * TS }, ['baygable', 'baygable', 'queenanne', 'secondempire', 'queenanne'], [2], ['red', 'buff', 'darkred', 'red', 'cream', 'grey'], 40);
     for (let y = 38; y < 44; y++) for (let x = a; x < b; x++) if (!isNS(x)) set(x, y, y === 38 ? `sidewalk${x % 3}` : `grass${(x + y) % 3}`);
   }
   // Queen south side: shop backs onto the graffiti laneway (roofs start right behind the sidewalk)
@@ -281,8 +305,8 @@ export function generateQueenWest() {
     { text: 'OSSINGTON', x: (OX + 2) * TS, y: 33 * TS, vertical: true },
     { text: 'BELLWOODS', x: (BX + 2) * TS, y: 33 * TS, vertical: true },
     { text: 'STRACHAN', x: (SX + 2) * TS, y: 69 * TS, vertical: true },
-    { text: 'TRINITY BELLWOODS', x: 52 * TS, y: 37 * TS, kind: 'landmark' },
-    { text: 'DOG BOWL', x: 52 * TS, y: 23.5 * TS, kind: 'landmark' },
+    { text: 'TRINITY BELLWOODS', x: R(0.5, 0.64)[0], y: R(0.5, 0.64)[1], kind: 'landmark' },
+    { text: 'DOG BOWL', x: bowl.x + bowl.w / 2, y: bowl.y + bowl.h / 2, kind: 'landmark' },
     { text: 'GATES', x: 52 * TS, y: 49 * TS, kind: 'landmark' },
     { text: 'GRAFFITI LANE', x: 30 * TS, y: (laneRow + 1) * TS, kind: 'landmark' },
   ];
@@ -293,7 +317,7 @@ export function generateQueenWest() {
     spawn: { x: 45 * TS + 8, y: (QUEEN - 2) * TS + 8 },
     markers: [{ id: 'bike_lane_war', x: 62 * TS, y: (QUEEN - 2) * TS + 8, label: 'THE BIKE LANE WAR' }],
     lanes, intersections, walkways, labels,
-    critters: [{ kind: 'white_squirrel', x: bowl.x + bowl.w + 30, y: bowl.y + 70 }],
-    landmarks: [{ id: 'tb_gates', x: GATE_X, y: (QUEEN - 3) * TS - 10, label: 'TRINITY BELLWOODS GATES', fact: 'THE OLD GATES OF TRINITY COLLEGE, WHICH STOOD HERE FROM 1852 TO 1925. THE COLLEGE MOVED; THE GATES STAYED.' }],
+    critters: [{ kind: 'white_squirrel', x: R(0.26, 0.48)[0], y: R(0.26, 0.48)[1] }], // where the park map draws its squirrel
+    landmarks: [{ id: 'tb_gates', x: GATE_X, y: (QUEEN - 3) * TS - 10, label: 'THE UNIVERSITY OF', fact: 'TRINITY COLLEGE\n1852 - 1925' }],
   };
 }

@@ -44,20 +44,18 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'caption', text: 'FRA-HA-HA-HA-HA!', font: 'font_red', y: 30, hold: 1200 },
     { t: 'clear' },
     { t: 'say', who: 'DOG FRAUD', text: 'CITIZENS! YOUR FAVOURITE DOG HAS A HISTORIC PLAN!', expr: 'grin' },
-    { t: 'say', who: 'DOG FRAUD', text: 'THE PARKWAY IS JAMMED? I HAVE THE SOLUTION.', expr: 'grin' },
+    { t: 'say', who: 'DOG FRAUD', text: 'STUCK IN TRAFFIC? I HAVE THE SOLUTION.', expr: 'grin' },
     { t: 'portrait', expr: 'grin', action: 'drop' },
     { t: 'dvp', lanes: 5 },
-    { t: 'caption', text: 'FIVE LANES. NOT MOVING.', y: 24, hold: 1700 },
-    { t: 'clear' },
+    { t: 'wait', ms: 2200 },
     { t: 'portrait', expr: 'grin', action: 'rise' },
     { t: 'say', who: 'DOG FRAUD', text: 'TORONTO NEEDS...', expr: 'grin' },
     { t: 'say', who: 'DOG FRAUD', text: '...ANOTHER CAR LANE!', expr: 'laugh' },
     { t: 'portrait', expr: 'laugh', action: 'drop' },
     { t: 'dvpAdd' },
-    { t: 'caption', text: 'SIX LANES. STILL NOT MOVING.', y: 24, hold: 1800 },
-    { t: 'clear' },
+    { t: 'wait', ms: 2600 },
     { t: 'title', text: 'ANOTHER CAR LANE', sub: 'DOG FRAUD\'S ANSWER TO EVERYTHING' },
-    { t: 'side', sky: 'dusk', street: 'plain', pan: 0.02 },
+    { t: 'side', sky: 'dusk', street: 'plain' },
     { t: 'darken', to: 0, ms: 10 },
     { t: 'caption', text: 'SOMEONE HAS TO STOP HIM.', y: 40, hold: 1100 },
     { t: 'caption', text: 'SOMEONE SMALL. SOMEONE FAST.', y: 54, hold: 900 },
@@ -70,7 +68,7 @@ export const CUTSCENES: Record<string, Step[]> = {
 
   // ---- The Bike Lane War: before ----
   bwl_before: [
-    { t: 'side', sky: 'day', street: 'plain', pan: 0.015 },
+    { t: 'side', sky: 'day', street: 'plain' },
     { t: 'music', song: 'none' },
     { t: 'caption', text: 'QUEEN STREET WEST. 8:14 AM.', y: 18, hold: 600 },
     { t: 'actor', id: 'car1', frame: 'carside_red', atlas: 'world', x: 250, y: GROUND - 6, depth: 40 },
@@ -107,7 +105,7 @@ export const CUTSCENES: Record<string, Step[]> = {
 
   // ---- The Bike Lane War: after ----
   bwl_after: [
-    { t: 'side', sky: 'day', street: 'protected', pan: 0.015 },
+    { t: 'side', sky: 'day', street: 'protected' },
     { t: 'music', song: 'improve' },
     { t: 'caption', text: 'ONE WEEK LATER.', y: 18, hold: 500 },
     { t: 'actor', id: 'mom', frame: 'cys_c_0', anim: 'cys_c', x: -30, y: GROUND - 6, depth: 60 },

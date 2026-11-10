@@ -111,11 +111,12 @@ export class CutsceneScene extends Phaser.Scene {
         this.layer(`sky_${s.sky}`, 0, GAME_H, 0);
         this.layer(`skyline_${s.sky}`, 30, 170, 0.08);
         this.layer(`backrow_${s.sky}`, 96, 80, 0.3);
-        this.layer('facades_qw', 72, 96, 0.7).setTilePosition(300, 0);
+        this.layer('facades_qw', 72, 96, 1.0).setTilePosition(300, 0);
         this.layer(`street_${s.street}`, 168, 64, 1.0);
         if (s.street === 'protected') for (let x = 20; x < GAME_W; x += 70) this.bgGroup.push(this.add.image(x, 201, 'world', 'planter').setOrigin(0.5, 1).setDepth(70).setScale(1.5));
         this.boxTop = true;
-        this.pan = s.pan ?? 0.015;
+        // vignettes hold the camera still: actors, parked cars and planters stay planted on the street
+        this.pan = s.pan ?? 0;
         this.children.list.filter((o) => o instanceof Phaser.GameObjects.Graphics && (o as Phaser.GameObjects.Graphics).depth === 100000).forEach((o) => o.destroy());
         break;
       }
@@ -211,12 +212,10 @@ export class CutsceneScene extends Phaser.Scene {
         sfx.construction();
         this.tweens.add({ targets: d, reveal: 1, duration: 1200, ease: 'Sine.easeIn', onUpdate: () => { if (Math.random() < 0.08) sfx.construction(); } });
         await this.wait(1300);
-        d.flow = 1.4; // a moment of hope...
-        for (let i = 0; i < 26; i++) this.time.delayedCall(i * 55, () => this.addDvpCar(d.lanes - 1, 0.62 - Math.random() * 0.05));
-        await this.wait(1500);
-        d.flow = 0; // ...and gridlock again
-        sfx.carHonk(); this.time.delayedCall(300, () => sfx.carHonk());
-        await this.wait(600);
+        // the new lane fills with the same crawl as the rest: no relief
+        for (let dd = 1.05 + Math.random() * 0.2; dd < 15; dd += 0.5 + Math.random() * 0.12) this.addDvpCar(d.lanes - 1, dd);
+        sfx.carHonk(); this.time.delayedCall(400, () => sfx.carHonk());
+        await this.wait(400);
         break;
       }
       case 'actor': {

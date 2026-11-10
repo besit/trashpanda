@@ -64,7 +64,8 @@ export class Traffic {
       s = this.scene.add.image(0, 0, 'world', key).setOrigin(pv.x, pv.y);
     }
     if (horiz) s.setPosition(pos, lane.pos + off); else s.setPosition(lane.pos + off, pos);
-    const speed = kind === 'streetcar' ? 46 : kind === 'bike' ? 42 + Math.random() * 16 : lane.light ? 44 + Math.random() * 14 : 58 + Math.random() * 26;
+    // cars > streetcars > cyclists > pedestrians (16-28), so a cyclist in mixed traffic visibly holds cars up
+    const speed = kind === 'streetcar' ? 52 : kind === 'bike' ? 32 + Math.random() * 7 : lane.light ? 52 + Math.random() * 14 : 72 + Math.random() * 26;
     this.vehicles.push({ s, lane, kind, speed, v: speed, len, honkCd: 0, stopT: 0, served: new Set(), off });
   }
 

@@ -51,9 +51,10 @@ export function hitStop(scene: Phaser.Scene, ms = 60) {
   setTimeout(() => { scene.time.timeScale = 1; scene.anims.globalTimeScale = 1; if (scene.scene.isActive()) w.resume(); }, ms);
 }
 
-export function floatText(scene: Phaser.Scene, x: number, y: number, str: string, font: FontKey = 'font_outline', tint = 0xffffff) {
+export function floatText(scene: Phaser.Scene, x: number, y: number, str: string, font: FontKey = 'font_outline', tint = 0xffffff, hold = 0) {
   const t = text(scene, x, y, str, font).setDepth(9000).setTint(tint);
-  scene.tweens.add({ targets: t, y: y - 18, alpha: 0, duration: 800, ease: 'Cubic.easeOut', onComplete: () => t.destroy() });
+  scene.tweens.add({ targets: t, y: y - 18, alpha: 0, delay: hold, duration: 800, ease: 'Cubic.easeOut', onComplete: () => t.destroy() });
+  if (hold) scene.tweens.add({ targets: t, y: y - 6, duration: 300, ease: 'Cubic.easeOut' });
   return t;
 }
 

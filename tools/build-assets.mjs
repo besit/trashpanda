@@ -71,7 +71,8 @@ addProp('streetlight', P.streetlight()); addProp('ttcstop', P.ttcStop()); addPro
 addProp('hydrant', P.hydrant()); addProp('bench', P.bench()); addProp('planter', P.planter()); addProp('bollard', P.bollard());
 addProp('cone', P.cone()); addProp('signal', P.trafficSignal()); addProp('newsbox', P.newsBox());
 addProp('tree_c', P.tree(3, 1.2));
-addProp('tbgates', PK.tbGates()); addProp('parklamp', PK.parkLamp());
+addProp('tbgates', PK.tbGates()); addProp('parklamp', PK.parkLamp()); addProp('picnic', PK.picnicTable());
+PK.graffitiPieces().forEach((g, i) => addProp(`graf_${i}`, g));
 for (const k of ['green', 'blue', 'grey']) addProp(`bin_${k}`, PK.bin(k));
 PK.whiteSquirrel().forEach((f, i) => addProp(`sq_${i}`, f));
 manifest.anims.sq_run = { frames: ['sq_0', 'sq_1'], rate: 12, loop: true, atlas: 'world' };
@@ -128,7 +129,7 @@ const mapOut = {
   tileColors,
 };
 // ground decals: standalone images (big, mostly transparent: compress well, keep the atlas small)
-const decalImgs = { dogbowl: PK.dogBowl(), diamond: PK.baseballDiamond(), tennis: PK.tennisCourts() };
+const decalImgs = { dogbowl: PK.dogBowl(208, 128), diamond: PK.baseballDiamond('east'), tennis: PK.tennisCourts() };
 for (const d of map.decals) if (d.gen?.kind === 'paths') decalImgs[d.key] = PK.parkPaths(d.gen);
 for (const [k, im] of Object.entries(decalImgs)) { save(im, path.join(OUT, `${k}.png`)); manifest.images[k] = `gen/${k}.png`; }
 fs.writeFileSync(path.join(OUT, 'queenwest.json'), JSON.stringify(mapOut));

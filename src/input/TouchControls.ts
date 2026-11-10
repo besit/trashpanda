@@ -46,6 +46,9 @@ export class TouchControls {
     this.drawButtons();
 
     scene.scale.on('resize', this.relayout, this);
+    // while the scene is paused it can't see pointer-ups: release everything so no button stays stuck
+    scene.events.on('pause', this.releaseAll, this);
+    scene.events.on('resume', this.releaseAll, this);
     scene.input.on('pointerdown', this.down, this);
     scene.input.on('pointermove', this.move, this);
     scene.input.on('pointerup', this.up, this);
@@ -59,6 +62,12 @@ export class TouchControls {
     for (const b of this.buttons) { [b.x, b.y] = pos[b.id]; b.t?.setPosition(b.x, b.y); }
   }
   private relayout() { this.layout(); this.drawButtons(); }
+  private releaseAll() {
+    this.btnPointers.clear(); this.stickId = null; touchState.taps.clear();
+    touchState.x = 0; touchState.y = 0;
+    for (const k of Object.keys(touchState.buttons)) touchState.buttons[k] = false;
+    this.stickBase.clear(); this.stickKnob.clear(); this.drawButtons();
+  }
 
   setLabel(id: Btn['id'], label: string) {
     const b = this.buttons.find((x) => x.id === id);
@@ -83,7 +92,7 @@ export class TouchControls {
 
   private down(p: Phaser.Input.Pointer) {
     const b = this.hitButton(p.x, p.y);
-    if (b) { this.btnPointers.set(p.id, b.id); touchState.buttons[b.id] = true; this.drawButtons(); return; }
+    if (b) { this.btnPointers.set(p.id, b.id); touchState.buttons[b.id] = true; touchState.taps.add(b.id); this.drawButtons(); return; }
     if (p.x < GAME_W * 0.55 && this.stickId === null) {
       this.stickId = p.id; this.stickOrigin.set(p.x, p.y); this.drawStick(p.x, p.y);
     }
@@ -113,6 +122,8 @@ export class TouchControls {
   }
   destroy() {
     this.scene.scale.off('resize', this.relayout, this);
+    this.scene.events.off('pause', this.releaseAll, this);
+    this.scene.events.off('resume', this.releaseAll, this);
     this.scene.input.off('pointerdown', this.down, this);
     this.scene.input.off('pointermove', this.move, this);
     this.scene.input.off('pointerup', this.up, this);

@@ -2,7 +2,7 @@
 // Launched on top of Explore or Action, which are paused underneath.
 import Phaser from 'phaser';
 import { GAME_W, GAME_H } from '../config';
-import { InputManager, CONTROLS_KEYS, CONTROLS_ALT, CONTROLS_PAD } from '../input/InputManager';
+import { InputManager, CONTROLS_KEYS, CONTROLS_ALT, CONTROLS_PAD, touchState } from '../input/InputManager';
 import { wantsTouch } from '../input/TouchControls';
 import { text, iris } from '../ui/fx';
 import { ctx } from '../core/ctx';
@@ -42,6 +42,11 @@ export class PauseScene extends Phaser.Scene {
   create(data: PauseData) {
     this.from = data.from;
     this.input2 = new InputManager(this);
+    // the key/button that opened the overlay is still held: don't let it close the overlay again (M1 flicker bug)
+    this.input2.swallow();
+    touchState.x = 0; touchState.y = 0;
+    for (const k of Object.keys(touchState.buttons)) touchState.buttons[k] = false;
+    touchState.taps.clear();
     this.sel = 0; this.lastNY = 0; this.lastNX = 0;
     music.duck(true);
     this.show(data.mode ?? 'menu');
@@ -62,6 +67,19 @@ export class PauseScene extends Phaser.Scene {
     if (mode === 'menu') this.buildMenu();
     else if (mode === 'controls') this.buildControls();
     else this.buildMap();
+    // close button (top right), always there
+    const bx = GAME_W - 14, by = 14;
+    const btn = this.add.graphics();
+    btn.fillStyle(0x16121f).fillCircle(bx, by + 1, 10).fillStyle(0xd42a24).fillCircle(bx, by, 10).lineStyle(1, 0xf6f2e9).strokeCircle(bx, by, 10);
+    this.root.add(btn);
+    this.root.add(text(this, bx, by, 'X', 'font_outline'));
+    this.closeBtn = { x: bx, y: by };
+  }
+  private closeBtn = { x: 0, y: 0 };
+
+  private back() {
+    if (this.mode === 'controls' && this.from !== 'Title') { sfx.select(); this.show('menu'); }
+    else this.resume();
   }
 
   // ---------- menu ----------
@@ -104,7 +122,7 @@ export class PauseScene extends Phaser.Scene {
       this.root.add(text(this, cx, 174, CONTROLS_ALT, 'font').setTint(0x9793a6));
       this.root.add(text(this, cx, 184, CONTROLS_PAD, 'font').setTint(0x9793a6));
     }
-    this.root.add(text(this, cx, GAME_H - 12, wantsTouch() ? 'TAP TO GO BACK' : 'ESC / E: BACK', 'font').setTint(0x9793a6));
+    this.root.add(text(this, cx, GAME_H - 12, wantsTouch() ? 'X: BACK' : 'ESC / E: BACK', 'font').setTint(0x9793a6));
   }
 
   // ---------- city map ----------
@@ -159,7 +177,7 @@ export class PauseScene extends Phaser.Scene {
     }
     this.blink = this.add.graphics();
     this.root.add(this.blink);
-    this.root.add(text(this, cx, GAME_H - 9, wantsTouch() ? 'TAP TO CLOSE' : 'M / ESC: CLOSE', 'font').setTint(0x9793a6));
+    this.root.add(text(this, cx, GAME_H - 9, wantsTouch() ? 'X: CLOSE' : 'M / ESC: CLOSE', 'font').setTint(0x9793a6));
     this.drawBlink();
   }
 
@@ -180,7 +198,8 @@ export class PauseScene extends Phaser.Scene {
 
   // ---------- input ----------
   private tap(p: Phaser.Input.Pointer) {
-    if (this.mode !== 'menu') { if (this.mode === 'map' || this.from === 'Title') this.resume(); else this.show('menu'); sfx.select(); return; }
+    if (Phaser.Math.Distance.Between(p.x, p.y, this.closeBtn.x, this.closeBtn.y) < 16) { this.back(); return; }
+    if (this.mode !== 'menu') return; // map + controls stay open until closed
     this.items.forEach((it, i) => {
       const b = it.t!.getBounds();
       if (p.y > b.y - 4 && p.y < b.bottom + 4 && p.x > b.x - 30 && p.x < b.right + 30) {
@@ -209,11 +228,11 @@ export class PauseScene extends Phaser.Scene {
     this.blinkT += dt;
     if (this.mode === 'map') {
       this.drawBlink();
-      if (this.input2.justPressed('map') || this.input2.justPressed('back') || this.input2.justPressed('confirm')) this.resume();
+      if (this.input2.justPressed('map') || this.input2.justPressed('back') || this.input2.justPressed('pause')) this.resume();
       return;
     }
     if (this.mode === 'controls') {
-      if (this.input2.justPressed('back') || this.input2.justPressed('confirm')) { if (this.from === 'Title') this.resume(); else { sfx.select(); this.show('menu'); } }
+      if (this.input2.justPressed('back') || this.input2.justPressed('confirm')) this.back();
       return;
     }
     if (this.input2.justPressed('pause') || this.input2.justPressed('back')) { this.resume(); return; }
