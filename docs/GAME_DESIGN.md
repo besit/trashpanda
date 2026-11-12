@@ -106,7 +106,11 @@ The cost is a 0.3 s wipe at the seam. The design target of "one city" is kept: s
 | Traffic | flagger with STOP paddle | slow, longer reach, tanky |
 | **SUV Rat** (M2) | a rat at the wheel of a dark SUV, purple DF cap | drives through your lane, honking; stomp the roof or pump the bumper (hits stall it); "RIGHT TURN ONLY!" |
 | **Bureaucrat Rat** (M2 boss) | grey suit, red tie, ring glasses, rubber stamp, desk | stamp volleys, clipboard shove, summons clerks, red tape |
-| Lobbyist (buffs), Mega Rat (miniboss) | | planned for M3 |
+| **Lobbyist** (M3) | navy suit, gold tie, briefcase of cash | never fights; keeps 120–170 px away; rats within 120 px glint gold and take **half damage**. Corner him first |
+| **Foreman Rat** (M2.1, M1 boss) | the construction rat at boss size | cones, jackhammer shove, whistle, a JACKHAMMER charge that leaves him dizzy |
+| **The Lane Eater** (M3, M5 boss) | a yellow paving machine, rat foreman in the cab | paint gobs from the conveyor, a megaphone that summons rats, a lunge; the grinder opens only when it overheats |
+| **The Monster SUV** (M3, M7 boss) | a lifted SUV with a crowned rat at the wheel | charges across the lot and stalls at the edge; stomp the roof, pump the tyres while it's stalled |
+| Mega Rat (miniboss) | | planned for M4 |
 
 ## Missions
 
@@ -116,10 +120,10 @@ The cost is a 0.3 s wipe at the seam. The design target of "one city" is kept: s
 | 2 | Let the Streetcar Through ✅ M2 | Queen West | Transit signal priority | non-combat streetcar escort |
 | 3 | King of the Street ✅ M2 | Downtown | King St transit corridor | combat + SUV Rats + Bureaucrat boss |
 | 4 | **Slow Down, Dog** ✅ M2 *(added by Ivan, made a main mission at the M0 review)* | High Park (Parkside school zone) | School zone, slowed by design | chase the camera haulers, then build humps / a raised crossing / a curb extension under traffic |
-| 5 | **The Lane Eater** *(Bloor; Ivan's call at the M1 review)* | High Park (Bloor West) | Keeping protected lanes (community pressure) | auto-scrolling chase + rally-a-peloton + 3-part machine boss |
+| 5 | **The Lane Eater** ✅ M3 *(Bloor; Ivan's call at the M1 review)* | High Park (Bloor West) | Keeping protected lanes (community pressure) | auto-scrolling chase + rally-a-peloton + 3-part machine boss |
 | 6 | Save the Science | North | Adaptive reuse | stealth + combat |
-| 7 | The Great Parking Lot | East End | Parking → park | combat + park-building, SUV Rat boss |
-| 8 | The Waterfront Heist | Waterfront | Public waterfront | combat |
+| 7 | The Great Parking Lot ✅ M3 | East End | Parking → park | combat + depave arena + Monster SUV boss |
+| 8 | The Waterfront Heist ✅ M3 | Waterfront | Public waterfront | lobbyist waves + fence-tearing arena |
 | 9 | Finish the Line | Downtown → East End | Ontario Line | Mega Rat miniboss |
 | 10 | Death by Highway | Waterfront | Highway → boulevard + park | "...another lane?" scene, then Highway Mech final boss |
 | side | Pedestrian Takeover | Queen West (Kensington-style) | Pedestrian street | crowd-gathering |
@@ -164,6 +168,12 @@ The real 2026 removals happen on Bloor (URBAN_RESEARCH §1), so this mission is 
 - **The ending:** the peloton fills Bloor and the machine stalls. The payoff is public pressure, not a court win: the after-vignette shows a protest ride with signs.
 - **Tone:** the real dispute is live, with a Supreme Court leave application pending. The game shows the evidence and the community, and makes no claims about real people.
 - **Upgrade:** "Lanes kept + community ride". It gives a modest Livability gain plus a new stat, **Riders rallied**.
+
+### Mission 7: The Great Parking Lot (East End), built in M3
+MEGAMART's lot south of Queen (URBAN_RESEARCH §6). Two rat waves, one with an SUV Rat. Then a locked **depave** arena: pump five cracked asphalt patches (3 hits each) into soil and saplings while rats defend them. The boss is the **Monster SUV**: it charges across the lot and stalls at the arena edge. Stomp its roof any time, and pump its tyres while it's stalled. At half health it charges faster. Payoff: the lot becomes a park.
+
+### Mission 8: The Waterfront Heist (Waterfront), built in M3
+The fictional MEGA SPA is fencing off the shore (URBAN_RESEARCH §7). Three waves include **Lobbyists**, who make nearby rats take half damage, so the order matters. The middle beat is a locked arena with four fence panels across the promenade to pump down while rats and a lobbyist defend. Payoff: the fences and the causeway gate are gone, and the island gets a public beach.
 
 Each mission has 2–4 beats: a ride section (curbs, cones, parked cars to hop), arena waves (camera locks), a mission-specific twist, then the finale. Every mission gets one twist of its own so combat doesn't repeat.
 

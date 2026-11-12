@@ -143,10 +143,13 @@ export class PauseScene extends Phaser.Scene {
     const md = (live?.data ?? this.cache.json.get(`map_${view}`)) as MapData | undefined;
     this.root.add(text(this, cx, 10, DISTRICTS[view]?.name ?? 'TORONTO', 'font_big'));
     // the city west to east: the district on screen is marked, "YOU" where the raccoon is, open missions counted
-    const strip = DISTRICT_ORDER.map((d) => {
+    // M3: five districts: > < = on screen, N! = open missions; where you are moved to the footer
+    const makeStrip = (short: boolean) => DISTRICT_ORDER.map((d) => {
       const open = Object.values(MISSIONS).filter((m) => m.district === d && !ctx.state.completedMissions.includes(m.id) && missionAvailable(m.id, ctx.state.completedMissions)).length;
-      return `${d === view ? '>' : ''}${DISTRICTS[d].name}${d === here ? ' (YOU)' : ''}${open ? ` ${open}!` : ''}${d === view ? '<' : ''}`;
-    }).join('  -  ');
+      return `${d === view ? '>' : ''}${short ? DISTRICTS[d].short : DISTRICTS[d].name}${open ? ` ${open}!` : ''}${d === view ? '<' : ''}`;
+    }).join('  ');
+    let strip = makeStrip(false);
+    if (strip.length * 6 > GAME_W - 64) strip = makeStrip(true); // clear of the close button
     this.root.add(text(this, cx, 24, strip, 'font').setTint(0xc9c5d1));
     // paging arrows (also tappable)
     const vi = DISTRICT_ORDER.indexOf(view);
@@ -206,7 +209,7 @@ export class PauseScene extends Phaser.Scene {
     this.viewHasPlayer = !!live;
     this.blink = this.add.graphics();
     this.root.add(this.blink);
-    this.root.add(text(this, cx, GAME_H - 9, wantsTouch() ? '< > TAP THE ARROWS   X: CLOSE' : 'A/D OR ARROWS: DISTRICTS   M / ESC: CLOSE', 'font').setTint(0x9793a6));
+    this.root.add(text(this, cx, GAME_H - 9, wantsTouch() ? `< > TAP THE ARROWS   YOU: ${DISTRICTS[here]?.short ?? ''}   X: CLOSE` : `A/D: DISTRICTS   YOU: ${DISTRICTS[here]?.name ?? ''}   M / ESC: CLOSE`, 'font').setTint(0x9793a6));
     this.drawBlink();
   }
   private viewMarkers: { x: number; y: number; label: string; done: boolean }[] = [];

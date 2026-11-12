@@ -388,3 +388,57 @@ His description: a single row under the 2nd-floor windows changes colour, from t
 - Vitest suddenly failed even a one-line test with "reading 'config'". The editor had reopened the project as `c:\...` instead of `C:\...`, and Vitest loaded its own module twice under two drive-letter casings. Running from the upper-case path fixes it.
 - City Map paging ignored fast key taps: menus read held keys, and a quick tap is gone by the next frame. Menus now get the frame's taps too.
 - My bot couldn't finish M4's build, because it assumed the stakes are built in order.
+
+## 2026-11-12: Day 4, M3: the East End, the Waterfront, missions 5, 7 and 8
+
+Ivan's M2 answers: district seams are fine; keep the speed camera ("maybe we even remove the ban as a mission result"); go straight on to M3 after the fixes and fold the M2 feedback into the M3 review. M2.1 shipped (tag `m2.1`); this entry is the M3 content on top of it.
+
+### Two new districts
+- **East End** (east of Downtown):
+  - The Don Valley first: the river, the Lower Don trail and the DVP. The river and the highway are solid, so you cross on the **bridges** at Dundas, Gerrard and Queen. The Queen St bridge carries Eldon Garnet's inscription as a plaque.
+  - Broadview (504 streetcar) and the **Broadview Hotel**, Riverdale Park East on its hill, East Chinatown's lanterns on Gerrard, and Leslieville.
+  - South of Queen: **MEGAMART** and its sea of parking (fictional).
+- **Waterfront** (south of Downtown), the first district reached by riding **south**:
+  - **N/S exits are new.** Exits used to be rows on the west/east edges. Now an exit is a span along any edge, matched by street name, and you arrive at the same distance along the span. Spadina, University and Bay line up with Downtown's columns, so riding down University drops you onto University.
+  - The **Gardiner** overhead (deck segments drawn above everything), Lake Shore beneath it, mid-rises in its shadow.
+  - **Roundhouse Park** with the CN Tower and the domed stadium.
+  - **Queens Quay** with the streetcar in its grassy median. Its lanes are `transitOnly`: streetcars only, no cars or bikes.
+  - The **Martin Goodman Trail** (bike-only lanes), the promenade, the boardwalk, **Sugar Beach**'s pink umbrellas, sailboats drifting about their moorings.
+  - Out west, an island with the **Cinesphere**, two pods and Dog Fraud's fictional **MEGA SPA**, fenced off behind a locked gate on the causeway.
+
+### Three new missions
+- **5. The Lane Eater** (High Park, Bloor West):
+  - An auto-scrolling chase with a paving machine behind you that eats the bike lane.
+  - Ring your bell at cyclists to grow a **peloton**. Every rider takes a hit for you and slows the machine.
+  - At the end of Bloor the machine turns on you: a 3-weak-point boss (conveyor, cab, and a grinder that's only open while it's overheated).
+  - The after-vignette is a protest ride. The payoff headline ("THE PELOTON FILLS BLOOR. THE BIKE LANES STAY.") is labelled as the game's fantasy outcome, since the real removals began in October 2026.
+- **7. The Great Parking Lot** (East End):
+  - Two waves, then a locked **depave** arena: pump five cracked asphalt patches into soil and saplings.
+  - Then the **Monster SUV** boss: it charges, stalls at the arena edge, and while it's stalled you stomp its roof and pump its tyres.
+  - The lot becomes a park. The blurb is sourced from Toronto's December 2021 parking-minimum repeal.
+- **8. The Waterfront Heist** (Waterfront):
+  - The new rat is **the Lobbyist** (navy suit, gold tie, a briefcase stuffed with cash). He never fights. He keeps 120–170 px away, backing off when you approach, and every rat near him glints gold and **takes half damage**. The lesson is the order: corner the lobbyist, then fight the rest.
+  - The middle beat reuses the depave arena with a `fence` style: four MEGA SPA fence panels across the promenade topple when pumped down.
+  - The map payoff removes the fences and opens the causeway; the island gets a public beach, trees and picnic tables.
+
+### The Ontario Place question
+The real story behind mission 8 is the 95-year Therme lease at Ontario Place. I kept the spa **fictional** (MEGA SPA, never "Therme") and let the upgrade blurb carry only what I could source today: the lease (CBC, October 2024) and roughly 850 trees cut. Sources say 850 to 865, so the blurb uses the conservative "about 850". The blurb ends on a question rather than a verdict. One line I wrote for the lobbyist quoted a day-pass price. I cut it: it was invented, and it would read as a fact about the real spa.
+
+### Fixes found while building
+- **Map strip overflow:** with five districts, the City Map's strip ran under the close button. The fix is short names when the full ones don't fit, and "YOU: <district>" moved to the footer. My first attempt used `[ ]` and `*`, which the bitmap font doesn't have (`*` drew as a `#`-like star).
+- **Unreadable signs:** "MEGA SPA" read as **HECA SPA** in 3×3 glyphs, and MEGAMART's sign was eight white squares. Both now use 5-px-tall glyphs (art history `waterfront/v01`, `eastend/v02`).
+- **The island:**
+  - The first island was drawn with `shore_n` on every edge, so it looked shredded. Shore tiles are now chosen per side.
+  - The whole lake was one solid box, so the island was unreachable. The lake is now solid per row of water, so the island and the causeway stay rideable.
+  - The first MEGA SPA stood *on the trail*, and its fence ran across the bike path. Both moved out to the island.
+- **Captions:** two lines in the after-vignettes stacked on top of each other (in `lot_after` too, since M3's first pass). Each now clears first.
+
+### Failures
+- **The bot "lost" two missions that were winnable.**
+  - In the parking lot it hammered fixed offsets from the camera, not the patches. The debug state now lists the open spots and the bot walks to them.
+  - On the Lane Eater it attacked the grinder from the wrong side.
+  - I probed both directly: every patch, every fence and every weak point registers hits. With the fixes the bot wins M7 (with 2 deaths) and M8 (no damage taken). The Lane Eater's conveyor and cab sit high and need jump attacks, which the bot doesn't do. Those two zones are verified by direct hits instead.
+- **The unit tests had silently stopped covering the East End.** The test's generator table listed only three districts. It now generates all five and requires every exit to pair on the **opposite** edge.
+
+### Numbers
+Unit tests 14/14, e2e 18/18 (4 new in `m3.spec.ts`: the N/S ride, and marker → briefing → action → debrief → payoff for missions 5, 7 and 8). All scenes hold 60 fps with a p95 of 16.8 ms up to 6× CPU throttle. First load is about 2.3 MB of the 2.5 MB budget (see PERFORMANCE).

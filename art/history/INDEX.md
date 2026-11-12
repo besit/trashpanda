@@ -176,6 +176,24 @@ v01: intro highway backdrop (DVP-style ravine, river, lake, sunset, skyline) + b
 
 ![dvp v01](dvp/v01/preview.png)
 
+## eastend
+
+### eastend v02
+
+2026-11-12
+
+MEGAMART sign lettering redrawn with 5-px glyphs (v01's 3x4 blocks read as blank squares at game scale).
+
+![eastend v02](eastend/v02/preview.png)
+
+### eastend v01
+
+2026-11-12
+
+M3 East End: MEGAMART big-box facade, the Broadview Hotel, lot lights, asphalt patch -> soil + sapling (depave), the Monster SUV boss.
+
+![eastend v01](eastend/v01/preview.png)
+
 ## font
 
 ### font v01
@@ -203,6 +221,16 @@ M2.1: swans + wood ducks for Grenadier Pond (Ivan), the Jamie Bell Adventure Pla
 M2 High Park / Roncesvalles: cherry + black oak trees, capybaras (v02: added head, ear, eye, nose; v01 read as loaves), zoo rail fence, HIGH PARK sign, TTC station entrance, Parkside speed camera + its cut stump, school-zone sign, transit-priority signal head, King St patio sets, playground, the Revue's marquee, a red-brick school.
 
 ![highpark v01](highpark/v01/preview.png)
+
+## lane_eater
+
+### lane_eater v01
+
+2026-11-12
+
+M3 mission 5 boss: the Lane Eater, a road-paving machine that eats bike lanes. Three weak points (conveyor, cab, grinder) shown intact and smashed.
+
+![lane_eater v01](lane_eater/v01/preview.png)
 
 ## park
 
@@ -338,6 +366,14 @@ SDF-rendered, 8 dirs x 4 pedal frames, 32deg character camera. (Earlier passes -
 
 ## rats
 
+### rats v04
+
+2026-11-12
+
+M3: + the Lobbyist (navy suit, gold tie, briefcase of cash). Hangs back; rats near him take half damage.
+
+![rats v04](rats/v04/preview.png)
+
 ### rats v03
 
 2026-11-09
@@ -384,6 +420,14 @@ M2.1: the Foreman Rat, mission 1's new boss (Ivan: 'a boss would make it feel ac
 
 ## side_bg
 
+### side_bg v04
+
+2026-11-12
+
+M3 side views: MEGAMART's lot (stalls + wheel stops, big-box backdrop) and the waterfront promenade (lake, islands, railing, Martin Goodman Trail, boardwalk) with MEGA SPA fence panels.
+
+![side_bg v04](side_bg/v04/preview.png)
+
 ### side_bg v03
 
 2026-11-10
@@ -427,6 +471,14 @@ M2 side-view mission props: signal pole with a TSP call box (red / green / prior
 ![side_props v01](side_props/v01/preview.png)
 
 ## tiles
+
+### tiles v05
+
+2026-11-12
+
+M3 tiles: flowerbed, parking lot / stall / wheel stop, Don bridge rails, DVP median, Martin Goodman Trail, sand, Queens Quay's grassy streetcar median.
+
+![tiles v05](tiles/v05/preview.png)
 
 ### tiles v04
 
@@ -485,3 +537,13 @@ Streetcar: grey roof instead of white slab, taller dark window band.
 First pass vehicles: car (4 dirs/colours), SUV, 3-section TTC-style streetcar.
 
 ![vehicles v01](vehicles/v01/preview.png)
+
+## waterfront
+
+### waterfront v01
+
+2026-11-12
+
+M3 Waterfront: CN Tower (map), the domed stadium, Cinesphere, a pod, Sugar Beach umbrella, sailboat, Gardiner deck segment, MEGA SPA fence + facade (lettering redrawn 5px tall after the 3x3 glyphs read as HECA SPA).
+
+![waterfront v01](waterfront/v01/preview.png)

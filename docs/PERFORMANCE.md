@@ -65,6 +65,26 @@ The p95 frame time is 16.7–16.8 ms everywhere.
 
 The Downtown building atlas (2048×1024, 810 KB) dominates: dithered glass compresses poorly. If it grows, the options are flatter glass bands or quantizing the reflection dither to 2×2 blocks.
 
+### 2026-11-12 (M3)
+Five districts and three new missions. Same harness (`tools/perf.mjs`, production build, CPU-throttled Chromium). The 1× column is from a second run; a second run's 4× numbers matched the first within 0.2 fps.
+
+| Scene | 1× | 4× | 6× | Heap (6×) |
+|---|---|---|---|---|
+| Explore, East End | 60.1 | 60.2 | 60.3 | 20 MB |
+| Explore, Waterfront | 60.3 | 60.1 | 60.2 | 22 MB |
+| Action, M5 (Lane Eater: auto-scroll, peloton, machine) | 60.1 | 60.1 | 60.2 | 17 MB |
+| Action, M7 (Parking Lot: depave, Monster SUV) | 60.1 | 60.1 | 60.2 | 16 MB |
+| Action, M8 (Waterfront: lobbyists, fences) | 60.2 | 60.2 | 60.2 | 16 MB |
+
+The older scenes are unchanged (60.1–60.3 fps). The p95 frame time is 16.7–16.8 ms everywhere.
+
+**Downloads (M3):**
+- JS: 1,379 KB raw / 364 KB gzipped
+- At boot: 1,440 KB. It was 875 KB at M2. The growth is mostly **every district's map JSON** (432 KB for five), loaded at boot so the City Map can page through districts, plus the new side-view strips.
+- Per district on entry: Queen West 338 KB, High Park 404 KB, Downtown 807 KB, East End 489 KB, Waterfront 179 KB. Park decals add up to 274 KB.
+
+**First load for a new game: about 2.3 MB** (boot + Queen West + its decals + JS), against a 2.5 MB budget. The fix is ready for M4: load the other districts' map JSON lazily the first time the City Map pages to them, or ship a pre-baked minimap image per district (~20 KB each) instead of the full map.
+
 ### Bundle (M0)
 | Item | Raw | Gzipped |
 |---|---|---|
@@ -85,3 +105,4 @@ The Downtown building atlas (2048×1024, 810 KB) dominates: dithered glass compr
 - Phaser is about 300 KB of the gzipped JS. A custom Phaser build that strips unused systems (Matter, Spine, etc.) could save about 100 KB. Deferred to M4.
 - ~~The full city map (6 districts) is roughly 10× the tiles of this chunk.~~ Solved in M2 by loading districts as separate maps (one in memory at a time).
 - Downtown's building atlas (810 KB): see M2 notes above.
+- **M3: boot size 1.44 MB.** All five map JSONs load at boot for the City Map. Make them lazy, or use per-district minimap PNGs, before the North district lands in M4.

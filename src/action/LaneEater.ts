@@ -107,6 +107,8 @@ export class LaneEater {
   }
 
   get alive() { return this.move !== 'dead'; }
+  /** overheated after a lunge: the grinder is open (debug/bot) */
+  get hot() { return this.move === 'hot'; }
   get totalHp() { return this.hp.conveyor + this.hp.cab + this.hp.grinder; }
   get front() { return this.x + LE_W / 2; }
   private broken() { return (Object.keys(this.hp) as ZoneKey[]).filter((k) => this.hp[k] <= 0); }

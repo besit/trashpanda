@@ -66,7 +66,6 @@ export function generateWaterfront() {
   D.fill(0, LAKESHORE + 7, SP - 1, QQ - 8, (x, y) => `lawn${(x * 5 + y) % 3}`);
   parkTree(1, SP - 2, LAKESHORE + 8, QQ - 9, 6);
   D.prop('bench', 24 * TS, 28 * TS + 12); D.prop('bench', 42 * TS, 28 * TS + 12); D.prop('parklamp', 33 * TS, 28 * TS); D.prop('parklamp', 62 * TS, 28 * TS);
-  D.labels.push({ text: 'ROUNDHOUSE PARK', x: 24 * TS, y: 24 * TS, kind: 'landmark' });
 
   // ---------- Sugar Beach (east) ----------
   for (let y = QQ + 9; y <= LAKE_Y; y++) for (let x = 106; x < 118; x++) D.set(x, y, y === LAKE_Y ? 'shore_n' : 'sand');
@@ -93,7 +92,7 @@ export function generateWaterfront() {
   for (let x = 0; x < 34; x++) if (x < 20 || x > 22) D.tprop('spafence', x, LAKE_Y, 0, 2, { tag: 'spafence' });
   D.landmarks.push({ id: 'megaspa', x: 22 * TS, y: (QQ + 11) * TS, label: 'THE MEGA SPA (FICTIONAL)', fact: 'PRIVATE. PAID ENTRY.\nYOUR SHORELINE,\nTHEIR CHECKOUT.' });
   D.markers.push({ id: 'waterfront_heist', x: 26 * TS, y: (QQ + 11) * TS + 8, label: 'THE WATERFRONT HEIST' });
-  D.labels.push({ text: 'MEGA SPA', x: 22 * TS, y: (LAKE_Y + 7) * TS, kind: 'landmark' }, { text: 'THE PODS', x: 7 * TS, y: (LAKE_Y + 3) * TS, kind: 'landmark' });
+  D.labels.push({ text: 'MEGA SPA', x: 23 * TS, y: (LAKE_Y + 8) * TS, kind: 'landmark' }, { text: 'THE PODS', x: 8 * TS, y: (LAKE_Y + 17) * TS, kind: 'landmark' });
 
   // ---------- the lake is solid (runs of water per row; the island + causeway stay rideable) ----------
   for (let y = LAKE_Y; y < H; y++) {
@@ -126,7 +125,7 @@ export function generateWaterfront() {
   for (const [c, name] of [[SP, 'spadina'], [UN, 'university'], [BY, 'bay']]) D.nsLanes(name, c, c === SP ? { streetcar: true } : {}, 0, QQ);
   D.labels.push(
     { text: 'GARDINER EXPWY', x: 60 * TS, y: (LAKESHORE - 3) * TS }, { text: 'LAKE SHORE BLVD', x: 86 * TS, y: (LAKESHORE + 2) * TS },
-    { text: 'QUEENS QUAY', x: 86 * TS, y: (QQ + 2) * TS }, { text: 'MARTIN GOODMAN TRAIL', x: 70 * TS, y: (QQ + 8) * TS },
+    { text: 'QUEENS QUAY', x: 86 * TS, y: (QQ + 2) * TS }, { text: 'MARTIN GOODMAN TRAIL', x: 56 * TS, y: (QQ + 8) * TS },
     { text: 'LAKE ONTARIO', x: 70 * TS, y: 64 * TS, kind: 'landmark' },
     { text: 'SPADINA', x: (SP + 2) * TS, y: 26 * TS, vertical: true }, { text: 'UNIVERSITY', x: (UN + 2) * TS, y: 26 * TS, vertical: true }, { text: 'BAY', x: (BY + 2) * TS, y: 26 * TS, vertical: true },
     { text: '^ DOWNTOWN', x: (UN + 2) * TS, y: 2 * TS, kind: 'exit' },

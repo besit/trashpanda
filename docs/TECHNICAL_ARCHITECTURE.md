@@ -33,7 +33,9 @@ src/input     InputManager (keyboard/gamepad/touch → actions; sub-frame taps l
 src/audio     Synth (WebAudio chip), Sequencer (lookahead tracker), songs, sfx
 src/explore   CityMap (tilemap, decals, y-sorted objects, colliders, improvement patches incl. removal of tagged objects), TopDownPlayer,
               Traffic (data lanes + intersections, shared signal cycle, streetcar stops, cyclists), Crowd (pedestrians on walkways, white squirrel)
-src/action    SidePlayer, Rat, SuvRat (vehicle enemy), Bureaucrat (boss), Escort (mission 2), Parkside: Chase + BuildSpots (mission 4)
+src/action    SidePlayer, Rat (incl. the support-only Lobbyist: `shielded` rats take half damage), SuvRat (vehicle enemy), Boss (Bureaucrat + Foreman),
+              Escort (mission 2), Parkside: Chase + BuildSpots (mission 4), LaneEater: Peloton + machine boss (mission 5),
+              ParkingLot: DepaveSpots (`asphalt` | `fence` style, missions 7 + 8) + MonsterSuv (mission 7)
 src/ui        fx: bitmap text, iris and blinds wipes, shake, hit-stop, float text, particles
 tools/        asset generators (never shipped): raster + SDF renderers, sprite modules, map generator, atlas packer
 ```
@@ -45,13 +47,13 @@ tools/        asset generators (never shipped): raster + SDF renderers, sprite m
   - `decals[]`: big ground images (park paths, dog bowl, courts, diamond)
   - `improvements{id: {tiles[[x,y,t]], addProps[], removeTag}}`
   - `spawn`, `markers`, `landmarks` (plaques), `labels` (minimap)
-  - `lanes[]`: `{axis, dir, pos, streetcar, stops[], bikeOnly, requires, priority (TSP), noCars (corridor), calm, speedy}`. The flags name the upgrade that changes the lane's behaviour
-  - `exits[]`: `{side: 'w'|'e', y0, y1, to}`, a street continuing into the neighbour at the same rows (a unit test checks every exit has its partner)
+  - `lanes[]`: `{axis, dir, pos, streetcar, stops[], bikeOnly, requires, priority (TSP), noCars (corridor), calm, speedy, transitOnly, range}`. `priority`/`noCars`/`calm` name the upgrade that changes the lane's behaviour; `transitOnly` (M3, Queens Quay's median) spawns streetcars only
+  - `exits[]`: `{side: 'w'|'e'|'n'|'s', y0, y1 | x0, x1, to, street}`: a street continuing into the neighbour, **matched by street name** (M2.1). W/E exits span rows, N/S exits (M3) span columns, and you arrive at the same distance along the span. A unit test checks every exit has a partner on the opposite edge
   - `intersections[]` (rects), `walkways[]` (polylines), `critters[]`
   - `tileColors` (average colour per tile, used by the minimap)
 - **Upgrade:** `{id, livability, categories, mapPatches[], blurb (sourced), stat}`. Unlocking applies its map patches, live (animated sweep) or on load.
-- **Mission:** `{id, title, district, upgrades[], requires[], briefing, debrief, focusX/Y, focusAxis, action:{bg, street, sky, length, groundY, intro, hint, waves[{at, rats[], suvs}], boss, escort, chase, caughtWave, build, noCombat}}`. `briefing` and `debrief` are cutscene ids played before the fight and before the map payoff.
-- **Cutscene steps:** bg, side (side-view street with `bg` queen/king/parkside, `parked`, `patios`), **pan** (tracking-shot speed), caption, say, portrait, darken, music, sfx, shake, wait, title, dvp/dvpAdd (the highway shot), actor (`world` actors scroll with the street; `scale`), frame, move/wobble/bang (on a 384-wide stage, centred on wider screens).
+- **Mission:** `{id, title, district, upgrades[], requires[], briefing, debrief, focusX/Y, focusAxis, action:{bg, street, sky, length, groundY, intro, hint, waves[{at, rats[], suvs}], boss {at, kind: bureaucrat|foreman|laneeater|monstersuv}, escort, chase, caughtWave, build, autoscroll, depave {at, patches[], rats[], style}, noCombat}}`. `briefing` and `debrief` are cutscene ids played before the fight and before the map payoff.
+- **Cutscene steps:** bg, side (side-view street with `bg` queen/king/parkside/bigbox/lake, `parked`, `patios`), **pan** (tracking-shot speed), caption, say, portrait, darken, music, sfx, shake, wait, title, dvp/dvpAdd (the highway shot), actor (`world` actors scroll with the street; `scale`), frame, move/wobble/bang (on a 384-wide stage, centred on wider screens).
 - **Save:** `trashpanda.save.v1` → `{version: 2, upgrades, completedMissions, flags, ratsDefeated, lanesAddedByDogFraud, playTimeMs, player: {district, x, y}}`. `migrate()` sanitizes unknown or old data; v1 saves land in Queen West.
 
 ## Asset pipeline

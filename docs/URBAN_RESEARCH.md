@@ -18,8 +18,8 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
 | 3 | Transit signal priority | Let the Streetcar Through | ✅ |
 | 4 | Transit-priority corridor (King St pilot) | King of the Street | ✅ |
 | 5 | Adaptive reuse (Science Centre) | Save the Science | ⬜ |
-| 6 | Parking → public space | The Great Parking Lot | ⬜ |
-| 7 | Waterfront public space (Ontario Place) | The Waterfront Heist | ⬜ |
+| 6 | Parking → public space (parking minimums) | The Great Parking Lot | ✅ (see §6) |
+| 7 | Waterfront public space (Ontario Place) | The Waterfront Heist | ✅ for the game's claims (see §7) |
 | 8 | Ontario Line / rapid transit | Finish the Line | ⬜ |
 | 9 | Highway transformation (Gardiner) | Death by Highway | ⬜ |
 | 10 | Pedestrian streets | Pedestrian Takeover (side) | ⬜ |
@@ -231,3 +231,52 @@ These are well-known facts used on plaques. They have not yet been checked again
 - **The Jamie Bell Adventure Playground** in High Park was destroyed by fire in 2012 and rebuilt by community volunteers (M2.1 plaque).
 - **The Grenadier Cafe** sits at the bottom of West Road (from the City's High Park map).
 - **Graffiti Alley** (Rush Lane) runs south of Queen, west of Spadina. It moved here from the Queen West map after Ivan's M1 note.
+
+---
+
+## 6. Parking → public space: Toronto's parking minimums ✅
+
+- **December 15–17, 2021:** City Council adopted item PH29.3, removing **minimum parking requirements for most land uses** in new developments. The exceptions were **visitor parking and accessible parking**. Parking **maximums** were introduced at the same time.
+- **February 3, 2022:** Council enacted **By-law 89-2022**, amending Zoning By-law 569-2013. It was appealed to the Ontario Land Tribunal, and technical corrections followed (By-law 125-2022; MM47.70, July 2022). 🟡 We did not find the outcome of the appeal.
+- **2025 staff report:** most applications submitted after July 2022 fit within the remaining minimums and the new maximums.
+
+Sources: [By-law 89-2022 (PDF)](https://www.toronto.ca/legdocs/bylaws/2022/law0089.pdf); [Ontario Bar Association summary](https://www.oba.org/city-of-toronto-abandons-minimum-parking-standards-to-advance-environmental-sustainability-and-resid); [MM47.70 background file](https://www.toronto.ca/legdocs/mmis/2022/mm/bgrd/backgroundfile-228892.pdf); [2025 staff report](https://www.toronto.ca/legdocs/mmis/2025/ph/bgrd/backgroundfile-252037.pdf).
+
+**BLURB (upgrade `parking_to_park`):** "IN DECEMBER 2021 TORONTO STOPPED REQUIRING MOST NEW BUILDINGS TO INCLUDE CAR PARKING. LESS ASPHALT BY LAW: MORE ROOM FOR HOMES, TREES AND PARKS." The second sentence is the policy's intent, not a measured outcome.
+
+**GAME IMPLEMENTATION:** *The Great Parking Lot* (mission 7, East End). Beats: two rat waves, then a locked **depave** arena where you pump five cracked asphalt patches into soil and saplings. The boss is the **Monster SUV**: it charges, stalls at the arena edge, and while it's stalled you stomp its roof and pump its tyres. **Map payoff:** MEGAMART's lot becomes a park with lawns, paths, trees, a playground and picnic tables. MEGAMART is fictional.
+
+**COUNTERPOINTS:** removing minimums doesn't remove parking. Developers can still build it (up to the maximums), and existing lots stay. The game's lot-to-park swap is the hopeful version of a slow, parcel-by-parcel change.
+
+---
+
+## 7. Waterfront public space: Ontario Place ✅ for the game's claims
+
+- **95-year lease:** in October 2024 the Province released the terms of its **95-year lease** with Therme Canada for a private spa/waterpark on Ontario Place's West Island. Over the lease, Therme is expected to pay about $1.96 billion in rent and maintenance.
+- **Parking:** the lease requires Ontario to provide at least 1,800 parking spaces at Ontario Place, **1,600 of them reserved for Therme**. A provincially funded garage was initially budgeted at about $400 million.
+- **Trees:** Infrastructure Ontario began removing roughly **850–865 trees** (sources differ) on the evening of October 2, 2024, with replacement planting promised. Critics pointed out that some of the trees were around 50 years old.
+- **Timeline:** officials said construction could start as soon as spring 2026, with a hoped-for opening around 2029 (not an official projection). 🟡 Not rechecked for 2026 progress.
+- **Opposing view:** the Province argues the deal revitalizes a long-neglected site at no cost to taxpayers for the spa itself. Critics (e.g. TVO opinion, advocacy groups) argue the public subsidizes a private attraction on public waterfront land.
+
+Sources: [CBC, lease details (Oct 2024)](https://www.cbc.ca/lite/story/1.7341585); [CTV, 1,600 parking spots](https://toronto.ctvnews.ca/ontario-promises-1-600-dedicated-parking-spots-for-therme-spa-at-ontario-place-lease-1.7061075); [Global News, parking contract](https://globalnews.ca/news/10151490/ontario-therme-spa-contract-parking); [The Trillium, revenue estimate](https://thetrillium.ca/news/municipalities-transit-and-infrastructure/province-estimates-therme-will-pay-it-11b-in-direct-revenue-over-95-year-ontario-place-lease-9608292); [TVO opinion](https://amp.tvo.org/article/opinion-the-ontario-place-spa-is-a-costly-extravagance-well-be-subsidizing-forever); [CTV, final designs (June 2025)](https://www.ctvnews.ca/toronto/politics/queens-park/article/ontario-place-final-designs-revealed/).
+
+**FICTION LABEL:** the **MEGA SPA is fictional**: its name, its sign and its rats are Dog Fraud's. The game never names Therme. The upgrade blurb says so explicitly: "THE MEGA SPA IS FICTION. BUT IN 2024 ONTARIO SIGNED A 95-YEAR LEASE FOR A PRIVATE SPA AT ONTARIO PLACE, AND ABOUT 850 TREES THERE WERE CUT DOWN. WHO IS THE WATERFRONT FOR?" "About 850" is the conservative end of the reported range. The vignette's rat line ("95-YEAR LEASE. MEMBERS ONLY!") is satire built on the same reported fact. No prices are quoted.
+
+**GAME IMPLEMENTATION:** *The Waterfront Heist* (mission 8, Waterfront). Lobbyist rats hang back and shield nearby rats (half damage), so you have to corner them first. A locked arena has four MEGA SPA fence panels across the promenade to pump down. **Map payoff:** the fences across the boardwalk and the island causeway disappear, the island gets a public beach (sand, umbrellas), trees and picnic tables, and a bike ring appears on the promenade.
+
+---
+
+## 19. The Lane Eater (mission 5) ✅ via §1
+
+Mission 5 dramatizes the Bloor bike lanes' removal fight. All facts it uses are in §1: the pilot's +49% cycling, permanence in 2017, the TCAT economic study, the Court of Appeal ruling (August 14, 2026), and removal work starting in October 2026. The headline "THE PELOTON FILLS BLOOR. THE BIKE LANES STAY." is the **game's fantasy outcome**, not a prediction.
+
+---
+
+## 20. Waterfront + East End landmarks (plaques) 🟡
+
+Well-known facts used on M3 plaques, not yet checked against a primary source this session:
+- **The CN Tower** opened in **1976**, is **553 m** tall, and was the world's tallest freestanding structure (tower) until 2007.
+- **Sugar Beach** (Canada's Sugar Beach): pink umbrellas beside the Redpath sugar refinery.
+- **The Queen St bridge over the Don** carries Eldon Garnet's 1996 inscription "THIS RIVER I STEP IN IS NOT THE RIVER I STAND IN".
+- **The Broadview Hotel** at Queen + Broadview dates from the 1890s.
+- **Riverdale Park East**: known for its skyline view.

@@ -68,6 +68,22 @@ Each district gets landmarks and textures you can't mistake for anywhere else. Q
 - Chinatown's red lanterns at Spadina, Graffiti Alley, the news van bursting out of 299 Queen W
 - after mission 3, King's red TTC lanes and patio decks with striped umbrellas
 
+**East End (M3):**
+- the Don Valley: the river, the Lower Don trail, the DVP, and the bridges with concrete rails (the Queen St bridge inscription as a plaque)
+- the Broadview Hotel's red brick corner, Riverdale Park East's hill, East Chinatown's lanterns on Gerrard
+- MEGAMART (fictional): a ribbed grey big box, a red sign, and a parking lot of stalls, wheel stops and light poles
+
+**Waterfront (M3):**
+- the Gardiner deck overhead on its piers, with Lake Shore beneath
+- the CN Tower's base and shaft in Roundhouse Park, the domed stadium's ribbed roof
+- Queens Quay's streetcar in a grassy median, the Martin Goodman Trail's yellow centre dashes, granite promenade and boardwalk
+- Sugar Beach's pink umbrellas and white chairs, sailboats, the Cinesphere's geodesic dome, the pods on stilts
+- the MEGA SPA (fictional, pink and glass) and its chain-link PRIVATE fences
+
+**Rules added in M3:**
+- Lettering on signs is at least 5 px tall. 3×3 glyphs read as nonsense: "MEGA SPA" came out as "HECA SPA".
+- An island is drawn with the shore tile that matches each side (water touching land to the south gets `shore_s`, and so on), never one edge tile all round.
+
 **Rules added in M2:**
 - No wall colour may equal a sky colour: the teal brick speckle was sky blue and read as holes (Ivan's circled screenshot).
 - Vehicles seen from behind must show a trunk, a rear window and tail lights. The SDF back view read as all glass, so it's hand-built per scale now.

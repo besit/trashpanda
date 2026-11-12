@@ -6,7 +6,7 @@ const base = process.argv[2] ?? 'http://localhost:4173/trashpanda/';
 const browser = await chromium.launch();
 const results = [];
 for (const throttle of [1, 4, 6]) {
-  for (const [scene, q, go] of [['Explore QW', 'scene=Explore', null], ['Explore DT', 'scene=Explore', 'downtown'], ['Action M1', 'scene=Action', null], ['Action M3', 'scene=Action&mission=king_of_street', null], ['Action M2', 'scene=Action&mission=streetcar_through', null]]) {
+  for (const [scene, q, go] of [['Explore QW', 'scene=Explore', null], ['Explore DT', 'scene=Explore', 'downtown'], ['Action M1', 'scene=Action', null], ['Action M3', 'scene=Action&mission=king_of_street', null], ['Action M2', 'scene=Action&mission=streetcar_through', null], ['Explore EE', 'scene=Explore', 'eastend'], ['Explore WF', 'scene=Explore', 'waterfront'], ['Action M5 (Lane Eater)', 'scene=Action&mission=lane_eater', null], ['Action M7 (Parking Lot)', 'scene=Action&mission=great_parking_lot', null], ['Action M8 (Waterfront)', 'scene=Action&mission=waterfront_heist', null]]) {
     const page = await browser.newPage({ viewport: { width: 1152, height: 648 } });
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: throttle });

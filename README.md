@@ -26,7 +26,7 @@ npm run build && npx playwright test   # production build + end-to-end tests
 Add `?debug` to the URL for debug keys:
 - T on the map applies this district's upgrades
 - V in a mission wins it
-- the title menu gets TEST entries for missions 2–4
+- the title menu gets DEBUG menus: SELECT MISSION (any mission, briefing first) and WATCH VIGNETTES
 
 Jump straight to a scene:
 - `?scene=Explore` continues your save
@@ -35,7 +35,7 @@ Jump straight to a scene:
 
 `?touch` forces touch controls.
 
-The city is three districts so far, **High Park ← Queen West → Downtown**. Ride off the map edge along Queen or Dundas/Bloor to cross.
+The city is five districts so far: **High Park ← Queen West → Downtown → East End**, with the **Waterfront** south of Downtown. Ride off the map edge along a street that continues (Queen, Dundas/Bloor, or Spadina/University/Bay down to the lake) to cross.
 
 ## How the art is made
 All art is authored as code. `tools/sprites/*` paints palette-indexed grids or models characters with a tiny SDF renderer (`tools/lib/sdf.mjs`), and `npm run assets` builds the atlases. Every art iteration is kept in [`art/history/`](art/history/INDEX.md). The process is documented in [`docs/DEVLOG.md`](docs/DEVLOG.md).

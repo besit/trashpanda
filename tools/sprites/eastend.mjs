@@ -14,9 +14,7 @@ export function bigBoxFacade(w = 192) {
   // the sign
   const sx = Math.round(w / 2 - 40);
   img.rect(sx, 5, 80, 12, 'R'); img.rect(sx + 1, 6, 78, 10, 'q');
-  const G = { M: ['#.#', '###', '#.#', '#.#'], E: ['###', '##.', '#..', '###'], G: ['###', '#..', '#.#', '###'], A: ['.#.', '#.#', '###', '#.#'], R: ['##.', '###', '##.', '#.#'], T: ['###', '.#.', '.#.', '.#.'] };
-  let x = sx + 8;
-  for (const ch of 'MEGAMART') { const g = G[ch]; for (let yy = 0; yy < 4; yy++) for (let i = 0; i < 3; i++) if (g[yy][i] === '#') img.rect(x + i * 2, 8 + yy * 2, 2, 2, 'W'); x += 8; }
+  pixelWord(img, 'MEGAMART', w / 2, 8, 'W');
   // entrance + dock doors
   img.rect(sx + 24, h - 12, 32, 12, 'k'); img.rect(sx + 25, h - 11, 30, 11, 'U'); img.vline(sx + 40, h - 11, h - 1, 'k');
   for (const dx of [8, 40, w - 60, w - 30]) { img.rect(dx, h - 14, 20, 14, 'G'); for (let y = h - 13; y < h; y += 2) img.hline(dx + 1, dx + 18, y, 'h'); }
@@ -58,12 +56,23 @@ export function bigBoxStrip(W = 768) {
   // repeating MEGAMART sign + dock doors + a cart corral
   for (let s = 0; s < W; s += 384) {
     img.rect(s + 120, 44, 150, 24, 'R'); img.rect(s + 122, 46, 146, 20, 'q');
-    for (let i = 0; i < 8; i++) img.rect(s + 132 + i * 17, 52, 11, 9, 'W');
+    pixelWord(img, 'MEGAMART', s + 195, 51, 'W', 2); // real letters (M3: the old blocks read as blank squares)
     for (const dx of [20, 300]) { img.rect(s + dx, 80, 48, 40, 'G'); for (let y = 82; y < H; y += 4) img.hline(s + dx + 2, s + dx + 45, y, 'h'); }
     img.rect(s + 170, 92, 50, 28, 'k'); img.rect(s + 172, 94, 46, 26, 'U');
   }
   for (let i = 0; i < 40; i++) img.set(r.int(0, W - 1), r.int(36, H - 1), 'H');
   return img;
+}
+
+const GLYPHS = {
+  M: ['#...#', '##.##', '#.#.#', '#...#', '#...#'], E: ['####', '#...', '###.', '#...', '####'], G: ['.###', '#...', '#.##', '#..#', '.###'],
+  A: ['.##.', '#..#', '####', '#..#', '#..#'], R: ['###.', '#..#', '###.', '#.#.', '#..#'], T: ['#####', '..#..', '..#..', '..#..', '..#..'],
+};
+/** 5-px-tall pixel lettering centred on cx, each pixel drawn as sc x sc */
+function pixelWord(img, word, cx, y, col, sc = 1) {
+  const adv = (ch) => (ch === ' ' ? 3 : GLYPHS[ch][0].length + 1);
+  let x = Math.round(cx - ((word.split('').reduce((t, ch) => t + adv(ch), 0) - 1) * sc) / 2);
+  for (const ch of word) { if (ch !== ' ') GLYPHS[ch].forEach((row, yy) => [...row].forEach((c, i) => { if (c === '#') img.rect(x + i * sc, y + yy * sc, sc, sc, col); })); x += adv(ch) * sc; }
 }
 
 /** cracked asphalt patch to DEPAVE (pump it), and what it becomes: soil + a sapling */

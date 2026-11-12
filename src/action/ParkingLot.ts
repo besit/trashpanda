@@ -27,6 +27,8 @@ export class DepaveSpots {
   }
   get verb() { return this.fence ? 'FENCES DOWN' : 'DEPAVED'; }
   get total() { return this.spots.length; }
+  /** x of every spot still to break (debug/bot) */
+  get openSpots() { return this.spots.filter((s) => !s.done).map((s) => Math.round(s.x)); }
   get allDone() { return this.done >= this.spots.length; }
   finish() { this.spots.forEach((s) => s.bar.clear()); }
   update(hits: Hitbox[], px: number) {
