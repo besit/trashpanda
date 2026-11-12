@@ -103,7 +103,8 @@ describe('M2: districts, missions, saves', async () => {
       const map = load(id);
       for (const e of map.exits) {
         const other = load(e.to);
-        const back = other.exits.find((o: { side: string; to: string; y0: number }) => o.to === id && o.side !== e.side && o.y0 === e.y0);
+        // matched by street name: rows may differ between districts
+        const back = other.exits.find((o: { side: string; to: string; street: string }) => o.to === id && o.side !== e.side && o.street === e.street);
         expect(back, `${id} ${e.side} -> ${e.to} @${e.y0}`).toBeTruthy();
       }
     }

@@ -3,8 +3,8 @@ import { migrate, type GameState } from './GameState';
 const KEY = 'trashpanda.save.v1';
 const SETTINGS_KEY = 'trashpanda.settings';
 
-export interface Settings { music: number; sfx: number; shake: boolean; touch: 'auto' | 'on' | 'off' }
-export const DEFAULT_SETTINGS: Settings = { music: 0.7, sfx: 0.8, shake: true, touch: 'auto' };
+export interface Settings { music: number; sfx: number; shake: boolean; touch: 'auto' | 'on' | 'off'; muted: boolean }
+export const DEFAULT_SETTINGS: Settings = { music: 0.7, sfx: 0.8, shake: true, touch: 'auto', muted: false };
 
 interface StorageLike { getItem(k: string): string | null; setItem(k: string, v: string): void; removeItem(k: string): void }
 

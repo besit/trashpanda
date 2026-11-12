@@ -14,5 +14,7 @@ export const ctx = {
     if (this.sessionStart) { this.state.playTimeMs += now - this.sessionStart; this.sessionStart = now; }
     SaveSystem.save(this.state);
   },
-  applySettings() { synth.setVolumes(this.settings.music, this.settings.sfx); SaveSystem.saveSettings(this.settings); },
+  applySettings() { const m = this.settings.muted; synth.setVolumes(m ? 0 : this.settings.music, m ? 0 : this.settings.sfx); SaveSystem.saveSettings(this.settings); },
+  /** Ctrl+M (M2.1): mute everything / restore the chosen volumes */
+  toggleMute() { this.settings.muted = !this.settings.muted; this.applySettings(); return this.settings.muted; },
 };

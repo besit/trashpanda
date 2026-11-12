@@ -33,6 +33,8 @@ export class BootScene extends Phaser.Scene {
     for (const [k, f] of Object.entries(m.fonts)) this.load.image(k, f.png);
     for (const [k, i] of Object.entries(m.images)) this.load.image(k, i);
     for (const [k, p] of Object.entries(m.maps)) this.load.json(`map_${k}`, p);
+    // every district's map data is small: load them all so the city map can page through districts
+    for (const [k, d] of Object.entries(m.districts ?? {})) this.load.json(`map_${k}`, d.map);
     this.load.image('tiles', 'gen/tiles.png');
     this.load.once('complete', () => this.finish(m));
     this.load.start();

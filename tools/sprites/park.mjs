@@ -277,10 +277,10 @@ export function picnicTable(rot = Math.PI / 4) {
     prims.push({ box: true, c: [x, y, 0.40], d: [L, 0.26, 0.06], rot, cols: bench, planks: 1 });
   }
   prims.push({ box: true, c: [0, 0, 0.72], d: [L, 0.78, 0.07], rot, cols: top, planks: 3, bias: 0.3 });
-  const img = projectedModel(prims, { S: 11 });
+  const img = projectedModel(prims, { S: 9 }); // M2.1: a little smaller (Ivan)
   img.outline('K');
   // soft ground shadow (only on empty pixels, so the outline stays crisp)
-  const [ox, oy] = img.origin, S = 11, sh = [[-L / 2, -0.5], [L / 2, -0.5], [L / 2, 0.5], [-L / 2, 0.5]].map(([u, v]) => { const [x, y] = W(u + 0.12, v + 0.18, 0); return [ox + x * S, oy + y * S]; });
+  const [ox, oy] = img.origin, S = 9, sh = [[-L / 2, -0.5], [L / 2, -0.5], [L / 2, 0.5], [-L / 2, 0.5]].map(([u, v]) => { const [x, y] = W(u + 0.12, v + 0.18, 0); return [ox + x * S, oy + y * S]; });
   const shadow = new Img(img.w, img.h); shadow.poly(sh, 'e');
   for (let i = 0; i < img.px.length; i++) if (img.px[i] === null && shadow.px[i] && ((i % img.w) + Math.floor(i / img.w)) % 2 === 0) img.px[i] = 'e';
   // ground contact: pivot at the model origin's ground point

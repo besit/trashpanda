@@ -4,6 +4,7 @@
 import type { RatKind } from '../action/Rat';
 import type { EscortDef } from '../action/Escort';
 import type { ChaseDef, BuildDef } from '../action/Parkside';
+import type { BossKind } from '../action/Boss';
 
 export type DistrictId = 'queenwest' | 'downtown' | 'north' | 'waterfront' | 'highpark' | 'eastend';
 
@@ -33,7 +34,7 @@ export interface MissionDef {
     hint?: [string, string];
     groundY?: number;
     waves: Wave[];
-    boss?: { at: number; kind: 'bureaucrat' };
+    boss?: { at: number; kind: BossKind };
     escort?: EscortDef;
     chase?: ChaseDef;
     /** the wave fought when the chase ends (the haulers drop the camera) */
@@ -54,13 +55,15 @@ export const MISSIONS: Record<string, MissionDef> = {
     debrief: 'bwl_after',
     focusY: 56 * 16,
     action: {
-      bg: 'queen', street: 'plain', sky: 'day', length: 1400,
+      bg: 'queen', street: 'plain', sky: 'day', length: 1750,
       intro: 'CLEAR THE RATS SO QUEEN CAN GET ITS BIKE LANE!',
       waves: [
         { at: 260, rats: ['basic', 'basic'] },
         { at: 700, rats: ['construction', 'basic'] },
         { at: 1150, rats: ['traffic', 'construction', 'basic'] },
       ],
+      // M2.1 (Ivan): a boss makes the first mission feel won. Easier than the Bureaucrat.
+      boss: { at: 1500, kind: 'foreman' },
     },
   },
 
@@ -74,17 +77,18 @@ export const MISSIONS: Record<string, MissionDef> = {
     debrief: 'tsp_after',
     focusY: 56 * 16,
     action: {
-      bg: 'queen', street: 'escort', sky: 'day', length: 2900, groundY: 212, noCombat: true,
+      bg: 'queen', street: 'escort', sky: 'day', length: 3300, groundY: 198, noCombat: true,
       intro: 'GET THE 501 THROUGH ON TIME!',
       hint: ['E: PUMP SIGNAL BUTTONS, CARS + CONES   SPACE: JUMP', 'RED: PUMP BUTTONS, CARS + CONES'],
       waves: [],
       escort: {
-        signals: [620, 1380, 2180],
-        blockers: [{ at: 1000, kind: 'van' }, { at: 1820, kind: 'turner' }],
-        coneRats: [330, 1150, 1950, 2400],
-        stops: [1600],
-        end: 2760,
-        allowDelay: 15,
+        // M2.1: "not super challenging": a 4th signal, a 2nd van, one more cone rat, less slack
+        signals: [620, 1300, 2050, 2650],
+        blockers: [{ at: 980, kind: 'van' }, { at: 1760, kind: 'turner' }, { at: 2420, kind: 'van' }],
+        coneRats: [330, 1100, 1550, 2150, 2800],
+        stops: [1500],
+        end: 3150,
+        allowDelay: 12,
       },
     },
   },
@@ -97,7 +101,7 @@ export const MISSIONS: Record<string, MissionDef> = {
     requires: ['bike_lane_war'],
     briefing: 'king_before',
     debrief: 'king_after',
-    focusY: 78 * 16,
+    focusY: 86 * 16,
     action: {
       bg: 'king', street: 'king', sky: 'day', length: 2500,
       intro: 'CLEAR THE THROUGH-TRAFFIC OFF KING!',

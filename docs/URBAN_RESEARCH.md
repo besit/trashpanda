@@ -206,6 +206,8 @@ Sources: [CP24, Sept 7 2025](https://www.cp24.com/local/toronto/2025/09/07/toron
 
 **GAME IMPLEMENTATION:** *Slow Down, Dog* (main 4). The briefing shows rats sawing the camera down with Dog Fraud cheering. The mission opens with a **chase**: catch the haulers before they reach the pond. Then you **build**: pump the stakes to raise a speed hump, a raised crosswalk and a curb extension while SUV Rats speed through. Each finished piece slows the cars that cross it. **Map payoff:** humps, a raised school crosswalk, SLOW stencils, curb-extension planters, and the camera back on its pole. The game is fiction here: the camera returns even though Ontario's ban stands (§2). Parkside's traffic now drives at half speed.
 
+**GAME FICTION (Ivan, M2 review):** the payoff headline says *THE CAMERA BAN IS LIFTED*. That is the game's fantasy outcome, not a claim about Ontario, where the ban stands as of this writing.
+
 **WHY THE PAYOFF LEANS ON DESIGN, NOT JUST THE CAMERA:** the SickKids/TMU study (§2) found speeding returned when cameras left. Physical calming stays put. The blurb says exactly that, and nothing more: no unsourced injury numbers.
 
 ---
@@ -226,4 +228,6 @@ These are well-known facts used on plaques. They have not yet been checked again
 - **Old City Hall** (E. J. Lennox) opened in **1899**.
 - **299 Queen St W** (the CHUM-City building) has a news van bursting out of its wall at Queen + John.
 - **The Revue Cinema** on Roncesvalles opened in **1912**.
+- **The Jamie Bell Adventure Playground** in High Park was destroyed by fire in 2012 and rebuilt by community volunteers (M2.1 plaque).
+- **The Grenadier Cafe** sits at the bottom of West Road (from the City's High Park map).
 - **Graffiti Alley** (Rush Lane) runs south of Queen, west of Spadina. It moved here from the Queen West map after Ivan's M1 note.

@@ -4,16 +4,17 @@ import Phaser from 'phaser';
 import { GAME_W, GAME_H } from '../config';
 import { InputManager } from '../input/InputManager';
 import { CUTSCENES, type Step } from '../data/cutscenes';
-import { text, iris, shake, blinds } from '../ui/fx';
+import { text, iris, shake, blinds, fitText } from '../ui/fx';
 import { music } from '../audio/Sequencer';
 import { SONG_MAIN, SONG_DOGFRAUD, SONG_ACTION, SONG_IMPROVE } from '../audio/songs';
 import { sfx } from '../audio/sfx';
 import { synth } from '../audio/Synth';
 import { ctx } from '../core/ctx';
 import type { Manifest } from './BootScene';
+import { ScrollLayer, STREET_Y, FRONT_Y, BACKROW_Y, SKYLINE_Y } from '../ui/sideLayout';
 
 const STAGE_W = 384;
-const GROUND_PARKED = 190; // parked cars along the curb in side vignettes
+const GROUND_PARKED = STREET_Y + 22; // parked cars along the curb in side vignettes
 // Highway geometry (matches tools/sprites/dvp.mjs)
 const HZ = 92, LEFT_BOTTOM = -170, LANE_BOTTOM = 62;
 const CAR_KINDS = ['red', 'blue', 'white', 'yellow', 'teal', 'suv', 'white', 'blue'];
@@ -25,7 +26,7 @@ export class CutsceneScene extends Phaser.Scene {
   private portrait?: Phaser.GameObjects.Image;
   private dark!: Phaser.GameObjects.Rectangle;
   private captions: Phaser.GameObjects.GameObject[] = [];
-  private layers: { ts: Phaser.GameObjects.TileSprite; f: number; base: number }[] = [];
+  private layers: ScrollLayer[] = [];
   /** street furniture that scrolls with the street (wraps around): planters, parked cars */
   private decor: { img: Phaser.GameObjects.Image; wx: number }[] = [];
   private decorSpan = 0;
@@ -37,6 +38,7 @@ export class CutsceneScene extends Phaser.Scene {
   private actors = new Map<string, Phaser.GameObjects.Sprite | Phaser.GameObjects.Image>();
   private followers: { g: Phaser.GameObjects.Container; a: Phaser.GameObjects.GameObject & { x: number; y: number; active: boolean } }[] = [];
   private boxTop = false;
+  private triggers: { id: string; frame: string; atScreenX: number; by?: string; ahead?: number; sfx?: 'signal' | 'ding' | 'bell'; done: boolean }[] = [];
   private next = 'Explore';
   private nextData: object | undefined;
   private skipping = false;
@@ -54,7 +56,7 @@ export class CutsceneScene extends Phaser.Scene {
     this.next = data?.next ?? 'Explore';
     this.nextData = data?.nextData;
     this.skipping = false;
-    this.captions = []; this.layers = []; this.bgGroup = []; this.actors.clear(); this.followers = []; this.decor = []; this.worldActors.clear();
+    this.captions = []; this.layers = []; this.bgGroup = []; this.actors.clear(); this.followers = []; this.decor = []; this.worldActors.clear(); this.triggers = [];
     this.portrait = undefined; this.dvp = undefined; this.pan = 0; this.panX = 0; this.boxTop = false;
     synth.unlock();
     this.dark = this.add.rectangle(0, 0, GAME_W, GAME_H, 0x16121f, 0).setOrigin(0).setDepth(5);
@@ -92,10 +94,11 @@ export class CutsceneScene extends Phaser.Scene {
     this.actors.forEach((a) => a.destroy()); this.actors.clear();
   }
 
-  private layer(key: string, y: number, h: number, f: number, base = 0) {
-    const ts = this.add.tileSprite(0, y, GAME_W, h, key).setOrigin(0).setDepth(0).setTilePosition(base, 0);
-    this.layers.push({ ts, f, base }); this.bgGroup.push(ts);
-    return ts;
+  private layer(key: string, y: number, _h: number, f: number, base = 0) {
+    const l = new ScrollLayer(this, key, y, f, base);
+    this.layers.push(l); this.bgGroup.push(...l.objects);
+    l.update(0);
+    return l;
   }
 
   /** a repeating row of street furniture that scrolls with the street layer */
@@ -114,7 +117,7 @@ export class CutsceneScene extends Phaser.Scene {
       case 'bg': {
         this.clearBg();
         this.layer(`sky_${s.sky}`, 0, GAME_H, 0);
-        this.layer(`skyline_${s.sky}`, 46, 170, 0.15, -40);
+        this.layer(`skyline_${s.sky}`, 46, 170, 0.15, 40);
         this.layer(`backrow_${s.sky}`, 136, 80, 0.5);
         this.pan = 0.12; // slow drift so no layer looks frozen (px/ms at f = 1)
         await iris(this, 'open', GAME_W / 2, GAME_H / 2, 700);
@@ -125,17 +128,17 @@ export class CutsceneScene extends Phaser.Scene {
         await blinds(this, 250);
         this.clearBg();
         this.layer(`sky_${s.sky}`, 0, GAME_H, 0);
-        this.layer(`skyline_${s.sky}`, 30, 170, 0.08);
+        this.layer(`skyline_${s.sky}`, SKYLINE_Y, 170, 0.08);
         // facades (or the park), sidewalk, street furniture and standing actors all scroll as ONE layer
         // (Ivan, M1.1): a tracking shot, so riding actors hold their place on screen and visibly move
         const bg = s.bg ?? 'queen';
-        if (bg === 'king') this.layer('facades_dt', 28, 140, 1.0, 200);
-        else if (bg === 'parkside') this.layer('park_hp', 48, 120, 1.0, 100);
-        else { this.layer(`backrow_${s.sky}`, 96, 80, 0.3); this.layer('facades_qw', 72, 96, 1.0, 300); }
-        this.layer(`street_${s.street}`, 168, 64, 1.0);
-        if (s.street === 'protected') this.addDecor(['planter'], 201, 70, 70, 1.5);
+        if (bg === 'king') this.layer('facades_dt', FRONT_Y.king, 140, 1.0, 200);
+        else if (bg === 'parkside') this.layer('park_hp', FRONT_Y.parkside, 120, 1.0, 100);
+        else { this.layer(`backrow_${s.sky}`, BACKROW_Y, 80, 0.3); this.layer('facades_qw', FRONT_Y.queen, 96, 1.0, 300); }
+        this.layer(`street_${s.street}`, STREET_Y, 70, 1.0);
+        if (s.street === 'protected') this.addDecor(['planter'], STREET_Y + 32, 70, 70, 1.5);
         if (s.parked) this.addDecor(['carside_red', 'suvside', 'carside_blue', 'carside_blue_r'], GROUND_PARKED, 150, 40);
-        if (s.patios) this.addDecor(['patio_r', 'patio_f'], 186, 90, 45, 1.6);
+        if (s.patios) this.addDecor(['patio_r', 'patio_f'], STREET_Y + 18, 90, 45, 1.6);
         this.boxTop = true;
         this.pan = (s.pan ?? 0) / 1000;
         this.children.list.filter((o) => o instanceof Phaser.GameObjects.Graphics && (o as Phaser.GameObjects.Graphics).depth === 100000).forEach((o) => o.destroy());
@@ -143,7 +146,9 @@ export class CutsceneScene extends Phaser.Scene {
       }
       case 'caption': {
         const font = s.font ?? 'font_outline';
-        const t = text(this, GAME_W / 2, s.y ?? 70 + this.captions.length * 16, '', font).setDepth(200);
+        const t = text(this, GAME_W / 2, s.y ?? 70 + this.captions.length * 16, s.text, font).setDepth(200);
+        fitText(t, GAME_W - 16); // sized from the full line, then typed out (M2.1: big captions ran off screen)
+        t.setText('');
         this.captions.push(t);
         await this.typewrite(t, s.text);
         await this.wait(s.hold ?? 1200);
@@ -209,7 +214,8 @@ export class CutsceneScene extends Phaser.Scene {
       }
       case 'title': {
         await blinds(this, 300);
-        const t = text(this, GAME_W / 2, GAME_H / 2 - 10, s.text, 'font_big').setDepth(100001).setScale(GAME_W >= 420 ? 2 : 1.6);
+        const t = text(this, GAME_W / 2, GAME_H / 2 - 10, s.text, 'font_big').setDepth(100001);
+        t.setScale(Math.min(GAME_W >= 420 ? 2 : 1.6, (GAME_W - 16) / Math.max(1, t.width)));
         const sub = s.sub ? text(this, GAME_W / 2, GAME_H / 2 + 20, s.sub, 'font_outline').setDepth(100001) : null;
         shake(this, 200, 0.01);
         sfx.ding();
@@ -248,13 +254,16 @@ export class CutsceneScene extends Phaser.Scene {
         const atlas = s.atlas ?? 'chars';
         const a = s.anim ? this.add.sprite(ox + s.x, s.y, atlas, s.frame).play(s.anim) : this.add.image(ox + s.x, s.y, atlas, s.frame);
         const pv = (this.registry.get('manifest') as Manifest).pivots;
-        const pk = s.frame.startsWith('rs_') ? 'rs' : s.frame.startsWith('rat_bureaucrat') ? 'rat_bureaucrat' : s.frame.startsWith('rat_') ? 'rat' : s.frame.startsWith('ped_') ? 'ped' : s.frame;
+        const pk = s.frame.startsWith('rs_') ? 'rs' : s.frame.startsWith('rat_bureaucrat') ? 'rat_bureaucrat' : s.frame.startsWith('rat_foreman') ? 'rat_foreman' : s.frame.startsWith('rat_') ? 'rat' : s.frame.startsWith('ped_') ? 'ped' : s.frame;
         const p = pv[pk] ?? { x: 0.5, y: 1 };
         a.setOrigin(p.x, p.y).setDepth(s.depth ?? 60).setFlipX(!!s.flip).setScale(s.scale ?? 1);
         this.actors.get(s.id)?.destroy();
         this.actors.set(s.id, a);
         this.worldActors.delete(s.id);
         if (s.world) this.worldActors.set(s.id, { wx: s.x + this.panX });
+        // vehicles turning in from a side street rise from below the bottom edge (M2.1, Ivan)
+        if (s.rise) { a.y = s.y + 70; this.tweens.add({ targets: a, y: s.y, duration: 900, ease: 'Sine.easeOut' }); }
+        if (s.turnOn) this.triggers.push({ id: s.id, ...s.turnOn, done: false });
         if (s.sign) { // a picket sign carried above the actor
           const g = this.add.container(a.x, a.y - 44).setDepth((s.depth ?? 60) + 1);
           const lines = s.sign.split('\n');
@@ -278,7 +287,20 @@ export class CutsceneScene extends Phaser.Scene {
         const p = new Promise<void>((r) => w
           ? this.tweens.add({ targets: w, wx: s.x + this.panX, duration: s.ms, ease: s.ease ?? 'Linear', onComplete: done(r) })
           : this.tweens.add({ targets: a, x: ox + s.x, duration: s.ms, ease: s.ease ?? 'Linear', onComplete: done(r) }));
+        if (s.y !== undefined) this.tweens.add({ targets: a, y: s.y, duration: s.ms, ease: s.ease ?? 'Linear' });
+        // whoever walks stops walking when they arrive (M2.1: rats kept shuffling in place)
+        if (!s.anim && a instanceof Phaser.GameObjects.Sprite && !s.keepAnim) p.then(() => { if (a.active && a.anims.currentAnim && !a.anims.currentAnim.key.startsWith('cy') && !a.anims.currentAnim.key.startsWith('rs_')) { a.anims.stop(); a.setFrame(a.anims.currentAnim.frames[0].textureFrame); } });
         if (s.wait) await p;
+        break;
+      }
+      case 'hop': { // a smooth bump (a car rolling over a speed hump)
+        const a = this.actors.get(s.id);
+        if (a) this.tweens.add({ targets: a, y: a.y - (s.dy ?? 4), duration: (s.ms ?? 500) / 2, yoyo: true, ease: 'Sine.easeInOut' });
+        break;
+      }
+      case 'rotate': {
+        const a = this.actors.get(s.id);
+        if (a) { const pr = new Promise<void>((r) => this.tweens.add({ targets: a, angle: s.angle, duration: s.ms ?? 500, ease: s.ease ?? 'Quad.easeIn', onComplete: () => r() })); if (s.wait) await pr; }
         break;
       }
       case 'frame': {
@@ -386,10 +408,17 @@ export class CutsceneScene extends Phaser.Scene {
   update(_t: number, dt: number) {
     this.input2.update();
     this.panX += dt * this.pan;
-    for (const l of this.layers) l.ts.tilePositionX = l.base + this.panX * l.f;
+    for (const l of this.layers) l.update(this.panX);
     const span = this.decorSpan;
     for (const d of this.decor) d.img.x = Math.round(((((d.wx - this.panX) % span) + span) % span) - 80);
     for (const [id, w] of this.worldActors) { const a = this.actors.get(id); if (a) a.x = Math.round(this.ox + w.wx - this.panX); }
+    // signals that turn green as the streetcar comes up to them
+    for (const t of this.triggers) {
+      if (t.done) continue;
+      const a = this.actors.get(t.id); const by = t.by ? this.actors.get(t.by) : undefined;
+      const reach = by ? by.x + (t.ahead ?? 0) : this.ox + t.atScreenX;
+      if (a && a.x <= reach) { t.done = true; a.setFrame(t.frame); if (t.sfx) sfx[t.sfx](); }
+    }
     this.updateDvp(dt);
     for (const f of this.followers) if (f.a.active && f.g.active) f.g.setPosition(f.a.x, f.a.y - 40 + Math.sin(this.time.now / 150));
     if (this.input2.justPressed('back') || this.input2.justPressed('pause')) { this.skipping = true; this.advance?.(); this.time.removeAllEvents(); void this.finish(); return; }

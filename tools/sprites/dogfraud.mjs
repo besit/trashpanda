@@ -142,22 +142,36 @@ export function dogFraudFrames() {
  * Big-head proportions are the joke. ~44 x 64.
  */
 export function dogFraudStanding(expr = 'grin', podium = false) {
-  const W = 56, H = 74;
-  const head = render(scene(model(expr)), { w: W, h: 52, cx: W / 2 + 1, cy: 50, cam: orthoCam([-0.32, -1, -0.12]), light: norm([-0.55, 0.7, 0.75]), ambient: 0.2, scale: 0.44 });
+  // v02 (Ivan: "upper torso looks weird"): the head model is clipped at the jowls so the portrait's own
+  // shoulders + tie don't show, and a proper little suit is drawn under it: shoulders as wide as the
+  // jowls, lapels, white shirt V, the purple dotted tie, arms with pink paws, short legs.
+  const W = 60, H = 80;
+  const raw = scene(model(expr));
+  const clipped = (p) => { const r = raw(p); return p[2] < 25 ? [Math.max(r[0], 25 - p[2]), r[1]] : r; };
+  const head = render(clipped, { w: W, h: 54, cx: W / 2 + 1, cy: 54, cam: orthoCam([-0.32, -1, -0.12]), light: norm([-0.55, 0.7, 0.75]), ambient: 0.2, scale: 0.44 });
   const img = new Img(W, H);
-  // tiny suit: jacket, white shirt + dotted purple tie, little legs and shoes
-  const bx = W / 2 - 8, by = 48;
-  img.rect(bx, by, 16, 14, 'k'); img.rect(bx + 1, by + 1, 14, 12, 'g'); img.vline(bx + 8, by + 2, by + 11, 'k');
-  img.set(bx + 6, by + 5, 'h'); img.set(bx + 6, by + 9, 'h');
-  img.rect(bx - 3, by + 2, 3, 9, 'g'); img.rect(bx + 16, by + 2, 3, 9, 'g'); // arms
-  img.rect(bx - 3, by + 10, 3, 2, 'P'); img.rect(bx + 16, by + 10, 3, 2, 'P'); // paws
-  img.rect(bx + 3, by + 14, 4, 8, 'k'); img.rect(bx + 9, by + 14, 4, 8, 'k');
-  img.rect(bx + 2, by + 21, 6, 2, 'K'); img.rect(bx + 8, by + 21, 6, 2, 'K');
+  const cx = Math.round(W / 2), by = 44;
+  // jacket: rounded shoulders tapering to the waist
+  img.poly([[cx - 14, by + 4], [cx - 11, by], [cx + 11, by], [cx + 14, by + 4], [cx + 12, by + 22], [cx - 12, by + 22]], 'g');
+  img.poly([[cx - 14, by + 4], [cx - 11, by], [cx - 2, by], [cx - 10, by + 22], [cx - 12, by + 22]], 'k'); // shadow side
+  // shirt V + lapels + tie
+  img.poly([[cx - 5, by], [cx + 5, by], [cx, by + 10]], 'W');
+  img.line(cx - 5, by, cx - 1, by + 12, 'G'); img.line(cx + 5, by, cx + 1, by + 12, 'G');
+  img.rect(cx - 1, by + 1, 2, 11, 'V'); img.set(cx - 1, by + 3, 'Z'); img.set(cx, by + 6, 'Z'); img.set(cx - 1, by + 9, 'Z');
+  img.set(cx + 3, by + 15, 'h'); img.set(cx + 3, by + 19, 'h'); // buttons
+  // arms + paws
+  img.poly([[cx - 14, by + 4], [cx - 17, by + 18], [cx - 14, by + 19], [cx - 11, by + 8]], 'k');
+  img.poly([[cx + 14, by + 4], [cx + 17, by + 18], [cx + 14, by + 19], [cx + 11, by + 8]], 'g');
+  img.ellipse(cx - 15, by + 20, 2, 2, 'P'); img.ellipse(cx + 15, by + 20, 2, 2, 'P');
+  // legs + shoes
+  img.rect(cx - 7, by + 22, 5, 9, 'k'); img.rect(cx + 2, by + 22, 5, 9, 'k');
+  img.rect(cx - 9, by + 30, 7, 3, 'K'); img.rect(cx + 2, by + 30, 7, 3, 'K'); img.set(cx - 8, by + 30, 'g'); img.set(cx + 3, by + 30, 'g');
   img.outline('K');
-  img.blit(head, 0, 0);
+  img.blit(head, 0, -2);
   if (podium) {
-    img.rect(W / 2 - 14, 54, 28, 18, 'v'); img.rect(W / 2 - 13, 55, 26, 16, 'V'); img.hline(W / 2 - 14, W / 2 + 13, 54, 'Z');
-    img.rect(W / 2 - 6, 59, 12, 6, 'W'); img.rect(W / 2 - 4, 61, 8, 2, 'V'); // the DF crest
+    img.rect(cx - 15, 58, 30, 20, 'v'); img.rect(cx - 14, 59, 28, 18, 'V'); img.hline(cx - 15, cx + 14, 58, 'Z');
+    img.rect(cx - 7, 63, 14, 7, 'W'); img.rect(cx - 5, 65, 10, 3, 'V'); // the DF crest
+    img.vline(cx + 8, 50, 58, 'g'); img.rect(cx + 7, 48, 3, 3, 'G'); // microphone
   }
   img.pivot = { x: 0.5, y: (H - 2) / H };
   return img;

@@ -116,6 +116,14 @@ First pass portrait (grin / laugh / shock). SDF: pear head (skull+jowls smooth-u
 
 ## dogfraud_inworld
 
+### dogfraud_inworld v02
+
+2026-11-12
+
+M2.1 (Ivan: the upper torso looked weird): the head render is clipped at the jowls, and a proper suit is drawn: shoulders as wide as the jowls, lapels, shirt V, dotted tie, arms + paws; podium gets a microphone.
+
+![dogfraud_inworld v02](dogfraud_inworld/v02/preview.png)
+
 ### dogfraud_inworld v01
 
 2026-11-10
@@ -125,6 +133,14 @@ M2: Dog Fraud in the world (side vignettes). The portrait's SDF head re-rendered
 ![dogfraud_inworld v01](dogfraud_inworld/v01/preview.png)
 
 ## downtown
+
+### downtown v02
+
+2026-11-12
+
+M2.1 (Ivan's refs): City Hall v02 from city-hall.jpg (two curved towers: white convex backs, dark ribbed concave faces, crescent roofs, the saucer between, the walkway ring); Old City Hall v02 from his photo (banded sandstone, arched windows, brown metal roofs with conical turrets, rose-window gable, clock tower with arcaded belfry + pyramid spire); one Freedom Arch spanning the pool north-south, seen slightly from the west like the photo; a brighter news van facing east.
+
+![downtown v02](downtown/v02/preview.png)
 
 ### downtown v01
 
@@ -172,6 +188,14 @@ Original 5x7 uppercase font: plain, outline, shadow, 2x outline (titles).
 
 ## highpark
 
+### highpark v02
+
+2026-11-12
+
+M2.1: swans + wood ducks for Grenadier Pond (Ivan), the Jamie Bell Adventure Playground (wooden towers, turret roofs, rope bridges, tube slide), the Grenadier Cafe and the greenhouse facades.
+
+![highpark v02](highpark/v02/preview.png)
+
 ### highpark v01
 
 2026-11-10
@@ -181,6 +205,14 @@ M2 High Park / Roncesvalles: cherry + black oak trees, capybaras (v02: added hea
 ![highpark v01](highpark/v01/preview.png)
 
 ## park
+
+### park v04
+
+2026-11-12
+
+M2.1: picnic tables a little smaller (Ivan), S 11 -> 9.
+
+![park v04](park/v04/preview.png)
 
 ### park v03
 
@@ -340,6 +372,16 @@ M2 boss: the Bureaucrat Rat. Same rat model at 1.75x in 48px frames: grey suit (
 
 ![rats_bureaucrat v01](rats_bureaucrat/v01/preview.png)
 
+## rats_foreman
+
+### rats_foreman v01
+
+2026-11-12
+
+M2.1: the Foreman Rat, mission 1's new boss (Ivan: 'a boss would make it feel accomplished'): the construction rat at boss size.
+
+![rats_foreman v01](rats_foreman/v01/preview.png)
+
 ## side_bg
 
 ### side_bg v03
@@ -368,6 +410,14 @@ First side-view composition: dithered sky (day/dusk), skyline w/ CN Tower + dome
 
 ## side_props
 
+### side_props v02
+
+2026-11-12
+
+M2.1 (Ivan): the raised crosswalk now runs across the whole road with its bars along the road (not brown); the curb extension is a sidewalk bulb-out with a tree, planting and bollards; the extra-life raccoon token.
+
+![side_props v02](side_props/v02/preview.png)
+
 ### side_props v01
 
 2026-11-10
@@ -377,6 +427,14 @@ M2 side-view mission props: signal pole with a TSP call box (red / green / prior
 ![side_props v01](side_props/v01/preview.png)
 
 ## tiles
+
+### tiles v04
+
+2026-11-12
+
+M2.1: Hillside Gardens flower beds (tulip rows).
+
+![tiles v04](tiles/v04/preview.png)
 
 ### tiles v03
 
@@ -403,6 +461,14 @@ First tile set: asphalt variants, lane markings, embedded streetcar tracks (E-W,
 ![tiles v01](tiles/v01/preview.png)
 
 ## vehicles
+
+### vehicles v03
+
+2026-11-12
+
+M2.1: streetcars redrawn as TTC Flexity (Ivan's photo): five modules, black joints, red roof edge, white window frame bands, red body, white skirt, the nose swoosh, big windshield.
+
+![vehicles v03](vehicles/v03/preview.png)
 
 ### vehicles v02
 

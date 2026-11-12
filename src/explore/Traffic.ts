@@ -35,7 +35,8 @@ export class Traffic {
     for (const st of this.states) {
       if (!this.active(st.lane)) continue;
       const n = st.lane.axis === 'x' ? (st.lane.bikeOnly ? 4 : 4) : 2;
-      for (let i = 0; i < n; i++) this.spawn(st.lane, Math.random() * (st.lane.axis === 'x' ? mapW : mapH), st.lane.bikeOnly ? 'bike' : 'car');
+      const [a, b] = this.span(st.lane);
+      for (let i = 0; i < n; i++) this.spawn(st.lane, a + Math.random() * (b - a), st.lane.bikeOnly ? 'bike' : 'car');
     }
   }
 
@@ -44,6 +45,8 @@ export class Traffic {
   private get protectedLanes() { return this.upgrades.has('queen_protected_lanes'); }
 
   private has(id?: string) { return !!id && this.upgrades.has(id); }
+  /** the stretch of map a lane runs along */
+  private span(l: Lane): [number, number] { return l.range ?? [0, l.axis === 'x' ? this.mapW : this.mapH]; }
 
   private spawn(lane: Lane, at?: number, kind: Kind = 'car') {
     // King St corridor: no through traffic (a rare local delivery still turns in)
@@ -51,8 +54,8 @@ export class Traffic {
     const horiz = lane.axis === 'x';
     const f = face(lane);
     const len = kind === 'streetcar' ? 100 : kind === 'bike' ? 16 : 32;
-    const lim = horiz ? this.mapW : this.mapH;
-    const pos = at ?? (lane.dir === 1 ? -len : lim + len);
+    const [a, b] = this.span(lane);
+    const pos = at ?? (lane.dir === 1 ? a - len : b + len);
     if (this.vehicles.some((v) => v.lane === lane && Math.abs(this.posOf(v) - pos) < (len + v.len) / 2 + 24)) return;
     let s: Vehicle['s'];
     let off = 0;
@@ -150,8 +153,8 @@ export class Traffic {
     }
     // despawn
     this.vehicles = this.vehicles.filter((v) => {
-      const p = this.posOf(v), lim = v.lane.axis === 'x' ? this.mapW : this.mapH;
-      if (p < -v.len * 1.5 || p > lim + v.len * 1.5) { v.s.destroy(); return false; }
+      const p = this.posOf(v), [a, b] = this.span(v.lane);
+      if (p < a - v.len * 1.5 || p > b + v.len * 1.5) { v.s.destroy(); return false; }
       return true;
     });
   }

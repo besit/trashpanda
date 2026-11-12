@@ -8,8 +8,9 @@
 // Rows for Dundas and Queen match Queen West so they continue across the west edge.
 import { District, TS } from './common.mjs';
 
-export const W = 120, H = 92;
-export const DUNDAS = 11, QUEEN = 54, KING = 76;
+export const W = 120, H = 100;
+// M2.1: King moved south so Graffiti Alley fits (and is rideable) between Queen and King
+export const DUNDAS = 11, QUEEN = 54, KING = 84;
 export const SP = 14;   // Spadina Ave cols 14..17 (streetcar)
 export const JN = 46;   // John St cols 46..49 (Queen -> King)
 export const UN = 70;   // University Ave cols 70..73
@@ -29,7 +30,7 @@ export function generateDowntown() {
   D.nsStreet(BY, 0, H - 1);
   for (const row of [DUNDAS, QUEEN, KING]) { D.cross(SP, row, { nsTracks: true }); D.cross(UN, row); D.cross(BY, row); }
   D.cross(JN, QUEEN, { tee: true }); D.cross(JN, KING);
-  D.exit('w', QUEEN, 'queenwest'); D.exit('w', DUNDAS, 'queenwest');
+  D.exit('w', QUEEN, 'queenwest', 'queen'); D.exit('w', DUNDAS, 'queenwest', 'dundas');
 
   const bricks = ['red', 'buff', 'darkred', 'red', 'cream', 'grey', 'teal', 'mustard'];
   const glass = ['blue', 'teal', 'dark', 'sky', 'bronze'];
@@ -63,49 +64,52 @@ export function generateDowntown() {
     for (let y = 38; y < 40; y++) for (let x = a; x < b; x++) D.set(x, y, `sidewalk${x % 3}`);
   }
   towerRow(BY + 4, W, { top: (DUNDAS + 7) * TS }, [12, 16]);
-  // Osgoode Hall: lawn behind its iron fence (with the famous cow gates)
-  D.fill(UN + 4, DUNDAS + 7, UN + 11, QUEEN - 4, (x, y) => `lawn${(x + y) % 3}`);
-  for (let y = DUNDAS + 8; y < QUEEN - 3; y += 6) D.tprop('tree_a', UN + 7, y, 8, 10, { solid: 5 });
-  for (let x = UN + 4; x <= UN + 11; x++) D.tprop('fence_h', x, QUEEN - 4, 0, 14, { solidBox: [0, -4, 16, 4] });
-  D.labels.push({ text: 'OSGOODE HALL', x: (UN + 8) * TS, y: 32 * TS, kind: 'landmark' });
-  // Nathan Phillips Square
-  const NX0 = UN + 12, NX1 = BY - 1;
+  // Nathan Phillips Square (fills University -> Bay; M2.1 dropped Osgoode Hall, which nobody could find)
+  const NX0 = UN + 4, NX1 = BY - 1;
   D.fill(NX0, DUNDAS + 7, NX1, QUEEN - 3, (x, y) => `plaza${(x + y) % 2}`);
   const cx = ((NX0 + NX1 + 1) / 2) * TS;
-  D.prop('cityhall', cx, 34 * TS, { solidBox: [-104, -40, 208, 36], landmark: 'CITY HALL' });
-  // the reflecting pool (a skating rink in winter) + Freedom Arches
-  const PX0 = NX0 + 3, PX1 = NX1 - 3, PY0 = 43, PY1 = 46;
+  D.prop('cityhall', cx, 35 * TS, { solidBox: [-110, -48, 220, 44], landmark: 'CITY HALL' });
+  // the reflecting pool (a skating rink in winter): the Freedom Arches span it north-south;
+  // the TORONTO sign stands just above the pool's left half (Ivan's M2 notes)
+  const PX0 = NX0 + 4, PX1 = NX1 - 4, PY0 = 43, PY1 = 47;
   for (let y = PY0; y <= PY1; y++) for (let x = PX0; x <= PX1; x++) D.set(x, y, y === PY0 ? 'shore_n' : y === PY1 ? 'shore_s' : `water${(x + y) % 3}`);
   D.prop('blank', cx, (PY1 + 1) * TS, { solidBox: [-(PX1 - PX0 + 1) * TS / 2 + 4, -(PY1 - PY0 + 1) * TS + 6, (PX1 - PX0 + 1) * TS - 8, (PY1 - PY0 + 1) * TS - 8], invisible: true });
-  D.prop('arches', cx, (PY1 + 1) * TS - 2, { depth: (PY1 + 1) * TS });
-  D.prop('torontosign', cx, 40 * TS + 4, { solidBox: [-46, -6, 92, 6] });
-  D.landmarks.push({ id: 'npsquare', x: cx, y: 40 * TS + 18, label: 'NATHAN PHILLIPS SQUARE', fact: 'CITY HALL OPENED 1965.\nTHE POOL BECOMES A\nSKATING RINK IN WINTER.' });
+  const poolW = (PX1 - PX0 + 1) * TS;
+  for (let k = 1; k <= 3; k++) D.prop('arch', PX0 * TS + (poolW * k) / 4 + poolW / 8, ((PY0 + PY1 + 1) / 2) * TS + 6, { depth: (PY1 + 1) * TS });
+  const signX = PX0 * TS + poolW / 4 + 8;
+  D.prop('torontosign', signX, PY0 * TS - 3, { solidBox: [-46, -6, 92, 6] });
+  D.landmarks.push({ id: 'npsquare', x: signX, y: PY0 * TS + 8, label: 'NATHAN PHILLIPS SQUARE', fact: 'CITY HALL OPENED 1965.\nTHE POOL BECOMES A\nSKATING RINK IN WINTER.' });
   for (const x of [NX0 + 1, NX1 - 1]) for (let y = DUNDAS + 9; y < QUEEN - 4; y += 5) D.tprop('tree_b', x, y, 8, 10, { solid: 4 });
   // Old City Hall east of Bay
   D.objects.push({ type: 'building', key: 'bld_downtown_oldcityhall', gen: { kind: 'oldcityhall', w: 10 * TS, d: 64 }, x: (BY + 5) * TS, y: (QUEEN - 3) * TS - 64, w: 10 * TS, d: 64 });
   D.landmarks.push({ id: 'oldcityhall', x: (BY + 10) * TS, y: (QUEEN - 3) * TS + 8, label: 'OLD CITY HALL', fact: 'OPENED 1899.\nTHE CLOCK TOWER STILL\nKEEPS TIME ON QUEEN.' });
 
   // ---------- Queen St W ----------
-  const chumX = JN + 4;
-  for (const [a, b] of [[0, SP], [SP + 4, chumX], [chumX + 5, UN]]) D.row(a, b, { base: (QUEEN - 3) * TS }, 'shop', [1, 2, 2, 3], bricks);
-  // the CHUM-City building at Queen + John, news van bursting out of the corner wall
-  const chum = D.addBuilding(chumX * TS, 5 * TS, { w: 5 * TS, d: 48, floors: 4, brick: 'cream', seed: 299, kind: 'warehouse' }, { base: (QUEEN - 3) * TS }, { graffiti: null });
-  D.prop('newsvan', chumX * TS + 10, chum.base - 30, { depth: chum.base + 0.4 });
-  D.landmarks.push({ id: 'chum', x: (chumX + 2) * TS, y: (QUEEN - 3) * TS + 8, label: '299 QUEEN ST W', fact: 'THE NEWS VAN THAT\nBURST OUT OF THE WALL.' });
-  // Queen south side: shop backs onto the laneway (Graffiti Alley west of Spadina)
-  for (const [a, b] of [[0, SP], [SP + 4, JN], [JN + 4, UN], [UN + 4, BY], [BY + 4, W]]) D.row(a, b, { top: (QUEEN + 7) * TS }, 'rear', [1, 1, 2], bricks, 48, { graffiti: a < SP ? [3, 5] : [0, 1] });
-  const laneY = QUEEN + 12;
-  D.fill(0, laneY, W - 1, laneY + 1, (x) => (D.isNS(x) ? D.get(x, laneY) : 'laneway'));
-  // Graffiti Alley's far wall: low garages + fences covered in pieces
-  for (let x = 0; x < SP; x += 2) {
-    D.prop(`graf_${(x * 7) % 9}`, x * TS + 4, (laneY + 2) * TS + 4, { depth: (laneY + 2) * TS + 4 });
+  for (const [a, b] of [[0, SP], [SP + 4, UN]]) D.row(a, b, { base: (QUEEN - 3) * TS }, 'shop', [1, 2, 2, 3], bricks);
+  // Queen south side: shop backs onto the laneway. West of Spadina the lane is Graffiti Alley (Rush Lane):
+  // every wall painted (murals on the ground floor + pieces from the graffiti sheet)
+  const chumX = JN - 5;
+  for (const [a, b] of [[0, SP], [SP + 4, chumX], [JN + 4, UN], [UN + 4, BY], [BY + 4, W]]) {
+    let x = a;
+    while (x < b) {
+      let w = r.pick([2, 3, 3, 4]); if (x + w > b) w = b - x; if (w < 2) break;
+      D.addBuilding(x * TS, w * TS, { w: w * TS, d: 48, floors: r.pick([1, 1, 2]), brick: r.pick(bricks), seed: 500 + D.bid, kind: 'rear', murals: a < SP }, { top: (QUEEN + 7) * TS }, { graffiti: a < SP ? [3, 5] : [0, 1] });
+      x += w;
+    }
   }
+  // the CHUM-City building (299 Queen W): the news van bursts out of its east wall onto John St
+  const chum = D.addBuilding(chumX * TS, 5 * TS, { w: 5 * TS, d: 48, floors: 2, brick: 'cream', seed: 299, kind: 'rear' }, { top: (QUEEN + 7) * TS }, { graffiti: null });
+  D.prop('newsvan', JN * TS + 4, chum.base - 8, { depth: chum.base + 2 });
+  D.landmarks.push({ id: 'chum', x: JN * TS + 10, y: chum.base + 10, label: '299 QUEEN ST W', fact: 'THE NEWS VAN THAT\nBURST OUT OF THE WALL.' });
+  const laneY = QUEEN + 13;
+  D.fill(0, laneY, W - 1, laneY + 1, (x) => (D.isNS(x) ? D.get(x, laneY) : 'laneway'));
   D.labels.push({ text: 'GRAFFITI ALLEY', x: 7 * TS, y: (laneY + 1) * TS, kind: 'landmark' });
 
   // ---------- King St W ----------
   // north side: King West warehouses west of University, towers east
-  wareRow(0, SP, { base: (KING - 3) * TS }); wareRow(SP + 4, JN, { base: (KING - 3) * TS }); wareRow(JN + 4, UN, { base: (KING - 3) * TS });
-  towerRow(UN + 4, BY, { base: (KING - 3) * TS }, [10, 14]); towerRow(BY + 4, W, { base: (KING - 3) * TS }, [12, 16]);
+  // (heights capped so they never cover Graffiti Alley behind them)
+  wareRow(0, SP, { base: (KING - 3) * TS }, [3, 5]); wareRow(SP + 4, JN, { base: (KING - 3) * TS }, [3, 5]); wareRow(JN + 4, UN, { base: (KING - 3) * TS }, [3, 5]);
+  towerRow(UN + 4, BY, { base: (KING - 3) * TS }, [8, 11], 40); towerRow(BY + 4, W, { base: (KING - 3) * TS }, [9, 12], 40);
   // south side: shop backs
   for (const [a, b] of [[0, SP], [SP + 4, JN], [JN + 4, UN], [UN + 4, BY], [BY + 4, W]]) D.row(a, b, { top: (KING + 7) * TS }, 'rear', [1, 2], bricks, 48, { graffiti: [0, 1] });
 
@@ -151,12 +155,14 @@ export function generateDowntown() {
     { text: 'QUEEN ST W', x: 30 * TS, y: (QUEEN + 2) * TS },
     { text: 'KING ST W', x: 30 * TS, y: (KING + 2) * TS },
     { text: 'SPADINA', x: (SP + 2) * TS, y: 30 * TS, vertical: true },
-    { text: 'UNIVERSITY', x: (UN + 2) * TS, y: 64 * TS, vertical: true },
-    { text: 'BAY', x: (BY + 2) * TS, y: 64 * TS, vertical: true },
-    { text: 'JOHN', x: (JN + 2) * TS, y: 66 * TS, vertical: true },
+    { text: 'UNIVERSITY', x: (UN + 2) * TS, y: 72 * TS, vertical: true },
+    { text: 'BAY', x: (BY + 2) * TS, y: 72 * TS, vertical: true },
+    { text: 'JOHN', x: (JN + 2) * TS, y: 74 * TS, vertical: true },
     { text: 'CHINATOWN', x: (SP + 2) * TS, y: (DUNDAS - 5) * TS, kind: 'landmark' },
     { text: 'CITY HALL', x: cx, y: 22 * TS, kind: 'landmark' },
     { text: '< QUEEN WEST', x: 4 * TS, y: (QUEEN - 4) * TS, kind: 'exit' },
   );
-  return D.out({ spawn: { x: 3 * TS, y: (QUEEN - 2) * TS + 8 } });
+  // hidden extra lives: at the west end of Graffiti Alley, and tucked behind City Hall
+  const lifeTokens = [{ x: 2 * TS, y: (laneY + 1) * TS + 4 }, { x: cx + 124, y: 22 * TS }];
+  return D.out({ spawn: { x: 3 * TS, y: (QUEEN - 2) * TS + 8 }, lifeTokens });
 }

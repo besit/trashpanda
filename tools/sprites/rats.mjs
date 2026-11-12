@@ -140,3 +140,16 @@ export function allRatsPreview() {
 }
 
 export function bureaucratPreview() { return { frames: bureaucratAnims().frames, cols: 7 }; }
+
+/** The Foreman Rat (mission 1 boss, M2.1): the construction rat at boss size. */
+export function foremanAnims() {
+  const frames = [], anims = {};
+  const f = (pose) => ratFrame('construction', pose, 1.75, BOSS_FW, BOSS_FH);
+  const add = (name, list, rate, loop = true) => { anims[name] = { start: frames.length, count: list.length, rate, loop }; frames.push(...list); };
+  add('walk', [0, 0.25, 0.5, 0.75].map((w) => f({ walk: w })), 7);
+  add('windup', [f({ attack: 1 })], 1, false);
+  add('attack', [f({ attack: 2 })], 1, false);
+  add('hurt', [f({ hurt: true })], 1, false);
+  return { frames, anims };
+}
+export function foremanPreview() { return { frames: foremanAnims().frames, cols: 7 }; }

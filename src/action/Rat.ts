@@ -93,8 +93,9 @@ export class Rat {
       case 'walk': {
         const want = this.def.ranged ? (dist > this.def.reach ? 1 : dist < 70 ? -1 : 0) : dist > this.def.reach - 4 ? 1 : 0;
         if (ground) b.setVelocityX(want * this.facing * this.def.speed);
-        if (this.sprite.anims.currentAnim?.key !== `rat_${this.kind}_walk`) this.sprite.play(`rat_${this.kind}_walk`);
-        this.sprite.anims.timeScale = want === 0 ? 0.3 : 1;
+        // standing still = standing still (M2.1: the walk cycle used to keep shuffling in place)
+        if (want === 0) { if (this.sprite.anims.isPlaying) { this.sprite.anims.stop(); this.sprite.setFrame(`rat_${this.kind}_0`); } }
+        else if (this.sprite.anims.currentAnim?.key !== `rat_${this.kind}_walk` || !this.sprite.anims.isPlaying) this.sprite.play(`rat_${this.kind}_walk`);
         if (this.t <= 0 && dist < this.def.reach + 6 && ground) {
           this.state = 'windup'; this.t = this.def.windup;
           b.setVelocityX(0);

@@ -98,7 +98,7 @@ export function backRow(kind = 'day', W = 768) {
 
 /** Tileable street strip: sidewalk, curb, bike lane, road. 64 x 64 */
 export function streetStrip(protectedLane = false) {
-  const W = 64, H = 64;
+  const W = 64, H = 70; // M2.1: 70 tall so the road reaches the bottom after the side view moved up
   const img = new Img(W, H);
   const r = rng(protectedLane === true ? 9 : 8);
   img.rect(0, 0, W, 12, 't'); // sidewalk
@@ -111,6 +111,7 @@ export function streetStrip(protectedLane = false) {
     img.rect(0, 16, W, 12, 'E');
     for (let i = 0; i < 20; i++) img.set(r.int(0, W - 1), r.int(16, 27), 'l');
     img.rect(0, 28, W, 3, 'T'); img.hline(0, W - 1, 31, 'S');
+    for (const y of [40, 48]) { img.hline(0, W - 1, y, 'h'); img.hline(0, W - 1, y + 1, 'g'); } // Queen's streetcar tracks
   } else if (protectedLane === 'escort') {
     // mission 2 (side view): the streetcar's tracks in the far lane, the raccoon rides the near lane
     for (let x = 0; x < W; x += 16) img.rect(x + 2, 17, 1, 3, 'H');
@@ -130,7 +131,7 @@ export function streetStrip(protectedLane = false) {
   } else {
     img.hline(0, W - 1, 28, 'W'); img.hline(0, W - 1, 29, 'H');
   }
-  for (let x = 0; x < W; x += 32) img.rect(x + 4, 50, 18, 2, 'H'); // lane dashes
+  for (let x = 0; x < W; x += 32) img.rect(x + 4, 60, 18, 2, 'H'); // lane dashes (near lane)
   return img;
 }
 

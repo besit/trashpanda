@@ -343,3 +343,48 @@ I wrote a **playtest bot** (`tools/scratch/bot.mjs`) that plays with real key pr
 - **Downloads:** first load about 1.8 MB (budget 2.5 MB); Downtown's 930 KB loads only when you ride in.
 - **Tests:** 14 unit tests (new: v1→v2 save migration, every mission's marker and patch exist, every district exit has its partner) and 11 end-to-end tests (new: crossing districts; missions 2–4 from marker to saved payoff), all passing.
 - **Art history:** 47 versions.
+
+---
+
+## 2026-11-11: Day 3, M2.1 pass from Ivan's M2 review
+
+Ivan played M2 and sent a long, precise list, plus five references: the City's High Park map, two City Hall photos, Old City Hall, and a Flexity streetcar.
+
+### The one-pixel seam (round two)
+His description: a single row under the 2nd-floor windows changes colour, from the left of the screen up to the CN Tower's left edge, and the border **moves with the skyline**. A seam that tracks a *different* parallax layer can't be in the facade art. A per-row frame-diff harness (two captures, compare each row against the expected scroll) found nothing at 1:1 on my GPU. So I removed the whole class of bug instead of chasing a driver: every side-view layer (missions, vignettes, the title) is now a `ScrollLayer` made of plain images placed on whole pixels, replacing Phaser `TileSprite`s, whose shader-side texture wrapping is the only thing that could tie one row to another layer's content. To be confirmed on Ivan's machine.
+
+### Systems
+- **Side view moved up 18px** (`ui/sideLayout.ts`, one place for all the lines). Streetcars now sit on their rails in every vignette and mission, and the street strip is taller so the road reaches the bottom.
+- **District seams by street name**, not by row (Ivan: maps can differ in size). The Queensway continues as Queen, Bloor as Dundas. That let High Park grow taller (to match the real park's shape) and Downtown push King south.
+- **Lives.** Lose all your hearts and you lose a life (raccoon tokens between the hearts and the stamina bar) and the mission restarts. At zero lives you go back to the map with 3 lives again. Failing an objective (late streetcar, splash) just restarts. Two hidden extra-life tokens per district glint on the map.
+- **Missions end on their last beat**: the boss falls → debrief. No riding past the desk.
+- **Text that fits**: titles scale down, end cards wrap, and the map payoff shows a headline and then the evidence in a **box at the bottom that waits for a key** and pages long text.
+- **Debug menus** (`?debug`): SELECT MISSION (any mission, briefing included) and WATCH VIGNETTES.
+- **City map paging**: A/D or arrows page through districts; the strip marks the one on screen and "(YOU)".
+- **Ctrl+M** mutes (a tiny DOM toast, so it works over every scene; M alone still opens the map).
+- Rats stop their walk cycle when they stand still. Lanes can have a range, so John St's cars no longer drive through the buildings north of Queen. SUV Rats rise in from below the frame, as if turning in from a side street.
+
+### Art (from the references)
+- **City Hall v02**: the two curved towers read right at last: white convex backs, dark ribbed concave faces, crescent roofs, the saucer between, the walkway ring.
+- **Old City Hall v02**: banded sandstone, arched windows, brown roofs with conical turrets, the belfry and spire.
+- **Freedom Arches** span the pool north-south. Seen straight from the south an N-S arch is just a vertical bar, and the photo shows exactly that sliver, so the camera turns 28° to the west to let the curve read.
+- **Flexity streetcars** on the map and in the side view; the old 3-section car is gone.
+- **High Park re-laid from the map**: Grenadier Pond (with swans and wood ducks), Spring Creek ponds, all five park roads, the Grenadier Cafe, the dog park, the zoo, the greenhouse, Hillside Gardens, the Jamie Bell Adventure Playground, Colborne Lodge, and cherry trees along the pond.
+- Downtown: Graffiti Alley between Queen and King and **rideable** (King's buildings were covering it), murals on every wall, the news van out of the CHUM building's east wall onto John, Osgoode Hall dropped.
+- Dog Fraud's standing body redrawn (the portrait's own shoulders are clipped off); the Foreman Rat; smaller picnic tables; a Hillside tulip-bed tile.
+
+### Missions
+- **M1** gets a boss: **the Foreman Rat** (cones, a jackhammer shove, a whistle, and a JACKHAMMER charge that leaves him dizzy).
+- **M2**: a progress strip with every signal, blocker and cone, a LAST STOP with people who cheer, 4 signals and 3 blockers, 12 s of slack. The end vignette is now a tracking shot of the streetcar while each signal flips to the white transit bar as its nose arrives.
+- **M3**: Dog Fraud watches the boss fight from his podium ("GET HIM, PAPERWORK!") and runs off when it ends. The end vignette has people at the patios and the streetcar fully on screen.
+- **M4**:
+  - The haulers have a health bar (8 pumps to drop the camera).
+  - The pond is in the park, and they leap over the sidewalk into it.
+  - The camera tips over (same sprite, rotated) instead of swapping art.
+  - Build stakes say what they become, and the raised crosswalk runs across the road.
+  - The last car rolls over the hump instead of shaking.
+
+### Failures
+- Vitest suddenly failed even a one-line test with "reading 'config'". The editor had reopened the project as `c:\...` instead of `C:\...`, and Vitest loaded its own module twice under two drive-letter casings. Running from the upper-case path fixes it.
+- City Map paging ignored fast key taps: menus read held keys, and a quick tap is gone by the next frame. Menus now get the frame's taps too.
+- My bot couldn't finish M4's build, because it assumed the stakes are built in order.

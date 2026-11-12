@@ -171,6 +171,8 @@ export function buildTiles() {
   for (let s = 0; s < 2; s++) { const t = base('x'); for (let y = 0; y < 16; y += 3) t.hline(0, 15, y, 'w'); speckle(t, 'X', 8, 176 + s); t.vline(s ? 15 : 0, 0, 15, 'w'); add(`deck${s}`, t); }
   // sand / dirt path for the park (High Park's trails)
   { const t = base('j'); speckle(t, 'X', 12, 180); speckle(t, 'D', 6, 181); add('trail', t); }
+  // Hillside Gardens flower bed: dark soil with rows of tulips (red, yellow, pink, white)
+  { const t = base('w'); speckle(t, 'x', 8, 185); for (let y = 2; y < 16; y += 4) for (let x = 1 + (y % 8 === 2 ? 0 : 2); x < 16; x += 4) { const c = ['R', 'y', 'P', 'W'][((x + y) >> 2) % 4]; t.set(x, y, c); t.set(x, y + 1, 'E'); } add('flowerbed', t); }
   // zoo pen ground (packed dirt + straw)
   { const t = base('X'); speckle(t, 'x', 10, 182); speckle(t, 'y', 6, 183); speckle(t, 'j', 6, 184); add('pen', t); }
   return tiles;

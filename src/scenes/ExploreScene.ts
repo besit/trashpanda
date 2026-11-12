@@ -13,14 +13,15 @@ import { UPGRADES } from '../data/upgrades';
 import { MISSIONS, missionAvailable } from '../data/missions';
 import { DISTRICTS } from '../data/districts';
 import { text, iris, floatText, shake, bellRing, blinds } from '../ui/fx';
+import { MAX_LIVES } from '../core/GameState';
 import { music } from '../audio/Sequencer';
 import { SONG_MAIN, SONG_IMPROVE } from '../audio/songs';
 import { sfx } from '../audio/sfx';
 import { openPause, type MapInfo } from './PauseScene';
 import type { Manifest } from './BootScene';
 
-interface ExploreData { from?: 'mission' | 'district'; missionId?: string; won?: boolean; district?: string; entry?: { side: 'w' | 'e'; y: number } }
-type Hud = { box: Phaser.GameObjects.Graphics; meter: Phaser.GameObjects.Graphics; score: Phaser.GameObjects.BitmapText; tier: Phaser.GameObjects.BitmapText; stamina: Phaser.GameObjects.Graphics; prompt: Phaser.GameObjects.BitmapText; label: Phaser.GameObjects.BitmapText };
+interface ExploreData { from?: 'mission' | 'district'; missionId?: string; won?: boolean; district?: string; entry?: { side: 'w' | 'e'; street?: string; dy?: number; y?: number; fromDistrict?: string } }
+type Hud = { lives: Phaser.GameObjects.BitmapText; box: Phaser.GameObjects.Graphics; meter: Phaser.GameObjects.Graphics; score: Phaser.GameObjects.BitmapText; tier: Phaser.GameObjects.BitmapText; stamina: Phaser.GameObjects.Graphics; prompt: Phaser.GameObjects.BitmapText; label: Phaser.GameObjects.BitmapText };
 
 const DIR_V = [[1, 0], [0.7, 0.7], [0, 1], [-0.7, 0.7], [-1, 0], [-0.7, -0.7], [0, -1], [0.7, -0.7]];
 
@@ -73,7 +74,13 @@ export class ExploreScene extends Phaser.Scene {
     for (const u of ctx.state.upgrades) for (const p of UPGRADES[u]?.mapPatches ?? []) if (md.improvements[p]) this.map.applyImprovement(p);
 
     let start = md.spawn;
-    if (data.entry) start = { x: data.entry.side === 'w' ? 12 : this.map.widthPx - 12, y: data.entry.y };
+    if (data.entry) {
+      // arrive on the same street (matched by name; rows can differ between districts)
+      const e = data.entry;
+      const ex = (md.exits ?? []).find((x) => x.side === e.side && x.street === e.street && (!e.fromDistrict || x.to === e.fromDistrict));
+      const y = ex ? Phaser.Math.Clamp(ex.y0 + (e.dy ?? 40), ex.y0 + 8, ex.y1 - 8) : e.y ?? md.spawn.y;
+      start = { x: e.side === 'w' ? 12 : this.map.widthPx - 12, y };
+    }
     else if (ctx.state.player.district === this.district && ctx.state.player.x > 0 && ctx.state.player.x < this.map.widthPx && ctx.state.player.y < this.map.heightPx) start = ctx.state.player;
     this.player = new TopDownPlayer(this, start.x, start.y);
     if (data.entry) this.player.dir = data.entry.side === 'w' ? 0 : 4;
@@ -88,6 +95,7 @@ export class ExploreScene extends Phaser.Scene {
       if (!ctx.state.flags.whiteSquirrel) { ctx.state.flags.whiteSquirrel = true; this.toast('A RARE WHITE SQUIRREL:\nTRINITY BELLWOODS\' LOCAL CELEBRITY.'); ctx.save(); }
     };
     this.buildExitSigns(md.exits ?? []);
+    this.buildLifeTokens(md);
 
     const cam = this.cameras.main;
     cam.setBounds(0, 0, this.map.widthPx, this.map.heightPx).setRoundPixels(true);
@@ -168,8 +176,41 @@ export class ExploreScene extends Phaser.Scene {
     const tier = text(this, 8, 29, '', 'font', 0).setScrollFactor(0).setDepth(20001).setTint(0xfff08a);
     const stamina = this.add.graphics().setScrollFactor(0).setDepth(20001);
     const prompt = text(this, GAME_W / 2, GAME_H - 14, '', 'font_outline').setScrollFactor(0).setDepth(20001);
-    this.hud = { box, meter, score, tier, stamina, prompt, label };
+    // lives under the meter: a raccoon token + the count
+    box.fillStyle(0x16121f, 0.75).fillRoundedRect(4, 42, 42, 14, 3).lineStyle(1, 0x69657a).strokeRoundedRect(4, 42, 42, 14, 3);
+    this.add.image(13, 54, 'world', 'life_0').setOrigin(0.5, 1).setScrollFactor(0).setDepth(20001);
+    const lives = text(this, 22, 46, '', 'font', 0).setScrollFactor(0).setDepth(20001).setTint(0xfff08a);
+    this.hud = { box, meter, score, tier, stamina, prompt, label, lives };
+    this.drawLives();
     this.drawMeter(this.shownLiv);
+  }
+
+  private drawLives() { this.hud.lives.setText(`X${ctx.state.lives}`); }
+
+  /** hidden extra lives: a glinting raccoon token, once per spot */
+  private lifeTokens: { s: Phaser.GameObjects.Sprite; key: string }[] = [];
+  private buildLifeTokens(md: MapData) {
+    this.lifeTokens = [];
+    (md.lifeTokens ?? []).forEach((t, i) => {
+      const key = `life_${this.district}_${i}`;
+      if (ctx.state.flags[key]) return;
+      const s = this.add.sprite(t.x, t.y, 'world', 'life_0').setOrigin(0.5, 1).setDepth(t.y).play('life_glint');
+      this.tweens.add({ targets: s, y: t.y - 3, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      this.lifeTokens.push({ s, key });
+    });
+  }
+  private checkLifeTokens() {
+    for (const t of this.lifeTokens) {
+      if (!t.s.active || Phaser.Math.Distance.Between(this.player.x, this.player.y, t.s.x, t.s.y) > 14) continue;
+      ctx.state.flags[t.key] = true;
+      ctx.state.lives = Math.min(MAX_LIVES, ctx.state.lives + 1);
+      sfx.ding(); sfx.bell();
+      floatText(this, t.s.x, t.s.y - 20, '1UP!', 'font_big', 0xffffff, 600);
+      this.tweens.killTweensOf(t.s); t.s.destroy();
+      this.toast(`EXTRA LIFE! LIVES: ${ctx.state.lives}`, 2500);
+      this.drawLives();
+      ctx.save();
+    }
   }
 
   /** Re-anchor centred/right-aligned HUD when the view width changes. */
@@ -257,17 +298,19 @@ export class ExploreScene extends Phaser.Scene {
     this.traffic.setUpgrades(ctx.state.upgrades);
     this.traffic.setDensity(0.8);
     await this.wait(Math.max(1600, dur * 0.6));
-    banner.setText(UPGRADES[mission.upgrades[0]]?.name ?? 'IMPROVED!');
+    const up = UPGRADES[mission.upgrades[0]];
+    // the headline, wrapped onto lines that fit, big font scaled down if a word is still too wide
+    banner.setText(up?.headline ?? up?.name ?? 'IMPROVED!').setMaxWidth(Math.round((GAME_W - 24) / 1)).setCenterAlign().setScale(1);
+    if (banner.width > GAME_W - 16) banner.setScale((GAME_W - 16) / banner.width);
     shake(this, 150, 0.004);
     sfx.ding();
     const o = { v: before };
     floatText(this, 63, 40, `+${after - before} LIVABILITY`, 'font_outline', 0x9bd35a).setScrollFactor(0).setDepth(20006);
     this.tweens.add({ targets: o, v: after, duration: 1200, ease: 'Cubic.easeOut', onUpdate: () => { this.drawMeter(o.v); sfx.blip(); } });
-    await this.wait(1500);
-    const blurb = text(this, GAME_W / 2, 68, UPGRADES[mission.upgrades[0]]?.blurb ?? '', 'font_outline').setScrollFactor(0).setDepth(20005).setMaxWidth(Math.min(340, GAME_W - 40));
-    blurb.setCenterAlign();
-    await this.wait(3600);
-    banner.destroy(); blurb.destroy();
+    await this.wait(1300);
+    // the evidence: in a box at the bottom; it stays until you press a key (and pages if it's long)
+    await this.infoBox(up?.name ?? 'IMPROVED!', up?.blurb ?? '');
+    banner.destroy();
     cam.pan(this.player.x, this.player.y, 600, 'Sine.easeInOut');
     await this.wait(650);
     cam.startFollow(this.player.sprite, true, 0.12, 0.12);
@@ -277,6 +320,45 @@ export class ExploreScene extends Phaser.Scene {
     this.busy = false;
     this.shownLiv = after;
     if (firstTime) this.nextHint(missionId);
+  }
+
+  /**
+   * A semi-transparent box at the bottom of the screen: a title line + up to 3 lines of text per page.
+   * It waits for E / Enter / a tap; longer text pages through (M2.1: the payoff text used to vanish).
+   */
+  private infoBox(title: string, body: string): Promise<void> {
+    return new Promise((resolve) => {
+      const cw = 6, maxChars = Math.floor((GAME_W - 40) / cw);
+      const words = body.split(/\s+/), lines: string[] = [];
+      let cur = '';
+      for (const w of words) { if ((cur + ' ' + w).trim().length > maxChars) { lines.push(cur.trim()); cur = w; } else cur += ' ' + w; }
+      if (cur.trim()) lines.push(cur.trim());
+      const pages: string[][] = [];
+      for (let i = 0; i < lines.length; i += 3) pages.push(lines.slice(i, i + 3));
+      if (!pages.length) pages.push(['']);
+      const h = 52, y = GAME_H - h - 6;
+      const box = this.add.graphics().setScrollFactor(0).setDepth(20010);
+      box.fillStyle(0x16121f, 0.85).fillRoundedRect(8, y, GAME_W - 16, h, 4).lineStyle(1, 0x9bd35a).strokeRoundedRect(8, y, GAME_W - 16, h, 4);
+      const tt = text(this, 16, y + 5, title, 'font', 0).setScrollFactor(0).setDepth(20011).setTint(0x9bd35a);
+      const bt = text(this, 16, y + 17, '', 'font_outline', 0).setScrollFactor(0).setDepth(20011);
+      const pg = text(this, GAME_W - 16, y + 5, '', 'font', 1).setScrollFactor(0).setDepth(20011).setOrigin(1, 0).setTint(0x9793a6);
+      const arrow = text(this, GAME_W - 18, y + h - 10, wantsTouch() ? 'TAP' : 'E >', 'font', 1).setScrollFactor(0).setDepth(20011).setOrigin(1, 0).setTint(0xfff08a);
+      this.tweens.add({ targets: arrow, alpha: 0.3, duration: 400, yoyo: true, repeat: -1 });
+      let page = 0, ready = 0;
+      const show = () => { bt.setText(pages[page].join('\n')); pg.setText(pages.length > 1 ? `${page + 1}/${pages.length}` : ''); ready = this.time.now + 350; };
+      show();
+      const advance = () => {
+        if (this.time.now < ready) return;
+        sfx.select();
+        if (++page < pages.length) { show(); return; }
+        this.events.off('update', poll); this.input.off('pointerdown', advance);
+        [box, tt, bt, pg, arrow].forEach((o) => o.destroy());
+        resolve();
+      };
+      const poll = () => { if (this.input2.justPressed('act') || this.input2.justPressed('confirm')) advance(); };
+      this.events.on('update', poll);
+      this.input.on('pointerdown', advance);
+    });
   }
 
   /** After a mission: where to go next. */
@@ -313,7 +395,7 @@ export class ExploreScene extends Phaser.Scene {
     if (this.busy) return;
     this.busy = true; this.leaving = true;
     this.player.frozen = true;
-    const entry = { side: e.side === 'w' ? 'e' : 'w', y: Phaser.Math.Clamp(this.player.y, e.y0 + 8, e.y1 - 8) } as const;
+    const entry = { side: e.side === 'w' ? 'e' : 'w', street: e.street, dy: Phaser.Math.Clamp(this.player.y, e.y0 + 8, e.y1 - 8) - e.y0, fromDistrict: this.district } as const;
     ctx.state.player = { scene: 'explore', district: e.to, x: -1, y: -1 };
     ctx.save();
     sfx.chain();
@@ -333,6 +415,7 @@ export class ExploreScene extends Phaser.Scene {
     this.traffic.update(dt, this.player.x, this.player.y);
     this.crowd.update(dt, this.player.x, this.player.y, this.cameras.main.worldView);
     this.map.updateOcclusion(this.player.x, this.player.y);
+    this.checkLifeTokens();
     // district edges: riding off the map along a street that continues
     if (!this.busy) {
       const px = this.player.x, py = this.player.y;
@@ -375,6 +458,7 @@ export class ExploreScene extends Phaser.Scene {
     const w = window as unknown as { __TP?: Record<string, unknown> };
     w.__TP = { ...(w.__TP ?? {}), scene: 'Explore', district: this.district, state: ctx.state, player: () => ({ x: this.player.x, y: this.player.y }), teleport: (x: number, y: number) => this.player.sprite.setPosition(x, y), startMission: (id: string) => this.startMission(id), improve: (id: string) => this.map.applyImprovement(id, true, this.player.x), traffic: () => this.traffic.count, map: this.map.data,
       goto: (district: string, y?: number) => this.scene.start('Explore', { from: 'district', district, entry: y !== undefined ? { side: 'w', y } : undefined }),
+      exits: () => this.map.data.exits,
       markers: () => this.markers.map((m) => m.id), busy: () => this.busy };
   }
 }

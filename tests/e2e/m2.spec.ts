@@ -32,7 +32,9 @@ test('districts: Queen West -> High Park -> Queen West -> Downtown along the str
   await page.waitForTimeout(800);
   const hp = await ev(page, () => (window as unknown as W).__TP!.player());
   expect(hp.x).toBeGreaterThan(100 * T); // arrived at High Park's east edge
-  expect(Math.abs(hp.y - (52 * 16 + 8))).toBeLessThan(24); // on the same street
+  // on the same street: High Park's Queensway is at a different row (exits are matched by street name)
+  const ex = await ev(page, () => (window as unknown as W).__TP!.exits().find((e: { street: string; side: string }) => e.street === 'queen' && e.side === 'e'));
+  expect(hp.y).toBeGreaterThanOrEqual(ex.y0); expect(hp.y).toBeLessThanOrEqual(ex.y1);
   // and back east
   await page.keyboard.down('d'); await page.waitForFunction(() => (window as unknown as W).__TP?.district === 'queenwest', null, { timeout: 8000 }); await page.keyboard.up('d');
   await page.waitForTimeout(800);
@@ -91,7 +93,9 @@ for (const [id, district, check] of [
     await page.keyboard.press('Escape');
     await sceneIs(page, 'Explore');
     await page.waitForFunction((m) => (window as unknown as W).__TP!.state.completedMissions.includes(m), id, { timeout: 15_000 });
-    await page.waitForFunction(() => !(window as unknown as W).__TP!.busy(), null, { timeout: 25_000 }); // the payoff sweep finishes
+    // the payoff sweep, then the evidence box that waits for a key (M2.1): press E until the map is free
+    for (let i = 0; i < 40 && (await page.evaluate(() => (window as unknown as W).__TP!.busy())); i++) { await page.waitForTimeout(700); await page.keyboard.press('e'); }
+    expect(await page.evaluate(() => (window as unknown as W).__TP!.busy())).toBe(false);
     const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('trashpanda.save.v1')!));
     expect(saved.completedMissions).toContain(id);
     expect(saved.upgrades.length).toBe(2);

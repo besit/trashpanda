@@ -20,8 +20,9 @@ export interface Lane {
   /** upgrade id: through-car traffic removed (King St corridor) */ noCars?: string;
   /** upgrade id: traffic calmed (slower cars) */ calm?: string;
   /** drivers speed here until calmed */ speedy?: boolean;
+  /** [start, end] px along the lane's axis when the street doesn't span the whole map */ range?: [number, number];
 }
-export interface Exit { side: 'w' | 'e'; y0: number; y1: number; to: string }
+export interface Exit { side: 'w' | 'e'; y0: number; y1: number; to: string; street: string }
 export interface Intersection { x0: number; x1: number; y0: number; y1: number; tee?: boolean }
 export interface MapData {
   id?: string;
@@ -41,6 +42,8 @@ export interface MapData {
   critters?: { kind: string; x: number; y: number }[];
   landmarks?: { id: string; x: number; y: number; label: string; fact: string }[];
   tileColors?: number[];
+  /** hidden extra lives (M2.1) */
+  lifeTokens?: { x: number; y: number }[];
 }
 
 export interface BuildingRef { img: Phaser.GameObjects.Image; x: number; y: number; w: number; d: number; h: number; mapColor?: string }

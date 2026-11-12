@@ -1,6 +1,10 @@
 import Phaser from 'phaser';
 import { GAME_W, GAME_H, DEBUG } from '../config';
+import { ScrollLayer, STREET_Y, GROUND_Y, FRONT_Y, BACKROW_Y, SKYLINE_Y } from '../ui/sideLayout';
 import { openPause } from './PauseScene';
+import { MISSIONS } from '../data/missions';
+import { DISTRICTS } from '../data/districts';
+import { CUTSCENES } from '../data/cutscenes';
 import { InputManager } from '../input/InputManager';
 import { text, iris } from '../ui/fx';
 import { synth } from '../audio/Synth';
@@ -16,11 +20,9 @@ export class TitleScene extends Phaser.Scene {
   private items: { label: string; action: () => void; t?: Phaser.GameObjects.BitmapText }[] = [];
   private sel = 0;
   private started = false;
-  private skyline!: Phaser.GameObjects.TileSprite;
-  private facades!: Phaser.GameObjects.TileSprite;
-  private street!: Phaser.GameObjects.TileSprite;
-  private backrow!: Phaser.GameObjects.TileSprite;
   private rider!: Phaser.GameObjects.Sprite;
+  private layers: ScrollLayer[] = [];
+  private scroll = 0;
   private prompt!: Phaser.GameObjects.BitmapText;
   private menu!: Phaser.GameObjects.Container;
   private leaving = false;
@@ -31,16 +33,20 @@ export class TitleScene extends Phaser.Scene {
   create() {
     this.started = false; this.leaving = false; this.sel = 0;
     this.input2 = new InputManager(this);
-    this.add.tileSprite(0, 0, GAME_W, GAME_H, 'sky_dusk').setOrigin(0);
-    this.skyline = this.add.tileSprite(0, 40, GAME_W, 170, 'skyline_dusk').setOrigin(0).setTilePosition(-60, 0);
-    this.backrow = this.add.tileSprite(0, 104, GAME_W, 80, 'backrow_dusk').setOrigin(0);
-    this.facades = this.add.tileSprite(0, 72, GAME_W, 96, 'facades_qw').setOrigin(0).setTint(0xc8a8d8);
-    this.street = this.add.tileSprite(0, 168, GAME_W, 64, 'street_paint').setOrigin(0).setTint(0xd0b8d8);
-    this.rider = this.add.sprite(-40, 198, 'chars', 'rs_2').setOrigin(0.5, 42 / 44).play('rs_ride');
+    this.scroll = 0;
+    this.layers = [
+      new ScrollLayer(this, 'sky_dusk', 0, 0),
+      new ScrollLayer(this, 'skyline_dusk', SKYLINE_Y + 22, 0.08, 60),
+      new ScrollLayer(this, 'backrow_dusk', BACKROW_Y + 8, 0.25),
+      new ScrollLayer(this, 'facades_qw', FRONT_Y.queen, 0.6, 0, 0, 0xc8a8d8),
+      new ScrollLayer(this, 'street_paint', STREET_Y, 1, 0, 0, 0xd0b8d8),
+    ];
+    this.rider = this.add.sprite(-40, GROUND_Y + 4, 'chars', 'rs_2').setOrigin(0.5, 42 / 44).play('rs_ride');
     this.tweens.add({ targets: this.rider, x: GAME_W + 60, duration: 7000, repeat: -1, repeatDelay: 1500 });
 
     // logo
     const logo = this.add.container(GAME_W / 2, 44);
+    this.logo = logo;
     const shadow = text(this, 2, 2, 'TRASH PANDA', 'font_big').setTint(0x16121f).setScale(2);
     const main = text(this, 0, 0, 'TRASH PANDA', 'font_big').setScale(2);
     const sub = text(this, 0, 26, 'RIGHT OF WAY', 'font_red').setScale(1);
@@ -54,18 +60,17 @@ export class TitleScene extends Phaser.Scene {
     // menu (shown after first input)
     this.menu = this.add.container(GAME_W / 2, 118).setVisible(false);
     const hasSave = SaveSystem.hasSave();
-    this.items = [
+    this.mainItems = [
       ...(hasSave ? [{ label: 'CONTINUE', action: () => this.go(true) }] : []),
       { label: 'NEW GAME', action: () => this.go(false) },
       { label: 'CONTROLS', action: () => { this.leaving = false; openPause(this, 'controls'); } },
+      // debug (?debug): pick ANY mission (with its briefing) or watch any vignette on its own (M2.1, Ivan)
       ...(DEBUG ? [
-        { label: 'TEST: STREETCAR (M2)', action: () => this.goScene('Action', { mission: 'streetcar_through' }) },
-        { label: 'TEST: KING ST (M3)', action: () => this.goScene('Action', { mission: 'king_of_street' }) },
-        { label: 'TEST: PARKSIDE (M4)', action: () => this.goScene('Action', { mission: 'slow_down_dog' }) },
-        { label: 'INTRO CUTSCENE', action: () => this.goScene('Cutscene') },
+        { label: 'SELECT MISSION', action: () => this.setItems(this.missionItems()) },
+        { label: 'WATCH VIGNETTES', action: () => this.setItems(this.vignetteItems()) },
       ] : []),
     ];
-    this.items.forEach((it, i) => { it.t = text(this, 0, i * 11, it.label, 'font_outline'); this.menu.add(it.t); });
+    this.setItems(this.mainItems);
 
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
       if (!this.started) { this.begin(); return; }
@@ -94,8 +99,45 @@ export class TitleScene extends Phaser.Scene {
     this.refresh();
   }
 
+  private mainItems: { label: string; action: () => void; t?: Phaser.GameObjects.BitmapText }[] = [];
+  private logo?: Phaser.GameObjects.Container;
+  /** swap the menu's items (submenus); long lists scroll in a window of 8 */
+  private setItems(list: { label: string; action: () => void }[]) {
+    this.menu.removeAll(true);
+    this.items = list.map((it) => ({ ...it }));
+    this.items.forEach((it, i) => { it.t = text(this, 0, i * 11, it.label, 'font_outline'); this.menu.add(it.t); });
+    const sub = list !== this.mainItems;
+    this.logo?.setVisible(!sub);
+    this.menu.setY(sub ? 30 : 118);
+    this.sel = 0;
+    if (this.started) this.refresh();
+  }
+  private missionItems() {
+    const back = { label: '< BACK', action: () => this.setItems(this.mainItems) };
+    return [back, ...Object.values(MISSIONS).map((m) => ({ label: `${m.title} (${DISTRICTS[m.district]?.name ?? m.district})`, action: () => this.playMission(m.id) }))];
+  }
+  private vignetteItems() {
+    const back = { label: '< BACK', action: () => this.setItems(this.mainItems) };
+    return [back, ...Object.keys(CUTSCENES).map((id) => ({ label: id.toUpperCase().replace(/_/g, ' '), action: () => this.goScene('Cutscene', { id, next: 'Title' }) }))];
+  }
+  /** debug: a mission from the start, briefing vignette included, on your save (or a fresh one) */
+  private async playMission(id: string) {
+    if (this.leaving) return;
+    this.leaving = true;
+    if (!ctx.continue()) ctx.newGame();
+    await iris(this, 'close');
+    const m = MISSIONS[id];
+    if (m.briefing) this.scene.start('Cutscene', { id: m.briefing, next: 'Action', nextData: { mission: id } });
+    else this.scene.start('Action', { mission: id });
+  }
+
   private refresh() {
-    this.items.forEach((it, i) => { it.t!.setText(i === this.sel ? `> ${it.label} <` : it.label).setTint(i === this.sel ? 0xfff08a : 0xffffff); });
+    const win = 8, start = Math.max(0, Math.min(this.sel - 3, this.items.length - win));
+    this.items.forEach((it, i) => {
+      const vis = this.items.length <= win || (i >= start && i < start + win);
+      it.t!.setVisible(vis).setY((i - (this.items.length <= win ? 0 : start)) * 11);
+      it.t!.setText(i === this.sel ? `> ${it.label} <` : it.label).setTint(i === this.sel ? 0xfff08a : 0xffffff);
+    });
   }
 
   private async go(cont: boolean) {
@@ -120,10 +162,8 @@ export class TitleScene extends Phaser.Scene {
 
   update(_t: number, dt: number) {
     this.input2.update();
-    this.skyline.tilePositionX += dt * 0.004;
-    this.backrow.tilePositionX += dt * 0.012;
-    this.facades.tilePositionX += dt * 0.03;
-    this.street.tilePositionX += dt * 0.05;
+    this.scroll += dt * 0.05;
+    for (const l of this.layers) l.update(this.scroll);
     if (!this.started) { if (this.input2.justPressed('confirm')) this.begin(); return; }
     if (this.leaving) return;
     const up = this.input2.moveY < -0.5, down = this.input2.moveY > 0.5;

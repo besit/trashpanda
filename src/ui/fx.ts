@@ -78,3 +78,18 @@ export function bellRing(scene: Phaser.Scene, x: number, y: number, depth = 5000
     }, onComplete: () => g.destroy() });
   }
 }
+
+/**
+ * Make text fit the view (M2.1: titles and end cards were running off screen).
+ * Without `wrap`: shrink a big title to fit and return the scale used.
+ * With `wrap`: break into centred lines no wider than maxW and return the text.
+ */
+export function fitText(t: Phaser.GameObjects.BitmapText, maxW: number): number;
+export function fitText(t: Phaser.GameObjects.BitmapText, maxW: number, wrap: true): Phaser.GameObjects.BitmapText;
+export function fitText(t: Phaser.GameObjects.BitmapText, maxW: number, wrap = false): number | Phaser.GameObjects.BitmapText {
+  if (wrap) { t.setMaxWidth(maxW).setCenterAlign(); return t; }
+  t.setScale(1);
+  const s = Math.min(1, maxW / Math.max(1, t.width));
+  t.setScale(s);
+  return s;
+}

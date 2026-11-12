@@ -5,7 +5,7 @@ import { Img, save } from './lib/raster.mjs';
 import { packAtlas, packTileset } from './lib/pack.mjs';
 import { raccoonSideFrames, PIVOT_Y as RS_PIVOT_Y } from './sprites/raccoon_side.mjs';
 import { raccoonTopFrame, DIRS } from './sprites/raccoon_top.mjs';
-import { ratAnims, RAT_VARIANTS, bureaucratAnims, BOSS_FH } from './sprites/rats.mjs';
+import { ratAnims, RAT_VARIANTS, bureaucratAnims, foremanAnims, BOSS_FH } from './sprites/rats.mjs';
 import { dogFraudPortrait, dogFraudStanding } from './sprites/dogfraud.mjs';
 import { PED_VARIANTS, CYC_VARIANTS, PED_DIRS, pedFrame, cycFrame, cycSideFrame, PED_FW, PED_FH, PED_OX, PED_OY } from './sprites/people.mjs';
 import { buildTiles } from './sprites/tiles.mjs';
@@ -52,6 +52,10 @@ const chars = [];
   ba.frames.forEach((f, i) => chars.push({ name: `rat_bureaucrat_${i}`, img: f }));
   for (const [k, a] of Object.entries(ba.anims)) manifest.anims[`rat_bureaucrat_${k}`] = { frames: Array.from({ length: a.count }, (_, i) => `rat_bureaucrat_${a.start + i}`), rate: a.rate, loop: a.loop };
   manifest.pivots.rat_bureaucrat = { x: 0.47, y: (BOSS_FH - 1) / BOSS_FH };
+  const fa = foremanAnims();
+  fa.frames.forEach((f, i) => chars.push({ name: `rat_foreman_${i}`, img: f }));
+  for (const [k, a] of Object.entries(fa.anims)) manifest.anims[`rat_foreman_${k}`] = { frames: Array.from({ length: a.count }, (_, i) => `rat_foreman_${a.start + i}`), rate: a.rate, loop: a.loop };
+  manifest.pivots.rat_foreman = { x: 0.47, y: (BOSS_FH - 1) / BOSS_FH };
   for (const e of ['grin', 'laugh', 'shock']) chars.push({ name: `df_${e}`, img: dogFraudPortrait(e) });
   // in-world Dog Fraud (side vignettes)
   for (const [n, e, pod] of [['dfs_grin', 'grin', false], ['dfs_laugh', 'laugh', false], ['dfs_pod', 'grin', true], ['dfs_podlaugh', 'laugh', true]]) {
@@ -110,14 +114,19 @@ addProp('tree_cherry', HP.cherryTree()); addProp('tree_oak', HP.oakTree());
 HP.capybaraFrames().forEach((f, i) => addProp(`capy_${i}`, f));
 manifest.anims.capy_walk = { frames: ['capy_0', 'capy_1'], rate: 5, loop: true, atlas: 'world' };
 manifest.anims.capy_sit = { frames: ['capy_2'], rate: 1, loop: true, atlas: 'world' };
+HP.swanFrames().forEach((f, i) => addProp(`swan_${i}`, f)); HP.woodDuckFrames().forEach((f, i) => addProp(`woodduck_${i}`, f));
+manifest.anims.swan_swim = { frames: ['swan_0', 'swan_1'], rate: 3, loop: true, atlas: 'world' };
+manifest.anims.woodduck_swim = { frames: ['woodduck_0', 'woodduck_1'], rate: 4, loop: true, atlas: 'world' };
+addProp('adventure', HP.adventurePlayground());
 addProp('fence_h', HP.fence('h')); addProp('fence_v', HP.fence('v')); addProp('hpsign', HP.highParkSign()); addProp('subway', HP.subwayEntrance());
 addProp('speedcam', HP.speedCam()); addProp('speedcam_cut', HP.speedCam(true)); addProp('schoolsign', HP.schoolSign()); addProp('tspsignal', HP.tspSignal());
 addProp('patio_r', HP.patioSet('R')); addProp('patio_f', HP.patioSet('F')); addProp('playground', HP.playground()); addProp('marquee', HP.revueMarquee());
-addProp('cityhall', DT.cityHall()); addProp('torontosign', DT.torontoSign()); addProp('arches', DT.freedomArches(14 * 16)); addProp('newsvan', DT.newsVan()); addProp('lanterns', DT.lanterns());
+addProp('cityhall', DT.cityHall()); addProp('torontosign', DT.torontoSign()); addProp('arch', DT.freedomArch(66, 36)); addProp('newsvan', DT.newsVan()); addProp('lanterns', DT.lanterns());
 for (const st of ['red', 'green', 'tsp']) addProp(`sigpole_${st}`, SP.signalPole(st));
 addProp('vanside', SP.vanSide()); addProp('suvrat_0', SP.suvRatSide(0)); addProp('suvrat_1', SP.suvRatSide(1));
 addProp('desk', SP.desk()); addProp('stamp_0', SP.stamp(0)); addProp('stamp_1', SP.stamp(1)); addProp('camcarried', SP.camCarried());
-addProp('buildspot', SP.buildSpot()); addProp('humpside', SP.humpSide()); addProp('raisedside', SP.raisedCrossSide()); addProp('curbextside', SP.curbExtSide());
+addProp('buildspot', SP.buildSpot()); addProp('humpside', SP.humpSide()); addProp('raisedside', SP.raisedCrossSide()); addProp('life_0', SP.lifeToken(0)); addProp('life_1', SP.lifeToken(1));
+manifest.anims.life_glint = { frames: ['life_0', 'life_0', 'life_0', 'life_1'], rate: 4, loop: true, atlas: 'world' }; addProp('curbextside', SP.curbExtSide());
 manifest.atlases.world = { ...packAtlas(world, path.join(OUT, 'world'), 2048), png: 'gen/world.png', json: 'gen/world.json' };
 
 // ---------- per-district building atlases (loaded when you ride into the district) ----------
@@ -167,7 +176,7 @@ for (const [id, map] of Object.entries(maps)) {
     ground: map.ground.map((row) => row.map((n) => idx[n])),
     objects: map.objects,
     improvements: Object.fromEntries(Object.entries(map.improvements).map(([k, v]) => [k, { ...v, tiles: v.tiles.map(([x, y, n]) => [x, y, idx[n]]) }])),
-    spawn: map.spawn, markers: map.markers, lanes: map.lanes, exits: map.exits,
+    spawn: map.spawn, markers: map.markers, lanes: map.lanes, exits: map.exits, lifeTokens: map.lifeTokens,
     intersections: map.intersections, walkways: map.walkways, labels: map.labels, critters: map.critters, landmarks: map.landmarks,
     decals: map.decals.map(({ gen, ...d }) => d),
     tileColors,

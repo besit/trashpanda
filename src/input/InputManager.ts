@@ -27,6 +27,7 @@ export const CONTROLS_KEYS: [string, string][] = [
   ['E', 'BELL / TALK / PUMP'],
   ['M', 'MAP'],
   ['ESC', 'PAUSE'],
+  ['CTRL+M', 'MUTE'],
 ];
 export const CONTROLS_ALT = 'ARROWS + Z JUMP  X ACT  C DASH  V BOOST';
 export const CONTROLS_PAD = 'PAD: A JUMP  X ACT  B DASH  RT BOOST  SELECT MAP';
@@ -53,13 +54,19 @@ export class InputManager {
     if (kb) {
       const names = new Set(['W', 'A', 'S', 'D', 'UP', 'DOWN', 'LEFT', 'RIGHT', ...Object.values(KEYMAP).flat()]);
       for (const n of names) { this.keys.set(n, kb.addKey(n, true, false)); this.codeOf.set(n, Phaser.Input.Keyboard.KeyCodes[n as keyof typeof Phaser.Input.Keyboard.KeyCodes]); }
-      const onDown = (e: KeyboardEvent) => { if (e.keyCode === 9) e.preventDefault(); if (!e.repeat) this.taps.add(e.keyCode); };
-      kb.on('keydown', onDown);
-      scene.events.once('shutdown', () => kb.off('keydown', onDown));
+      const onDown = (e: KeyboardEvent) => { this.ctrl = e.ctrlKey || e.metaKey; if (e.keyCode === 9) e.preventDefault(); if (!e.repeat && !this.ctrl) this.taps.add(e.keyCode); };
+      const onUp = (e: KeyboardEvent) => { this.ctrl = e.ctrlKey || e.metaKey; };
+      kb.on('keydown', onDown); kb.on('keyup', onUp);
+      scene.events.once('shutdown', () => { kb.off('keydown', onDown); kb.off('keyup', onUp); });
     }
   }
 
-  private k(n: string) { return this.keys.get(n)?.isDown ?? false; }
+  /** Ctrl/Cmd held: shortcuts like Ctrl+M (mute) must not also open the map */
+  private ctrl = false;
+  private tapNames = new Set<string>();
+  /** a left/right key tapped this frame (menus that page: quick taps are never lost) */
+  tapX(): -1 | 0 | 1 { return this.tapNames.has('A') || this.tapNames.has('LEFT') ? -1 : this.tapNames.has('D') || this.tapNames.has('RIGHT') ? 1 : 0; }
+  private k(n: string) { return !this.ctrl && (this.keys.get(n)?.isDown ?? false); }
 
   /** Call once per frame before reading. */
   update() {
@@ -72,6 +79,7 @@ export class InputManager {
     const jd = new Set<string>();
     for (const [n, code] of this.codeOf) if (this.taps.has(code)) jd.add(n);
     this.taps.clear();
+    this.tapNames = jd;
     const tapped = new Set<Action>();
     for (const a of ACTIONS) {
       if (KEYMAP[a].some((n) => this.k(n))) now.add(a);

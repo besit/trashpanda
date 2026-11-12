@@ -42,8 +42,8 @@ export function generateQueenWest() {
   for (const c of [SX, SX + 3]) for (let y = QUEEN; y <= QUEEN + 3; y++) set(c, y, 'zebra_ns');
   for (const x of [SX + 1, SX + 2]) for (let y = QUEEN; y <= QUEEN + 3; y++) set(x, y, y === QUEEN + 1 || y === QUEEN + 2 ? `tracks${(x + y) % 2}` : 'asphalt3');
   // Queen and Dundas continue west into High Park / Roncesvalles and east downtown
-  D.exit('w', QUEEN, 'highpark'); D.exit('w', DUNDAS, 'highpark');
-  D.exit('e', QUEEN, 'downtown'); D.exit('e', DUNDAS, 'downtown');
+  D.exit('w', QUEEN, 'highpark', 'queen'); D.exit('w', DUNDAS, 'highpark', 'dundas');
+  D.exit('e', QUEEN, 'downtown', 'queen'); D.exit('e', DUNDAS, 'downtown', 'dundas');
 
   // ---------- Trinity Bellwoods Park ----------
   for (let y = PARK.y0 - 1; y <= PARK.y1 + 1; y++) for (let x = PARK.x0 - 2; x <= PARK.x1 + 2; x++) set(x, y, `lawn${(x * 5 + y * 11) % 3}`);
@@ -238,5 +238,7 @@ export function generateQueenWest() {
   );
   D.critters.push({ kind: 'white_squirrel', x: R(0.26, 0.48)[0], y: R(0.26, 0.48)[1] }); // where the park map draws its squirrel
   D.landmarks.push({ id: 'tb_gates', x: GATE_X, y: (QUEEN - 3) * TS - 10, label: 'THE UNIVERSITY OF', fact: 'TRINITY COLLEGE\n1852 - 1925' });
-  return D.out({ spawn: { x: 45 * TS + 8, y: (QUEEN - 2) * TS + 8 } });
+  // two hidden extra lives: deep in the park's north-west trees, and at the far east end of the back lane
+  const lifeTokens = [{ x: R(0.04, 0.06)[0], y: R(0.04, 0.06)[1] }, { x: (W - 2) * TS, y: (laneRow + 1) * TS + 10 }];
+  return D.out({ spawn: { x: 45 * TS + 8, y: (QUEEN - 2) * TS + 8 }, lifeTokens });
 }

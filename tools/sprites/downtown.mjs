@@ -3,6 +3,7 @@
 // the Freedom Arches over the pool), Old City Hall's clock tower, and the news van bursting
 // out of the wall at Queen + John. All drawn for the 3/4 map (roof on top, facade below).
 import { Img, sheet } from '../lib/raster.mjs';
+import { scene, render, orthoCam } from '../lib/sdf.mjs';
 import { rng } from '../lib/rng.mjs';
 import { BRICKS, brickWall, sashWindow, storefront, roof } from './buildings.mjs';
 
@@ -120,51 +121,64 @@ export function downtownBuilding({ w = 64, d = 48, floors = 8, brick = 'red', gl
 
 // ---------------------------------------------------------------- landmarks
 
-/**
- * Toronto City Hall (Viljo Revell, 1965): two curved concrete towers of unequal height cradling the
- * white council-chamber saucer on its podium. Seen from the square (south) in 3/4.
- */
+/** Toronto City Hall (Viljo Revell, 1965). */
 export function cityHall() {
-  const W = 224, H = 172, img = new Img(W, H);
-  const base = H - 4;
-  // podium
-  img.rect(10, base - 22, W - 20, 22, 'T'); img.hline(10, W - 11, base - 22, 'W');
-  for (let x = 14; x < W - 14; x += 8) img.rect(x, base - 16, 4, 16, 'g');
-  img.hline(10, W - 11, base - 1, 'S');
-  // a curved tower: plan is a quarter-ellipse, so the south face shades from lit (outer) to dark (inner)
-  const tower = (x0, x1, top, flip) => {
-    for (let x = x0; x <= x1; x++) {
-      const t = (x - x0) / (x1 - x0), u = flip ? 1 - t : t; // 0 = outer edge, 1 = inner (facing the saucer)
-      const topY = top + Math.round(Math.pow(u, 2.2) * 10); // the curved back rises toward the outer edge
-      for (let y = topY; y < base - 22; y++) {
-        // vertical concrete fins every 3px with narrow glass between; shading follows the curve
-        const fin = (x - x0) % 3 === 0;
-        const shade = u < 0.35 ? 0 : u < 0.7 ? 1 : 2;
-        let c = fin ? ['W', 'H', 'h'][shade] : ['h', 'G', 'g'][shade];
-        if (!fin && (y - topY) % 6 === 0) c = ['H', 'h', 'G'][shade];
-        if (!fin && bay(x, y) < 0.12 && shade < 2) c = 'U';
-        img.set(x, y, c);
+  // v02 (Ivan's ref: city-hall.jpg). Two curved towers of unequal height facing each other: each shows its
+  // smooth white convex back on the outside and its dark, finely ribbed concave face on the inside; the
+  // roofs read as crescents. The white council saucer sits between them on the podium, with the
+  // elevated walkway ring sweeping across the front.
+  const W = 240, H = 214, img = new Img(W, H);
+  const base = H - 4, podTop = base - 30;
+  const tower = (x0, w, top, west) => {
+    const crown = 9; // the crescent roof band
+    for (let i = 0; i < w; i++) {
+      const t = i / (w - 1), u = west ? t : 1 - t; // u: 0 = outer edge -> 1 = inner (concave) edge
+      const outer = u < 0.5;
+      // the convex back curves away: brightest facing the light (west-ish), darkening toward the inner edge
+      for (let y = top + crown; y < podTop; y++) {
+        let c;
+        if (outer) {
+          const shade = west ? u : 0.5 - u + 0.2; // the west tower's back faces the sun
+          c = shade < 0.18 ? 'W' : shade < 0.36 ? 'H' : 'h';
+          if ((i + (west ? 0 : 1)) % 4 === 0) c = c === 'W' ? 'H' : c === 'H' ? 'h' : 'G'; // thin vertical ribs
+        } else {
+          // the concave face: dark glass between closely spaced pale fins, floor bands every 5px
+          const k = (u - 0.5) / 0.5;
+          c = i % 2 === 0 ? (k < 0.5 ? 'G' : 'g') : (k < 0.4 ? 'g' : 'k');
+          if ((y - top) % 5 === 0) c = k < 0.5 ? 'h' : 'G';
+          if (bay(i, y) < 0.06) c = 'U';
+        }
+        img.set(x0 + i, y, c);
       }
-      img.set(x, topY, 'W');
+      // the crescent roof: a curved band whose height follows the plan's curve
+      const curve = Math.sin(u * Math.PI) * 0.8 + 0.2;
+      const ry = Math.round(top + crown - curve * crown);
+      for (let y = ry; y < top + crown; y++) img.set(x0 + i, y, y === ry ? 'W' : outer ? 'H' : 'h');
+      img.set(x0 + i, top + crown, 'G');
     }
-    // the curved back's rim
-    img.vline(flip ? x1 : x0, top, base - 23, 'h');
+    // outer silhouette edge + the concave lip
+    img.vline(west ? x0 : x0 + w - 1, top + 2, podTop, 'h');
   };
-  tower(14, 92, 6, false);    // east tower (taller), drawn on the left from the square looking north? -> keep classic view: taller on the right
-  tower(132, 210, 36, true);
-  // swap visual heights: the east (right) tower is taller in the classic view from the square
-  const tmp = new Img(W, H); tmp.blit(img, 0, 0, { flipX: true }); img.px = tmp.px;
-  // redraw podium edge after flip (symmetric anyway)
-  // the saucer: white flattened dome on a slender stem, between the towers
-  const cx = W / 2, cy = base - 44;
-  img.rect(cx - 4, cy, 8, 22, 'h'); img.vline(cx - 4, cy, cy + 21, 'H');
-  img.ellipse(cx, cy, 44, 12, 'H');
-  img.ellipse(cx, cy - 3, 40, 10, 'W');
-  img.ellipse(cx, cy - 8, 26, 6, 'W');
-  img.hline(cx - 44, cx + 44, cy + 1, 'h');
-  for (let x = cx - 40; x <= cx + 40; x++) if (bay(x, cy + 3) < 0.5) img.set(x, cy + 3, 'G');
-  // ramp up to the podium roof garden
-  img.line(16, base - 2, 40, base - 22, 'S'); img.line(17, base - 2, 41, base - 22, 'S');
+  tower(22, 66, 52, true);    // west tower (20 storeys)
+  tower(150, 70, 14, false);  // east tower (27 storeys)
+  // podium: a long low block with a dark glazed band and columns
+  img.rect(8, podTop, W - 16, base - podTop, 'H'); img.hline(8, W - 9, podTop, 'W');
+  img.rect(12, podTop + 8, W - 24, 12, 'k');
+  for (let x = 14; x < W - 14; x += 7) img.rect(x, podTop + 8, 2, 12, 'h');
+  img.hline(8, W - 9, base - 1, 'S');
+  // the saucer: a flattened white dome on a dark drum, between the towers
+  const cx = 118, cy = podTop - 2;
+  img.rect(cx - 30, cy - 4, 60, 6, 'g');
+  img.ellipse(cx, cy - 6, 50, 9, 'h');
+  img.ellipse(cx, cy - 9, 47, 8, 'H');
+  img.ellipse(cx, cy - 12, 38, 7, 'W');
+  img.ellipse(cx - 8, cy - 14, 18, 3, 'W');
+  for (let x = cx - 50; x <= cx + 50; x++) if (bay(x, cy - 3) < 0.5) img.set(x, cy - 3, 'G');
+  // the elevated walkway ring across the front (a pale band on thin legs)
+  for (let x = 4; x < W - 4; x++) {
+    const t = (x - 4) / (W - 8), y = Math.round(base - 22 + Math.sin(t * Math.PI) * 9);
+    img.rect(x, y, 1, 3, 'T'); img.set(x, y - 1, 'W'); if (x % 14 === 0) img.vline(x, y + 3, base - 1, 'h');
+  }
   img.outline('K');
   img.pivot = { x: 0.5, y: base / H };
   return img;
@@ -213,66 +227,120 @@ export function freedomArches(w = 192) {
 
 /** Old City Hall (1899): Romanesque sandstone with the off-centre clock tower. Facade + roof, 3/4. */
 export function oldCityHall(w = 160, d = 64) {
+  // v02 (Ivan's photo): banded sandstone with red-brown string courses, rows of round-arched windows,
+  // steep brown metal roofs with conical corner turrets, a front gable with a rose window, and the
+  // clock tower (right of centre) with an arcaded belfry, four clocks and a tall pyramid spire.
   const r = rng(1899);
-  const facH = 58, towerW = 22, towerH = 96;
-  const H = d + facH + towerH - 30, img = new Img(w, H);
-  const top = towerH - 30; // roof starts here
-  // roof: grey slate hips (a long ridge, sloped ends) with copper-green corner turrets + cresting
+  const facH = 62, towerW = 26, spire = 46, towerAbove = 78;
+  const top = towerAbove + spire;                  // roof starts here
+  const H = top + d + facH, img = new Img(w, H);
+  const STONE = 'j', BAND = 'x', DARK = 'X';
+  // ---- roof: steep brown hips seen from above, with ridge, turrets and dormers ----
   for (let y = 0; y < d; y++) for (let x = 0; x < w; x++) {
     const toRidge = Math.abs(y - d / 2), endSlope = Math.min(x, w - 1 - x);
-    const north = y < d / 2;
-    let c = endSlope < toRidge ? (x < w / 2 ? 'G' : 'g') : north ? 'G' : 'g';
-    if ((x * 3 + y * 5) % 11 === 0) c = 's';
+    let c = endSlope < toRidge ? (x < w / 2 ? 'x' : 'w') : y < d / 2 ? 'x' : 'w';
+    if ((x + y * 2) % 6 === 0) c = c === 'x' ? 'X' : 'x'; // standing-seam metal lines
     img.set(x, top + y, c);
   }
-  img.hline(Math.round(d / 2), w - 1 - Math.round(d / 2), top + Math.round(d / 2), 'h');
-  for (let x = Math.round(d / 2); x < w - d / 2; x += 3) img.set(x, top + Math.round(d / 2) - 1, 'K');
-  for (const [cx, cy] of [[6, top + 6], [w - 7, top + 6], [6, top + d - 6], [w - 7, top + d - 6]]) { img.circle(cx, cy, 5, 'f'); img.circle(cx - 1, cy - 1, 3, 'F'); img.set(cx, cy - 1, 'C'); }
-  img.hline(0, w - 1, top, 'h');
-  // facade: sandstone with rusticated courses, round-arched windows
+  img.hline(Math.round(d / 2), w - 1 - Math.round(d / 2), top + Math.round(d / 2), 'j');
+  // corner turrets (conical, seen from above as rings) + small chimneys
+  for (const [cx, cy] of [[7, top + 7], [w - 8, top + 7], [7, top + d - 7], [w - 8, top + d - 7]]) { img.circle(cx, cy, 6, 'w'); img.circle(cx, cy, 4, 'x'); img.circle(cx - 1, cy - 1, 2, 'X'); img.set(cx, cy, 'j'); }
+  for (const cx of [40, 72, 112]) { img.rect(cx, top + 10, 4, 6, STONE); img.hline(cx, cx + 3, top + 10, 'D'); }
+  // ---- facade ----
   const fy = top + d;
-  const sand = { base: 'j', dark: 'X', light: 'D' };
-  brickWall(img, 0, fy, w, facH, sand, r, true);
-  for (let y = fy; y < fy + facH; y += 4) img.hline(0, w - 1, y, 'X');
-  for (let f = 0; f < 3; f++) for (let x = 8; x < w - 8; x += 12) {
-    const wy = fy + 6 + f * 16;
-    img.rect(x, wy, 6, 10, 'u'); img.set(x, wy, 'j'); img.set(x + 5, wy, 'j'); img.hline(x, x + 5, wy - 1, 'X'); img.set(x + 1, wy + 1, 'c');
+  img.rect(0, fy, w, facH, STONE);
+  for (let y = fy; y < fy + facH; y++) for (let x = 0; x < w; x++) if ((x * 7 + y * 3) % 23 === 0) img.set(x, y, 'D'); // stone texture
+  for (let y = fy + 3; y < fy + facH; y += 8) img.hline(0, w - 1, y, BAND);   // red-brown string courses
+  img.rect(0, fy + facH - 8, w, 8, BAND); img.hline(0, w - 1, fy + facH - 8, DARK); // rusticated base
+  // three rows of round-arched windows in pairs
+  for (let row = 0; row < 3; row++) {
+    const wy = fy + 6 + row * 16, wh = row === 0 ? 8 : 10;
+    for (let x = 6; x < w - 8; x += 9) {
+      if (x > w * 0.62 - 4 && x < w * 0.62 + towerW + 2) continue; // the tower base
+      img.rect(x, wy + 2, 5, wh - 2, 'u'); img.hline(x + 1, x + 3, wy + 1, 'u'); img.set(x + 2, wy, 'u');
+      img.hline(x - 1, x + 5, wy - 1, BAND); img.set(x + 1, wy + 3, 'c');
+      if (row === 2) img.vline(x + 2, wy + 2, wy + wh - 1, STONE);
+    }
   }
-  // grand entrance arches
+  // front gable with a rose window, left of the tower
+  const gx = Math.round(w * 0.28);
+  img.poly([[gx - 18, fy + 2], [gx, fy - 20], [gx + 18, fy + 2]], STONE);
+  img.poly([[gx - 20, fy + 2], [gx, fy - 22], [gx + 20, fy + 2], [gx + 18, fy + 2], [gx, fy - 19], [gx - 18, fy + 2]], 'x');
+  img.circle(gx, fy - 6, 4, 'u'); img.circle(gx, fy - 6, 4, BAND, false); img.set(gx, fy - 6, 'c');
+  // the grand entrance arches (centre-left)
   const ex = Math.round(w * 0.42);
-  for (let k = 0; k < 3; k++) { const ax = ex + k * 10; img.rect(ax, fy + facH - 16, 8, 16, 'k'); img.ellipse(ax + 4, fy + facH - 16, 4, 3, 'k'); }
-  // clock tower (right of centre)
-  const tx = Math.round(w * 0.6);
-  brickWall(img, tx, 0, towerW, top + d + 6, sand, r, true);
-  for (let y = 4; y < top + d; y += 4) img.hline(tx, tx + towerW - 1, y, 'X');
-  img.poly([[tx - 2, 8], [tx + towerW / 2, -18], [tx + towerW + 2, 8]], 'f'); // spire (clipped by the canvas top is fine)
-  img.rect(tx - 2, 8, towerW + 4, 3, 'F');
+  for (let k = 0; k < 3; k++) { const ax = ex + k * 9; img.rect(ax, fy + facH - 18, 7, 18, 'k'); img.ellipse(ax + 3, fy + facH - 18, 3, 3, 'k'); img.hline(ax - 1, ax + 7, fy + facH - 22, BAND); }
+  // ---- the clock tower ----
+  const tx = Math.round(w * 0.62), tTop = spire; // tower shaft top (below the spire)
+  img.rect(tx, tTop, towerW, fy + facH - tTop, STONE);
+  for (let y = tTop + 4; y < fy + facH; y += 7) img.hline(tx, tx + towerW - 1, y, BAND);
+  img.vline(tx, tTop, fy + facH - 1, 'X'); img.vline(tx + towerW - 1, tTop, fy + facH - 1, 'w');
+  // corner gargoyles / pinnacles at the clock stage
+  img.rect(tx - 2, tTop + 18, 3, 3, 'X'); img.rect(tx + towerW - 1, tTop + 18, 3, 3, 'X');
   // clock faces
-  const cy = 24; img.circle(tx + towerW / 2, cy, 6, 'W'); img.circle(tx + towerW / 2, cy, 6, 'K', false); img.vline(tx + towerW / 2, cy - 4, cy, 'K'); img.hline(tx + towerW / 2, tx + towerW / 2 + 3, cy, 'K');
-  for (let y = cy + 12; y < top + d - 6; y += 10) img.rect(tx + towerW / 2 - 2, y, 4, 6, 'u');
+  const cy = tTop + 10, ccx = tx + Math.round(towerW / 2);
+  img.circle(ccx, cy, 7, 'K'); img.circle(ccx, cy, 6, 'k'); img.circle(ccx, cy, 6, 'D', false);
+  img.vline(ccx, cy - 4, cy, 'W'); img.hline(ccx, ccx + 3, cy, 'W');
+  // arcaded belfry: tall paired round arches
+  for (let k = 0; k < 3; k++) { const ax = tx + 4 + k * 7; img.rect(ax, tTop + 24, 4, 16, 'k'); img.hline(ax + 1, ax + 2, tTop + 23, 'k'); img.vline(ax + 2, tTop + 25, tTop + 39, STONE); }
+  for (let k = 0; k < 3; k++) { const ax = tx + 4 + k * 7; img.rect(ax, tTop + 46, 4, 8, 'u'); img.hline(ax + 1, ax + 2, tTop + 45, 'u'); }
+  // the pyramid spire with a finial
+  img.poly([[tx - 2, tTop + 1], [ccx, 2], [tx + towerW + 2, tTop + 1]], 'x');
+  img.poly([[ccx, 2], [tx + towerW + 2, tTop + 1], [ccx, tTop + 1]], 'w');
+  for (let y = 8; y < tTop; y += 4) { const hw = ((y - 2) / (tTop - 1)) * (towerW / 2 + 2); img.hline(Math.round(ccx - hw), Math.round(ccx + hw), y, 'X'); }
+  img.rect(tx - 3, tTop, towerW + 6, 3, BAND);
+  img.vline(ccx, 0, 3, 'g');
   img.outline('K');
   return { img, footprint: { w, d }, facadeH: facH };
 }
 
-/** The news van bursting out of the wall at Queen + John (299 Queen St W). */
+/**
+ * The news van bursting out of the east wall of 299 Queen W (v02: brighter, bigger, facing east).
+ * Its rear is buried in a ragged brick hole on the left; the front hangs out over John St.
+ */
 export function newsVan() {
   const img = Img.fromGrid(`
-.........KKKKKKKKKK....
-........KWWWWWWWWWK....
-.......KWccWWRRRWWK....
-......KWcccWWRRRWWKKK..
-.....KWWcccWWWWWWWWWHK.
-....KKKKKKKKKKKKKKKKKK.
-....KHHHHHHHHHHHHHHHHK.
-....KHRRRRHHHHHHHHHYYK.
-....KHHHHHHHHHHHHHHHHK.
-....KKKKKKKKKKKKKKKKKK.
-......KkkK......KkkK...
-......KkgK......KkgK...
-.......KK........KK....`);
-  // broken bricks around the hole
-  img.set(2, 3, 'B'); img.set(1, 6, 'b'); img.set(3, 9, 'B'); img.set(0, 4, 'n');
-  img.pivot = { x: 0.5, y: 1 };
+..bnB...............................
+.nBbB.KKKKKKKKKKKKKKKKKKKKK.........
+BbnB.KWWWWWWWWWWWWWWWWWWWWWK........
+.bBbKWRRRRRRRRRRRRRWWKKKKKKWK.......
+nBb.KWRWWWWRWWWWRRRWWKccccUUWK......
+.bBnKWRWRRRRWRRRWRRWWKcccUUUUWK.....
+BbB.KWRWWWWRWWWWRRRWWKccUUUUUUWK....
+.nbBKWWWWWWWWWWWWWWWWWWWWWWWWWWWKK..
+bB.nKUUUUUUUUUUUUUUUUUUUUUUUUUUUWYK.
+.BbbKWWWWWWWWWWWWWWWWWWWWWWWWWWWWYK.
+nB.BKhhhhhhhhhhhhhhhhhhhhhhhhhhhhhK.
+.bBnKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK.
+bBn.....KKKK...............KKKK.....
+.B......KggK...............KggK.....
+........KKKK...............KKKK.....`);
+  img.pivot = { x: 0.15, y: 1 };
+  return img;
+}
+
+/**
+ * One Freedom Arch (M2.1, Ivan: the arches span the pool top to bottom). A concrete half-ring standing
+ * in the north-south plane, rendered with the 3/4 props camera so the far leg rises behind the near one.
+ * Pivot = the arch's centre on the water.
+ */
+export function freedomArch(span = 60, rise = 34) {
+  const R = span / 2, tube = 2.4;
+  const ELEV = (32 * Math.PI) / 180;
+  // seen slightly from the west (like the reference photo) so the curve of each arch reads
+  const YAW = (28 * Math.PI) / 180;
+  const cam = orthoCam([Math.sin(YAW) * Math.cos(ELEV), -Math.cos(YAW) * Math.cos(ELEV), -Math.sin(ELEV)]);
+  // a half torus: ring in the y-z plane (axis x), only above the water; squashed vertically to `rise`
+  const sq = rise / R;
+  const d = (p) => {
+    const y = p[1], z = p[2] / sq;
+    const q = Math.hypot(Math.hypot(y, z) - R, p[0]) - tube;
+    return p[2] < 0 ? Math.max(q, -p[2]) : q;
+  };
+  const w = Math.ceil(R * 2 * Math.sin(YAW)) + 12, h = Math.ceil(rise * Math.cos(ELEV) + R * Math.sin(ELEV) * 2 + 12);
+  const oy = Math.round(h - 4 - R * Math.sin(ELEV));
+  const img = render(scene([{ d, m: { ramp: ['h', 'H', 'W', 'W'] } }]), { w, h, cx: w / 2, cy: oy, cam, ambient: 0.35 });
+  img.pivot = { x: 0.5, y: oy / h };
   return img;
 }
 
@@ -295,7 +363,7 @@ export function downtownPreview() {
     downtownBuilding({ w: 80, floors: 8, glass: 'dark', seed: 3 }).img,
     downtownBuilding({ w: 64, floors: 4, brick: 'red', seed: 4, kind: 'warehouse' }).img,
     downtownBuilding({ w: 48, floors: 5, brick: 'buff', seed: 5, kind: 'warehouse' }).img,
-    oldCityHall().img, cityHall(), torontoSign(), freedomArches(), newsVan(),
+    oldCityHall().img, cityHall(), torontoSign(), freedomArch(), newsVan(),
   ];
   return { frames, cols: 5 };
 }

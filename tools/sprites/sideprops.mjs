@@ -116,26 +116,61 @@ export function humpSide() {
   img.pivot = { x: 0.5, y: 0.9 };
   return img;
 }
-export function raisedCrossSide() {
-  const img = new Img(64, 12);
-  img.poly([[0, 11], [8, 3], [56, 3], [64, 11]], 'B');
-  for (let x = 8; x < 56; x += 6) img.rect(x, 3, 3, 8, 'W');
-  img.hline(8, 55, 3, 'n');
-  img.outline('K');
-  img.pivot = { x: 0.5, y: 0.95 };
+/**
+ * Raised crosswalk (v02, Ivan: "should go top-to-bottom across the road, with the lines along the road").
+ * In the side view the crossing runs from the far curb down to the near edge of the road: a raised grey
+ * table with ramps on both sides and zebra bars running along the road. Origin: top-left at the curb.
+ */
+export function raisedCrossSide(h = 54) {
+  const W = 46, img = new Img(W, h);
+  img.rect(6, 0, W - 12, h, 'S');
+  for (let y = 3; y < h - 1; y += 6) img.rect(9, y, W - 18, 3, 'W');        // zebra bars, along the road
+  img.poly([[0, h], [6, h], [6, 0], [3, 0]], 'g'); img.poly([[W, h], [W - 6, h], [W - 6, 0], [W - 3, 0]], 'g'); // ramps
+  for (let y = 2; y < h; y += 5) { img.set(2 + (y % 2), y, 'y'); img.set(W - 3 - (y % 2), y, 'y'); }
+  img.hline(6, W - 7, 0, 'H');
+  img.pivot = { x: 0.5, y: 0 };
   return img;
 }
+
+/** Curb extension (v02): the sidewalk bulges into the curb lane, with a tree, planting and bollards. */
 export function curbExtSide() {
-  const img = new Img(44, 30);
-  img.rect(0, 22, 44, 8, 'T'); img.hline(0, 43, 22, 'W');
-  img.rect(6, 12, 30, 10, 'S'); img.ellipse(14, 10, 8, 6, 'E'); img.ellipse(26, 9, 9, 7, 'l'); img.ellipse(21, 6, 5, 4, 'L');
-  img.set(13, 8, 'P'); img.set(28, 7, 'y');
+  const W = 60, H = 62, img = new Img(W, H);
+  const top = 30; // sidewalk level row in this image (aligned to the street strip's sidewalk)
+  // the bulb-out: a rounded sidewalk tongue reaching ~14px into the road
+  img.poly([[2, top + 16], [8, top + 30], [W - 8, top + 30], [W - 2, top + 16]], 't');
+  img.hline(8, W - 9, top + 30, 'T'); img.hline(8, W - 9, top + 31, 'g');
+  img.line(2, top + 16, 8, top + 30, 'T'); img.line(W - 2, top + 16, W - 8, top + 30, 'T');
+  for (let x = 10; x < W - 10; x += 6) img.set(x, top + 22, 'S');
+  // planting bed + a young tree
+  img.ellipse(W / 2, top + 22, 14, 4, 'E'); img.ellipse(W / 2 - 4, top + 21, 6, 2, 'l'); img.set(W / 2 + 6, top + 21, 'P'); img.set(W / 2 - 8, top + 22, 'y');
+  img.rect(W / 2 - 1, top - 2, 2, 24, 'w');
+  img.ellipse(W / 2, top - 8, 12, 10, 'E'); img.ellipse(W / 2 - 3, top - 11, 7, 5, 'l'); img.ellipse(W / 2 + 4, top - 5, 4, 3, 'e');
+  // bollards on the corner
+  for (const bx of [8, W - 9]) { img.rect(bx, top + 18, 3, 9, 'W'); img.rect(bx, top + 20, 3, 2, 'R'); }
   img.outline('K');
+  img.pivot = { x: 0.5, y: (top + 30) / H };
+  return img;
+}
+
+/** Extra life: a golden raccoon token, hidden on the maps (2 frames: a glint). */
+export function lifeToken(frame = 0) {
+  const img = Img.fromGrid(`
+...KKKKK...
+..KyyyyyK..
+.KyKKyKKyK.
+KyKhKyKhKyK
+KyKWKyKWKyK
+KyyKKKKKyyK
+KyyyKkKyyyK
+.KyyyKyyyK.
+..KyyyyyK..
+...KKKKK...`);
+  if (frame) { img.set(3, 2, 'Y'); img.set(2, 3, 'Y'); img.set(3, 3, 'W'); }
   img.pivot = { x: 0.5, y: 1 };
   return img;
 }
 
 export function sidePropsPreview() {
-  const frames = [signalPole('red'), signalPole('green'), signalPole('tsp'), vanSide(), suvRatSide(1), desk(), stamp(), camCarried(), buildSpot(), humpSide(), raisedCrossSide(), curbExtSide()];
+  const frames = [signalPole('red'), signalPole('green'), signalPole('tsp'), vanSide(), suvRatSide(1), desk(), stamp(), camCarried(), buildSpot(), humpSide(), raisedCrossSide(), curbExtSide(), lifeToken(0), lifeToken(1)];
   return { frames, cols: 12 };
 }

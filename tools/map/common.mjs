@@ -135,11 +135,16 @@ export class District {
     this.walkways.push([[0, (row - 2) * TS + 6], [this.W * TS, (row - 2) * TS + 6]], [[0, (row + 5) * TS + 10], [this.W * TS, (row + 5) * TS + 10]]);
   }
   nsLanes(id, c, extra = {}, y0 = 0, y1 = this.H) {
-    this.lanes.push({ id: `${id}_sb`, axis: 'y', dir: 1, pos: (c + 1) * TS + 8, ...extra }, { id: `${id}_nb`, axis: 'y', dir: -1, pos: (c + 2) * TS + 8, ...extra });
+    // a street that doesn't run the whole map (John St: Queen -> King) keeps its traffic to its own length
+    const range = y0 > 0 || y1 < this.H ? { range: [y0 * TS, y1 * TS] } : {};
+    this.lanes.push({ id: `${id}_sb`, axis: 'y', dir: 1, pos: (c + 1) * TS + 8, ...extra, ...range }, { id: `${id}_nb`, axis: 'y', dir: -1, pos: (c + 2) * TS + 8, ...extra, ...range });
     this.walkways.push([[c * TS + 5, y0 * TS], [c * TS + 5, y1 * TS]], [[(c + 3) * TS + 11, y0 * TS], [(c + 3) * TS + 11, y1 * TS]]);
   }
-  /** A street that continues into the neighbouring district across the map edge. */
-  exit(side, row, to) { this.exits.push({ side, y0: (row - 3) * TS, y1: (row + 7) * TS, to }); }
+  /**
+   * A street that continues into the neighbouring district across the map edge. Exits are matched by
+   * street name, not by row (M2.1, Ivan): maps can differ in size and street rows can differ.
+   */
+  exit(side, row, to, street) { this.exits.push({ side, y0: (row - 3) * TS, y1: (row + 7) * TS, to, street }); }
 
   out(extra = {}) {
     for (const l of this.lanes) { delete l.stopsWB; delete l.stopsEB; if (l.stops === undefined) delete l.stops; }

@@ -8,13 +8,15 @@ import { TouchControls, wantsTouch } from '../input/TouchControls';
 import { SidePlayer, SIDE, type Hitbox } from '../action/SidePlayer';
 import { Rat, type RatKind } from '../action/Rat';
 import { SuvRat } from '../action/SuvRat';
-import { Bureaucrat } from '../action/Bureaucrat';
+import { Boss } from '../action/Boss';
 import { Escort } from '../action/Escort';
 import { Chase, BuildSpots } from '../action/Parkside';
 import { MISSIONS, type MissionDef } from '../data/missions';
 import { ctx } from '../core/ctx';
-import { text, iris, shake, hitStop, puff, floatText } from '../ui/fx';
+import { START_LIVES } from '../core/GameState';
+import { text, iris, shake, hitStop, puff, floatText, fitText } from '../ui/fx';
 import { openPause } from './PauseScene';
+import { ScrollLayer, STREET_Y, GROUND_Y, FRONT_Y, BACKROW_Y, SKYLINE_Y } from '../ui/sideLayout';
 import { music } from '../audio/Sequencer';
 import { SONG_ACTION } from '../audio/songs';
 import { sfx } from '../audio/sfx';
@@ -30,21 +32,23 @@ export class ActionScene extends Phaser.Scene {
   private player!: SidePlayer;
   private rats: Rat[] = [];
   private cars: SuvRat[] = [];
-  private boss?: Bureaucrat;
+  private boss?: Boss;
+  private dogFraud?: Phaser.GameObjects.Image;
+  private lowHpT = 0;
   private escort?: Escort;
   private chase?: Chase;
   private build?: BuildSpots;
   private cones!: Phaser.Physics.Arcade.Group;
   private ground!: Phaser.GameObjects.Zone;
   private platforms!: Phaser.Physics.Arcade.StaticGroup;
-  private layers: { ts: Phaser.GameObjects.TileSprite; f: number }[] = [];
+  private layers: ScrollLayer[] = [];
   private waveIdx = 0;
   private lock: Lock | null = null;
   private bossDone = false;
   private buildDone = false;
   private chaseDone = false;
   private worldW = 0;
-  private groundY = 194;
+  private groundY = GROUND_Y;
   private hud!: { g: Phaser.GameObjects.Graphics; label: Phaser.GameObjects.BitmapText; go: Phaser.GameObjects.BitmapText };
   private finished = false;
   private killed = 0;
@@ -59,7 +63,7 @@ export class ActionScene extends Phaser.Scene {
     this.bossDone = false; this.buildDone = false; this.chaseDone = false;
     this.input2 = new InputManager(this);
     const a = this.mission.action;
-    this.groundY = a.groundY ?? 194;
+    this.groundY = a.groundY ?? GROUND_Y;
     this.worldW = a.length + GAME_W;
     this.physics.world.gravity.y = SIDE.gravity;
     this.physics.world.setBounds(0, 0, this.worldW, GAME_H + 100);
@@ -86,7 +90,7 @@ export class ActionScene extends Phaser.Scene {
 
     if (a.escort) this.escort = new Escort(this, a.escort, -30);
     if (a.chase) this.chase = new Chase(this, a.chase, 60, this.groundY);
-    if (a.build) this.add.image(a.build.at + 60, 168, 'school_side').setOrigin(0, 1).setDepth(2);
+    if (a.build) this.add.image(a.build.at + 60, STREET_Y, 'school_side').setOrigin(0, 1).setDepth(2);
 
     const cam = this.cameras.main;
     cam.setBounds(0, 0, this.worldW, GAME_H).setRoundPixels(true);
@@ -108,7 +112,7 @@ export class ActionScene extends Phaser.Scene {
         while (this.waveIdx < a2.waves.length && a2.waves[this.waveIdx].at < x) this.waveIdx++;
         if (a2.chase && x > a2.chase.pondAt - 200) { this.chaseDone = true; this.chase?.camImage.setVisible(false); }
         this.player.body.reset(x, this.groundY - 10);
-      }, rats: () => this.rats.filter((r) => r.alive).length, win: () => this.win(),
+      }, rats: () => this.rats.filter((r) => r.alive).length, win: () => this.win(), boss: () => this.boss,
       state: () => (!this.sys.isActive() ? { finished: true } : { x: this.player.sprite.x, frozen: this.player.frozen, hp: this.player.hp,
         rats: this.rats.filter((r) => r.alive).map((r) => Math.round(r.sprite.x)), carsAt: this.cars.filter((c) => c.alive && !c.tame).map((c) => [Math.round(c.x), c.dir]), bossX: this.boss?.alive ? Math.round(this.boss.sprite.x) : null,
         front: this.escort ? Math.round(this.escort.front) : null, haul: this.chase ? Math.round(this.chase.rearX) : null, lock: this.lock?.kind ?? null, wave: this.waveIdx, boss: this.boss ? this.boss.hp : null, escort: this.escort ? { car: Math.round(this.escort.car.x), delay: +this.escort.delay.toFixed(1), done: this.escort.done } : null, chase: this.chase?.state ?? null, built: this.build?.built ?? null, cars: this.cars.filter((c) => c.alive).length, finished: this.finished, camX: Math.round(this.cameras.main.scrollX) }) };
@@ -116,17 +120,14 @@ export class ActionScene extends Phaser.Scene {
 
   private buildBackground() {
     const a = this.mission.action, sky = a.sky;
-    this.add.image(0, 0, `sky_${sky}`).setOrigin(0).setScrollFactor(0);
-    const layer = (key: string, y: number, h: number, f: number) => {
-      const ts = this.add.tileSprite(0, y, GAME_W, h, key).setOrigin(0).setScrollFactor(0);
-      this.layers.push({ ts, f });
-    };
-    layer(`skyline_${sky}`, 30, 170, 0.08);
+    const layer = (key: string, y: number, f: number) => this.layers.push(new ScrollLayer(this, key, y, f));
+    layer(`sky_${sky}`, 0, 0);
+    layer(`skyline_${sky}`, SKYLINE_Y, 0.08);
     // the front row (buildings or park) and the sidewalk scroll together as one plane (Ivan, M1.1)
-    if (a.bg === 'king') layer('facades_dt', 28, 140, 1.0);
-    else if (a.bg === 'parkside') layer('park_hp', 48, 120, 1.0);
-    else { layer(`backrow_${sky}`, 96, 80, 0.3); layer('facades_qw', 72, 96, 1.0); }
-    layer(`street_${a.street}`, 168, 64, 1.0);
+    if (a.bg === 'king') layer('facades_dt', FRONT_Y.king, 1.0);
+    else if (a.bg === 'parkside') layer('park_hp', FRONT_Y.parkside, 1.0);
+    else { layer(`backrow_${sky}`, BACKROW_Y, 0.3); layer('facades_qw', FRONT_Y.queen, 1.0); }
+    layer(`street_${a.street}`, STREET_Y, 1.0);
   }
 
   private queenDecor() {
@@ -146,11 +147,12 @@ export class ActionScene extends Phaser.Scene {
     this.player.frozen = true;
     await iris(this, 'open', 80, this.groundY - 20, 500);
     const a = this.mission.action;
-    const t1 = text(this, GAME_W / 2, 60, this.mission.title, 'font_big').setScrollFactor(0).setDepth(1000).setScale(0.1);
-    this.tweens.add({ targets: t1, scale: 1, duration: 300, ease: 'Back.easeOut' });
-    const t2 = text(this, GAME_W / 2, 84, a.intro, 'font_outline').setScrollFactor(0).setDepth(1000);
+    const t1 = text(this, GAME_W / 2, 56, this.mission.title, 'font_big').setScrollFactor(0).setDepth(1000);
+    const s1 = fitText(t1, GAME_W - 16); t1.setScale(0.1);
+    this.tweens.add({ targets: t1, scale: s1, duration: 300, ease: 'Back.easeOut' });
+    const t2 = fitText(text(this, GAME_W / 2, 80, a.intro, 'font_outline').setScrollFactor(0).setDepth(1000), GAME_W - 16, true);
     const hint = a.hint ? (wantsTouch() ? a.hint[1] : a.hint[0]) : wantsTouch() ? 'RED: PUMP   BLUE: DASH   GREEN: JUMP' : 'E: PUMP (3-HIT COMBO)   Q: DASH   SPACE: JUMP';
-    const t3 = text(this, GAME_W / 2, 100, hint, 'font').setScrollFactor(0).setDepth(1000).setTint(0xfff08a);
+    const t3 = fitText(text(this, GAME_W / 2, 80 + t2.height + 8, hint, 'font').setScrollFactor(0).setDepth(1000).setTint(0xfff08a), GAME_W - 16, true);
     sfx.bell();
     await new Promise((r) => this.time.delayedCall(2600, r));
     t1.destroy(); t2.destroy(); t3.destroy();
@@ -159,8 +161,10 @@ export class ActionScene extends Phaser.Scene {
   }
 
   private flashGo(msg: string) {
-    this.hud.go.setText(msg).setAlpha(1).setScale(1.5);
-    this.tweens.add({ targets: this.hud.go, scale: 1, duration: 200 });
+    this.hud.go.setText(msg).setScale(1);
+    const s = fitText(this.hud.go, GAME_W - 16);
+    this.hud.go.setAlpha(1).setScale(s * 1.5);
+    this.tweens.add({ targets: this.hud.go, scale: s, duration: 200 });
     this.tweens.add({ targets: this.hud.go, alpha: 0, delay: 900, duration: 300 });
   }
 
@@ -173,7 +177,7 @@ export class ActionScene extends Phaser.Scene {
 
   private layoutHud() {
     this.hud.label.setX(GAME_W / 2); this.hud.go.setX(GAME_W / 2);
-    for (const l of this.layers) l.ts.setSize(GAME_W, l.ts.height);
+    for (const l of this.layers) l.refit();
     if (wantsTouch() && window.innerHeight > window.innerWidth && !this.finished) openPause(this);
   }
 
@@ -182,16 +186,23 @@ export class ActionScene extends Phaser.Scene {
     g.clear();
     const a = this.mission.action;
     if (!a.noCombat) {
+      // hearts: the last one blinks when you're one hit from losing a life
+      const blink = this.player.hp === 1 && Math.floor(this.time.now / 180) % 2 === 0;
       for (let i = 0; i < SIDE.maxHp; i++) {
         const x = 8 + i * 12, y = 8, full = i < this.player.hp;
         g.fillStyle(0x16121f).fillRect(x - 1, y - 1, 11, 10);
-        g.fillStyle(full ? 0xd42a24 : 0x443f54);
+        g.fillStyle(full ? (blink ? 0xfff08a : 0xd42a24) : 0x443f54);
         g.fillRect(x, y + 1, 9, 4).fillRect(x + 1, y, 3, 1).fillRect(x + 5, y, 3, 1).fillRect(x + 1, y + 5, 7, 1).fillRect(x + 2, y + 6, 5, 1).fillRect(x + 3, y + 7, 3, 1);
         if (full) g.fillStyle(0xff6347).fillRect(x + 1, y + 1, 2, 1);
       }
+      // lives: raccoon tokens (lose all hearts = lose a life and restart the mission)
+      for (let i = 0; i < Math.min(ctx.state.lives, 9); i++) {
+        const x = 9 + i * 8, y = 20;
+        g.fillStyle(0x16121f).fillCircle(x + 3, y + 3, 4).fillStyle(0xf5c22e).fillCircle(x + 3, y + 3, 3).fillStyle(0x2a2536).fillRect(x + 1, y + 2, 5, 1).fillStyle(0xf6f2e9).fillRect(x + 2, y + 2, 1, 1).fillRect(x + 4, y + 2, 1, 1);
+      }
     }
     // stamina
-    const sy = a.noCombat ? 8 : 20;
+    const sy = a.noCombat ? 8 : 30;
     g.fillStyle(0x16121f).fillRect(7, sy, 52, 4).fillStyle(this.player.stamina > 35 ? 0xf5c22e : 0xd42a24).fillRect(8, sy + 1, (50 * this.player.stamina) / 100, 2);
     const alive = this.rats.filter((r) => r.alive).length + this.cars.filter((c) => c.alive).length;
     if (this.escort) {
@@ -199,10 +210,11 @@ export class ActionScene extends Phaser.Scene {
       const w = 120, x = GAME_W / 2 - w / 2, v = this.escort.onTime;
       g.fillStyle(0x16121f).fillRect(x - 1, 17, w + 2, 7).fillStyle(0x443f54).fillRect(x, 18, w, 5).fillStyle(v > 0.5 ? 0x9bd35a : v > 0.25 ? 0xf5c22e : 0xd42a24).fillRect(x, 18, w * v, 5);
       this.hud.label.setText(this.escort.v < 6 && this.escort.delay > 0 ? '501: DELAYED!' : '501 QUEEN: ON TIME');
+      this.escort.drawStrip(g, this.player.sprite.x);
     } else if (this.boss?.alive) {
       const w = 140, x = GAME_W / 2 - w / 2;
       g.fillStyle(0x16121f).fillRect(x - 1, 17, w + 2, 7).fillStyle(0x443f54).fillRect(x, 18, w, 5).fillStyle(0x7d47a8).fillRect(x, 18, (w * this.boss.hp) / this.boss.maxHp, 5);
-      this.hud.label.setText('THE BUREAUCRAT RAT');
+      this.hud.label.setText(this.boss.title);
     } else if (this.chase && this.chase.state === 'run') {
       const gap = Math.max(0, Math.round((this.chase.rearX - this.player.sprite.x) / 10));
       const toPond = Math.max(0, Math.round((this.mission.action.chase!.pondAt - this.chase.x) / 10));
@@ -223,6 +235,13 @@ export class ActionScene extends Phaser.Scene {
     this.player.body.setCollideWorldBounds(true);
     this.lock = { kind, left, startKills: this.killed, total, suvsLeft: suvs, suvT: 0.8 };
     return this.lock;
+  }
+
+  /** an arena beat is over: the mission ends if it was the last one, otherwise ride on */
+  private endArena(msg = 'GO! >>') {
+    this.lock = null;
+    if (this.allBeatsDone()) { this.time.delayedCall(700, () => void this.win()); return; }
+    this.unlock(msg);
   }
 
   private unlock(msg = 'GO! >>') {
@@ -281,11 +300,17 @@ export class ActionScene extends Phaser.Scene {
 
   private startBoss() {
     const l = this.lockArena('boss', 0);
-    this.boss = new Bureaucrat(this, l.left + GAME_W - 80, this.groundY, {
+    const kind = this.mission.action.boss?.kind ?? 'bureaucrat';
+    if (kind === 'bureaucrat') {
+      // Dog Fraud watches from his podium on the sidewalk (Ivan: "where was Dog Fraud?")
+      this.dogFraud = this.add.image(l.left + 70, STREET_Y + 10, 'chars', 'dfs_pod').setOrigin(0.5, 0.97).setDepth(20);
+      this.time.delayedCall(400, () => { if (this.dogFraud) { floatText(this, l.left + GAME_W / 2, this.dogFraud.y - 84, 'GET HIM, PAPERWORK!', 'font_red', 0xffffff, 1400); sfx.laugh(); this.dogFraud.setFrame('dfs_podlaugh'); this.time.delayedCall(1500, () => this.dogFraud?.setFrame('dfs_pod')); } });
+    }
+    this.boss = new Boss(this, l.left + GAME_W - 90, this.groundY, {
       summon: (x) => { this.spawnRat('basic', Math.min(l.left + GAME_W + 10, x + 120)); this.time.delayedCall(400, () => this.spawnRat('basic', l.left - 10)); },
       clerksAlive: () => this.rats.filter((r) => r.alive).length,
       hurtPlayer: (fx) => { if (this.player.hurt(fx)) { shake(this, 140, 0.01); hitStop(this, 70); } },
-    });
+    }, kind);
     this.physics.add.collider(this.boss.sprite, this.ground);
     this.flashGo('BOSS!');
     music.play(SONG_ACTION);
@@ -308,28 +333,49 @@ export class ActionScene extends Phaser.Scene {
     sfx.ding();
     const a = this.mission.action;
     const head = a.escort ? 'RIGHT ON TIME!' : a.build ? 'SCHOOL ZONE SLOWED!' : 'STREET CLEARED!';
-    const t = text(this, GAME_W / 2, 70, head, 'font_big').setScrollFactor(0).setDepth(3000).setScale(0.1);
-    this.tweens.add({ targets: t, scale: 1, duration: 300, ease: 'Back.easeOut' });
-    const sub = this.escort ? `DELAY: ${this.escort.delay.toFixed(1)} S   CLEARED: ${this.escort.cleared}` : `RATS DEFEATED: ${this.killed}`;
-    text(this, GAME_W / 2, 92, sub, 'font_outline').setScrollFactor(0).setDepth(3000);
+    const t = text(this, GAME_W / 2, 66, head, 'font_big').setScrollFactor(0).setDepth(3000);
+    const ts = fitText(t, GAME_W - 16); t.setScale(0.1);
+    this.tweens.add({ targets: t, scale: ts, duration: 300, ease: 'Back.easeOut' });
+    const sub = this.escort ? `DELAY: ${this.escort.delay.toFixed(1)} S\nCLEARED: ${this.escort.cleared}` : `RATS DEFEATED: ${this.killed}`;
+    fitText(text(this, GAME_W / 2, 92, sub, 'font_outline').setScrollFactor(0).setDepth(3000).setCenterAlign(), GAME_W - 16, true);
     ctx.state.ratsDefeated += this.killed + (this.escort?.cleared ?? 0);
     await new Promise((r) => this.time.delayedCall(2000, r));
     await iris(this, 'close', this.player.sprite.x - this.cameras.main.scrollX, this.player.sprite.y - 16, 500);
     this.physics.world.gravity.y = 0;
+    ctx.save();
     const next = { from: 'mission', missionId: this.mission.id, won: true, district: this.mission.district };
     if (this.mission.debrief) this.scene.start('Cutscene', { id: this.mission.debrief, next: 'Explore', nextData: next });
     else this.scene.start('Explore', next);
   }
 
-  private async lose(msg = 'BONK! TRY AGAIN') {
+  /**
+   * M2.1 (Ivan): losing all hearts costs a LIFE and restarts the mission; out of lives sends you back to
+   * the map (lives refilled). Failing an objective (the streetcar is late, the camera hits the pond)
+   * just restarts, no life lost.
+   */
+  private async lose(msg = 'BONK!', costsLife = true) {
     if (this.finished) return;
     this.finished = true;
     music.stop();
-    text(this, GAME_W / 2, 80, msg, 'font_red').setScrollFactor(0).setDepth(3000);
-    text(this, GAME_W / 2, 100, 'TRY AGAIN', 'font_outline').setScrollFactor(0).setDepth(3000);
-    await new Promise((r) => this.time.delayedCall(1800, r));
+    this.player.frozen = true;
+    if (costsLife) ctx.state.lives = Math.max(0, ctx.state.lives - 1);
+    const out = costsLife && ctx.state.lives <= 0;
+    fitText(text(this, GAME_W / 2, 70, out ? 'OUT OF LIVES!' : msg, 'font_big').setScrollFactor(0).setDepth(3000).setTint(0xff6347), GAME_W - 16);
+    const sub = out ? 'BACK TO THE MAP TO REGROUP' : costsLife ? `-1 LIFE   LIVES LEFT: ${ctx.state.lives}` : 'TRY AGAIN';
+    fitText(text(this, GAME_W / 2, 96, sub, 'font_outline').setScrollFactor(0).setDepth(3000), GAME_W - 16, true);
+    if (costsLife) { sfx.hurt(); shake(this, 300, 0.01); }
+    if (out) ctx.state.lives = START_LIVES;
+    ctx.save();
+    await new Promise((r) => this.time.delayedCall(2200, r));
     await iris(this, 'close');
-    this.scene.restart({ mission: this.mission.id });
+    if (out) { this.physics.world.gravity.y = 0; this.scene.start('Explore', { district: this.mission.district }); }
+    else this.scene.restart({ mission: this.mission.id });
+  }
+
+  /** every beat of the mission is done: the mission ends right away (Ivan: no riding past the boss) */
+  private allBeatsDone() {
+    const a = this.mission.action;
+    return this.waveIdx >= a.waves.length && (!a.boss || this.bossDone) && (!a.build || this.buildDone) && (!a.chase || this.chaseDone) && !a.escort && !this.lock;
   }
 
   update(_t: number, dt: number) {
@@ -337,7 +383,7 @@ export class ActionScene extends Phaser.Scene {
     if (!this.finished && this.input2.justPressed('pause')) { openPause(this); return; }
     this.player.update(this.input2, dt);
     const cam = this.cameras.main;
-    for (const l of this.layers) l.ts.tilePositionX = cam.scrollX * l.f;
+    for (const l of this.layers) l.update(cam.scrollX);
     const a = this.mission.action;
     const px = this.player.sprite.x;
 
@@ -359,18 +405,18 @@ export class ActionScene extends Phaser.Scene {
     if (this.escort && !this.finished && !this.player.frozen) {
       this.escort.update(dt, px, hits, newHit);
       if (this.escort.done) void this.win();
-      else if (this.escort.failed) void this.lose('THE 501 IS LATE AGAIN!');
+      else if (this.escort.failed) void this.lose('THE 501 IS LATE AGAIN!', false);
     }
 
     // ---- chase ----
     if (this.chase && !this.chaseDone && !this.finished && !this.player.frozen) {
-      const st = this.chase.update(dt, { x: px, body: pb, onGround: this.player.onGround });
+      const st = this.chase.update(dt, { x: px, body: pb, onGround: this.player.onGround }, hits);
       if (st === 'caught') {
         this.chaseDone = true;
         const l = this.lockArena('caught', a.caughtWave?.length ?? 0);
         this.spawnRats(a.caughtWave ?? [], l.left);
         this.flashGo('FIGHT!');
-      } else if (st === 'splash') { this.chaseDone = true; void this.lose('SPLASH! IT\'S IN THE POND.'); }
+      } else if (st === 'splash') { this.chaseDone = true; void this.lose('SPLASH! IT\'S IN THE POND.', false); }
     }
 
     // ---- SUV Rats ----
@@ -401,7 +447,7 @@ export class ActionScene extends Phaser.Scene {
 
     // ---- boss ----
     if (this.boss) {
-      this.boss.update(dt, px, pRect, hits, this.player.onGround);
+      this.boss.update(dt, px, pRect, hits, this.player.onGround, bounds);
       if (this.boss.alive) {
         const bb = this.boss.body, bRect = new Phaser.Geom.Rectangle(bb.x, bb.y, bb.width, bb.height);
         for (const h of hits) if (overlap(h, bRect) && this.boss.takeHit(h, px)) { hitStop(this, h.dmg > 1 ? 100 : 55); shake(this, 90, h.dmg > 1 ? 0.01 : 0.004); }
@@ -414,7 +460,12 @@ export class ActionScene extends Phaser.Scene {
         this.bossDone = true;
         this.killed++;
         for (const r of this.rats) if (r.alive) r.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 99, kb: 120, id: 99999 }, px);
-        this.time.delayedCall(1300, () => this.unlock('KING ST IS OPEN! >>'));
+        if (this.dogFraud) {
+          const df = this.dogFraud;
+          floatText(this, df.x + 60, df.y - 84, 'THIS ISN\'T OVER!', 'font_red', 0xffffff, 900);
+          this.tweens.add({ targets: df, x: df.x - 200, duration: 1400, delay: 500, ease: 'Quad.easeIn' });
+        }
+        this.time.delayedCall(1300, () => this.endArena(this.mission.action.boss?.kind === 'foreman' ? 'LANE OPEN! >>' : 'KING ST IS OPEN! >>'));
       }
     }
 
@@ -461,20 +512,20 @@ export class ActionScene extends Phaser.Scene {
     // ---- arena cleared? ----
     if (L && !this.finished) {
       const ratsDone = this.killed - L.startKills >= L.total - (L.kind === 'build' ? L.suvsLeft + this.cars.filter((c) => c.alive).length : 0) && L.suvsLeft <= 0 && !this.cars.some((c) => c.alive && !c.tame);
-      if (L.kind === 'wave' && ratsDone) this.unlock();
-      else if (L.kind === 'caught' && this.rats.every((r) => !r.alive)) { floatText(this, px, this.groundY - 60, 'CAMERA RECOVERED!', 'font_outline', 0x9bd35a, 900); this.unlock('TO THE SCHOOL! >>'); }
+      if (L.kind === 'wave' && ratsDone) this.endArena();
+      else if (L.kind === 'caught' && this.rats.every((r) => !r.alive)) { floatText(this, px, this.groundY - 60, 'CAMERA RECOVERED!', 'font_outline', 0x9bd35a, 900); this.endArena('TO THE SCHOOL! >>'); }
       else if (L.kind === 'build' && this.build?.allDone && this.rats.every((r) => !r.alive)) {
         // calmed: any car still around now crawls through politely and leaves
         for (const c of this.cars) if (c.alive) c.tame = true;
         L.suvsLeft = 0;
         this.buildDone = true;
-        this.unlock('SLOWED! >>');
+        this.build?.finish();
+        this.endArena('SLOWED! >>');
       }
     }
 
-    // ---- the end of the street ----
-    const beatsDone = this.waveIdx >= a.waves.length && (!a.boss || this.bossDone) && (!a.build || this.buildDone) && (!a.chase || this.chaseDone) && !a.escort;
-    if (!this.lock && beatsDone && px > this.worldW - GAME_W / 2 - 20) void this.win();
+    // ---- low health: a heartbeat beep ----
+    if (!a.noCombat && this.player.hp === 1 && !this.finished) { this.lowHpT -= dt; if (this.lowHpT <= 0) { sfx.blip(); this.lowHpT = 900; } }
     if (this.player.dead) void this.lose();
     if (this.player.sprite.y > GAME_H + 40) { this.player.hp = 0; this.player.dead = true; }
     this.drawHud();

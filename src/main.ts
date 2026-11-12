@@ -6,6 +6,7 @@ import { ExploreScene } from './scenes/ExploreScene';
 import { ActionScene } from './scenes/ActionScene';
 import { CutsceneScene } from './scenes/CutsceneScene';
 import { PauseScene } from './scenes/PauseScene';
+import { ctx } from './core/ctx';
 
 setGameW(viewWidthFor(window.innerWidth, window.innerHeight));
 
@@ -49,3 +50,17 @@ game.events.once(Phaser.Core.Events.READY, fit);
 fit();
 
 (window as unknown as { __TP_GAME?: Phaser.Game }).__TP_GAME = game;
+
+// Ctrl+M: mute / unmute (M2.1). A tiny DOM toast so it works over every scene.
+const toast = document.createElement('div');
+toast.style.cssText = 'position:fixed;left:50%;top:12px;transform:translateX(-50%);padding:6px 12px;background:rgba(22,18,31,.85);color:#fff08a;font:bold 14px monospace;border:1px solid #69657a;border-radius:4px;pointer-events:none;opacity:0;transition:opacity .25s;z-index:10';
+document.body.appendChild(toast);
+let toastT = 0;
+window.addEventListener('keydown', (e) => {
+  if (!(e.ctrlKey || e.metaKey) || e.code !== 'KeyM') return;
+  e.preventDefault();
+  toast.textContent = ctx.toggleMute() ? 'SOUND OFF  (CTRL+M)' : 'SOUND ON';
+  toast.style.opacity = '1';
+  clearTimeout(toastT); toastT = window.setTimeout(() => (toast.style.opacity = '0'), 1200);
+});
+ctx.applySettings();

@@ -161,27 +161,53 @@ export function suvModel() {
     { d: sd.box([-15.5, 4.6, 6.4], [0.4, 1.0, 1.0]), m: { flat: 'R' } }, { d: sd.box([-15.5, -4.6, 6.4], [0.4, 1.0, 1.0]), m: { flat: 'R' } },
   ];
 }
-// TTC-style articulated low-floor streetcar (3 sections), red lower body, black window band, white roof.
+// TTC Flexity Outlook (M2.1, from Ivan's photo): five modules with black articulation joints; a red roof
+// edge, white bands framing a dark window strip, red body, a white skirt line; a sloped nose with a big
+// windshield and the white swoosh rising from the front skirt into the window frame; pantograph on top.
 export function streetcar(yaw = 0, length = 96, side = false, vertical = false) {
-  const half = length / 2, segs = 3, segL = length / segs;
+  const half = length / 2, segs = 5, segL = length / segs;
   const objs = [];
+  const livery = (cx, nose) => (p) => {
+    const z = p[2], lx = p[0] - cx;
+    if (z > 16.4) return ['g', 'G', 'h', 'h'];          // roof
+    if (z > 15.4) return ['r', 'R', 'R', 'q'];          // red roof edge
+    if (z > 14.4) return ['h', 'H', 'W', 'W'];          // white band over the windows
+    if (z > 7.6) {                                      // windows + white pillars
+      const pil = Math.abs(((lx % 8) + 8) % 8 - 4) < 0.55;
+      if (pil) return ['h', 'H', 'W'];
+      return p[1] > 0 ? ['K', 'k', 'u', 'U'] : ['K', 'k', 'u'];
+    }
+    if (z > 6.6) return ['h', 'H', 'W', 'W'];           // white band under the windows
+    // the swoosh: a white sweep near the nose rising from the skirt into the window band
+    if (nose) { const along = (p[0] - (cx + nose * (segL / 2))) * -nose; if (along < 14 && Math.abs(z - (2.4 + along * 0.32)) < 0.9) return ['h', 'H', 'W']; }
+    if (z > 2.6) return ['r', 'R', 'R', 'q'];           // red body
+    if (z > 1.6) return ['h', 'H', 'W'];                // white skirt line
+    return ['K', 'k', 'g'];                             // bogies
+  };
   for (let s = 0; s < segs; s++) {
     const cx = -half + segL * (s + 0.5);
     const nose = s === segs - 1 ? 1 : s === 0 ? -1 : 0;
-    objs.push({ d: sd.box([cx, 0, 8.5], [segL / 2 - 0.8, 6.4, 8], 1.4), m: mat(R.red, { spec: 1, fn: (p) => {
-      if (p[2] > 7.5 && p[2] < 14) return Math.abs(((p[0] - cx) % 7 + 7) % 7 - 3.5) < 0.4 ? 'K' : (p[1] > 0 ? ['K', 'k', 'u', 'U'] : ['K', 'k', 'u']);
-      if (p[2] >= 16.2) return ['g', 'G', 'G', 'h'];
-      if (p[2] >= 14) return null;
-      if (p[2] < 3.2) return 'k';
-      return null;
-    } }) });
-    if (nose) objs.push({ d: sd.ellipsoid([cx + nose * (segL / 2 - 1), 0, 8.6], [3.2, 6.3, 7.8]), m: mat(R.red, { fn: (p) => (p[2] > 7.5 && p[2] < 14 && p[0] * nose > cx * nose + segL / 2 - 0.5 ? ['K', 'u', 'U', 'c'] : p[2] > 16.2 ? ['g', 'G', 'h'] : null) }) });
+    objs.push({ d: sd.box([cx, 0, 8.6], [segL / 2 - 0.9, 6.3, 8.1], 1.2), m: mat(R.red, { spec: 1, fn: livery(cx, nose) }) });
+    if (s < segs - 1) objs.push({ d: sd.box([cx + segL / 2, 0, 8.4], [0.9, 5.6, 7.4], 0.4), m: mat(['K', 'k', 'k', 'g']) }); // accordion joint
+    if (nose) {
+      // sloped cab: rounded nose with a tall windshield
+      objs.push({ d: sd.ellipsoid([cx + nose * (segL / 2 - 1.5), 0, 8.4], [4.2, 6.2, 8.0]), m: mat(R.red, { spec: 1, fn: (p) => {
+        const fwd = (p[0] - cx) * nose - (segL / 2 - 1.5);
+        if (p[2] > 6.8 && p[2] < 15.6 && fwd > 0.6) return ['K', 'u', 'U', 'c'];
+        if (p[2] > 16) return ['g', 'G', 'h'];
+        if (p[2] > 15.2) return ['r', 'R', 'q'];
+        if (p[2] < 2.6 && p[2] > 1.6) return ['h', 'H', 'W'];
+        if (p[2] > 3 && p[2] < 4.4 && fwd > 1.4 && Math.abs(p[1]) > 3.4) return 'Y'; // headlights
+        return null;
+      } }) });
+    }
   }
-  // pantograph
-  objs.push({ d: sd.capsule([-6, 0, 17], [2, 0, 22], 0.4), m: mat(R.dark) });
+  // pantograph on the middle module
+  objs.push({ d: sd.capsule([-5, 0, 17], [2, 0, 22], 0.4), m: mat(R.dark) });
   objs.push({ d: sd.capsule([2, -3, 22], [2, 3, 22], 0.4), m: mat(R.dark) });
+  objs.push({ d: sd.box([0, 0, 17.2], [6, 3, 0.8]), m: mat(R.steel) });
   const w = length + 16;
-  if (side) { const k = 2.0, sw = Math.ceil(w * k), sh = 96; const img = render(scene(objs), { w: sw, h: sh, cx: sw / 2, cy: sh - 6, cam: orthoCam([0, -1, -0.22]), ambient: 0.16, scale: k }); img.pivot = { x: 0.5, y: (sh - 6) / sh }; return img; }
+  if (side) { const k = 2.0, sw = Math.ceil(w * k), sh = 96; const img = render(scene(objs), { w: sw, h: sh, cx: sw / 2, cy: sh - 6, cam: orthoCam([0, -1, -0.22]), ambient: 0.2, scale: k }); img.pivot = { x: 0.5, y: (sh - 6) / sh }; return img; }
   if (vertical) return draw(objs, 52, length + 48, 26, length / 2 + 30, yaw);
   return draw(objs, w, 48, w / 2, 36, yaw);
 }
