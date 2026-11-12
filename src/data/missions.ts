@@ -5,6 +5,7 @@ import type { RatKind } from '../action/Rat';
 import type { EscortDef } from '../action/Escort';
 import type { ChaseDef, BuildDef } from '../action/Parkside';
 import type { BossKind } from '../action/Boss';
+import type { AutoScrollDef } from '../action/LaneEater';
 
 export type DistrictId = 'queenwest' | 'downtown' | 'north' | 'waterfront' | 'highpark' | 'eastend';
 
@@ -34,7 +35,9 @@ export interface MissionDef {
     hint?: [string, string];
     groundY?: number;
     waves: Wave[];
-    boss?: { at: number; kind: BossKind };
+    boss?: { at: number; kind: BossKind | 'laneeater' };
+    /** M3 (The Lane Eater): the screen scrolls on its own; riders to rally; ambushes */
+    autoscroll?: AutoScrollDef;
     escort?: EscortDef;
     chase?: ChaseDef;
     /** the wave fought when the chase ends (the haulers drop the camera) */
@@ -135,6 +138,29 @@ export const MISSIONS: Record<string, MissionDef> = {
       caughtWave: ['traffic', 'basic'],
       build: { at: 2250, spots: [90, 200, 310], suvs: 4, rats: ['construction', 'basic'] },
     },
+  },
+};
+
+MISSIONS.lane_eater = {
+  id: 'lane_eater',
+  title: 'THE LANE EATER',
+  district: 'highpark',
+  upgrades: ['bloor_lanes_kept'],
+  requires: ['slow_down_dog'],
+  briefing: 'lane_before',
+  debrief: 'lane_after',
+  focusY: 13 * 16,
+  action: {
+    bg: 'queen', street: 'protected', sky: 'day', length: 3300,
+    intro: 'OUTRIDE THE LANE EATER! RING YOUR BELL AT EVERY RIDER!',
+    hint: ['E NEAR A RIDER: THEY JOIN (EACH ONE TAKES A HIT FOR YOU)', 'RED NEAR A RIDER: THEY JOIN YOUR PELOTON'],
+    waves: [],
+    autoscroll: {
+      speed: 62, end: 2950,
+      riders: [330, 560, 800, 1040, 1300, 1560, 1820, 2100, 2380, 2650],
+      ambush: [{ at: 700, rats: ['construction'] }, { at: 1250, rats: ['basic', 'construction'] }, { at: 1900, rats: ['traffic', 'basic'] }, { at: 2500, rats: ['construction', 'basic'] }],
+    },
+    boss: { at: 2950, kind: 'laneeater' },
   },
 };
 

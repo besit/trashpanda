@@ -10,6 +10,7 @@ import { Rat, type RatKind } from '../action/Rat';
 import { SuvRat } from '../action/SuvRat';
 import { Boss } from '../action/Boss';
 import { Escort } from '../action/Escort';
+import { Peloton, LaneEater } from '../action/LaneEater';
 import { Chase, BuildSpots } from '../action/Parkside';
 import { MISSIONS, type MissionDef } from '../data/missions';
 import { ctx } from '../core/ctx';
@@ -34,6 +35,10 @@ export class ActionScene extends Phaser.Scene {
   private cars: SuvRat[] = [];
   private boss?: Boss;
   private dogFraud?: Phaser.GameObjects.Image;
+  private peloton?: Peloton;
+  private eater?: LaneEater;
+  private scrolling = false;
+  private ambushIdx = 0;
   private lowHpT = 0;
   private escort?: Escort;
   private chase?: Chase;
@@ -89,12 +94,19 @@ export class ActionScene extends Phaser.Scene {
     });
 
     if (a.escort) this.escort = new Escort(this, a.escort, -30);
+    this.peloton = undefined; this.eater = undefined; this.scrolling = false; this.ambushIdx = 0;
+    if (a.autoscroll) {
+      this.peloton = new Peloton(this, a.autoscroll.riders, this.groundY);
+      this.eater = new LaneEater(this, -180, this.groundY);
+      this.scrolling = true;
+    }
     if (a.chase) this.chase = new Chase(this, a.chase, 60, this.groundY);
     if (a.build) this.add.image(a.build.at + 60, STREET_Y, 'school_side').setOrigin(0, 1).setDepth(2);
 
     const cam = this.cameras.main;
     cam.setBounds(0, 0, this.worldW, GAME_H).setRoundPixels(true);
-    cam.startFollow(this.player.sprite, true, 0.15, 0.1, -40, 0);
+    if (a.autoscroll) this.player.shield = () => !!this.peloton?.absorb();
+    else cam.startFollow(this.player.sprite, true, 0.15, 0.1, -40, 0);
 
     this.buildHud();
     if (wantsTouch()) { this.touch = new TouchControls(this); this.touch.setLabel('act', 'PUMP'); }
@@ -112,10 +124,10 @@ export class ActionScene extends Phaser.Scene {
         while (this.waveIdx < a2.waves.length && a2.waves[this.waveIdx].at < x) this.waveIdx++;
         if (a2.chase && x > a2.chase.pondAt - 200) { this.chaseDone = true; this.chase?.camImage.setVisible(false); }
         this.player.body.reset(x, this.groundY - 10);
-      }, rats: () => this.rats.filter((r) => r.alive).length, win: () => this.win(), boss: () => this.boss,
+      }, rats: () => this.rats.filter((r) => r.alive).length, win: () => this.win(), boss: () => this.boss, eaterObj: () => this.eater, gy: () => this.groundY,
       state: () => (!this.sys.isActive() ? { finished: true } : { x: this.player.sprite.x, frozen: this.player.frozen, hp: this.player.hp,
         rats: this.rats.filter((r) => r.alive).map((r) => Math.round(r.sprite.x)), carsAt: this.cars.filter((c) => c.alive && !c.tame).map((c) => [Math.round(c.x), c.dir]), bossX: this.boss?.alive ? Math.round(this.boss.sprite.x) : null,
-        front: this.escort ? Math.round(this.escort.front) : null, haul: this.chase ? Math.round(this.chase.rearX) : null, lock: this.lock?.kind ?? null, wave: this.waveIdx, boss: this.boss ? this.boss.hp : null, escort: this.escort ? { car: Math.round(this.escort.car.x), delay: +this.escort.delay.toFixed(1), done: this.escort.done } : null, chase: this.chase?.state ?? null, built: this.build?.built ?? null, cars: this.cars.filter((c) => c.alive).length, finished: this.finished, camX: Math.round(this.cameras.main.scrollX) }) };
+        front: this.escort ? Math.round(this.escort.front) : null, scrolling: this.scrolling, peloton: this.peloton?.size ?? null, eater: this.eater ? { x: Math.round(this.eater.x), boss: this.eater.boss, hp: this.eater.totalHp } : null, haul: this.chase ? Math.round(this.chase.rearX) : null, lock: this.lock?.kind ?? null, wave: this.waveIdx, boss: this.boss ? this.boss.hp : null, escort: this.escort ? { car: Math.round(this.escort.car.x), delay: +this.escort.delay.toFixed(1), done: this.escort.done } : null, chase: this.chase?.state ?? null, built: this.build?.built ?? null, cars: this.cars.filter((c) => c.alive).length, finished: this.finished, camX: Math.round(this.cameras.main.scrollX) }) };
   }
 
   private buildBackground() {
@@ -211,6 +223,13 @@ export class ActionScene extends Phaser.Scene {
       g.fillStyle(0x16121f).fillRect(x - 1, 17, w + 2, 7).fillStyle(0x443f54).fillRect(x, 18, w, 5).fillStyle(v > 0.5 ? 0x9bd35a : v > 0.25 ? 0xf5c22e : 0xd42a24).fillRect(x, 18, w * v, 5);
       this.hud.label.setText(this.escort.v < 6 && this.escort.delay > 0 ? '501: DELAYED!' : '501 QUEEN: ON TIME');
       this.escort.drawStrip(g, this.player.sprite.x);
+    } else if (this.eater?.boss && this.eater.alive) {
+      const w = 140, x = GAME_W / 2 - w / 2;
+      g.fillStyle(0x16121f).fillRect(x - 1, 17, w + 2, 7).fillStyle(0x443f54).fillRect(x, 18, w, 5).fillStyle(0xf5c22e).fillRect(x, 18, (w * this.eater.totalHp) / this.eater.maxHp, 5);
+      this.hud.label.setText(`THE LANE EATER   PELOTON ${this.peloton?.size ?? 0}`);
+    } else if (this.scrolling) {
+      const togo = Math.max(0, Math.round((this.mission.action.autoscroll!.end - this.cameras.main.scrollX - GAME_W) / 10));
+      this.hud.label.setText(`PELOTON ${this.peloton?.size ?? 0}   ${togo}M TO GO`);
     } else if (this.boss?.alive) {
       const w = 140, x = GAME_W / 2 - w / 2;
       g.fillStyle(0x16121f).fillRect(x - 1, 17, w + 2, 7).fillStyle(0x443f54).fillRect(x, 18, w, 5).fillStyle(0x7d47a8).fillRect(x, 18, (w * this.boss.hp) / this.boss.maxHp, 5);
@@ -300,7 +319,8 @@ export class ActionScene extends Phaser.Scene {
 
   private startBoss() {
     const l = this.lockArena('boss', 0);
-    const kind = this.mission.action.boss?.kind ?? 'bureaucrat';
+    const bk = this.mission.action.boss?.kind;
+    const kind = bk === 'foreman' ? 'foreman' : 'bureaucrat';
     if (kind === 'bureaucrat') {
       // Dog Fraud watches from his podium on the sidewalk (Ivan: "where was Dog Fraud?")
       this.dogFraud = this.add.image(l.left + 70, STREET_Y + 10, 'chars', 'dfs_pod').setOrigin(0.5, 0.97).setDepth(20);
@@ -332,11 +352,12 @@ export class ActionScene extends Phaser.Scene {
     music.stop();
     sfx.ding();
     const a = this.mission.action;
-    const head = a.escort ? 'RIGHT ON TIME!' : a.build ? 'SCHOOL ZONE SLOWED!' : 'STREET CLEARED!';
+    const head = a.escort ? 'RIGHT ON TIME!' : a.build ? 'SCHOOL ZONE SLOWED!' : a.autoscroll ? 'BLOOR IS SAFE!' : 'STREET CLEARED!';
     const t = text(this, GAME_W / 2, 66, head, 'font_big').setScrollFactor(0).setDepth(3000);
     const ts = fitText(t, GAME_W - 16); t.setScale(0.1);
     this.tweens.add({ targets: t, scale: ts, duration: 300, ease: 'Back.easeOut' });
-    const sub = this.escort ? `DELAY: ${this.escort.delay.toFixed(1)} S\nCLEARED: ${this.escort.cleared}` : `RATS DEFEATED: ${this.killed}`;
+    const sub = this.escort ? `DELAY: ${this.escort.delay.toFixed(1)} S\nCLEARED: ${this.escort.cleared}` : this.peloton ? `RIDERS RALLIED: ${this.peloton.joinedTotal}\nRATS DEFEATED: ${this.killed}` : `RATS DEFEATED: ${this.killed}`;
+    if (this.peloton) ctx.state.ridersRallied += this.peloton.joinedTotal;
     fitText(text(this, GAME_W / 2, 92, sub, 'font_outline').setScrollFactor(0).setDepth(3000).setCenterAlign(), GAME_W - 16, true);
     ctx.state.ratsDefeated += this.killed + (this.escort?.cleared ?? 0);
     await new Promise((r) => this.time.delayedCall(2000, r));
@@ -397,8 +418,52 @@ export class ActionScene extends Phaser.Scene {
     // ---- beats triggered by position ----
     if (!this.lock && !this.finished) {
       if (this.waveIdx < a.waves.length && px > a.waves[this.waveIdx].at) { this.spawnWave(this.waveIdx); this.waveIdx++; }
-      else if (a.boss && !this.boss && px > a.boss.at) this.startBoss();
+      else if (a.boss && a.boss.kind !== 'laneeater' && !this.boss && px > a.boss.at) this.startBoss();
       else if (a.build && !this.build && this.chaseDone && px > a.build.at) this.startBuild();
+    }
+
+    // ---- the Lane Eater: auto-scroll, the peloton, the machine ----
+    if (this.peloton && this.eater && !this.finished) {
+      const as = a.autoscroll!;
+      if (this.scrolling && !this.player.frozen) {
+        const speed = as.speed;
+        cam.scrollX = Math.min(cam.scrollX + speed * (dt / 1000), as.end - GAME_W);
+        // keep the raccoon on screen: the left edge pushes
+        const lo = cam.scrollX + 14, hi = cam.scrollX + GAME_W - 14;
+        if (px < lo) { this.player.sprite.x = lo; if (pb.velocity.x < speed) pb.setVelocityX(speed); }
+        if (px > hi) { this.player.sprite.x = hi; pb.setVelocityX(Math.min(pb.velocity.x, 0)); }
+        if (this.input2.justPressed('act')) this.peloton.ring(px);
+        this.eater.chase(dt, speed, this.peloton.size, px, cam.scrollX);
+        if (this.eater.touching(pRect)) { if (this.player.hurt(this.eater.x)) shake(this, 150, 0.01); pb.setVelocityX(160); }
+        // ambushes: rats step out ahead
+        while (this.ambushIdx < (as.ambush?.length ?? 0) && cam.scrollX + GAME_W > as.ambush![this.ambushIdx].at) {
+          const am = as.ambush![this.ambushIdx++];
+          am.rats.forEach((k, j) => this.time.delayedCall(j * 500, () => this.spawnRat(k, cam.scrollX + GAME_W + 10)));
+          sfx.squeak();
+        }
+        // end of the street: the machine turns on you
+        if (cam.scrollX >= as.end - GAME_W - 0.5) {
+          this.scrolling = false;
+          const l = this.lockArena('boss', 0);
+          this.eater.startBoss(l.left + 90);
+          this.peloton.parkAt = l.left + GAME_W - 20;
+          this.time.delayedCall(900, () => floatText(this, l.left + GAME_W / 2, 60, 'JUMP + PUMP THE CONVEYOR AND THE CAB.\nHIT THE GRINDER WHEN IT OVERHEATS!', 'font_outline', 0xfff08a, 2600).setScrollFactor(0));
+          this.flashGo('BOSS!');
+        }
+      }
+      this.peloton.update(dt, px, cam.scrollX);
+      if (this.eater.boss) {
+        this.eater.updateBoss(dt, px, pRect, this.player.onGround, (fx) => { if (this.player.hurt(fx)) { shake(this, 140, 0.01); hitStop(this, 70); } },
+          () => { const L2 = this.lock; if (L2) for (let i = 0; i < 2; i++) this.time.delayedCall(i * 400, () => this.spawnRat('construction', L2.left + GAME_W + 10)); },
+          this.rats.filter((r) => r.alive).length);
+        this.eater.takeHits(hits, () => { hitStop(this, 120); });
+        if (!this.eater.alive && !this.bossDone) {
+          this.bossDone = true; this.killed++;
+          for (const r of this.rats) if (r.alive) r.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 99, kb: 120, id: 99998 }, px);
+          this.peloton.riders.forEach((r, i) => this.tweens.add({ targets: r, y: r.y - 8, duration: 160, yoyo: true, repeat: 3, delay: i * 50 }));
+          this.time.delayedCall(1500, () => this.endArena());
+        }
+      }
     }
 
     // ---- escort ----

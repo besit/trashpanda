@@ -56,8 +56,12 @@ export class SidePlayer {
     return { x: this.sprite.x - 14, y: this.sprite.y - 26, w: 28, h: 24, dmg: 1, kb: 300, id: 1000 + this.swingId };
   }
 
+  /** something that takes the hit instead (the Lane Eater peloton); returns true if it did */
+  shield?: () => boolean;
+
   hurt(fromX: number, dmg = 1): boolean {
     if (this.invulnT > 0 || this.dashT > 0 || this.dead) return false;
+    if (this.shield?.()) { this.invulnT = SIDE.invuln * 0.6; return false; }
     this.hp -= dmg; this.invulnT = SIDE.invuln; this.hurtT = 0.3;
     this.body.setVelocity((this.sprite.x < fromX ? -1 : 1) * 180, -200);
     sfx.hurt();

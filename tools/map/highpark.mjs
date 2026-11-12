@@ -207,7 +207,15 @@ export function generateHighPark() {
   for (const y of [28, 46, 64]) calm.tiles.push([PS + 1, y, 'slow_stencil']);
   for (const y of [38, 43]) { calm.addProps.push({ type: 'prop', key: 'planter', x: (PS + 1) * TS + 2, y: y * TS + 12, solid: 6 }); calm.addProps.push({ type: 'prop', key: 'planter', x: (PS + 3) * TS - 2, y: y * TS + 12, solid: 6 }); }
   calm.addProps.push({ type: 'prop', key: 'speedcam', x: (PS - 1) * TS + 10, y: CAMY * TS + 14 });
-  D.improvements = { parkside_calming: calm };
+  // mission 5's payoff: Bloor's painted lanes become protected (curb + planters), and they stay
+  const bloor = { tiles: [], addProps: [] };
+  for (let x = 0; x < W; x++) {
+    if (D.isNS(x)) continue;
+    bloor.tiles.push([x, BLOOR, x % 12 === 5 ? 'bikelane_protected_n_stencil' : 'bikelane_protected_n'], [x, BLOOR + 3, x % 12 === 9 ? 'bikelane_protected_stencil' : 'bikelane_protected']);
+    if (x % 6 === 2 && !D.isNS(x - 1) && !D.isNS(x + 1)) bloor.addProps.push({ type: 'prop', key: 'planter', x: x * TS + 8, y: (BLOOR + 1) * TS - 1 }, { type: 'prop', key: 'planter', x: x * TS + 8, y: (BLOOR + 3) * TS + 4 });
+  }
+  D.improvements = { parkside_calming: calm, bloor_lanes_kept: bloor };
+  D.markers.push({ id: 'lane_eater', x: Math.floor(U(0.30)) * TS, y: (BLOOR - 2) * TS + 8, label: 'THE LANE EATER' });
 
   // ---------- traffic + walkers ----------
   D.ewLanes('bloor', BLOOR, {});

@@ -15,6 +15,7 @@ import * as PK from './sprites/park.mjs';
 import * as DT from './sprites/downtown.mjs';
 import * as HP from './sprites/highpark.mjs';
 import * as SP from './sprites/sideprops.mjs';
+import { laneEater, paintGob } from './sprites/laneeater.mjs';
 import { dvpBackdrop, dvpCar, DVP_SCALES } from './sprites/dvp.mjs';
 import { PALETTE, hexToRgb } from './palette.mjs';
 import * as P from './sprites/props.mjs';
@@ -123,6 +124,14 @@ addProp('speedcam', HP.speedCam()); addProp('speedcam_cut', HP.speedCam(true)); 
 addProp('patio_r', HP.patioSet('R')); addProp('patio_f', HP.patioSet('F')); addProp('playground', HP.playground()); addProp('marquee', HP.revueMarquee());
 addProp('cityhall', DT.cityHall()); addProp('torontosign', DT.torontoSign()); addProp('arch', DT.freedomArch(66, 36)); addProp('newsvan', DT.newsVan()); addProp('lanterns', DT.lanterns());
 for (const st of ['red', 'green', 'tsp']) addProp(`sigpole_${st}`, SP.signalPole(st));
+// the Lane Eater: 2 frames x every combination of smashed weak points (v = conveyor, b = cab, g = grinder)
+{ const Z = [['conveyor', 'v'], ['cab', 'b'], ['grinder', 'g']];
+  for (let mask = 0; mask < 8; mask++) for (const f of [0, 1]) {
+    const broken = Z.filter((_, i) => mask & (1 << i));
+    const suffix = broken.map(([, c]) => c).sort().join('');
+    addProp(suffix ? `laneeater_${f}_${suffix}` : `laneeater_${f}`, laneEater(f, broken.map(([k]) => k)));
+  }
+  addProp('paintgob_0', paintGob(0)); addProp('paintgob_1', paintGob(1)); }
 addProp('vanside', SP.vanSide()); addProp('suvrat_0', SP.suvRatSide(0)); addProp('suvrat_1', SP.suvRatSide(1));
 addProp('desk', SP.desk()); addProp('stamp_0', SP.stamp(0)); addProp('stamp_1', SP.stamp(1)); addProp('camcarried', SP.camCarried());
 addProp('buildspot', SP.buildSpot()); addProp('humpside', SP.humpSide()); addProp('raisedside', SP.raisedCrossSide()); addProp('life_0', SP.lifeToken(0)); addProp('life_1', SP.lifeToken(1));

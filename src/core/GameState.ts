@@ -14,6 +14,8 @@ export interface GameState {
   playTimeMs: number;
   /** M2.1: lose all hearts in a mission = lose a life; extra lives are hidden on the maps */
   lives: number;
+  /** M3: cyclists who joined the Bloor peloton (end-of-game stat) */
+  ridersRallied: number;
   /** where the raccoon was on the map; district added in v2 (M2) */
   player: { scene: 'explore'; district: string; x: number; y: number };
 }
@@ -28,6 +30,7 @@ export function newGame(): GameState {
     lanesAddedByDogFraud: 0,
     playTimeMs: 0,
     lives: START_LIVES,
+    ridersRallied: 0,
     player: { scene: 'explore', district: 'queenwest', x: -1, y: -1 },
   };
 }

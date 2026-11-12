@@ -86,4 +86,16 @@ export const UPGRADES: Record<string, Upgrade> = {
     blurb: 'TORONTO SCHOOL-ZONE CAMERAS CUT SPEEDING 45%... AND IT CAME BACK WHEN THEY WENT. HUMPS AND RAISED CROSSINGS DON\'T GO AWAY.',
     stat: { key: 'protectedIntersections', amount: 1 },
   },
+  bloor_lanes_kept: {
+    id: 'bloor_lanes_kept',
+    name: 'BLOOR KEEPS ITS BIKE LANES',
+    tree: 'cycling',
+    livability: 3,
+    categories: { cycling: 10, safety: 5, walking: 2 },
+    mapPatches: ['bloor_lanes_kept'],
+    // game fiction: in 2026 the province is removing Bloor's lanes (URBAN_RESEARCH §1, §19)
+    headline: 'THE PELOTON FILLS BLOOR. THE BIKE LANES STAY.',
+    blurb: 'AFTER BLOOR GOT BIKE LANES IN 2016, CYCLING ON IT ROSE 49%, AND A STUDY FOUND MORE ECONOMIC ACTIVITY ALONG THE STREET, NOT LESS.',
+    stat: { key: 'bikeLanes', amount: 2 },
+  },
 };
