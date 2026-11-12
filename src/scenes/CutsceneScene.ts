@@ -128,7 +128,8 @@ export class CutsceneScene extends Phaser.Scene {
         await blinds(this, 250);
         this.clearBg();
         this.layer(`sky_${s.sky}`, 0, GAME_H, 0);
-        this.layer(`skyline_${s.sky}`, SKYLINE_Y, 170, 0.08);
+        if (s.bg === 'lake') this.layer('islands_wf', STREET_Y - 140, 60, 0.2); // looking out at the islands (M3.1)
+        else this.layer(`skyline_${s.sky}`, SKYLINE_Y, 170, 0.08);
         // facades (or the park), sidewalk, street furniture and standing actors all scroll as ONE layer
         // (Ivan, M1.1): a tracking shot, so riding actors hold their place on screen and visibly move
         const bg = s.bg ?? 'queen';
@@ -263,7 +264,7 @@ export class CutsceneScene extends Phaser.Scene {
         this.actors.set(s.id, a);
         this.worldActors.delete(s.id);
         if (s.world) this.worldActors.set(s.id, { wx: s.x + this.panX });
-        // vehicles turning in from a side street rise from below the bottom edge (M2.1, Ivan)
+        // props that go up (fences, umbrellas) rise from below their spot
         if (s.rise) { a.y = s.y + 70; this.tweens.add({ targets: a, y: s.y, duration: 900, ease: 'Sine.easeOut' }); }
         if (s.turnOn) this.triggers.push({ id: s.id, ...s.turnOn, done: false });
         if (s.sign) { // a picket sign carried above the actor
@@ -309,6 +310,7 @@ export class CutsceneScene extends Phaser.Scene {
         const a = this.actors.get(s.id);
         if (a instanceof Phaser.GameObjects.Sprite && s.anim) a.play(s.anim);
         else a?.setFrame(s.frame);
+        if (s.flip !== undefined && a && 'setFlipX' in a) (a as Phaser.GameObjects.Sprite).setFlipX(s.flip);
         break;
       }
       case 'wobble': {
@@ -377,14 +379,15 @@ export class CutsceneScene extends Phaser.Scene {
       const want = t * 2.9;
       let idx = 0; for (let i = 0; i < scales.length; i++) if (Math.abs(scales[i] - want) < Math.abs(scales[idx] - want)) idx = i;
       c.s.setFrame(`dvp_${c.kind}_${idx}`).setPosition(Math.round(x), Math.round(y)).setOrigin(0.5, 0.9).setDepth(2 + y / 1000);
-      c.s.setVisible(t > 0.06 && y < H + 30 && (c.lane < D.lanes - 1 || D.reveal >= 1 || t < D.reveal));
+      c.s.setVisible(t > 0.06 && y < H + 90 && (c.lane < D.lanes - 1 || D.reveal >= 1 || t < D.reveal));
     }
     D.cars = D.cars.filter((c) => { if (c.d > 30) { c.s.destroy(); return false; } return true; });
-    // the jam never clears: refill every lane from behind the camera
+    // the jam never clears: refill every lane from behind the camera. New cars start below the bottom
+    // edge (d < 1.1 is off screen) and rise into view as they creep forward (Ivan, M2 + M3 notes)
     for (let l = 0; l < D.lanes; l++) {
       if (l === D.lanes - 1 && D.reveal < 1) continue;
       const nearest = D.cars.filter((c) => c.lane === l).reduce((m, c) => Math.min(m, c.d), 99);
-      if (nearest > 1.6) this.addDvpCar(l, nearest - 0.5 - Math.random() * 0.05);
+      if (nearest > 1.0) this.addDvpCar(l, nearest - 0.5 - Math.random() * 0.05);
     }
   }
 

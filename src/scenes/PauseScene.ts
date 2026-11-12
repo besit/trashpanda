@@ -1,6 +1,7 @@
 // Pause overlay: menu (resume / controls / volumes / shake / quit) and the city map.
 // Launched on top of Explore or Action, which are paused underneath.
 import Phaser from 'phaser';
+import { DIFFICULTY, fmtScore } from '../core/Score';
 import { DISTRICTS, DISTRICT_ORDER } from '../data/districts';
 import { MISSIONS, missionAvailable } from '../data/missions';
 import { GAME_W, GAME_H } from '../config';
@@ -89,6 +90,8 @@ export class PauseScene extends Phaser.Scene {
   private buildMenu() {
     const cx = GAME_W / 2;
     this.root.add(text(this, cx, 34, 'PAUSED', 'font_big'));
+    // M3.1: the run at a glance
+    this.root.add(text(this, cx, 50, `${ctx.state.name}   ${DIFFICULTY[ctx.state.difficulty].label}   SCORE ${fmtScore(ctx.state.score)}`, 'font').setTint(0xfff08a));
     const pct = (v: number) => `${Math.round(v * 10)}`.padStart(2, ' ');
     const bar = (v: number) => '#'.repeat(Math.round(v * 10)) + '.'.repeat(10 - Math.round(v * 10));
     const vol = (k: 'music' | 'sfx', d: number) => () => { ctx.settings[k] = Phaser.Math.Clamp(Math.round((ctx.settings[k] + d) * 10) / 10, 0, 1); ctx.applySettings(); sfx.blip(); this.refresh(); };

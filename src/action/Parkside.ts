@@ -146,11 +146,11 @@ export class BuildSpots {
             s.bar.clear();
             const p = PIECES[i % PIECES.length];
             s.img.destroy();
-            // each piece in its real place: the hump across the lane, the crossing across the whole road,
+            // each piece in its real place: the hump and the crossing span the whole road (M3.1: the hump used to
+            // show its cross-section),
             // the curb extension bulging out of the sidewalk
-            if (p.key === 'raisedside') s.piece = this.scene.add.image(s.x, STREET_Y + 16, 'world', p.key).setOrigin(0.5, 0).setDepth(30);
-            else if (p.key === 'curbextside') s.piece = this.scene.add.image(s.x, STREET_Y + 30, 'world', p.key).setOrigin(0.5, 60 / 62).setDepth(31);
-            else s.piece = this.scene.add.image(s.x, this.groundY + 3, 'world', p.key).setOrigin(0.5, 0.95).setDepth(80);
+            if (p.key === 'raisedside' || p.key === 'humpside') s.piece = this.scene.add.image(s.x, STREET_Y + 16, 'world', p.key).setOrigin(0.5, 0).setDepth(30);
+            else s.piece = this.scene.add.image(s.x, STREET_Y + 30, 'world', p.key).setOrigin(0.5, 60 / 62).setDepth(31); // curb extension
             s.piece.setScale(0, 1);
             this.scene.tweens.add({ targets: s.piece, scaleX: 1, duration: 250, ease: 'Back.easeOut' });
             s.label.setText(p.name).setTint(0x9bd35a).setY(STREET_Y - 6 - (i % 2) * 11);

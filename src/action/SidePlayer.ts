@@ -19,6 +19,7 @@ export interface Hitbox { x: number; y: number; w: number; h: number; dmg: numbe
 export class SidePlayer {
   readonly sprite: Phaser.Physics.Arcade.Sprite;
   facing: 1 | -1 = 1;
+  maxHp: number = SIDE.maxHp;
   hp = SIDE.maxHp;
   private coyoteT = 0; private bufferT = 0;
   dashT = 0; private dashCd = 0; private airDashUsed = false;

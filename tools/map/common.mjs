@@ -47,7 +47,7 @@ export class District {
     }
   }
   /** Signalised intersection of the N-S street at col c with the E-W street at `row`. */
-  cross(c, row, { tee = false, nsTracks = false, ewTracks = true } = {}) {
+  cross(c, row, { tee = false, teeS = false, nsTracks = false, ewTracks = true } = {}) {
     for (let y = row; y <= row + 3; y++) {
       this.set(c, y, 'zebra_ns'); this.set(c + 3, y, 'zebra_ns');
       const mid = y === row + 1 || y === row + 2;
@@ -57,19 +57,20 @@ export class District {
       }
     }
     if (!tee) { this.set(c + 1, row - 2, 'zebra_ew'); this.set(c + 2, row - 2, 'zebra_ew'); this.set(c + 1, row - 3, nsTracks ? 'tracks_ns_w' : 'road_ns_w_stop'); }
-    this.set(c + 1, row + 5, 'zebra_ew'); this.set(c + 2, row + 5, 'zebra_ew'); this.set(c + 2, row + 6, nsTracks ? 'tracks_ns_e' : 'road_ns_e_stop');
+    // teeS: the street ends here (Spadina, University, Bay at Queens Quay): no south leg
+    if (!teeS) { this.set(c + 1, row + 5, 'zebra_ew'); this.set(c + 2, row + 5, 'zebra_ew'); this.set(c + 2, row + 6, nsTracks ? 'tracks_ns_e' : 'road_ns_e_stop'); }
     this.intersections.push({ x0: c * TS, x1: (c + 4) * TS, y0: row * TS, y1: (row + 4) * TS, tee });
     for (const [sx, sy, oy] of [[c - 1, row - 1, 10], [c + 4, row - 1, 10], [c - 1, row + 4, 6], [c + 4, row + 4, 6]]) {
-      if (tee && sy === row - 1) continue;
+      if ((tee && sy === row - 1) || (teeS && sy === row + 4)) continue;
       this.tprop('signal', sx, sy, 8, oy);
     }
   }
 
-  addBuilding(x, w, gen, place, { graffiti = gen.kind === 'rear' ? [1, 3] : null } = {}) {
+  addBuilding(x, w, gen, place, { graffiti = gen.kind === 'rear' ? [1, 3] : null, tag } = {}) {
     const b = anyBuilding(gen);
     const imgH = b.img.h, d = gen.d;
     const base = place.base ?? place.top + imgH; // facade bottom (px)
-    this.objects.push({ type: 'building', key: `bld_${this.id}_${this.bid}`, gen, x, y: base - d, w, d, imgH });
+    this.objects.push({ type: 'building', key: `bld_${this.id}_${this.bid}`, gen, x, y: base - d, w, d, imgH, ...(tag ? { tag } : {}) });
     this.bid++;
     // graffiti from the shared sheet, sprayed over walls (any wall can take it; no graffiti pixels in buildings)
     if (graffiti) {

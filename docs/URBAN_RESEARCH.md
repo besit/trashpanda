@@ -31,6 +31,7 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
 | 16 | The Parkside Drive speed camera | Slow Down, Dog + High Park plaque | ✅ |
 | 17 | High Park flavour (Howards, car-free roads, capybaras) | High Park map | ✅ |
 | 18 | Downtown + Roncesvalles landmark plaques | Downtown / High Park maps | 🟡 |
+| 21 | M3.1 landmarks (Don Jail, Riverdale bridge, Sundial Folly, Ripley's, Rogers Centre, ferry terminal, Cinesphere, island airport, 510 route) | East End / Waterfront maps, mission 8 | ✅ (see §21) |
 
 ---
 
@@ -280,3 +281,20 @@ Well-known facts used on M3 plaques, not yet checked against a primary source th
 - **The Queen St bridge over the Don** carries Eldon Garnet's 1996 inscription "THIS RIVER I STEP IN IS NOT THE RIVER I STAND IN".
 - **The Broadview Hotel** at Queen + Broadview dates from the 1890s.
 - **Riverdale Park East**: known for its skyline view.
+
+## 21. M3.1 landmarks (plaques + map) ✅ checked 2026-11-12
+
+Facts added in M3.1 for Ivan's M3 review, each checked against at least one source this session:
+- **The Don Jail** (550 Gerrard St E): built 1858-64 to William Thomas's design, opened **1864** with **184 cells**, closed **1977**; now the administration building of Hennick Bridgepoint Hospital. Sources: [Don Jail (Wikipedia)](https://en.wikipedia.org/wiki/Don_Jail), [Sinai Health: the historic Don Jail](https://www.sinaihealth.ca/patients-and-visitors/the-historic-don-jail), [Read the Plaque: The Don Jail 1859-1864](https://readtheplaque.com/plaque/the-don-jail-1859-1864). Plaque: "OPENED IN 1864 WITH 184 CELLS. CLOSED IN 1977. NOW THE HOSPITAL NEXT DOOR'S OFFICES."
+- **The Riverdale Park pedestrian bridge** joins Riverdale Park West and East over Bayview Ave, the rail corridor, the Don and the DVP. Sources: [City of Toronto, Lower Don Trail bulletin](https://www.toronto.ca/wp-content/uploads/2021/03/96f1-lower-don-trail-improvements-phase-2-site-info-bulletin.pdf), [City notice: Gerrard, Riverdale + Dundas bridges](https://www.toronto.ca/wp-content/uploads/2024/06/969e-24ECS-BE-11PM-info-w13-w14-gerrard-riverdale-dundas-bridges-cons-june6-aoda.pdf). The game shows it crossing the river + the DVP (the map has no Bayview or rail corridor there).
+- **Gerrard St E runs north of Dundas St E** east of the Don (Ivan's correction; the map was re-laid).
+- **The Sundial Folly** (1995, John Fung + Paul Figueiredo): a concrete-and-steel sphere in a pool at Harbour Square Park West. Sources: [Toronto Sculpture: The Sundial Folly](https://sculpture.dittwald.com/sculptures/the-sundial-folly), [Sika: Sundial Folly restoration](https://can.sika.com/en/construction/concrete-repair-protection/projects/Sundia-Folly-Restoration.html). *The real park is at the foot of Bay/York; the game puts it at the foot of University, as Ivan asked (the map compresses).*
+- **Ripley's Aquarium of Canada** opened **October 16, 2013** at the base of the CN Tower (288 Bremner Blvd, just south-east of the tower). Sources: [Ripley's Aquarium of Canada (Wikipedia)](https://en.wikipedia.org/wiki/Ripley%27s_Aquarium_of_Canada), [UrbanToronto, opening](https://urbantoronto.ca/news/2013/10/ripleys-aquarium-canada-opens-base-cn-tower).
+- **The Rogers Centre (SkyDome)** opened in **1989** (June 3) with the first fully retractable motorized stadium roof; it stands west of the CN Tower. Sources: [Rogers Centre (Wikipedia)](https://en.wikipedia.org/wiki/Rogers_Centre), [CTV: SkyDome turns 25](https://toronto.ctvnews.ca/toronto-s-skydome-turns-25-1.1850507).
+- **The Jack Layton Ferry Terminal**: island ferries leave from the foot of Bay St (renamed for Jack Layton in 2013). Source: [Jack Layton Ferry Terminal (Wikipedia)](https://en.wikipedia.org/wiki/Jack_Layton_Ferry_Terminal).
+- **The Cinesphere** (Ontario Place, opened May 22, **1971**) was the world's **first permanent IMAX theatre**; Ontario Place itself opened in 1971. Sources: [Cinesphere (Wikipedia)](https://en.wikipedia.org/wiki/Cinesphere), [The Canadian Encyclopedia: Ontario Place](https://www.thecanadianencyclopedia.ca/en/article/ontario-place).
+- **Billy Bishop airport (the island airport) bans jets**, so its airliners are turboprops (Porter's Q400s). That's why mission 8's big plane is a turboprop, not a jet. Sources: [City of Toronto background file (2014)](https://www.toronto.ca/legdocs/mmis/2014/ex/bgrd/backgroundfile-64907.pdf), [Wings Magazine](https://www.wingsmagazine.com/making-new-waves-on-the-island-8692/).
+- **The 510 Spadina streetcar** turns from Spadina onto Queens Quay and runs east to Union through the Bay St tunnel; the Queens Quay median carries the 509 west. That's the curve the map's streetcars now take. Sources: [510 Spadina (Wikipedia)](https://en.wikipedia.org/wiki/510_Spadina), [Toronto streetcar loops](https://www.wikiwand.com/en/articles/Toronto_streetcar_loops).
+- **The Gibraltar Point lighthouse** on Toronto Island appears in mission 8's background as scenery only (no plaque, no claim).
+
+Fiction, labelled as such in the game: the MEGA SPA and its excavator (the Pink Digger boss).

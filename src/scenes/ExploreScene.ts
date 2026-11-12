@@ -12,8 +12,12 @@ import { completeMission } from '../core/GameState';
 import { UPGRADES } from '../data/upgrades';
 import { MISSIONS, missionAvailable } from '../data/missions';
 import { DISTRICTS } from '../data/districts';
-import { text, iris, floatText, shake, bellRing, blinds } from '../ui/fx';
+import { text, iris, floatText, shake, bellRing, blinds, wrapLines } from '../ui/fx';
+/** payoff headline: centred between the HUD (top left) and the info box (bottom), M3.1 */
+const BANNER_Y = 104;
 import { MAX_LIVES } from '../core/GameState';
+import { awardOnce, fmtScore } from '../core/Score';
+import { submitRun } from '../core/Leaderboard';
 import { music } from '../audio/Sequencer';
 import { SONG_MAIN, SONG_IMPROVE } from '../audio/songs';
 import { sfx } from '../audio/sfx';
@@ -21,7 +25,7 @@ import { openPause, type MapInfo } from './PauseScene';
 import type { Manifest } from './BootScene';
 
 interface ExploreData { from?: 'mission' | 'district'; missionId?: string; won?: boolean; district?: string; entry?: { side: 'w' | 'e' | 'n' | 's'; street?: string; dy?: number; y?: number; fromDistrict?: string } }
-type Hud = { lives: Phaser.GameObjects.BitmapText; box: Phaser.GameObjects.Graphics; meter: Phaser.GameObjects.Graphics; score: Phaser.GameObjects.BitmapText; tier: Phaser.GameObjects.BitmapText; stamina: Phaser.GameObjects.Graphics; prompt: Phaser.GameObjects.BitmapText; label: Phaser.GameObjects.BitmapText };
+type Hud = { lives: Phaser.GameObjects.BitmapText; points: Phaser.GameObjects.BitmapText; box: Phaser.GameObjects.Graphics; meter: Phaser.GameObjects.Graphics; score: Phaser.GameObjects.BitmapText; tier: Phaser.GameObjects.BitmapText; stamina: Phaser.GameObjects.Graphics; prompt: Phaser.GameObjects.BitmapText; label: Phaser.GameObjects.BitmapText };
 
 const DIR_V = [[1, 0], [0.7, 0.7], [0, 1], [-0.7, 0.7], [-1, 0], [-0.7, -0.7], [0, -1], [0.7, -0.7]];
 
@@ -92,10 +96,12 @@ export class ExploreScene extends Phaser.Scene {
 
     this.traffic = new Traffic(this, md.lanes, md.intersections, this.map.widthPx, this.map.heightPx, ctx.state.upgrades);
     this.traffic.setDensity(ctx.state.upgrades.length ? 0.8 : 1);
-    this.crowd = new Crowd(this, md.walkways, md.critters ?? [], this.district === 'downtown' ? 44 : 34);
+    this.crowd = new Crowd(this, md.walkways, md.critters ?? [], this.district === 'downtown' ? 44 : 34, md.underWalks ?? []);
     this.crowd.onSquirrelSpotted = () => {
       floatText(this, this.crowd.squirrelPos!.x, this.crowd.squirrelPos!.y - 16, 'THE WHITE SQUIRREL!', 'font_outline', 0xfff08a);
-      if (!ctx.state.flags.whiteSquirrel) { ctx.state.flags.whiteSquirrel = true; this.toast('A RARE WHITE SQUIRREL:\nTRINITY BELLWOODS\' LOCAL CELEBRITY.'); ctx.save(); }
+      if (!ctx.state.flags.whiteSquirrel) { ctx.state.flags.whiteSquirrel = true; this.toast('A RARE WHITE SQUIRREL:\nTRINITY BELLWOODS\' LOCAL CELEBRITY.'); }
+      this.scorePop(awardOnce(ctx.state, 'egg_white_squirrel', 'egg'), 'EASTER EGG');
+      ctx.save();
     };
     this.buildExitSigns(md.exits ?? []);
     this.buildLifeTokens(md);
@@ -187,14 +193,34 @@ export class ExploreScene extends Phaser.Scene {
     const prompt = text(this, GAME_W / 2, GAME_H - 14, '', 'font_outline').setScrollFactor(0).setDepth(20001);
     // lives under the meter: a raccoon token + the count
     box.fillStyle(0x16121f, 0.75).fillRoundedRect(4, 42, 42, 14, 3).lineStyle(1, 0x69657a).strokeRoundedRect(4, 42, 42, 14, 3);
-    this.add.image(13, 54, 'world', 'life_0').setOrigin(0.5, 1).setScrollFactor(0).setDepth(20001);
+    this.add.image(13, 53, 'world', 'life_0').setOrigin(0.5, 1).setScrollFactor(0).setDepth(20001);
     const lives = text(this, 22, 46, '', 'font', 0).setScrollFactor(0).setDepth(20001).setTint(0xfff08a);
-    this.hud = { box, meter, score, tier, stamina, prompt, label, lives };
+    // M3.1: the run's score, top right
+    const points = text(this, GAME_W - 6, 6, '', 'font_outline', 0).setOrigin(1, 0).setScrollFactor(0).setDepth(20001);
+    this.hud = { box, meter, score, tier, stamina, prompt, label, lives, points };
     this.drawLives();
     this.drawMeter(this.shownLiv);
   }
 
-  private drawLives() { this.hud.lives.setText(`X${ctx.state.lives}`); }
+  private drawLives() { this.hud.lives.setText(`X${ctx.state.lives}`); this.hud.points.setText(fmtScore(ctx.state.score)); }
+  /** points just earned on the map: a pop under the score + refresh the HUD */
+  private scorePop(pts: number, what: string) {
+    if (!pts) return;
+    floatText(this, GAME_W - 30, 26, `${what} +${pts}`, 'font_outline', 0xfff08a, 900).setScrollFactor(0).setDepth(20004).setOrigin(1, 0.5);
+    this.drawLives();
+  }
+  /** easter eggs: ride into one to find it (once per run) */
+  private checkEggs() {
+    for (const e of this.map.data.eggs ?? []) {
+      const px = this.player.x, py = this.player.y;
+      if (px < e.x || px > e.x + e.w || py < e.y || py > e.y + e.h || ctx.state.flags[`score_egg_${e.id}`]) continue;
+      const pts = awardOnce(ctx.state, `egg_${e.id}`, 'egg');
+      sfx.ding();
+      this.toast(`EASTER EGG: ${e.label}!\n${e.fact}`, 4500);
+      this.scorePop(pts, 'EASTER EGG');
+      ctx.save();
+    }
+  }
 
   /** hidden extra lives: a glinting raccoon token, once per spot */
   private lifeTokens: { s: Phaser.GameObjects.Sprite; key: string }[] = [];
@@ -215,6 +241,7 @@ export class ExploreScene extends Phaser.Scene {
       ctx.state.lives = Math.min(MAX_LIVES, ctx.state.lives + 1);
       sfx.ding(); sfx.bell();
       floatText(this, t.s.x, t.s.y - 20, '1UP!', 'font_big', 0xffffff, 600);
+      this.scorePop(awardOnce(ctx.state, t.key, 'heart'), 'HEART');
       this.tweens.killTweensOf(t.s); t.s.destroy();
       this.toast(`EXTRA LIFE! LIVES: ${ctx.state.lives}`, 2500);
       this.drawLives();
@@ -224,7 +251,7 @@ export class ExploreScene extends Phaser.Scene {
 
   /** Re-anchor centred/right-aligned HUD when the view width changes. */
   private layout() {
-    this.hud.prompt.setX(GAME_W / 2);
+    this.hud.prompt.setX(GAME_W / 2); this.hud.points.setX(GAME_W - 6);
     this.toasts.forEach((t) => t.active && t.setX(GAME_W / 2));
     if (wantsTouch() && window.innerHeight > window.innerWidth && !this.busy) openPause(this);
   }
@@ -278,6 +305,8 @@ export class ExploreScene extends Phaser.Scene {
     completeMission(ctx.state, missionId, mission?.upgrades ?? []);
     const after = livability(ctx.state.upgrades);
     ctx.save();
+    void submitRun(ctx.state); // the online leaderboard, when it's configured (best-effort)
+    this.drawLives();
     await iris(this, 'open', GAME_W / 2, GAME_H / 2, 450);
     music.stop();
     const cam = this.cameras.main;
@@ -291,7 +320,7 @@ export class ExploreScene extends Phaser.Scene {
       const startX = Phaser.Math.Clamp(mission?.focusX ?? this.player.x - 200, GAME_W / 2, this.map.widthPx - GAME_W / 2);
       cam.pan(startX, focusY, 600, 'Sine.easeInOut');
       await this.wait(700);
-      banner = text(this, GAME_W / 2, 50, 'THE CITY IS CHANGING...', 'font_big').setScrollFactor(0).setDepth(20005);
+      banner = text(this, GAME_W / 2, BANNER_Y, 'THE CITY IS CHANGING...', 'font_big').setScrollFactor(0).setDepth(20005);
       music.play(SONG_IMPROVE);
       for (const u of mission?.upgrades ?? []) for (const p of UPGRADES[u].mapPatches) dur = Math.max(dur, this.map.applyImprovement(p, true, startX - GAME_W / 2));
       cam.pan(startX + 420, focusY, Math.max(1400, dur * 0.6), 'Sine.easeInOut');
@@ -299,7 +328,7 @@ export class ExploreScene extends Phaser.Scene {
       const fx = mission?.focusX ?? this.player.x, startY = Phaser.Math.Clamp(mission?.focusY ?? this.player.y - 150, GAME_H / 2, this.map.heightPx - GAME_H / 2);
       cam.pan(fx, startY, 600, 'Sine.easeInOut');
       await this.wait(700);
-      banner = text(this, GAME_W / 2, 50, 'THE CITY IS CHANGING...', 'font_big').setScrollFactor(0).setDepth(20005);
+      banner = text(this, GAME_W / 2, BANNER_Y, 'THE CITY IS CHANGING...', 'font_big').setScrollFactor(0).setDepth(20005);
       music.play(SONG_IMPROVE);
       for (const u of mission?.upgrades ?? []) for (const p of UPGRADES[u].mapPatches) dur = Math.max(dur, this.map.applyImprovement(p, true, startY - GAME_H / 2, 'y'));
       cam.pan(fx, startY + 360, Math.max(1400, dur * 0.7), 'Sine.easeInOut');
@@ -337,11 +366,7 @@ export class ExploreScene extends Phaser.Scene {
    */
   private infoBox(title: string, body: string): Promise<void> {
     return new Promise((resolve) => {
-      const cw = 6, maxChars = Math.floor((GAME_W - 40) / cw);
-      const words = body.split(/\s+/), lines: string[] = [];
-      let cur = '';
-      for (const w of words) { if ((cur + ' ' + w).trim().length > maxChars) { lines.push(cur.trim()); cur = w; } else cur += ' ' + w; }
-      if (cur.trim()) lines.push(cur.trim());
+      const lines = wrapLines(this, 'font_outline', body, GAME_W - 36).filter((l) => l);
       const pages: string[][] = [];
       for (let i = 0; i < lines.length; i += 3) pages.push(lines.slice(i, i + 3));
       if (!pages.length) pages.push(['']);
@@ -426,6 +451,7 @@ export class ExploreScene extends Phaser.Scene {
     this.crowd.update(dt, this.player.x, this.player.y, this.cameras.main.worldView);
     this.map.updateOcclusion(this.player.x, this.player.y);
     this.checkLifeTokens();
+    this.checkEggs();
     // district edges: riding off the map along a street that continues
     if (!this.busy) {
       const px = this.player.x, py = this.player.y;
@@ -449,6 +475,8 @@ export class ExploreScene extends Phaser.Scene {
       else if (this.near?.kind === 'landmark') {
         const l = this.map.data.landmarks!.find((x) => x.id === this.near!.id)!;
         sfx.select(); this.plaque([l.label, ...l.fact.split('\n')]);
+        this.scorePop(awardOnce(ctx.state, `plaque_${this.district}_${l.id}`, 'plaque'), 'PLAQUE');
+        ctx.save();
       } else {
         // the bell rings at the handlebars, in front of the raccoon
         sfx.bell();
@@ -469,7 +497,7 @@ export class ExploreScene extends Phaser.Scene {
 
   private exposeDebug() {
     const w = window as unknown as { __TP?: Record<string, unknown> };
-    w.__TP = { ...(w.__TP ?? {}), scene: 'Explore', district: this.district, state: ctx.state, player: () => ({ x: this.player.x, y: this.player.y }), teleport: (x: number, y: number) => this.player.sprite.setPosition(x, y), startMission: (id: string) => this.startMission(id), improve: (id: string) => this.map.applyImprovement(id, true, this.player.x), traffic: () => this.traffic.count, map: this.map.data,
+    w.__TP = { ...(w.__TP ?? {}), scene: 'Explore', district: this.district, state: ctx.state, player: () => ({ x: this.player.x, y: this.player.y }), teleport: (x: number, y: number) => this.player.sprite.setPosition(x, y), startMission: (id: string) => this.startMission(id), improve: (id: string) => this.map.applyImprovement(id, true, this.player.x), improveNow: (id: string) => this.map.applyImprovement(id, false), traffic: () => this.traffic.count, map: this.map.data,
       goto: (district: string, y?: number) => this.scene.start('Explore', { from: 'district', district, entry: y !== undefined ? { side: 'w', y } : undefined }),
       exits: () => this.map.data.exits,
       markers: () => this.markers.map((m) => m.id), busy: () => this.busy };

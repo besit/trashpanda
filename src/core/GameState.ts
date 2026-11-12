@@ -1,7 +1,8 @@
 import { livability } from './Livability';
 import { UPGRADES } from '../data/upgrades';
+import { DIFFICULTY, type Difficulty } from './Score';
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 export const START_LIVES = 3, MAX_LIVES = 9;
 
 export interface GameState {
@@ -16,12 +17,23 @@ export interface GameState {
   lives: number;
   /** M3: cyclists who joined the Bloor peloton (end-of-game stat) */
   ridersRallied: number;
+  /** v3 (M3.1): chosen at NEW GAME, fixed for the run (hits per life + score multiplier) */
+  difficulty: Difficulty;
+  /** v3: points so far (see core/Score.ts) */
+  score: number;
+  /** v3: arcade initials for the high-score tables */
+  name: string;
+  /** v3: identifies this run in the high-score tables (one entry per run) */
+  runId: string;
   /** where the raccoon was on the map; district added in v2 (M2) */
   player: { scene: 'explore'; district: string; x: number; y: number };
 }
 
-export function newGame(): GameState {
+const newRunId = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+
+export function newGame(difficulty: Difficulty = 'normal', name = 'RAC'): GameState {
   return {
+    difficulty, score: 0, name, runId: newRunId(),
     version: SAVE_VERSION,
     upgrades: [],
     completedMissions: [],
@@ -48,6 +60,11 @@ export function migrate(raw: unknown): GameState | null {
     completedMissions: Array.isArray(s.completedMissions) ? s.completedMissions.filter((m) => typeof m === 'string') : [],
     flags: s.flags && typeof s.flags === 'object' ? s.flags : {},
     lives: typeof s.lives === 'number' && s.lives > 0 ? Math.min(MAX_LIVES, Math.floor(s.lives)) : START_LIVES,
+    // v2 saves: no difficulty or score yet -> a normal run that starts scoring now
+    difficulty: typeof s.difficulty === 'string' && s.difficulty in DIFFICULTY ? s.difficulty : 'normal',
+    score: typeof s.score === 'number' && s.score >= 0 ? Math.floor(s.score) : 0,
+    name: typeof s.name === 'string' && /^[A-Z]{1,3}$/.test(s.name) ? s.name : 'RAC',
+    runId: typeof s.runId === 'string' && s.runId ? s.runId : base.runId,
     // v1 saves had no district: they were always in Queen West
     player: { ...base.player, ...(s.player ?? {}), district: typeof s.player?.district === 'string' ? s.player.district : 'queenwest' },
     version: SAVE_VERSION,

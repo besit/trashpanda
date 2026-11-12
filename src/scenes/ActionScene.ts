@@ -12,10 +12,13 @@ import { Boss } from '../action/Boss';
 import { Escort } from '../action/Escort';
 import { Peloton, LaneEater } from '../action/LaneEater';
 import { DepaveSpots, MonsterSuv } from '../action/ParkingLot';
+import { SpaDigger } from '../action/SpaDigger';
 import { Chase, BuildSpots } from '../action/Parkside';
 import { MISSIONS, type MissionDef } from '../data/missions';
 import { ctx } from '../core/ctx';
 import { START_LIVES } from '../core/GameState';
+import { award, hitsPerLife, fmtScore, type ScoreKind } from '../core/Score';
+const POINTS_OF = (label: string) => Number(label.slice(1)) || 0;
 import { text, iris, shake, hitStop, puff, floatText, fitText } from '../ui/fx';
 import { openPause } from './PauseScene';
 import { ScrollLayer, STREET_Y, GROUND_Y, FRONT_Y, BACKROW_Y, SKYLINE_Y } from '../ui/sideLayout';
@@ -41,8 +44,12 @@ export class ActionScene extends Phaser.Scene {
   private lobbyTip = false;
   private depaveDone = false;
   private monster?: MonsterSuv;
+  private digger?: SpaDigger;
   private eater?: LaneEater;
   private scrolling = false;
+  /** the auto-scroll position as a float: Phaser floors cam.scrollX every frame (roundPixels), so at
+   *  120+ Hz a 0.5 px step was lost each frame and the screen never moved (M3.1, Ivan's M5 report) */
+  private autoX = 0;
   private ambushIdx = 0;
   private lowHpT = 0;
   private escort?: Escort;
@@ -59,7 +66,9 @@ export class ActionScene extends Phaser.Scene {
   private chaseDone = false;
   private worldW = 0;
   private groundY = GROUND_Y;
-  private hud!: { g: Phaser.GameObjects.Graphics; label: Phaser.GameObjects.BitmapText; go: Phaser.GameObjects.BitmapText };
+  private hud!: { g: Phaser.GameObjects.Graphics; label: Phaser.GameObjects.BitmapText; go: Phaser.GameObjects.BitmapText; score: Phaser.GameObjects.BitmapText };
+  /** points earned in this attempt (shown on the end card) */
+  private earned = 0;
   private finished = false;
   private killed = 0;
   private usedHits = new Set<number>();
@@ -87,6 +96,8 @@ export class ActionScene extends Phaser.Scene {
     if (a.bg === 'queen' && a.street === 'plain') this.queenDecor();
 
     this.player = new SidePlayer(this, 60, this.groundY - 10);
+    // M3.1: the difficulty sets how many hits one life takes (easy 7, normal 5, hard 3)
+    this.player.maxHp = hitsPerLife(ctx.state); this.player.hp = this.player.maxHp; this.earned = 0; this.scored = { pieces: 0, riders: 0, cleared: 0 };
     this.physics.add.collider(this.player.sprite, this.ground);
     this.physics.add.collider(this.player.sprite, this.platforms);
     this.cones = this.physics.add.group();
@@ -99,8 +110,8 @@ export class ActionScene extends Phaser.Scene {
     });
 
     if (a.escort) this.escort = new Escort(this, a.escort, -30);
-    this.peloton = undefined; this.eater = undefined; this.scrolling = false; this.ambushIdx = 0;
-    this.depave = undefined; this.depaveDone = false; this.monster = undefined;
+    this.peloton = undefined; this.eater = undefined; this.scrolling = false; this.ambushIdx = 0; this.autoX = 0;
+    this.depave = undefined; this.depaveDone = false; this.monster = undefined; this.digger = undefined;
     if (a.autoscroll) {
       this.peloton = new Peloton(this, a.autoscroll.riders, this.groundY);
       this.eater = new LaneEater(this, -180, this.groundY);
@@ -130,7 +141,7 @@ export class ActionScene extends Phaser.Scene {
         while (this.waveIdx < a2.waves.length && a2.waves[this.waveIdx].at < x) this.waveIdx++;
         if (a2.chase && x > a2.chase.pondAt - 200) { this.chaseDone = true; this.chase?.camImage.setVisible(false); }
         this.player.body.reset(x, this.groundY - 10);
-      }, rats: () => this.rats.filter((r) => r.alive).length, win: () => this.win(), boss: () => this.boss, eaterObj: () => this.eater, gy: () => this.groundY,
+      }, rats: () => this.rats.filter((r) => r.alive).length, win: () => this.win(), boss: () => this.boss, eaterObj: () => this.eater, digger: () => this.digger, monster: () => this.monster, gy: () => this.groundY,
       state: () => (!this.sys.isActive() ? { finished: true } : { x: this.player.sprite.x, frozen: this.player.frozen, hp: this.player.hp,
         rats: this.rats.filter((r) => r.alive).map((r) => Math.round(r.sprite.x)), carsAt: this.cars.filter((c) => c.alive && !c.tame).map((c) => [Math.round(c.x), c.dir]), bossX: this.boss?.alive ? Math.round(this.boss.sprite.x) : this.monster?.alive ? Math.round(this.monster.x) : null, depaved: this.depave?.done ?? null, spots: this.depave?.openSpots ?? null, monsterStalled: this.monster?.stalled ?? null,
         front: this.escort ? Math.round(this.escort.front) : null, scrolling: this.scrolling, peloton: this.peloton?.size ?? null, eater: this.eater ? { x: Math.round(this.eater.x), boss: this.eater.boss, hp: this.eater.totalHp, hot: this.eater.hot } : null, haul: this.chase ? Math.round(this.chase.rearX) : null, lock: this.lock?.kind ?? null, wave: this.waveIdx, boss: this.boss ? this.boss.hp : null, escort: this.escort ? { car: Math.round(this.escort.car.x), delay: +this.escort.delay.toFixed(1), done: this.escort.done } : null, chase: this.chase?.state ?? null, built: this.build?.built ?? null, cars: this.cars.filter((c) => c.alive).length, finished: this.finished, camX: Math.round(this.cameras.main.scrollX) }) };
@@ -140,7 +151,9 @@ export class ActionScene extends Phaser.Scene {
     const a = this.mission.action, sky = a.sky;
     const layer = (key: string, y: number, f: number) => this.layers.push(new ScrollLayer(this, key, y, f));
     layer(`sky_${sky}`, 0, 0);
-    layer(`skyline_${sky}`, SKYLINE_Y, 0.08);
+    // M3.1 (Ivan): on the waterfront we look OUT at the lake: the Toronto Islands + the airport, not the skyline
+    if (a.bg === 'lake') { layer('islands_wf', STREET_Y - 140, 0.2); this.planes(); }
+    else layer(`skyline_${sky}`, SKYLINE_Y, 0.08);
     // the front row (buildings or park) and the sidewalk scroll together as one plane (Ivan, M1.1)
     if (a.bg === 'king') layer('facades_dt', FRONT_Y.king, 1.0);
     else if (a.bg === 'parkside') layer('park_hp', FRONT_Y.parkside, 1.0);
@@ -163,21 +176,71 @@ export class ActionScene extends Phaser.Scene {
     for (const x of [200, 640, 1080]) for (let i = 0; i < 3; i++) this.add.image(x + i * 14, this.groundY + 1, 'world', 'cone').setOrigin(0.5, 1).setDepth(40);
   }
 
+  /** planes coming in to Billy Bishop over the islands: a turboprop descending west, a Cessna crossing east */
+  private planes() {
+    const tp = this.add.sprite(GAME_W + 60, 26, 'world', 'plane_tp_0').setScrollFactor(0).setDepth(1).play('plane_tp');
+    const loopTp = () => { tp.setPosition(GAME_W + 60, 22); this.tweens.add({ targets: tp, x: GAME_W * 0.38, y: 62, duration: 14000, ease: 'Linear', onComplete: () => { tp.setVisible(false); this.time.delayedCall(6000, () => { tp.setVisible(true); loopTp(); }); } }); };
+    loopTp();
+    const cs = this.add.sprite(-40, 16, 'world', 'plane_cs_0').setScrollFactor(0).setDepth(1).play('plane_cs');
+    const loopCs = () => { cs.setPosition(-40, 14 + Math.random() * 10); this.tweens.add({ targets: cs, x: GAME_W + 40, y: cs.y + 6, duration: 16000, delay: 4000, ease: 'Linear', onComplete: loopCs }); };
+    loopCs();
+  }
+
+  /** a prop you can stand on (one-way from below), its top at `top` */
+  private oneWay(x: number, top: number, w: number, key: string) {
+    this.add.image(x, this.groundY + 2, 'world', key).setOrigin(0.5, 1).setDepth(48);
+    const z = this.add.zone(x, top + 3, w, 6);
+    this.physics.add.existing(z, true);
+    const b = z.body as Phaser.Physics.Arcade.StaticBody;
+    b.checkCollision.down = false; b.checkCollision.left = false; b.checkCollision.right = false;
+    this.platforms.add(z);
+  }
+
   private async intro() {
     this.player.frozen = true;
     await iris(this, 'open', 80, this.groundY - 20, 500);
     const a = this.mission.action;
-    const t1 = text(this, GAME_W / 2, 56, this.mission.title, 'font_big').setScrollFactor(0).setDepth(1000);
-    const s1 = fitText(t1, GAME_W - 16); t1.setScale(0.1);
+    // M3.1: stacked top-down (origin y 0). Multi-line text centred on a fixed y grew upward into the title.
+    const t1 = text(this, GAME_W / 2, 48, this.mission.title, 'font_big').setScrollFactor(0).setDepth(1000);
+    const s1 = fitText(t1, GAME_W - 16), h1 = t1.height; t1.setScale(0.1);
     this.tweens.add({ targets: t1, scale: s1, duration: 300, ease: 'Back.easeOut' });
-    const t2 = fitText(text(this, GAME_W / 2, 80, a.intro, 'font_outline').setScrollFactor(0).setDepth(1000), GAME_W - 16, true);
+    const t2 = fitText(text(this, GAME_W / 2, 48 + h1 / 2 + 8, a.intro, 'font_outline').setOrigin(0.5, 0).setScrollFactor(0).setDepth(1000), GAME_W - 16, true);
     const hint = a.hint ? (wantsTouch() ? a.hint[1] : a.hint[0]) : wantsTouch() ? 'RED: PUMP   BLUE: DASH   GREEN: JUMP' : 'E: PUMP (3-HIT COMBO)   Q: DASH   SPACE: JUMP';
-    const t3 = fitText(text(this, GAME_W / 2, 80 + t2.height + 8, hint, 'font').setScrollFactor(0).setDepth(1000).setTint(0xfff08a), GAME_W - 16, true);
+    const t3 = fitText(text(this, GAME_W / 2, t2.y + t2.height + 6, hint, 'font_outline').setOrigin(0.5, 0).setScrollFactor(0).setDepth(1000).setTint(0xfff08a), GAME_W - 16, true);
     sfx.bell();
     await new Promise((r) => this.time.delayedCall(2600, r));
     t1.destroy(); t2.destroy(); t3.destroy();
     this.flashGo(this.chase ? 'AFTER THEM!' : 'RIDE!');
     this.player.frozen = false;
+  }
+
+  /**
+   * One instruction line under the GO banner, fixed on screen (M3.1: hints were placed at a world x with
+   * scrollFactor 0, or right over the banner). A new line replaces the old one.
+   */
+  private sayObj?: Phaser.GameObjects.BitmapText;
+  private say(msg: string, tint = 0xfff08a, hold = 1600) {
+    this.sayObj?.destroy();
+    const t = fitText(text(this, GAME_W / 2, 34, msg, 'font_outline').setOrigin(0.5, 0).setScrollFactor(0).setDepth(2001).setTint(tint), GAME_W - 16, true);
+    this.sayObj = t;
+    this.tweens.add({ targets: t, alpha: 0, delay: hold, duration: 400, onComplete: () => { t.destroy(); if (this.sayObj === t) this.sayObj = undefined; } });
+  }
+
+  /** award points and float them where they were earned (world coordinates) */
+  private pts(kind: ScoreKind, x: number, y: number, n = 1) {
+    const p = award(ctx.state, kind, n);
+    this.earned += p;
+    floatText(this, x, y, `+${p}`, 'font_outline', 0xfff08a, 300).setDepth(2500);
+  }
+  /** score from objectives counted by the mission objects (pieces built, riders joined, cone rats cleared) */
+  private scored = { pieces: 0, riders: 0, cleared: 0 };
+  private scoreObjectives() {
+    const pieces = (this.depave?.done ?? 0) + (this.build?.built ?? 0), riders = this.peloton?.joinedTotal ?? 0, cleared = this.escort?.cleared ?? 0;
+    const px = this.player.sprite.x, py = this.player.sprite.y - 44;
+    if (pieces > this.scored.pieces) this.pts('piece', px, py, pieces - this.scored.pieces);
+    if (riders > this.scored.riders) this.pts('rider', px, py - 10, riders - this.scored.riders);
+    if (cleared > this.scored.cleared) this.pts('rat', px, py, cleared - this.scored.cleared);
+    this.scored = { pieces, riders, cleared };
   }
 
   private flashGo(msg: string) {
@@ -192,11 +255,12 @@ export class ActionScene extends Phaser.Scene {
     const g = this.add.graphics().setScrollFactor(0).setDepth(2000);
     const label = text(this, GAME_W / 2, 6, '', 'font_outline', 0).setOrigin(0.5, 0).setScrollFactor(0).setDepth(2000);
     const go = text(this, GAME_W / 2, 70, '', 'font_big').setScrollFactor(0).setDepth(2000).setAlpha(0);
-    this.hud = { g, label, go };
+    const score = text(this, GAME_W - 6, 6, '', 'font_outline', 0).setOrigin(1, 0).setScrollFactor(0).setDepth(2000);
+    this.hud = { g, label, go, score };
   }
 
   private layoutHud() {
-    this.hud.label.setX(GAME_W / 2); this.hud.go.setX(GAME_W / 2);
+    this.hud.label.setX(GAME_W / 2); this.hud.go.setX(GAME_W / 2); this.hud.score.setX(GAME_W - 6);
     for (const l of this.layers) l.refit();
     if (wantsTouch() && window.innerHeight > window.innerWidth && !this.finished) openPause(this);
   }
@@ -206,19 +270,22 @@ export class ActionScene extends Phaser.Scene {
     g.clear();
     const a = this.mission.action;
     if (!a.noCombat) {
-      // hearts: the last one blinks when you're one hit from losing a life
+      // M3.1 (Ivan): a health bar of 3 / 5 / 7 segments (difficulty) instead of five hearts; it flashes
+      // on the last hit before you lose a life
+      const n = this.player.maxHp, segW = Math.max(6, Math.floor(56 / n)), bw = n * segW + 1;
       const blink = this.player.hp === 1 && Math.floor(this.time.now / 180) % 2 === 0;
-      for (let i = 0; i < SIDE.maxHp; i++) {
-        const x = 8 + i * 12, y = 8, full = i < this.player.hp;
-        g.fillStyle(0x16121f).fillRect(x - 1, y - 1, 11, 10);
-        g.fillStyle(full ? (blink ? 0xfff08a : 0xd42a24) : 0x443f54);
-        g.fillRect(x, y + 1, 9, 4).fillRect(x + 1, y, 3, 1).fillRect(x + 5, y, 3, 1).fillRect(x + 1, y + 5, 7, 1).fillRect(x + 2, y + 6, 5, 1).fillRect(x + 3, y + 7, 3, 1);
-        if (full) g.fillStyle(0xff6347).fillRect(x + 1, y + 1, 2, 1);
+      g.fillStyle(0x16121f).fillRect(7, 7, bw + 2, 9).fillStyle(0x2a2536).fillRect(8, 8, bw, 7);
+      for (let i = 0; i < n; i++) {
+        const full = i < this.player.hp, x = 9 + i * segW;
+        g.fillStyle(full ? (blink ? 0xfff08a : 0x55a144) : 0x443f54).fillRect(x, 9, segW - 1, 5);
+        if (full) g.fillStyle(blink ? 0xffffff : 0x9bd35a).fillRect(x, 9, segW - 1, 1);
       }
-      // lives: raccoon tokens (lose all hearts = lose a life and restart the mission)
+      // lives: little hearts under the bar (lose the whole bar = lose a life and restart the mission)
       for (let i = 0; i < Math.min(ctx.state.lives, 9); i++) {
-        const x = 9 + i * 8, y = 20;
-        g.fillStyle(0x16121f).fillCircle(x + 3, y + 3, 4).fillStyle(0xf5c22e).fillCircle(x + 3, y + 3, 3).fillStyle(0x2a2536).fillRect(x + 1, y + 2, 5, 1).fillStyle(0xf6f2e9).fillRect(x + 2, y + 2, 1, 1).fillRect(x + 4, y + 2, 1, 1);
+        const x = 8 + i * 9, y = 19;
+        g.fillStyle(0x16121f).fillRect(x, y, 9, 8);
+        g.fillStyle(0xd42a24).fillRect(x + 1, y + 2, 7, 2).fillRect(x + 1, y + 1, 3, 1).fillRect(x + 5, y + 1, 3, 1).fillRect(x + 2, y + 4, 5, 1).fillRect(x + 3, y + 5, 3, 1).fillRect(x + 4, y + 6, 1, 1);
+        g.fillStyle(0xff6347).fillRect(x + 2, y + 2, 1, 1);
       }
     }
     // stamina
@@ -231,6 +298,10 @@ export class ActionScene extends Phaser.Scene {
       g.fillStyle(0x16121f).fillRect(x - 1, 17, w + 2, 7).fillStyle(0x443f54).fillRect(x, 18, w, 5).fillStyle(v > 0.5 ? 0x9bd35a : v > 0.25 ? 0xf5c22e : 0xd42a24).fillRect(x, 18, w * v, 5);
       this.hud.label.setText(this.escort.v < 6 && this.escort.delay > 0 ? '501: DELAYED!' : '501 QUEEN: ON TIME');
       this.escort.drawStrip(g, this.player.sprite.x);
+    } else if (this.digger?.alive) {
+      const w = 140, x = GAME_W / 2 - w / 2;
+      g.fillStyle(0x16121f).fillRect(x - 1, 17, w + 2, 7).fillStyle(0x443f54).fillRect(x, 18, w, 5).fillStyle(0xd9646f).fillRect(x, 18, (w * this.digger.hp) / this.digger.maxHp, 5);
+      this.hud.label.setText(this.digger.title);
     } else if (this.monster?.alive) {
       const w = 140, x = GAME_W / 2 - w / 2;
       g.fillStyle(0x16121f).fillRect(x - 1, 17, w + 2, 7).fillStyle(0x443f54).fillRect(x, 18, w, 5).fillStyle(0xd42a24).fillRect(x, 18, (w * this.monster.hp) / this.monster.maxHp, 5);
@@ -311,8 +382,7 @@ export class ActionScene extends Phaser.Scene {
     const r = new Rat(this, x, this.groundY - 30, kind, (rat) => this.throwCone(rat));
     if (kind === 'lobbyist' && !this.lobbyTip) {
       this.lobbyTip = true;
-      const t = floatText(this, this.cameras.main.scrollX + GAME_W / 2, 100, 'LOBBYIST! RATS NEAR HIM TAKE HALF DAMAGE.\nCORNER HIM FIRST!', 'font_outline', 0xf5c22e, 2600);
-      t.setScrollFactor(0).setX(GAME_W / 2);
+      this.say('LOBBYIST! HE MAKES EVERY RAT TOUGHER.\nTAKE HIM OUT FIRST!', 0xf5c22e, 2600);
     }
     this.physics.add.collider(r.sprite, this.ground);
     this.rats.push(r);
@@ -361,7 +431,7 @@ export class ActionScene extends Phaser.Scene {
     this.build = new BuildSpots(this, b, l.left, this.groundY);
     this.spawnRats(b.rats, l.left);
     this.flashGo('BUILD IT!');
-    floatText(this, l.left + GAME_W / 2, 110, 'PUMP THE STAKES TO BUILD', 'font_outline', 0xfff08a, 1600).setScrollFactor(0);
+    this.say('PUMP THE STAKES TO BUILD');
   }
 
   private async win() {
@@ -372,12 +442,15 @@ export class ActionScene extends Phaser.Scene {
     sfx.ding();
     const a = this.mission.action;
     const head = a.escort ? 'RIGHT ON TIME!' : a.build ? 'SCHOOL ZONE SLOWED!' : a.autoscroll ? 'BLOOR IS SAFE!' : a.depave?.style === 'fence' ? 'THE SHORE IS PUBLIC!' : a.depave ? 'THE LOT IS GREEN!' : 'STREET CLEARED!';
-    const t = text(this, GAME_W / 2, 66, head, 'font_big').setScrollFactor(0).setDepth(3000);
-    const ts = fitText(t, GAME_W - 16); t.setScale(0.1);
+    const t = text(this, GAME_W / 2, 60, head, 'font_big').setScrollFactor(0).setDepth(3000);
+    const ts = fitText(t, GAME_W - 16), th = t.height; t.setScale(0.1);
     this.tweens.add({ targets: t, scale: ts, duration: 300, ease: 'Back.easeOut' });
-    const sub = this.escort ? `DELAY: ${this.escort.delay.toFixed(1)} S\nCLEARED: ${this.escort.cleared}` : this.peloton ? `RIDERS RALLIED: ${this.peloton.joinedTotal}\nRATS DEFEATED: ${this.killed}` : `RATS DEFEATED: ${this.killed}`;
+    const sub0 = this.escort ? `DELAY: ${this.escort.delay.toFixed(1)} S\nCLEARED: ${this.escort.cleared}` : this.peloton ? `RIDERS RALLIED: ${this.peloton.joinedTotal}\nRATS DEFEATED: ${this.killed}` : `RATS DEFEATED: ${this.killed}`;
+    const firstWin = !ctx.state.completedMissions.includes(this.mission.id);
+    if (firstWin) this.earned += award(ctx.state, 'mission');
+    const sub = `${sub0}\nSCORE +${this.earned}${firstWin ? ' (MISSION BONUS)' : ''}`;
     if (this.peloton) ctx.state.ridersRallied += this.peloton.joinedTotal;
-    fitText(text(this, GAME_W / 2, 92, sub, 'font_outline').setScrollFactor(0).setDepth(3000).setCenterAlign(), GAME_W - 16, true);
+    fitText(text(this, GAME_W / 2, 60 + th / 2 + 8, sub, 'font_outline').setOrigin(0.5, 0).setScrollFactor(0).setDepth(3000).setCenterAlign(), GAME_W - 16, true);
     ctx.state.ratsDefeated += this.killed + (this.escort?.cleared ?? 0);
     await new Promise((r) => this.time.delayedCall(2000, r));
     await iris(this, 'close', this.player.sprite.x - this.cameras.main.scrollX, this.player.sprite.y - 16, 500);
@@ -402,7 +475,7 @@ export class ActionScene extends Phaser.Scene {
     const out = costsLife && ctx.state.lives <= 0;
     fitText(text(this, GAME_W / 2, 70, out ? 'OUT OF LIVES!' : msg, 'font_big').setScrollFactor(0).setDepth(3000).setTint(0xff6347), GAME_W - 16);
     const sub = out ? 'BACK TO THE MAP TO REGROUP' : costsLife ? `-1 LIFE   LIVES LEFT: ${ctx.state.lives}` : 'TRY AGAIN';
-    fitText(text(this, GAME_W / 2, 96, sub, 'font_outline').setScrollFactor(0).setDepth(3000), GAME_W - 16, true);
+    fitText(text(this, GAME_W / 2, 84, sub, 'font_outline').setOrigin(0.5, 0).setScrollFactor(0).setDepth(3000), GAME_W - 16, true);
     if (costsLife) { sfx.hurt(); shake(this, 300, 0.01); }
     if (out) ctx.state.lives = START_LIVES;
     ctx.save();
@@ -442,14 +515,27 @@ export class ActionScene extends Phaser.Scene {
         this.depave = new DepaveSpots(this, a.depave, l.left, this.groundY);
         this.spawnRats(a.depave.rats, l.left);
         this.flashGo(this.depave.fence ? 'TEAR IT DOWN!' : 'DEPAVE IT!');
-        floatText(this, GAME_W / 2, 110, this.depave.fence ? 'PUMP THE FENCES DOWN' : 'PUMP THE CRACKED ASPHALT', 'font_outline', 0xfff08a, 1600).setScrollFactor(0);
+        this.say(this.depave.fence ? 'PUMP THE FENCES DOWN' : 'PUMP THE CRACKED ASPHALT');
       }
       else if (a.boss?.kind === 'monstersuv' && !this.monster && px > a.boss.at) {
         const l = this.lockArena('boss', 0);
         this.monster = new MonsterSuv(this, l.left + GAME_W - 70, this.groundY, { left: l.left, right: l.left + GAME_W });
+        // M3.1: cart shelters to climb onto (pallets are the step up): the charge passes under you
+        for (const [sx, step] of [[l.left + 120, -1], [l.left + GAME_W - 120, 1]] as const) {
+          this.oneWay(sx, this.groundY - 56, 80, 'cartshelter');
+          this.oneWay(sx + step * 58, this.groundY - 26, 30, 'pallets');
+        }
         this.flashGo('BOSS!');
+        this.time.delayedCall(1300, () => this.say('CLIMB THE CART SHELTERS: IT CAN\'T REACH YOU.\nSTOMP ITS ROOF. PUMP THE TYRES WHEN IT STALLS!', 0xfff08a, 3200));
       }
-      else if (a.boss && a.boss.kind !== 'laneeater' && a.boss.kind !== 'monstersuv' && !this.boss && px > a.boss.at) this.startBoss();
+      else if (a.boss?.kind === 'spadigger' && !this.digger && px > a.boss.at) {
+        const l = this.lockArena('boss', 2);
+        this.digger = new SpaDigger(this, l.left + GAME_W - 100, this.groundY, { left: l.left, right: l.left + GAME_W }, (fx) => { if (this.player.hurt(fx)) { shake(this, 150, 0.01); hitStop(this, 70); } });
+        this.time.delayedCall(1500, () => { const L2 = this.lock; if (L2) ['basic', 'lobbyist'].forEach((k, i) => this.time.delayedCall(i * 600, () => this.spawnRat(k as RatKind, L2.left + 14))); });
+        this.flashGo('BOSS!');
+        this.time.delayedCall(1300, () => this.say('THE BUCKET SLAMS ON THE RED MARK.\nPUMP THE ARM WHILE IT\'S STUCK. STOMP THE CAB!', 0xfff08a, 3400));
+      }
+      else if (a.boss && a.boss.kind !== 'laneeater' && a.boss.kind !== 'monstersuv' && a.boss.kind !== 'spadigger' && !this.boss && px > a.boss.at) this.startBoss();
       else if (a.build && !this.build && this.chaseDone && px > a.build.at) this.startBuild();
     }
 
@@ -458,7 +544,8 @@ export class ActionScene extends Phaser.Scene {
       const as = a.autoscroll!;
       if (this.scrolling && !this.player.frozen) {
         const speed = as.speed;
-        cam.scrollX = Math.min(cam.scrollX + speed * (dt / 1000), as.end - GAME_W);
+        this.autoX = Math.min(this.autoX + speed * (dt / 1000), as.end - GAME_W);
+        cam.scrollX = Math.floor(this.autoX);
         // keep the raccoon on screen: the left edge pushes
         const lo = cam.scrollX + 14, hi = cam.scrollX + GAME_W - 14;
         if (px < lo) { this.player.sprite.x = lo; if (pb.velocity.x < speed) pb.setVelocityX(speed); }
@@ -473,12 +560,12 @@ export class ActionScene extends Phaser.Scene {
           sfx.squeak();
         }
         // end of the street: the machine turns on you
-        if (cam.scrollX >= as.end - GAME_W - 0.5) {
+        if (this.autoX >= as.end - GAME_W - 0.5) {
           this.scrolling = false;
           const l = this.lockArena('boss', 0);
           this.eater.startBoss(l.left + 90);
           this.peloton.parkAt = l.left + GAME_W - 20;
-          this.time.delayedCall(900, () => floatText(this, l.left + GAME_W / 2, 60, 'JUMP + PUMP THE CONVEYOR AND THE CAB.\nHIT THE GRINDER WHEN IT OVERHEATS!', 'font_outline', 0xfff08a, 2600).setScrollFactor(0));
+          this.time.delayedCall(900, () => this.say('JUMP + PUMP THE CONVEYOR AND THE CAB.\nHIT THE GRINDER WHEN IT OVERHEATS!', 0xfff08a, 2600));
           this.flashGo('BOSS!');
         }
       }
@@ -489,7 +576,7 @@ export class ActionScene extends Phaser.Scene {
           this.rats.filter((r) => r.alive).length);
         this.eater.takeHits(hits, () => { hitStop(this, 120); });
         if (!this.eater.alive && !this.bossDone) {
-          this.bossDone = true; this.killed++;
+          this.bossDone = true; this.killed++; this.pts('boss', this.eater.x, this.groundY - 90);
           for (const r of this.rats) if (r.alive) r.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 99, kb: 120, id: 99998 }, px);
           this.peloton.riders.forEach((r, i) => this.tweens.add({ targets: r, y: r.y - 8, duration: 160, yoyo: true, repeat: 3, delay: i * 50 }));
           this.time.delayedCall(1500, () => this.endArena());
@@ -499,6 +586,25 @@ export class ActionScene extends Phaser.Scene {
 
     // ---- the parking lot: depave + the Monster SUV ----
     if (this.depave && !this.depaveDone) this.depave.update(hits, px);
+    // ---- the Pink Digger (mission 8) ----
+    if (this.digger) {
+      const d = this.digger;
+      d.update(dt, px, pRect);
+      if (d.alive) {
+        const rr = d.roofRect();
+        if (pb.velocity.y > 40 && pRect.bottom <= d.roofY() + 12 && pRect.right > rr.x && pRect.x < rr.right) {
+          if (d.hit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 0, id: 7900 + Math.floor(this.time.now / 150) }, 'stomp')) { this.player.bounce(); hitStop(this, 70); }
+        } else {
+          const ar = d.armRect();
+          for (const h of hits) if (overlap(h, ar) && d.hit(h, 'pump')) { hitStop(this, 70); shake(this, 90, 0.005); }
+          if (Phaser.Geom.Rectangle.Overlaps(d.rect(), pRect) && pRect.bottom > d.roofY() + 40 && this.player.hurt(d.x)) { shake(this, 140, 0.01); hitStop(this, 70); }
+        }
+      } else if (!this.bossDone) {
+        this.bossDone = true; this.killed++; this.pts('boss', d.x, this.groundY - 100);
+        for (const r of this.rats) if (r.alive) r.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 99, kb: 120, id: 99996 }, px);
+        this.time.delayedCall(1700, () => this.endArena());
+      }
+    }
     if (this.monster) {
       const m = this.monster;
       m.update(dt, px);
@@ -512,7 +618,7 @@ export class ActionScene extends Phaser.Scene {
           if (m.dangerous && Phaser.Geom.Rectangle.Overlaps(mr, pRect) && pRect.bottom > m.roofY() + 10 && this.player.hurt(m.x)) { shake(this, 160, 0.012); hitStop(this, 80); }
         }
       } else if (!this.bossDone) {
-        this.bossDone = true; this.killed++;
+        this.bossDone = true; this.killed++; this.pts('boss', m.x, this.groundY - 90);
         for (const r of this.rats) if (r.alive) r.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 99, kb: 120, id: 99997 }, px);
         this.time.delayedCall(1300, () => this.endArena());
       }
@@ -550,11 +656,11 @@ export class ActionScene extends Phaser.Scene {
       const cr = c.rect();
       // stomp the roof
       if (pb.velocity.y > 40 && pRect.bottom <= c.roofY() + 10 && pRect.right > cr.x + 4 && pRect.x < cr.right - 4) {
-        if (c.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 0, id: 9000 + Math.floor(this.time.now / 150) })) { this.player.bounce(); hitStop(this, 60); if (!c.alive) this.killed++; }
+        if (c.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 0, id: 9000 + Math.floor(this.time.now / 150) })) { this.player.bounce(); hitStop(this, 60); if (!c.alive) { this.killed++; this.pts('suv', c.x, this.groundY - 50); } }
         continue;
       }
       let wasHit = false;
-      for (const h of hits) if (overlap(h, cr) && c.takeHit(h)) { wasHit = true; hitStop(this, 60); shake(this, 80, 0.005); if (!c.alive) this.killed++; }
+      for (const h of hits) if (overlap(h, cr) && c.takeHit(h)) { wasHit = true; hitStop(this, 60); shake(this, 80, 0.005); if (!c.alive) { this.killed++; this.pts('suv', c.x, this.groundY - 50); } }
       if (!wasHit && c.dangerous && Phaser.Geom.Rectangle.Overlaps(cr, pRect) && pRect.bottom > c.roofY() + 8 && this.player.hurt(c.x)) { shake(this, 150, 0.012); hitStop(this, 80); }
     }
     this.cars = this.cars.filter((c) => c.alive || c.img.active);
@@ -575,7 +681,7 @@ export class ActionScene extends Phaser.Scene {
         if (bab && overlap(bab, pRect) && this.player.hurt(this.boss.sprite.x)) { shake(this, 150, 0.01); hitStop(this, 80); }
       } else if (!this.bossDone) {
         this.bossDone = true;
-        this.killed++;
+        this.killed++; this.pts('boss', this.boss.sprite.x, this.groundY - 90);
         for (const r of this.rats) if (r.alive) r.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 99, kb: 120, id: 99999 }, px);
         if (this.dogFraud) {
           const df = this.dogFraud;
@@ -587,8 +693,10 @@ export class ActionScene extends Phaser.Scene {
     }
 
     // ---- rats ----
-    const lobbyists = this.rats.filter((r) => r.alive && r.kind === 'lobbyist');
-    for (const r of this.rats) r.shielded = r.kind !== 'lobbyist' && lobbyists.some((l) => Math.abs(l.sprite.x - r.sprite.x) < 120);
+    // M3.1 (Ivan): a lobbyist anywhere on screen lobbies for EVERY rat on screen (a third of the damage)
+    const onScreen = (x: number) => x > cam.scrollX - 16 && x < cam.scrollX + GAME_W + 16;
+    const lobbying = this.rats.some((r) => r.alive && r.kind === 'lobbyist' && onScreen(r.sprite.x));
+    for (const r of this.rats) r.shielded = lobbying && r.kind !== 'lobbyist' && onScreen(r.sprite.x);
     for (const r of this.rats) {
       r.update(dt, px);
       if (!r.alive) continue;
@@ -597,10 +705,10 @@ export class ActionScene extends Phaser.Scene {
       for (const h of hits) if (overlap(h, rRect) && r.takeHit(h, px)) {
         wasHit = true;
         hitStop(this, h.dmg > 1 ? 90 : 50); shake(this, 90, h.dmg > 1 ? 0.008 : 0.004);
-        if (!r.alive) this.killed++;
+        if (!r.alive) { this.killed++; r.reward = `+${award(ctx.state, 'rat')}`; this.earned += POINTS_OF(r.reward); }
       }
       if (!wasHit && pb.velocity.y > 60 && pRect.bottom < rRect.y + 10 && overlap({ x: pRect.x, y: pRect.y, w: pRect.width, h: pRect.height }, rRect)) {
-        if (r.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 60, id: 5000 + Math.floor(this.time.now / 200) }, px)) { this.player.bounce(); hitStop(this, 50); if (!r.alive) this.killed++; }
+        if (r.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 60, id: 5000 + Math.floor(this.time.now / 200) }, px)) { this.player.bounce(); hitStop(this, 50); if (!r.alive) { this.killed++; r.reward = `+${award(ctx.state, 'rat')}`; this.earned += POINTS_OF(r.reward); } }
         continue;
       }
       const rab = r.attackBox();
@@ -646,6 +754,8 @@ export class ActionScene extends Phaser.Scene {
 
     // ---- low health: a heartbeat beep ----
     if (!a.noCombat && this.player.hp === 1 && !this.finished) { this.lowHpT -= dt; if (this.lowHpT <= 0) { sfx.blip(); this.lowHpT = 900; } }
+    this.scoreObjectives();
+    this.hud.score.setText(fmtScore(ctx.state.score));
     if (this.player.dead) void this.lose();
     if (this.player.sprite.y > GAME_H + 40) { this.player.hp = 0; this.player.dead = true; }
     this.drawHud();

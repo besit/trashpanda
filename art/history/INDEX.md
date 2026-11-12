@@ -116,6 +116,14 @@ First pass portrait (grin / laugh / shock). SDF: pear head (skull+jowls smooth-u
 
 ## dogfraud_inworld
 
+### dogfraud_inworld v03
+
+2026-11-12
+
+M3.1 (Ivan): arms and torso separated by tone (darker sleeves, light sleeve edge, seam) instead of one diagonal shadow.
+
+![dogfraud_inworld v03](dogfraud_inworld/v03/preview.png)
+
 ### dogfraud_inworld v02
 
 2026-11-12
@@ -177,6 +185,14 @@ v01: intro highway backdrop (DVP-style ravine, river, lake, sunset, skyline) + b
 ![dvp v01](dvp/v01/preview.png)
 
 ## eastend
+
+### eastend v03
+
+2026-11-12
+
+M3.1: the Don Jail (1864) facade; cart shelter + pallets for the Monster SUV fight.
+
+![eastend v03](eastend/v03/preview.png)
 
 ### eastend v02
 
@@ -268,6 +284,14 @@ v01: Trinity Bellwoods gates (front elevation + 3/4 tops; first pass had the iro
 
 ## park_decals
 
+### park_decals v03
+
+2026-11-12
+
+M3.1: High Park's outdoor pool replaces two of the three diamonds.
+
+![park_decals v03](park_decals/v03/preview.png)
+
 ### park_decals v02
 
 2026-11-10
@@ -322,6 +346,14 @@ First pass props: trees, sapling, streetlight, TTC stop, post-and-ring bike stan
 
 ## raccoon_side
 
+### raccoon_side v04
+
+2026-11-12
+
+M3.1 (Ivan): bigger tail bounce while riding (tip swings -2..+4 px).
+
+![raccoon_side v04](raccoon_side/v04/preview.png)
+
 ### raccoon_side v03
 
 2026-11-10
@@ -347,6 +379,14 @@ First pass: hand-painted head grid + procedural bike, IK legs, trash-can-lid att
 ![raccoon_side v01](raccoon_side/v01/preview.png)
 
 ## raccoon_top
+
+### raccoon_top v03
+
+2026-11-12
+
+M3.1: the top-view tail now actually swings (sin(2a) was 0 on all 4 frames) and bobs.
+
+![raccoon_top v03](raccoon_top/v03/preview.png)
 
 ### raccoon_top v02
 
@@ -454,6 +494,14 @@ First side-view composition: dithered sky (day/dusk), skyline w/ CN Tower + dome
 
 ## side_props
 
+### side_props v03
+
+2026-11-12
+
+M3.1: the speed hump spans the road (no more cross-section); extra lives are hearts.
+
+![side_props v03](side_props/v03/preview.png)
+
 ### side_props v02
 
 2026-11-12
@@ -471,6 +519,14 @@ M2 side-view mission props: signal pole with a TSP call box (red / green / prior
 ![side_props v01](side_props/v01/preview.png)
 
 ## tiles
+
+### tiles v06
+
+2026-11-12
+
+M3.1: rail corridor tiles (ballast, ties, rails) north of Bremner Blvd.
+
+![tiles v06](tiles/v06/preview.png)
 
 ### tiles v05
 
@@ -514,6 +570,14 @@ First tile set: asphalt variants, lane markings, embedded streetcar tracks (E-W,
 
 ## vehicles
 
+### vehicles v04
+
+2026-11-12
+
+M3.1 (Ivan: notice the skewed front): the Flexity's cab ends are raked (the end face leans back toward the roof, bumper forward), grey double doors; 45-degree frames for streetcars and cars turning at corners.
+
+![vehicles v04](vehicles/v04/preview.png)
+
 ### vehicles v03
 
 2026-11-12
@@ -540,6 +604,14 @@ First pass vehicles: car (4 dirs/colours), SUV, 3-section TTC-style streetcar.
 
 ## waterfront
 
+### waterfront v02
+
+2026-11-12
+
+M3.1: CN Tower base (three tapering legs + pavilion, shaft rising off the map), Rogers Centre dome (ribbed sliding panels), Ripley's Aquarium wave roof, ferry terminal + ferry, Sundial Folly, Ontario Place pods + Cinesphere from Ivan's photos, Gardiner deck + piers, track curves, marina dock.
+
+![waterfront v02](waterfront/v02/preview.png)
+
 ### waterfront v01
 
 2026-11-12
@@ -547,3 +619,13 @@ First pass vehicles: car (4 dirs/colours), SUV, 3-section TTC-style streetcar.
 M3 Waterfront: CN Tower (map), the domed stadium, Cinesphere, a pod, Sugar Beach umbrella, sailboat, Gardiner deck segment, MEGA SPA fence + facade (lettering redrawn 5px tall after the 3x3 glyphs read as HECA SPA).
 
 ![waterfront v01](waterfront/v01/preview.png)
+
+## waterfront_side
+
+### waterfront_side v01
+
+2026-11-12
+
+M3.1 mission 8: the Pink Digger boss (3 poses), the Toronto Islands band (lighthouse, Billy Bishop airport), a turboprop + a Cessna, sand clod.
+
+![waterfront_side v01](waterfront_side/v01/preview.png)

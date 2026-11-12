@@ -442,3 +442,78 @@ The real story behind mission 8 is the 95-year Therme lease at Ontario Place. I 
 
 ### Numbers
 Unit tests 14/14, e2e 18/18 (4 new in `m3.spec.ts`: the N/S ride, and marker → briefing → action → debrief → payoff for missions 5, 7 and 8). All scenes hold 60 fps with a p95 of 16.8 ms up to 6× CPU throttle. First load is about 2.3 MB of the 2.5 MB budget (see PERFORMANCE).
+
+## 2026-11-12: Day 4 (later), M3.1: Ivan's M3 review
+
+Ivan's M3 notes ran to about forty items across the five districts, the missions and the systems. All of them are addressed in this pass; the review doc ([docs/reviews/M3.1.md](reviews/M3.1.md)) has a screenshot for every visual change, as he asked, so he doesn't have to replay a mission to see a speed hump.
+
+### The bug that only happened on Ivan's monitor
+"The screen didn't move" in the Lane Eater. It never reproduced here, because my tests run at 60 Hz. Phaser floors `camera.scrollX` every frame when `roundPixels` is on. At 62 px/s and 60 Hz the step is just over 1 px, so it survives the floor. At 120 Hz or more it's about 0.5 px, gets floored away every frame, and the camera never moves. The fix keeps the scroll position in a float and floors only what it hands to the camera. The regression test launches Chromium with `--disable-frame-rate-limit --disable-gpu-vsync` (rAF ran at 522/s) and checks the camera moves.
+
+**Lesson:** any per-frame increment written straight into a property Phaser rounds is a high-refresh bug waiting to happen.
+
+### Systems
+- **Difficulty** (EASY / NORMAL / HARD) is chosen at NEW GAME. It sets the mission health bar (7 / 5 / 3 hits per life) and the score multiplier (×1 / ×1.5 / ×2).
+- **Scores** for:
+  - rats and SUV Rats
+  - bosses, built pieces, peloton riders, missions
+  - plaques, hearts and easter eggs (these count once per run)
+- **Arcade initials** and a local top-10 per device.
+- **Save version 3:** v2 saves become NORMAL runs that start scoring from 0.
+- **Online leaderboard client** over Firestore's REST API (no SDK, so about 2 KB instead of about 100 KB). It's switched off until Ivan creates the Firebase project ([docs/LEADERBOARD.md](LEADERBOARD.md)).
+- **Hearts** replace the raccoon life token, on the map and in the HUD.
+- **Footprint collision:** only the ground under a building is solid, so you can ride behind it and it fades.
+- **Bridges over traffic:** a second tile layer redraws the bridge decks above the traffic and walkers that run under them (`overpasses`, `lane.under`).
+- **Turning traffic:** a vehicle can take a quarter-circle into another lane, using new 45° frames. Lanes can be fed only by turns (`noSpawn`).
+- **Elevated lanes** (the Gardiner): drawn above everything on the ground, fast, with a jam that forms and clears every 34 s.
+- **Full-scale map PNGs** (`tools/mapshots.mjs`): the game steps its camera over the whole map, snapshots each screen and stitches them together. They're in `docs/maps/`.
+
+### Maps
+- **East End re-laid:** Gerrard north of Dundas, as Ivan pointed out. Riverdale Park East is now a real hill north of Gerrard, the Riverdale Park footbridge crosses the Don and the DVP, and the Don Jail stands on Gerrard.
+- **Waterfront re-laid:**
+  - **North of the Gardiner:** the dome west of the CN Tower, Ripley's south-east of it, Roundhouse Park, Bremner Blvd's plaza, and the rail corridor along the top.
+  - **The streets:** Spadina, University and Bay end at Queens Quay, and the 510 curves onto it on its own rails.
+  - **The lake edge:** Harbour Square Park and the Sundial Folly, the ferry terminal and a ferry, two marinas, and Ontario Place's pods and Cinesphere redrawn from Ivan's photos.
+  - **After the win:** the MEGA SPA building goes along with its fences.
+- **High Park cleaned up:**
+  - one capybara pen, placed by a search that clears every road
+  - trails that all end somewhere, and park roads that meet the street through driveways
+  - one diamond plus a pool
+  - picnic tables nudged off roads and out of the water
+
+### Missions
+- **The Monster SUV** gets cart shelters to climb (pallets are the step up). Their roofs are above the SUV, so the charge passes under you.
+- **Mission 8:**
+  - The Lobbyist swings his briefcase when cornered, and lobbies for **every** rat on screen (a third of the damage).
+  - Bigger waves, and a boss: **the Pink Digger**, the spa's excavator with a rat in a bathrobe. It raises its bucket over a red mark, slams, sticks, and flings sand.
+  - The background is now the Toronto Islands and the island airport, with a turboprop landing (no jets at Billy Bishop) and a Cessna.
+- **Smaller fixes:**
+  - The Parkside camera is carried by both rats, one end each.
+  - The speed hump spans the road.
+  - Intro and end-card text stacks instead of overlapping.
+  - The payoff box measures real glyph widths.
+
+### Art
+- **The Flexity's raked cab ends** (Ivan's line drawing): an SDF box cut by a plane that leans back toward the roof.
+- **New sprites:**
+  - the CN Tower base (three flattened tapering legs + the glass pavilion, raster shaft above)
+  - the SkyDome roof panels, Ripley's wave roof
+  - the Sundial Folly, the ferry and its terminal
+  - pods, the Cinesphere, the digger, the planes
+  - rail tiles, the pool, the Don Jail
+- **The game font is drawable onto sprites now** (`drawText`): the FERRY and MEGA SPA signs use it.
+- **Dog Fraud's arms and torso** are separated by tone. **The tail bounces more** in both views.
+
+### Failures
+- **The top-view tail never swung at all.** `sin(2·angle)` is 0 at all four frame phases (t = 0, ¼, ½, ¾). Nobody noticed for three milestones.
+- **The first M3.1 e2e run passed against the old build.** The suite uses `vite preview` of `dist/`, which `npm run e2e` doesn't rebuild. I caught it, rebuilt, and two title-flow tests failed as they should have. Lesson: build before e2e.
+- **Playwright's instant key taps were missed by the title menu.** It polled the key state once per frame. Menus and initials now use keydown events, which is better for players too.
+- **A new run wasn't saved until the first map event,** so quitting straight after choosing HARD would have lost it. It's saved on NEW GAME now.
+- **The map exporter dropped the new overlay fields.** `build-assets` lists map fields by name, so the East End bridge overlay didn't render until I added `overpasses` and `underWalks` there.
+- **Bash heredocs mangle backslashes** in Python edit scripts (`\n` became a newline inside JS strings). Scripts now go through files, or build the characters with `chr(92)`.
+- **The first Rogers Centre render read as a flat plate.** It needed a bigger rise, a lower ambient light and a side light before the panels showed.
+
+### Numbers
+- Unit tests: 16 (difficulty, score, v2 → v3 migration added). End-to-end: 22 (difficulty + initials, the uncapped-fps scroll, turning traffic, plaque scoring added).
+- 60 fps (p95 16.8 ms) in every changed scene at 1×, 4× and 6× CPU throttle. That includes the Waterfront after 40 s of traffic build-up (about 110 vehicles).
+- First load about 2.38 MB: 1,542 KB boot, 466 KB Queen West, 370 KB gzipped JS. That's against the 2.5 MB budget, so lazy map JSON is due in M4.

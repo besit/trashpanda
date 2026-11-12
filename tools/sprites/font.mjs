@@ -3,7 +3,7 @@ import { Img } from '../lib/raster.mjs';
 
 export const CHARS = ' !"#%&\'()*+,-./0123456789:;<=>?ABCDEFGHIJKLMNOPQRSTUVWXYZ_$@';
 
-const G = {
+export const GLYPHS7 = {
   ' ': '.....|.....|.....|.....|.....|.....|.....',
   '!': '..#..|..#..|..#..|..#..|..#..|.....|..#..',
   '"': '.#.#.|.#.#.|.....|.....|.....|.....|.....',
@@ -73,7 +73,7 @@ export function fontSheet(color = 'W', style = 'plain', shade = 'K', scale = 1) 
   const cw = gw + 1 + pad * 2, ch = gh + 1 + pad * 2;
   const img = new Img(cw * CHARS.length, ch);
   [...CHARS].forEach((c, i) => {
-    const rows = G[c].split('|');
+    const rows = GLYPHS7[c].split('|');
     const glyph = new Img(cw, ch);
     rows.forEach((row, y) => [...row].forEach((p, x) => { if (p === '#') glyph.rect(pad + x * scale, pad + y * scale, scale, scale, color); }));
     if (style === 'outline') glyph.outline(shade, true);
@@ -85,4 +85,15 @@ export function fontSheet(color = 'W', style = 'plain', shade = 'K', scale = 1) 
 
 export function fontPreview() {
   return { frames: [fontSheet('W', 'plain').img, fontSheet('W', 'outline').img, fontSheet('Y', 'shadow', 'r').img, fontSheet('Y', 'outline', 'K', 2).img], cols: 1 };
+}
+
+/** Draw text in the game font onto an image (signs on buildings): 5x7 glyphs, 1 px apart. Centred on cx. */
+export function drawText(img, str, cx, y, color = 'W') {
+  const s = str.toUpperCase();
+  let x = Math.round(cx - (s.length * 6 - 1) / 2);
+  for (const c of s) {
+    const g = GLYPHS7[c] ?? GLYPHS7[' '];
+    g.split('|').forEach((row, yy) => [...row].forEach((p, xx) => { if (p === '#') img.set(x + xx, y + yy, color); }));
+    x += 6;
+  }
 }

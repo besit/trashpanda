@@ -85,6 +85,31 @@ The cost is a 0.3 s wipe at the seam. The design target of "one city" is kept: s
 
 **Dundas question (M0 review):** the 2026 provincial removals target Bloor, Yonge, University, Queen's Park and Avenue Road, not Dundas (see URBAN_RESEARCH §1). Dundas is on the map as the park's north edge. The bike-lane *removal* story plays out on **Bloor, in the High Park district**, as main mission 5, *The Lane Eater* (below).
 
+## Difficulty and score (M3.1)
+- **Difficulty is chosen at NEW GAME** and fixed for the run.
+  - EASY: 7 hits per life, score ×1
+  - NORMAL: 5 hits per life, score ×1.5
+  - HARD: 3 hits per life, score ×2
+- **Lives:** a mission's health bar has that many segments. Losing the bar costs a life (lives are hearts, found hidden on the maps).
+- **Base points** (`src/core/Score.ts`):
+
+  | Event | Points |
+  |---|---|
+  | rat | 10 |
+  | SUV Rat | 25 |
+  | piece built / depaved / fence torn down | 30 |
+  | peloton rider | 20 |
+  | boss | 500 |
+  | mission (first win) | 1000 |
+  | plaque (first read) | 50 |
+  | heart | 100 |
+  | easter egg | 250 |
+
+  Plaques, hearts and eggs count once per run.
+- **Easter eggs:** the white squirrel (Trinity Bellwoods), Graffiti Alley, the view from Riverdale hill, Sugar Beach.
+- **Initials:** three arcade letters at NEW GAME.
+- **High scores:** HIGH SCORES on the title screen shows this device's top 10, plus the online top 10 once the leaderboard is configured ([LEADERBOARD.md](LEADERBOARD.md)).
+
 ## Livability
 - Headline score starts at **60 (TORONTO)**.
 - Tiers: 65 Better · 70 Great · 75 Excellent · 80 World-Class · 90 Amsterdam/Copenhagen territory · 100 Raccoon Utopia.
@@ -106,10 +131,11 @@ The cost is a 0.3 s wipe at the seam. The design target of "one city" is kept: s
 | Traffic | flagger with STOP paddle | slow, longer reach, tanky |
 | **SUV Rat** (M2) | a rat at the wheel of a dark SUV, purple DF cap | drives through your lane, honking; stomp the roof or pump the bumper (hits stall it); "RIGHT TURN ONLY!" |
 | **Bureaucrat Rat** (M2 boss) | grey suit, red tie, ring glasses, rubber stamp, desk | stamp volleys, clipboard shove, summons clerks, red tape |
-| **Lobbyist** (M3) | navy suit, gold tie, briefcase of cash | never fights; keeps 120–170 px away; rats within 120 px glint gold and take **half damage**. Corner him first |
+| **Lobbyist** (M3, buffed in M3.1) | navy suit, gold tie, briefcase of cash | keeps 120–170 px away; swings the briefcase when cornered; while he's on screen **every** rat on screen glints gold and takes **a third** of the damage. Take him out first |
 | **Foreman Rat** (M2.1, M1 boss) | the construction rat at boss size | cones, jackhammer shove, whistle, a JACKHAMMER charge that leaves him dizzy |
 | **The Lane Eater** (M3, M5 boss) | a yellow paving machine, rat foreman in the cab | paint gobs from the conveyor, a megaphone that summons rats, a lunge; the grinder opens only when it overheats |
 | **The Monster SUV** (M3, M7 boss) | a lifted SUV with a crowned rat at the wheel | charges across the lot and stalls at the edge; stomp the roof, pump the tyres while it's stalled |
+| **The Pink Digger** (M3.1, M8 boss) | the fictional MEGA SPA's pink excavator, a rat in a bathrobe + sunglasses at the controls | raises the bucket over a red ground mark, slams, gets STUCK (pump the arm), flings sand clods every third cycle; stomp the cab roof; faster below half health |
 | Mega Rat (miniboss) | | planned for M4 |
 
 ## Missions
@@ -170,10 +196,10 @@ The real 2026 removals happen on Bloor (URBAN_RESEARCH §1), so this mission is 
 - **Upgrade:** "Lanes kept + community ride". It gives a modest Livability gain plus a new stat, **Riders rallied**.
 
 ### Mission 7: The Great Parking Lot (East End), built in M3
-MEGAMART's lot south of Queen (URBAN_RESEARCH §6). Two rat waves, one with an SUV Rat. Then a locked **depave** arena: pump five cracked asphalt patches (3 hits each) into soil and saplings while rats defend them. The boss is the **Monster SUV**: it charges across the lot and stalls at the arena edge. Stomp its roof any time, and pump its tyres while it's stalled. At half health it charges faster. Payoff: the lot becomes a park.
+MEGAMART's lot south of Queen (URBAN_RESEARCH §6). Two rat waves, one with an SUV Rat. Then a locked **depave** arena: pump five cracked asphalt patches (3 hits each) into soil and saplings while rats defend them. The boss is the **Monster SUV**: it charges across the lot and stalls at the arena edge. Stomp its roof any time, and pump its tyres while it's stalled. At half health it charges faster. M3.1 (Ivan: "I can't avoid him"): two **cart shelters**, with pallets as the step up, have roofs above the SUV, so its charge passes under you. Payoff: the lot becomes a park.
 
 ### Mission 8: The Waterfront Heist (Waterfront), built in M3
-The fictional MEGA SPA is fencing off the shore (URBAN_RESEARCH §7). Three waves include **Lobbyists**, who make nearby rats take half damage, so the order matters. The middle beat is a locked arena with four fence panels across the promenade to pump down while rats and a lobbyist defend. Payoff: the fences and the causeway gate are gone, and the island gets a public beach.
+The fictional MEGA SPA is fencing off the shore (URBAN_RESEARCH §7). Three waves include **Lobbyists**. M3.1: while one is on screen, **every** rat on screen takes a third of the damage, and a cornered lobbyist swings his briefcase. The middle beat is a locked arena with four fence panels across the promenade to pump down while rats and a lobbyist defend. The finale is **the Pink Digger**. The background looks out at the Toronto Islands and the island airport. Payoff: the fences, the gate and the spa are gone, and the island is a public park with a beach.
 
 Each mission has 2–4 beats: a ride section (curbs, cones, parked cars to hop), arena waves (camera locks), a mission-specific twist, then the finale. Every mission gets one twist of its own so combat doesn't repeat.
 

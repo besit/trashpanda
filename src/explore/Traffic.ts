@@ -4,14 +4,24 @@
 // honking); after it, cyclists get their own protected lanes and there are many more of them.
 import Phaser from 'phaser';
 import type { Manifest } from '../scenes/BootScene';
-import type { Lane, Intersection } from './CityMap';
+import { type Lane, type Intersection, underDepth, ELEVATED_DEPTH } from './CityMap';
 import { sfx } from '../audio/sfx';
 
 type Kind = 'car' | 'streetcar' | 'bike';
+interface Turn { to: Lane; r: number; c: [number, number]; s: [number, number]; e: [number, number]; h0: number; h1: number; t: number }
 interface Vehicle {
   s: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite; lane: Lane; kind: Kind;
   speed: number; v: number; len: number; honkCd: number; stopT: number; served: Set<number>; off: number;
+  /** sprite key without the facing ('car_red', 'suv', 'streetcar', 'cy_b') */ base: string;
+  /** the corner this vehicle will take, and the turn in progress */ plan?: Turn; turning?: Turn;
 }
+// 8 facings (screen angle, y down) -> sprite suffix; cyclists only have the 4 straight ones
+const FACE8 = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'];
+const faceOf = (ang: number, eight: boolean) => {
+  const step = eight ? Math.PI / 4 : Math.PI / 2;
+  const k = Math.round(ang / step);
+  return eight ? FACE8[((k % 8) + 8) % 8] : ['E', 'S', 'W', 'N'][((k % 4) + 4) % 4];
+};
 interface LaneState { lane: Lane; t: number; scT: number }
 
 const COLORS = ['blue', 'red', 'white', 'yellow', 'teal', 'orange'];
@@ -27,13 +37,19 @@ export class Traffic {
   private upgrades = new Set<string>();
   private manifest: Manifest;
 
+  private byId = new Map<string, Lane>();
+  /** the Gardiner's jam cycle (s): flowing, then a jam builds at a choke point and clears again */
+  private jamT = 0;
+  get jammed() { return this.jamT % 34 > 22; }
+
   constructor(private scene: Phaser.Scene, lanes: Lane[], private intersections: Intersection[], private mapW: number, private mapH: number, upgrades: string[]) {
     this.manifest = scene.registry.get('manifest') as Manifest;
     this.upgrades = new Set(upgrades);
+    for (const l of lanes) this.byId.set(l.id, l);
     this.states = lanes.map((lane) => ({ lane, t: Math.random() * 3, scT: 4 + Math.random() * 14 }));
     // pre-populate so the streets are alive from the first frame
     for (const st of this.states) {
-      if (!this.active(st.lane)) continue;
+      if (!this.active(st.lane) || st.lane.noSpawn) continue;
       const n = st.lane.axis === 'x' ? (st.lane.bikeOnly ? 4 : 4) : 2;
       const [a, b] = this.span(st.lane);
       for (let i = 0; i < n; i++) this.spawn(st.lane, a + Math.random() * (b - a), st.lane.bikeOnly ? 'bike' : 'car');
@@ -72,11 +88,54 @@ export class Traffic {
       s = this.scene.add.image(0, 0, 'world', key).setOrigin(pv.x, pv.y);
     }
     if (horiz) s.setPosition(pos, lane.pos + off); else s.setPosition(lane.pos + off, pos);
+    const base = kind === 'bike' ? (s.frame.name.split('_').slice(0, 2).join('_')) : (s.frame.name.replace(/_[NESW]$/, ''));
     // cars > streetcars > cyclists > pedestrians (16-28), so a cyclist in mixed traffic visibly holds cars up
     let speed = kind === 'streetcar' ? (this.has(lane.priority) ? 68 : 52) : kind === 'bike' ? 32 + Math.random() * 7 : lane.light ? 52 + Math.random() * 14 : 72 + Math.random() * 26;
     if (kind === 'car' && lane.speedy && !this.has(lane.calm)) speed = 108 + Math.random() * 22; // Parkside before calming
     if (kind === 'car' && this.has(lane.calm)) speed *= 0.5;
-    this.vehicles.push({ s, lane, kind, speed, v: speed, len, honkCd: 0, stopT: 0, served: new Set(), off });
+    if (lane.elevated) speed = 120 + Math.random() * 30; // the Gardiner, when it's moving
+    const plan = this.planTurn(lane, kind);
+    this.vehicles.push({ s, lane, kind, speed, v: speed, len, honkCd: 0, stopT: 0, served: new Set(), off, base, plan });
+  }
+
+  /** pick the corner (if any) a new vehicle will take, and lay out its quarter-circle */
+  private planTurn(lane: Lane, kind: Kind): Turn | undefined {
+    for (const t of lane.turns ?? []) {
+      if (t.kinds && !t.kinds.includes(kind)) continue;
+      if (Math.random() >= t.p) continue;
+      const to = this.byId.get(t.to);
+      if (!to || to.axis === lane.axis) continue;
+      const d1: [number, number] = lane.axis === 'x' ? [lane.dir, 0] : [0, lane.dir];
+      const d2: [number, number] = to.axis === 'x' ? [to.dir, 0] : [0, to.dir];
+      const P: [number, number] = lane.axis === 'y' ? [lane.pos, to.pos] : [to.pos, lane.pos];
+      const s: [number, number] = [P[0] - d1[0] * t.r, P[1] - d1[1] * t.r];
+      const e: [number, number] = [P[0] + d2[0] * t.r, P[1] + d2[1] * t.r];
+      const c: [number, number] = [s[0] + d2[0] * t.r, s[1] + d2[1] * t.r];
+      const h0 = Math.atan2(d1[1], d1[0]); let h1 = Math.atan2(d2[1], d2[0]);
+      if (h1 - h0 > Math.PI) h1 -= Math.PI * 2; if (h0 - h1 > Math.PI) h1 += Math.PI * 2;
+      return { to, r: t.r, c, s, e, h0, h1, t: 0 };
+    }
+    return undefined;
+  }
+
+  /** a vehicle mid-corner: follow the arc, show the facing nearest its heading (45-degree frames) */
+  private steer(v: Vehicle, dt: number) {
+    const T = v.turning!;
+    T.t = Math.min(1, T.t + (Math.max(v.v, 18) * dt) / (T.r * Math.PI / 2 + 1));
+    const h = T.h0 + (T.h1 - T.h0) * T.t;
+    // the point on the arc: start angle (from the centre) is perpendicular to the heading
+    const a0 = Math.atan2(T.s[1] - T.c[1], T.s[0] - T.c[0]), a1 = Math.atan2(T.e[1] - T.c[1], T.e[0] - T.c[0]);
+    let da = a1 - a0; if (da > Math.PI) da -= Math.PI * 2; if (da < -Math.PI) da += Math.PI * 2;
+    const a = a0 + da * T.t;
+    v.s.setPosition(T.c[0] + Math.cos(a) * T.r, T.c[1] + Math.sin(a) * T.r);
+    const f = faceOf(h, v.kind !== 'bike');
+    if (v.kind === 'bike') { const sp = v.s as Phaser.GameObjects.Sprite; const k = `${v.base}_${f}`; if (sp.anims.currentAnim?.key !== k) sp.play(k); }
+    else (v.s as Phaser.GameObjects.Image).setFrame(`${v.base}_${f}`);
+    if (T.t >= 1) {
+      v.lane = T.to; v.turning = undefined; v.off = 0;
+      v.s.setPosition(T.e[0], T.e[1]);
+      if (v.kind !== 'bike') (v.s as Phaser.GameObjects.Image).setFrame(`${v.base}_${face(T.to)}`);
+    }
   }
 
   private posOf(v: Vehicle) { return v.lane.axis === 'x' ? v.s.x : v.s.y; }
@@ -86,28 +145,34 @@ export class Traffic {
     this.signalT += dt;
     if (this.signalT > (this.ewGreen ? 10 : 6)) { this.signalT = 0; this.ewGreen = !this.ewGreen; }
 
+    this.jamT += dt;
     for (const st of this.states) {
       const l = st.lane;
-      if (!this.active(l)) continue;
+      if (!this.active(l) || l.noSpawn) continue;
       st.t -= dt * (l.bikeOnly ? 1 : this.density);
       if (st.t <= 0) {
         let kind: Kind = l.bikeOnly ? 'bike' : 'car';
         // brave cyclists in mixed traffic before there's anywhere safer to ride
         if (l.cyclists === 'mixed' && !this.protectedLanes && Math.random() < 0.18) kind = 'bike';
         this.spawn(l, undefined, kind);
-        st.t = l.bikeOnly ? 2.2 + Math.random() * 2.5 : l.axis === 'y' ? (l.light ? 9 : 5) + Math.random() * 4 : 2.6 + Math.random() * 3;
+        st.t = l.bikeOnly ? 2.2 + Math.random() * 2.5 : l.elevated ? 1.8 + Math.random() * 1.6 : l.axis === 'y' ? (l.light ? 9 : 5) + Math.random() * 4 : 2.6 + Math.random() * 3;
       }
       if (l.streetcar) { st.scT -= dt; if (st.scT <= 0) { this.spawn(l, undefined, 'streetcar'); st.scT = 24 + Math.random() * 12; } }
     }
 
     for (const v of this.vehicles) {
+      if (v.turning) { this.steer(v, dt); v.s.setDepth(v.s.y + 2); continue; }
       const l = v.lane, pos = this.posOf(v), front = pos + (l.dir * v.len) / 2;
       let target = v.speed;
+      // its corner is here: start the turn
+      if (v.plan && (pos - (l.axis === 'x' ? v.plan.s[0] : v.plan.s[1])) * l.dir >= 0) { v.turning = v.plan; v.plan = undefined; this.steer(v, dt); continue; }
       const brakeTo = (stopAt: number, k = 2.5) => { const dist = (stopAt - front) * l.dir; if (dist > -4 && dist < 44) target = Math.min(target, Math.max(0, dist - 2) * k); };
       // signals (bikes in protected lanes obey them too)
       const priority = v.kind === 'streetcar' && this.has(l.priority); // TSP: the light waits for the streetcar
+      // the Gardiner: no lights, but a jam builds up at a choke point now and then, and clears
+      if (l.elevated && this.jammed) brakeTo(l.dir === 1 ? this.mapW * 0.62 : this.mapW * 0.38, 1.6);
       for (const it of this.intersections) {
-        if (priority) break;
+        if (priority || l.elevated) break;
         if (l.axis === 'x') {
           if (it.tee || this.ewGreen || l.pos < it.y0 || l.pos > it.y1) continue;
           brakeTo(l.dir === 1 ? it.x0 - 2 : it.x1 + 2);
@@ -137,7 +202,7 @@ export class Traffic {
         }
       }
       // yield to the raccoon
-      const lat = l.axis === 'x' ? Math.abs(py - (l.pos + v.off)) : Math.abs(px - (l.pos + v.off));
+      const lat = l.elevated ? 999 : l.axis === 'x' ? Math.abs(py - (l.pos + v.off)) : Math.abs(px - (l.pos + v.off));
       const ahead = ((l.axis === 'x' ? px : py) - front) * l.dir;
       if (lat < (v.kind === 'bike' ? 8 : 11) && ahead > -v.len && ahead < (v.kind === 'bike' ? 20 : 34)) {
         target = 0;
@@ -149,7 +214,7 @@ export class Traffic {
       }
       v.v = target < v.v ? Math.max(target, v.v - 160 * dt) : Math.min(target, v.v + (v.kind === 'streetcar' ? 30 : 50) * dt);
       if (l.axis === 'x') v.s.x += v.v * l.dir * dt; else v.s.y += v.v * l.dir * dt;
-      v.s.setDepth(v.s.y + 2);
+      v.s.setDepth(l.under ? underDepth(v.s.y) : l.elevated ? ELEVATED_DEPTH + 1 + v.s.y / 100000 : v.s.y + 2);
       if (v.kind === 'bike') (v.s as Phaser.GameObjects.Sprite).anims.timeScale = Math.max(0.05, v.v / 45);
     }
     // despawn

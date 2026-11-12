@@ -40,6 +40,25 @@ src/ui        fx: bitmap text, iris and blinds wipes, shake, hit-stop, float tex
 tools/        asset generators (never shipped): raster + SDF renderers, sprite modules, map generator, atlas packer
 ```
 
+## M3.1 additions
+- **Score** (`src/core/Score.ts`, pure logic): difficulty table, points, `award`/`awardOnce`, local `HighScores` (localStorage, one entry per run).
+- **Leaderboard** (`src/core/Leaderboard.ts`): Firestore REST (`:commit` with a server `REQUEST_TIME` transform, `:runQuery` ordered by score). It's a no-op until `src/data/leaderboard.config.ts` has a projectId and apiKey.
+- **Save v3:** `difficulty`, `score`, `name`, `runId`. v2 saves migrate to a NORMAL run with a score of 0.
+- **CityMap:**
+  - Buildings are solid only on their footprint, and they fade when you're behind them.
+  - Buildings can carry a `tag`, so an improvement can remove them. `removeTag` accepts an array.
+  - `overpasses` (tile rects) build a second tile layer at `UNDER_DEPTH + 0.5`, drawn above traffic with `lane.under` and walkers on `underWalks`.
+- **Traffic:**
+  - `lane.turns` lets a vehicle take a quarter-circle into another lane, decided when it spawns, using 45° frames (`car_*_NE`, `streetcar_SE`, ...).
+  - `lane.noSpawn` lanes are fed only by turns.
+  - `lane.elevated` lanes (the Gardiner) are drawn at `ELEVATED_DEPTH`, don't stop at signals or yield to the player, and have a 34 s jam cycle.
+- **ActionScene:**
+  - `say()` is the single hint slot.
+  - `oneWay()` creates standable props.
+  - `SpaDigger` is the M8 boss.
+  - `autoX` keeps the auto-scroll as a float (Phaser floors `scrollX`).
+- **Tools:** `tools/mapshots.mjs` renders full-scale district PNGs from the running game.
+
 ## Data formats
 - **Map JSON** (`gen/<district>.json`, one per district; generators in `tools/map/`, sharing `common.mjs`):
   - `ground[y][x]` tile indices

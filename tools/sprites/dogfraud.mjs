@@ -152,16 +152,22 @@ export function dogFraudStanding(expr = 'grin', podium = false) {
   const img = new Img(W, H);
   const cx = Math.round(W / 2), by = 44;
   // jacket: rounded shoulders tapering to the waist
-  img.poly([[cx - 14, by + 4], [cx - 11, by], [cx + 11, by], [cx + 14, by + 4], [cx + 12, by + 22], [cx - 12, by + 22]], 'g');
-  img.poly([[cx - 14, by + 4], [cx - 11, by], [cx - 2, by], [cx - 10, by + 22], [cx - 12, by + 22]], 'k'); // shadow side
+  // v03 (Ivan, M3: "separate his arms and torso by using different shades, instead of one diagonal
+  // shadow"): the torso is one mid tone with a thin shade on its far edge; the arms are a darker tone with
+  // a light edge along the top of the sleeve and a dark seam where they meet the torso.
+  img.poly([[cx - 14, by + 4], [cx - 11, by], [cx + 11, by], [cx + 14, by + 4], [cx + 12, by + 22], [cx - 12, by + 22]], 'G');
+  img.line(cx - 12, by + 3, cx - 11, by + 21, 'g'); img.line(cx - 11, by + 1, cx + 10, by + 1, 'h'); // far-edge shade, shoulder light
   // shirt V + lapels + tie
   img.poly([[cx - 5, by], [cx + 5, by], [cx, by + 10]], 'W');
-  img.line(cx - 5, by, cx - 1, by + 12, 'G'); img.line(cx + 5, by, cx + 1, by + 12, 'G');
+  img.line(cx - 5, by, cx - 1, by + 12, 'g'); img.line(cx + 5, by, cx + 1, by + 12, 'g'); // lapels
   img.rect(cx - 1, by + 1, 2, 11, 'V'); img.set(cx - 1, by + 3, 'Z'); img.set(cx, by + 6, 'Z'); img.set(cx - 1, by + 9, 'Z');
   img.set(cx + 3, by + 15, 'h'); img.set(cx + 3, by + 19, 'h'); // buttons
   // arms + paws
-  img.poly([[cx - 14, by + 4], [cx - 17, by + 18], [cx - 14, by + 19], [cx - 11, by + 8]], 'k');
-  img.poly([[cx + 14, by + 4], [cx + 17, by + 18], [cx + 14, by + 19], [cx + 11, by + 8]], 'g');
+  for (const sgn of [-1, 1]) {
+    img.poly([[cx + sgn * 14, by + 3], [cx + sgn * 18, by + 18], [cx + sgn * 14, by + 19], [cx + sgn * 11, by + 7]], 'k');
+    img.line(cx + sgn * 14, by + 3, cx + sgn * 17, by + 16, sgn > 0 ? 'g' : 'G'); // sleeve edge catching the light
+    img.line(cx + sgn * 11, by + 7, cx + sgn * 14, by + 18, 'K');                  // the seam against the torso
+  }
   img.ellipse(cx - 15, by + 20, 2, 2, 'P'); img.ellipse(cx + 15, by + 20, 2, 2, 'P');
   // legs + shoes
   img.rect(cx - 7, by + 22, 5, 9, 'k'); img.rect(cx + 2, by + 22, 5, 9, 'k');

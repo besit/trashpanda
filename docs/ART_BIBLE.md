@@ -80,6 +80,13 @@ Each district gets landmarks and textures you can't mistake for anywhere else. Q
 - Sugar Beach's pink umbrellas and white chairs, sailboats, the Cinesphere's geodesic dome, the pods on stilts
 - the MEGA SPA (fictional, pink and glass) and its chain-link PRIVATE fences
 
+**Rules added in M3.1:**
+- A landmark too tall for the map (the CN Tower) is drawn as its base plus a shaft that leaves the top edge. It's a building, so its footprint is solid and you can ride behind it.
+- Only a building's footprint is solid; everything above it fades when the player is behind.
+- Vehicles that turn get 45° frames; a corner reads better than a snap from one facing to the next.
+- Signs on sprites use the game font (`drawText` in `tools/sprites/font.mjs`), never ad-hoc glyphs.
+- Looking out at the lake shows the islands, not the skyline. Backgrounds show what's really behind that view.
+
 **Rules added in M3:**
 - Lettering on signs is at least 5 px tall. 3×3 glyphs read as nonsense: "MEGA SPA" came out as "HECA SPA".
 - An island is drawn with the shore tile that matches each side (water touching land to the south gets `shore_s`, and so on), never one edge tile all round.

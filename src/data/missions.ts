@@ -36,7 +36,7 @@ export interface MissionDef {
     hint?: [string, string];
     groundY?: number;
     waves: Wave[];
-    boss?: { at: number; kind: BossKind | 'laneeater' | 'monstersuv' };
+    boss?: { at: number; kind: BossKind | 'laneeater' | 'monstersuv' | 'spadigger' };
     /** M3 (The Great Parking Lot): break up asphalt patches in a locked arena */
     depave?: DepaveDef;
     /** M3 (The Lane Eater): the screen scrolls on its own; riders to rally; ambushes */
@@ -176,7 +176,7 @@ MISSIONS.great_parking_lot = {
   briefing: 'lot_before',
   debrief: 'lot_after',
   focusX: 70 * 16,
-  focusY: 72 * 16,
+  focusY: 90 * 16, // M3.1: the East End was re-laid (Queen moved south)
   action: {
     bg: 'bigbox', street: 'lot', sky: 'day', length: 2300,
     intro: 'DEPAVE MEGAMART\'S LOT. TOW THE MONSTER SUV!',
@@ -198,18 +198,20 @@ MISSIONS.waterfront_heist = {
   requires: ['king_of_street'],
   briefing: 'wf_before',
   debrief: 'wf_after',
-  focusX: 26 * 16,
-  focusY: 51 * 16,
+  focusX: 20 * 16, // M3.1: the re-laid Waterfront (the island is further south)
+  focusY: 70 * 16,
   action: {
     bg: 'lake', street: 'quay', sky: 'dusk', length: 2450,
     intro: 'THE MEGA SPA IS FENCING OFF THE SHORE. TEAR IT DOWN!',
-    hint: ['CORNER THE LOBBYISTS FIRST   PUMP THE FENCES', 'GOLD RATS TAKE HALF DAMAGE: CATCH THE LOBBYIST'],
+    // M3.1 (Ivan: "relatively easy"): bigger waves, a lobbyist guarding the fences, and a boss at the end
+    hint: ['TAKE OUT THE LOBBYISTS FIRST   PUMP THE FENCES', 'GOLD RATS ARE LOBBIED: CATCH THE LOBBYIST'],
     waves: [
-      { at: 300, rats: ['basic', 'lobbyist', 'basic'] },
-      { at: 820, rats: ['construction', 'traffic', 'lobbyist', 'basic'] },
-      { at: 1950, rats: ['basic', 'construction', 'lobbyist', 'traffic', 'lobbyist', 'basic'] },
+      { at: 300, rats: ['basic', 'lobbyist', 'basic', 'traffic'] },
+      { at: 820, rats: ['construction', 'traffic', 'lobbyist', 'basic', 'basic'] },
+      { at: 1700, rats: ['basic', 'construction', 'lobbyist', 'traffic', 'lobbyist', 'basic'] },
     ],
-    depave: { at: 1350, patches: [70, 150, 230, 310], rats: ['basic', 'lobbyist', 'construction'], style: 'fence' },
+    depave: { at: 1250, patches: [70, 150, 230, 310], rats: ['basic', 'lobbyist', 'construction', 'traffic'], style: 'fence' },
+    boss: { at: 2150, kind: 'spadigger' },
   },
 };
 

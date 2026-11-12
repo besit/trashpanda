@@ -4,11 +4,12 @@
 import Phaser from 'phaser';
 import type { Manifest } from '../scenes/BootScene';
 import { floatText } from '../ui/fx';
+import { underDepth } from './CityMap';
 import { sfx } from '../audio/sfx';
 
 interface Walker {
   s: Phaser.GameObjects.Sprite; path: [number, number][]; seg: number; t: number; dir: 1 | -1;
-  speed: number; id: string; facing: string; off: number; wait: number; reactCd: number;
+  speed: number; id: string; facing: string; off: number; wait: number; reactCd: number; under?: boolean;
 }
 
 const LINES = ['HI RACCOON!', 'NICE BELL!', 'CUTE BIKE!', 'OH! A RACCOON!', 'WATCH OUT!', 'MORNING!'];
@@ -22,7 +23,7 @@ export class Crowd {
   private squirrel?: { s: Phaser.GameObjects.Sprite; home: { x: number; y: number }; vx: number; vy: number; t: number; spotted: boolean };
   onSquirrelSpotted?: () => void;
 
-  constructor(private scene: Phaser.Scene, walkways: [number, number][][], critters: { kind: string; x: number; y: number }[], count = 30) {
+  constructor(private scene: Phaser.Scene, walkways: [number, number][][], critters: { kind: string; x: number; y: number }[], count = 30, underWalks: number[] = []) {
     const m = scene.registry.get('manifest') as Manifest;
     const ids = m.peds ?? ['a'];
     const pv = m.pivots.ped ?? { x: 0.5, y: 0.9 };
@@ -36,11 +37,15 @@ export class Crowd {
       const seg = Math.floor(Math.random() * (path.length - 1));
       const id = ids[Math.floor(Math.random() * ids.length)];
       const s = scene.add.sprite(0, 0, 'chars', `ped_${id}_S_0`).setOrigin(pv.x, pv.y);
-      this.walkers.push({ s, path, seg, t: Math.random(), dir: Math.random() < 0.5 ? 1 : -1, speed: id === 'kid' ? 26 : 16 + Math.random() * 10, id, facing: '', off: (Math.random() - 0.5) * 6, wait: 0, reactCd: 0 });
+      this.walkers.push({ s, path, seg, t: Math.random(), dir: Math.random() < 0.5 ? 1 : -1, speed: id === 'kid' ? 26 : 16 + Math.random() * 10, id, facing: '', off: (Math.random() - 0.5) * 6, wait: 0, reactCd: 0, under: underWalks.includes(k) });
     }
     for (const c of critters) if (c.kind === 'swan' || c.kind === 'woodduck') {
       const s = scene.add.sprite(c.x, c.y, 'world', `${c.kind}_0`).setOrigin(0.5, 0.85).play(`${c.kind}_swim`);
       this.swimmers.push({ s, home: { x: c.x, y: c.y }, vx: 0, vy: 0, t: Math.random() * 3, r: c.kind === 'swan' ? 22 : 14 });
+    }
+    for (const c of critters) if (c.kind === 'moored') { // tied up at a marina dock: just bobbing
+      const s = scene.add.sprite(c.x, c.y, 'world', 'sailboat_0').setOrigin(0.5, 0.93).setDepth(c.y).play({ key: 'sailboat_bob', startFrame: Math.floor(Math.random() * 2) });
+      void s;
     }
     for (const c of critters) if (c.kind === 'sailboat') { // drift lazily about their mooring
       const s = scene.add.sprite(c.x, c.y, 'world', 'sailboat_0').setOrigin(0.5, 0.93).play('sailboat_bob');
@@ -83,7 +88,7 @@ export class Crowd {
         else if (w.t < 0) { if (w.seg > 0) { w.seg--; w.t = 1; } else { w.t = 0; w.dir = 1; } }
       }
       const x = a[0] + (b[0] - a[0]) * w.t - uy * w.off, y = a[1] + (b[1] - a[1]) * w.t + ux * w.off;
-      w.s.setPosition(Math.round(x), Math.round(y)).setDepth(y);
+      w.s.setPosition(Math.round(x), Math.round(y)).setDepth(w.under ? underDepth(y) : y);
       const vis = x > cam.x - 40 && x < cam.right + 40 && y > cam.y - 40 && y < cam.bottom + 40;
       w.s.setVisible(vis);
       if (!vis) continue;

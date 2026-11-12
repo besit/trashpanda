@@ -24,9 +24,8 @@ export class SuvRat {
   constructor(private scene: Phaser.Scene, x: number, readonly groundY: number, dir: 1 | -1, speed = 150, hp = 3) {
     this.dir = dir; this.speed = speed; this.hp = hp;
     this.img = scene.add.image(x, groundY + 2, 'world', 'suvrat_0').setOrigin(0.5, 0.92).setDepth(105).setFlipX(dir === -1);
-    // it turns in from a side street: rises from below the bottom edge as it drives into frame (M2.1)
-    this.img.y = groundY + 60;
-    scene.tweens.add({ targets: this.img, y: groundY + 2, duration: 650, ease: 'Sine.easeOut' });
+    // M3.1 (Ivan): side-view cars drive in from off screen at the sides (the M2.1 rise-from-below was
+    // only meant for the Parkway shot in the intro)
     sfx.carHonk();
   }
 

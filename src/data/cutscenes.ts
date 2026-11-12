@@ -19,9 +19,9 @@ export type Step =
   | { t: 'dvp'; lanes: number }
   | { t: 'dvpAdd' }
   | { t: 'actor'; id: string; frame: string; anim?: string; x: number; y: number; flip?: boolean; depth?: number; atlas?: 'chars' | 'world'; sign?: string; scale?: number; /** stands on the street and scrolls with it */ world?: boolean;
-      /** drives in rising from below the screen edge */ rise?: boolean;
+      /** rises up from below its spot (fences going up, umbrellas opening); vehicles enter from the sides */ rise?: boolean;
       /** switch frame when actor `by` (or screen x) reaches this actor */ turnOn?: { frame: string; atScreenX: number; by?: string; ahead?: number; sfx?: 'signal' | 'ding' | 'bell' } }
-  | { t: 'frame'; id: string; frame: string; anim?: string }
+  | { t: 'frame'; id: string; frame: string; anim?: string; flip?: boolean }
   | { t: 'move'; id: string; x: number; ms: number; wait?: boolean; ease?: string; anim?: string; y?: number; keepAnim?: boolean }
   | { t: 'hop'; id: string; dy?: number; ms?: number }
   | { t: 'rotate'; id: string; angle: number; ms?: number; ease?: string; wait?: boolean }
@@ -283,17 +283,23 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'wobble', id: 'cam' },
     { t: 'sfx', name: 'construction' },
     { t: 'wait', ms: 400 },
-    // TIMBER: the camera tips over (same sprite, just rotated; M2.1) and the rats carry it off
+    // TIMBER: the camera tips over (same sprite, just rotated; M2.1) onto the sidewalk. M3.1 (Ivan: "place
+    // it more precisely on them"): the camera is 80 px long lying down (pivot at its foot, head to the
+    // right), so the rats take one end each, lift it onto their shoulders, and carry it off in step.
     { t: 'rotate', id: 'cam', angle: 90, ms: 500, wait: true },
+    { t: 'move', id: 'cam', x: 260, y: SIDEWALK - 4, ms: 120 },
     { t: 'sfx', name: 'hurt' },
     { t: 'sfx', name: 'squeak' },
     { t: 'actor', id: 'df', frame: 'dfs_grin', x: 110, y: SIDEWALK + 6, depth: 49, world: true },
     { t: 'say', who: 'DOG FRAUD', text: 'SPEED CAMERAS? A TAX ON GOING FAST! TO THE POND WITH IT! FRA-HA-HA!' },
-    { t: 'frame', id: 'r1', frame: 'rat_construction_0', anim: 'rat_construction_walk' },
-    { t: 'frame', id: 'r2', frame: 'rat_basic_0', anim: 'rat_basic_walk' },
-    { t: 'move', id: 'cam', x: 580, y: SIDEWALK - 12, ms: 1600 },
-    { t: 'move', id: 'r1', x: 540, ms: 1600 },
-    { t: 'move', id: 'r2', x: 610, ms: 1600 },
+    { t: 'frame', id: 'r1', frame: 'rat_construction_0', anim: 'rat_construction_walk', flip: false },
+    { t: 'frame', id: 'r2', frame: 'rat_basic_0', anim: 'rat_basic_walk', flip: false },
+    { t: 'move', id: 'r1', x: 262, ms: 500 },
+    { t: 'move', id: 'r2', x: 330, ms: 500, wait: true },
+    { t: 'move', id: 'cam', x: 260, y: SIDEWALK - 16, ms: 300, wait: true },
+    { t: 'move', id: 'cam', x: 580, y: SIDEWALK - 16, ms: 1600, ease: 'Linear' },
+    { t: 'move', id: 'r1', x: 582, ms: 1600, ease: 'Linear' },
+    { t: 'move', id: 'r2', x: 650, ms: 1600, ease: 'Linear' },
     { t: 'move', id: 'df', x: -80, ms: 1200, wait: true },
     { t: 'actor', id: 'tp', frame: 'rs_2', anim: 'rs_ride', x: -30, y: GROUND + 2, depth: 90 },
     { t: 'move', id: 'tp', x: 150, ms: 1000, ease: 'Cubic.easeOut', wait: true, anim: 'rs_idle' },
@@ -309,11 +315,11 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'music', song: 'improve' },
     { t: 'caption', text: 'PARKSIDE DRIVE. MONDAY, 8:30 AM.', y: 18, hold: 500 },
     { t: 'actor', id: 'cam', frame: 'speedcam', atlas: 'world', x: 340, y: SIDEWALK + 4, depth: 30, world: true, scale: 2 },
-    { t: 'actor', id: 'hump', frame: 'humpside', atlas: 'world', x: 150, y: GROUND + 10, depth: 70, world: true },
+    { t: 'actor', id: 'hump', frame: 'humpside', atlas: 'world', x: 150, y: STREET_Y + 16, depth: 31, world: true },
     { t: 'actor', id: 'cross', frame: 'raisedside', atlas: 'world', x: 260, y: STREET_Y + 16, depth: 31, world: true },
     { t: 'actor', id: 'ext', frame: 'curbextside', atlas: 'world', x: 400, y: STREET_Y + 30, depth: 32, world: true },
     { t: 'actor', id: 'kid', frame: 'ped_kid_S_0', anim: 'ped_kid_S', x: 260, y: SIDEWALK, depth: 40, scale: 2 },
-    { t: 'actor', id: 'car', frame: 'carside_red', atlas: 'world', x: -90, y: GROUND + 8, depth: 80, rise: true },
+    { t: 'actor', id: 'car', frame: 'carside_red', atlas: 'world', x: -90, y: GROUND + 8, depth: 80 },
     { t: 'move', id: 'car', x: 118, ms: 2400, ease: 'Sine.easeOut', wait: true },
     { t: 'hop', id: 'car', dy: 4, ms: 700 },
     { t: 'move', id: 'car', x: 180, ms: 700, ease: 'Linear', wait: true },
@@ -344,7 +350,7 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'clear' },
     { t: 'music', song: 'dogfraud' },
     { t: 'sfx', name: 'carHonk' },
-    { t: 'actor', id: 'suv', frame: 'monstersuv_1', atlas: 'world', x: 520, y: GROUND + 20, depth: 80, flip: true, rise: true },
+    { t: 'actor', id: 'suv', frame: 'monstersuv_1', atlas: 'world', x: 520, y: GROUND + 20, depth: 80, flip: true },
     { t: 'move', id: 'suv', x: 230, ms: 1600, ease: 'Sine.easeOut', wait: true },
     { t: 'sfx', name: 'squeak' },
     { t: 'frame', id: 'weed', frame: 'cone' },

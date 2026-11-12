@@ -21,6 +21,11 @@ export interface Lane {
   /** upgrade id: traffic calmed (slower cars) */ calm?: string;
   /** drivers speed here until calmed */ speedy?: boolean;
   /** a dedicated transit right-of-way: streetcars only (Queens Quay) */ transitOnly?: boolean;
+  /** runs UNDER overpasses (the DVP under the Don bridges): drawn below the bridge-deck overlay */ under?: boolean;
+  /** up on an elevated deck (the Gardiner): drawn above everything on the ground, fast, jams that clear */ elevated?: boolean;
+  /** no vehicles of its own: it's fed by vehicles turning into it */ noSpawn?: boolean;
+  /** corners vehicles may take into another lane (first match wins, decided when a vehicle spawns) */
+  turns?: { to: string; r: number; p: number; kinds?: ('car' | 'streetcar' | 'bike')[] }[];
   /** [start, end] px along the lane's axis when the street doesn't span the whole map */ range?: [number, number];
 }
 /** a street continuing across a map edge: w/e exits span rows y0..y1, n/s exits span columns x0..x1 */
@@ -37,7 +42,7 @@ export interface MapData {
   ground: number[][];
   objects: MapObject[];
   decals?: { key: string; x: number; y: number }[];
-  improvements: Record<string, { tiles: [number, number, number][]; addProps: MapObject[]; removeTag?: string }>;
+  improvements: Record<string, { tiles: [number, number, number][]; addProps: MapObject[]; removeTag?: string | string[] }>;
   spawn: { x: number; y: number };
   markers: { id: string; x: number; y: number; label: string }[];
   lanes: Lane[];
@@ -47,9 +52,21 @@ export interface MapData {
   critters?: { kind: string; x: number; y: number }[];
   landmarks?: { id: string; x: number; y: number; label: string; fact: string }[];
   tileColors?: number[];
+  /** tile rects [x0, y0, x1, y1] redrawn above traffic that runs under them (bridge decks over the DVP, M3.1) */
+  overpasses?: [number, number, number, number][];
+  /** indices into walkways that run under the overpasses (the Lower Don trail) */
+  underWalks?: number[];
+  /** easter eggs (M3.1 scoring): ride into the rect to find one */
+  eggs?: { id: string; x: number; y: number; w: number; h: number; label: string; fact: string }[];
   /** hidden extra lives (M2.1) */
   lifeTokens?: { x: number; y: number }[];
 }
+
+/** depth band for things under an overpass: above the ground (-10) and decals (-9), below the deck overlay */
+export const UNDER_DEPTH = -8;
+export const underDepth = (y: number) => UNDER_DEPTH + y / 100000;
+/** the Gardiner deck (above everything on the ground, below the HUD at 20000); its cars sit just above it */
+export const ELEVATED_DEPTH = 10000;
 
 export interface BuildingRef { img: Phaser.GameObjects.Image; x: number; y: number; w: number; d: number; h: number; mapColor?: string }
 
@@ -71,6 +88,14 @@ export class CityMap {
     this.tilemap = scene.make.tilemap({ data: data.ground, tileWidth: ts, tileHeight: ts });
     const tileset = this.tilemap.addTilesetImage('tiles', 'tiles', ts, ts, data.tileset.margin, data.tileset.spacing)!;
     this.layer = this.tilemap.createLayer(0, tileset, 0, 0)!.setDepth(-10);
+    // bridge decks: the same tiles again in a layer over the traffic that passes beneath (depth UNDER_DEPTH)
+    if (data.overpasses?.length) {
+      const masked = data.ground.map((row) => row.map(() => -1));
+      for (const [x0, y0, x1, y1] of data.overpasses) for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (data.ground[y]?.[x] !== undefined) masked[y][x] = data.ground[y][x];
+      const om = scene.make.tilemap({ data: masked, tileWidth: ts, tileHeight: ts });
+      const ots = om.addTilesetImage('tiles', 'tiles', ts, ts, data.tileset.margin, data.tileset.spacing)!;
+      om.createLayer(0, ots, 0, 0)!.setDepth(UNDER_DEPTH + 0.5);
+    }
     for (const d of data.decals ?? []) scene.add.image(d.x, d.y, d.key).setOrigin(0).setDepth(-9);
     this.solids = scene.physics.add.staticGroup();
     for (const o of data.objects) this.addObject(o);
@@ -82,8 +107,11 @@ export class CityMap {
       const img = this.scene.add.image(o.x, base, o.atlas ?? 'world', o.key).setOrigin(0, 1).setDepth(base);
       const h = o.imgH ?? img.height;
       this.buildings.push({ img, x: o.x, y: o.y, w: o.w!, d: o.d!, h, mapColor: o.mapColor });
-      // the whole drawn block is solid: no riding "behind" a facade into its roof
-      this.solid(o.x + 1, base - h + 4, o.w! - 2, h - 5);
+      // M3.1 (Ivan): only the footprint is solid, so you can ride behind a building (it fades, see
+      // updateOcclusion). The footprint is the bottom d px of the image: the ground under the facade.
+      const z = this.solid(o.x + 1, base - o.d! + 2, o.w! - 2, o.d! - 3);
+      // a tagged building can be removed by an improvement (M3.1: the MEGA SPA goes once the shore is public)
+      if (o.tag) { const list = this.tagged.get(o.tag) ?? []; list.push({ img, zones: [z] }); this.tagged.set(o.tag, list); }
       return img;
     }
     if (o.invisible) {
@@ -116,8 +144,9 @@ export class CityMap {
     if (!imp || this.applied.has(id)) return 0;
     this.applied.add(id);
     const ts = this.data.tileSize;
-    const removed = imp.removeTag ? this.tagged.get(imp.removeTag) ?? [] : [];
-    this.tagged.delete(imp.removeTag ?? '');
+    const tags = imp.removeTag === undefined ? [] : Array.isArray(imp.removeTag) ? imp.removeTag : [imp.removeTag];
+    const removed = tags.flatMap((t) => this.tagged.get(t) ?? []);
+    tags.forEach((t) => this.tagged.delete(t));
     if (!animate) {
       for (const r of removed) { r.img.destroy(); r.zones.forEach((z) => z.destroy()); }
       for (const [x, y, t] of imp.tiles) this.tilemap.putTileAt(t, x, y, false, this.layer);
@@ -152,6 +181,7 @@ export class CityMap {
   /** Fade facades that hide the player (tall roofs can still overlap the sidewalk behind them). */
   updateOcclusion(px: number, py: number) {
     for (const b of this.buildings) {
+      if (!b.img.active) continue;
       const base = b.y + b.d;
       const behind = px > b.x - 4 && px < b.x + b.w + 4 && py < base && py > base - b.h;
       const target = behind ? 0.45 : 1;

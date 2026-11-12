@@ -41,7 +41,10 @@ function model(t) {
   const knee = (hip, ped) => [ (hip[0] + ped[0]) / 2 + 2.2, (hip[1] + ped[1]) / 2, (hip[2] + ped[2]) / 2 + 1.2 ];
   const kR = knee(hipR, pedR), kL = knee(hipL, pedL);
   const hc = [2.8, 0, 17.0];
-  const tailSway = Math.sin(ang * 2) * 1.2;
+  // M3.1 (Ivan: more tail bounce). sin(2*ang) was 0 on all 4 frames (t = 0, .25, .5, .75), so the tail
+  // never swung in this view: swing once per pedal cycle, bob twice
+  const tailSway = Math.sin(ang) * 1.6;
+  const tailBob = Math.cos(ang * 2) * 1.0;
   const objs = [
     // wheels
     { d: sd.torusY([-6.5, 0, 3.6], 3.0, 0.9), m: M.tire },
@@ -89,7 +92,7 @@ function model(t) {
   // bushy ringed tail
   for (let i = 0; i <= 8; i++) {
     const s = i / 8;
-    const c = [-3.5 - s * 7, tailSway * s * s * 2, 11.2 + Math.sin(s * Math.PI) * 2.2 + s * 1.2];
+    const c = [-3.5 - s * 7, tailSway * s * s * 2, 11.2 + Math.sin(s * Math.PI) * 2.2 + s * 1.2 + tailBob * s * s * 2];
     const r = 2.0 + Math.sin(s * Math.PI) * 0.8 - s * 0.6;
     const ring = i >= 7 ? M.furDark : Math.floor(i / 1.5) % 2 === 0 ? { ramp: ['g', 'G', 'h', 'H'] } : M.furDark;
     objs.push({ d: sd.sphere(c, r), m: ring });
@@ -111,3 +114,6 @@ export function raccoonTopFrames() {
   for (let d = 0; d < 8; d++) for (let f = 0; f < 4; f++) frames.push(raccoonTopFrame((d * Math.PI) / 4, f / 4));
   return { frames, fw: FW, fh: FH, cols: 4 };
 }
+
+/** M3.1: the pedal cycle facing east + south, the tail swinging now */
+export function topRidePreview() { return { frames: [0, Math.PI / 2].flatMap((y) => [0, 1, 2, 3].map((f) => raccoonTopFrame(y, f / 4))), cols: 4 }; }

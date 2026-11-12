@@ -65,6 +65,24 @@ The p95 frame time is 16.7–16.8 ms everywhere.
 
 The Downtown building atlas (2048×1024, 810 KB) dominates: dithered glass compresses poorly. If it grows, the options are flatter glass bands or quantizing the reflection dither to 2×2 blocks.
 
+### 2026-11-12 (M3.1)
+Same harness. The Waterfront was sampled after 40 s, once its traffic had built up (about 110 vehicles, including the Gardiner and turning traffic).
+
+| Scene | 1× | 4× | 6× | Heap (6×) |
+|---|---|---|---|---|
+| Explore, Waterfront (after 40 s) | 60.2 | 60.2 | 60.3 | 40 MB |
+| Explore, East End (re-laid, bridge overlay) | 60.3 | 60.2 | 60.2 | 21 MB |
+| Action, M5 | 60.3 | 60.2 | 60.2 | 15 MB |
+| Action, M7 (cart shelters) | 60.3 | 60.1 | 60.2 | 17 MB |
+| Action, M8 (islands, planes, Pink Digger) | 60.0 | 60.3 | 60.2 | 17 MB |
+
+p95 is 16.7–16.8 ms everywhere. `tools/perf.mjs` now takes `ONLY=<regex>` and `SETTLE=<ms>`.
+
+**Downloads (M3.1):**
+- Boot without JS: 1,542 KB (was 1,440). The shared world atlas gained the 45° vehicle frames, the planes and the digger.
+- Queen West on entry: 466 KB. JS: 370 KB gzipped.
+- **First load: about 2.38 MB** against the 2.5 MB budget. Lazy map JSON in M4 is now needed, not optional.
+
 ### 2026-11-12 (M3)
 Five districts and three new missions. Same harness (`tools/perf.mjs`, production build, CPU-throttled Chromium). The 1× column is from a second run; a second run's 4× numbers matched the first within 0.2 fps.
 

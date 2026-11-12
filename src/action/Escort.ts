@@ -150,7 +150,6 @@ export class Escort {
       if (r.state === 'dead') continue;
       if (hits.some((h) => h.x < r.s.x + 8 && h.x + h.w > r.s.x - 8 && newHit(h.id + 7000))) {
         r.state = 'dead'; sfx.hit(); sfx.squeak(); puff(this.scene, r.s.x, r.s.y - 14, 0xc9c5d1, 8, 20, 70);
-        floatText(this.scene, r.s.x, r.s.y - 30, '+1', 'font_outline', 0xfff08a);
         this.scene.tweens.add({ targets: r.s, y: r.s.y - 30, alpha: 0, angle: 360, duration: 500, onComplete: () => r.s.destroy() });
         this.cleared++;
         continue;

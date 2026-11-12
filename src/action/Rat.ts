@@ -10,8 +10,9 @@ const DEFS: Record<RatKind, { hp: number; speed: number; reach: number; windup: 
   basic: { hp: 3, speed: 52, reach: 22, windup: 0.38, cooldown: 0.7 },
   construction: { hp: 3, speed: 40, reach: 110, windup: 0.55, cooldown: 1.6, ranged: true },
   traffic: { hp: 4, speed: 34, reach: 30, windup: 0.6, cooldown: 1.0 },
-  // M3: never fights; hangs back and shields the rats near him (they take half damage). Corner him first.
-  lobbyist: { hp: 4, speed: 62, reach: 0, windup: 1, cooldown: 1, support: true },
+  // M3: hangs back and lobbies for every rat on screen. M3.1 (Ivan): they take a THIRD of the damage, and
+  // when you corner him he swings his briefcase.
+  lobbyist: { hp: 5, speed: 62, reach: 30, windup: 0.42, cooldown: 0.9, support: true },
 };
 
 type State = 'enter' | 'walk' | 'windup' | 'attack' | 'recover' | 'hurt' | 'dead';
@@ -25,8 +26,10 @@ export class Rat {
   private warn?: Phaser.GameObjects.BitmapText;
   facing: 1 | -1 = -1;
   readonly def;
-  /** a lobbyist is nearby: hits do half damage (set by the scene every frame) */
+  /** a lobbyist is on screen: hits do a third of the damage (set by the scene every frame) */
   shielded = false;
+  /** the points label floated when it goes poof (set by ActionScene when it awards the kill) */
+  reward = '';
   private glintT = 0;
 
   constructor(private scene: Phaser.Scene, x: number, y: number, readonly kind: RatKind, private onThrow: (r: Rat) => void) {
@@ -52,7 +55,7 @@ export class Rat {
   takeHit(h: Hitbox, fromX: number): boolean {
     if (!this.alive || h.id === this.lastHit) return false;
     this.lastHit = h.id;
-    this.hp -= this.shielded ? h.dmg * 0.5 : h.dmg;
+    this.hp -= this.shielded ? h.dmg / 3 : h.dmg;
     if (this.shielded) { puff(this.scene, this.sprite.x, this.sprite.y - 18, 0xf5c22e, 6, 18, 95); if (Math.random() < 0.4) floatText(this.scene, this.sprite.x, this.sprite.y - 34, 'LOBBIED!', 'font_outline', 0xf5c22e, 600); }
     this.warn?.destroy(); this.warn = undefined;
     const dir = this.sprite.x < fromX ? -1 : 1;
@@ -79,7 +82,7 @@ export class Rat {
     this.scene.time.delayedCall(650, () => {
       sfx.poof();
       puff(this.scene, this.sprite.x, this.sprite.y - 10, 0xc9c5d1, 10, 24, 95);
-      floatText(this.scene, this.sprite.x, this.sprite.y - 20, '+1', 'font_outline', 0xfff08a);
+      if (this.reward) floatText(this.scene, this.sprite.x, this.sprite.y - 20, this.reward, 'font_outline', 0xfff08a);
       this.sprite.destroy();
     });
   }
@@ -94,7 +97,8 @@ export class Rat {
     if (this.state !== 'hurt' && this.state !== 'attack') this.facing = dx > 0 ? 1 : -1;
     this.sprite.setFlipX(this.facing === -1);
     if (this.shielded && (this.glintT -= dt) <= 0) { this.glintT = 0.3; puff(this.scene, this.sprite.x + Phaser.Math.Between(-6, 6), this.sprite.y - Phaser.Math.Between(8, 26), 0xf5c22e, 1, 6, 95); }
-    if (this.def.support && (this.state === 'enter' || this.state === 'walk')) {
+    // cornered (you got close): he fights back with the briefcase instead of backing off
+    if (this.def.support && (this.state === 'enter' || this.state === 'walk') && dist >= 46) {
       // keep 120-170 px away from the raccoon, backing off (and visibly nervous) when approached
       const want = dist < 120 ? -1 : dist > 170 ? 1 : 0;
       if (ground) b.setVelocityX(want * this.facing * this.def.speed);

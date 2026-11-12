@@ -161,24 +161,38 @@ export function suvModel() {
     { d: sd.box([-15.5, 4.6, 6.4], [0.4, 1.0, 1.0]), m: { flat: 'R' } }, { d: sd.box([-15.5, -4.6, 6.4], [0.4, 1.0, 1.0]), m: { flat: 'R' } },
   ];
 }
-// TTC Flexity Outlook (M2.1, from Ivan's photo): five modules with black articulation joints; a red roof
-// edge, white bands framing a dark window strip, red body, a white skirt line; a sloped nose with a big
-// windshield and the white swoosh rising from the front skirt into the window frame; pantograph on top.
-export function streetcar(yaw = 0, length = 96, side = false, vertical = false) {
+// TTC Flexity Outlook. M2.1 from Ivan's photo; v03 (M3.1, Ivan: "notice the skewed front", new line drawing
+// reference): each cab end is RAKED: the end face leans back toward the roof (the bumper sticks out
+// further than the roof line), with a big windshield on the slope and a red cap over it. Five modules,
+// black accordion joints; a red roof edge, white bands framing the window strip, red body, white skirt
+// line; the white swoosh rising from the front skirt; grey double doors; a pantograph on the middle module.
+export function streetcarModel(length = 96) {
   const half = length / 2, segs = 5, segL = length / segs;
   const objs = [];
+  const RAKE = 0.42; // how far the end face leans back per unit of height
   const livery = (cx, nose) => (p) => {
     const z = p[2], lx = p[0] - cx;
+    if (nose) { // the raked cab face: windshield on the slope, a red cap above it, headlights low
+      const fwd = (p[0] - cx) * nose - (segL / 2 - 0.4 - RAKE * (16.5 - z));
+      if (fwd > -1.0) {
+        if (z > 15.2) return ['r', 'R', 'R', 'q'];
+        if (z > 7.2) return ['K', 'u', 'U', 'c'];
+        if (z > 3 && z < 4.6 && Math.abs(p[1]) > 3.6) return 'Y';
+        if (z < 2.6 && z > 1.6) return ['h', 'H', 'W'];
+        return ['r', 'R', 'R', 'q'];
+      }
+    }
     if (z > 16.4) return ['g', 'G', 'h', 'h'];          // roof
     if (z > 15.4) return ['r', 'R', 'R', 'q'];          // red roof edge
     if (z > 14.4) return ['h', 'H', 'W', 'W'];          // white band over the windows
+    const door = !nose && Math.abs(lx) < 2.4;          // double doors mid-module
+    if (door && z > 1.8) return Math.abs(lx) < 0.25 ? 'g' : ['g', 'G', 'h', 'H'];
     if (z > 7.6) {                                      // windows + white pillars
       const pil = Math.abs(((lx % 8) + 8) % 8 - 4) < 0.55;
       if (pil) return ['h', 'H', 'W'];
       return p[1] > 0 ? ['K', 'k', 'u', 'U'] : ['K', 'k', 'u'];
     }
     if (z > 6.6) return ['h', 'H', 'W', 'W'];           // white band under the windows
-    // the swoosh: a white sweep near the nose rising from the skirt into the window band
     if (nose) { const along = (p[0] - (cx + nose * (segL / 2))) * -nose; if (along < 14 && Math.abs(z - (2.4 + along * 0.32)) < 0.9) return ['h', 'H', 'W']; }
     if (z > 2.6) return ['r', 'R', 'R', 'q'];           // red body
     if (z > 1.6) return ['h', 'H', 'W'];                // white skirt line
@@ -187,35 +201,44 @@ export function streetcar(yaw = 0, length = 96, side = false, vertical = false) 
   for (let s = 0; s < segs; s++) {
     const cx = -half + segL * (s + 0.5);
     const nose = s === segs - 1 ? 1 : s === 0 ? -1 : 0;
-    objs.push({ d: sd.box([cx, 0, 8.6], [segL / 2 - 0.9, 6.3, 8.1], 1.2), m: mat(R.red, { spec: 1, fn: livery(cx, nose) }) });
+    const box = sd.box([cx, 0, 8.6], [segL / 2 - 0.9 + (nose ? 1.6 : 0), 6.3, 8.1], 1.2);
+    // cab ends: cut the box with a plane that leans back toward the roof (the rake)
+    const d = nose ? (p) => {
+      const n = [nose, 0, RAKE], L = Math.hypot(1, RAKE);
+      const x0 = cx + nose * (segL / 2 + 0.7);
+      return Math.max(box(p), ((p[0] - x0) * nose + RAKE * (p[2] - 1.5)) / L);
+    } : box;
+    objs.push({ d, m: mat(R.red, { spec: 1, fn: livery(cx, nose) }) });
     if (s < segs - 1) objs.push({ d: sd.box([cx + segL / 2, 0, 8.4], [0.9, 5.6, 7.4], 0.4), m: mat(['K', 'k', 'k', 'g']) }); // accordion joint
-    if (nose) {
-      // sloped cab: rounded nose with a tall windshield
-      objs.push({ d: sd.ellipsoid([cx + nose * (segL / 2 - 1.5), 0, 8.4], [4.2, 6.2, 8.0]), m: mat(R.red, { spec: 1, fn: (p) => {
-        const fwd = (p[0] - cx) * nose - (segL / 2 - 1.5);
-        if (p[2] > 6.8 && p[2] < 15.6 && fwd > 0.6) return ['K', 'u', 'U', 'c'];
-        if (p[2] > 16) return ['g', 'G', 'h'];
-        if (p[2] > 15.2) return ['r', 'R', 'q'];
-        if (p[2] < 2.6 && p[2] > 1.6) return ['h', 'H', 'W'];
-        if (p[2] > 3 && p[2] < 4.4 && fwd > 1.4 && Math.abs(p[1]) > 3.4) return 'Y'; // headlights
-        return null;
-      } }) });
-    }
   }
   // pantograph on the middle module
   objs.push({ d: sd.capsule([-5, 0, 17], [2, 0, 22], 0.4), m: mat(R.dark) });
   objs.push({ d: sd.capsule([2, -3, 22], [2, 3, 22], 0.4), m: mat(R.dark) });
   objs.push({ d: sd.box([0, 0, 17.2], [6, 3, 0.8]), m: mat(R.steel) });
+  return objs;
+}
+export function streetcar(yaw = 0, length = 96, side = false, vertical = false) {
+  const objs = streetcarModel(length);
   const w = length + 16;
   if (side) { const k = 2.0, sw = Math.ceil(w * k), sh = 96; const img = render(scene(objs), { w: sw, h: sh, cx: sw / 2, cy: sh - 6, cam: orthoCam([0, -1, -0.22]), ambient: 0.2, scale: k }); img.pivot = { x: 0.5, y: (sh - 6) / sh }; return img; }
   if (vertical) return draw(objs, 52, length + 48, 26, length / 2 + 30, yaw);
   return draw(objs, w, 48, w / 2, 36, yaw);
 }
+/** a streetcar mid-turn (M3.1): drawn at 45 degrees for the corners it takes */
+export function streetcarDiag(yaw) { return draw(streetcarModel(96), 104, 104, 52, 56, yaw); }
+/** a car / SUV at 45 degrees (turning) */
+export function carDiag(color, yaw) { return draw(carModel(color), 36, 36, 18, 24, yaw); }
+export function suvDiag(yaw) { return draw(suvModel(), 40, 40, 20, 27, yaw); }
 
 export function propsPreview() {
   const items = [tree(1), tree(2, 0.8), sapling(), streetlight(), ttcStop(), bikeRing(), hydrant(), bench(), planter(), bollard(), cone(), trafficSignal(), newsBox()];
   const frames = items.map((it) => { const f = new Img(40, 48); f.blit(it, Math.round((40 - it.w) / 2), 48 - it.h); return f; });
   return { frames, cols: 13 };
+}
+/** M3.1: the raked Flexity (side) + the 45-degree turning frames */
+export function streetcarPreviewM31() {
+  const D = [Math.PI / 4, (3 * Math.PI) / 4, (-3 * Math.PI) / 4, -Math.PI / 4];
+  return { frames: [streetcar(0, 96, true), ...D.map((y) => streetcarDiag(y)), ...D.map((y) => carDiag('red', y))], cols: 5 };
 }
 export function vehiclesPreview() {
   const items = [car('blue', 0), car('red', Math.PI), car('white', Math.PI / 2), car('yellow', -Math.PI / 2), suv(0), suv(Math.PI / 2), streetcar(0), streetcar(Math.PI)];

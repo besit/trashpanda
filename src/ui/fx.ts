@@ -26,6 +26,26 @@ export function iris(scene: Phaser.Scene, dir: 'close' | 'open', cx = GAME_W / 2
   });
 }
 
+/**
+ * Word-wrap by the font's real glyph widths (M3.1: the payoff box wrapped by a guessed 6 px per character,
+ * but font_outline is wider, so lines ran past the box).
+ */
+export function wrapLines(scene: Phaser.Scene, font: FontKey, str: string, maxW: number): string[] {
+  const probe = scene.add.bitmapText(-999, -999, font, '').setVisible(false);
+  const out: string[] = [];
+  for (const para of str.toUpperCase().split(/\n/)) {
+    let cur = '';
+    for (const w of para.split(/\s+/).filter(Boolean)) {
+      const cand = cur ? cur + ' ' + w : w;
+      probe.setText(cand);
+      if (probe.width > maxW && cur) { out.push(cur); cur = w; } else cur = cand;
+    }
+    out.push(cur);
+  }
+  probe.destroy();
+  return out;
+}
+
 /** Horizontal Sega-style blinds wipe to black (or, with open, from black back to the scene). */
 export function blinds(scene: Phaser.Scene, ms = 400, open = false): Promise<void> {
   return new Promise((resolve) => {

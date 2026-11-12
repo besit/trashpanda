@@ -109,11 +109,20 @@ export function buildSpot() {
   img.pivot = { x: 0.5, y: 24 / 26 };
   return img;
 }
-export function humpSide() {
-  const img = new Img(48, 10);
-  for (let x = 0; x < 48; x++) { const h = Math.round(Math.sin((x / 47) * Math.PI) * 6); for (let y = 8 - h; y <= 8; y++) img.set(x, y, y === 8 - h ? 'S' : 's'); if (x % 8 < 3 && h > 2) img.set(x, 8 - h + 1, 'W'); }
-  img.outline('K');
-  img.pivot = { x: 0.5, y: 0.9 };
+/**
+ * Speed hump (v02, M3.1, Ivan: "it should span across the street", not show its cross-section). Like the
+ * raised crosswalk it runs from the far curb down to the near edge of the road: a low asphalt ridge, lit on
+ * its crest, shadowed on its far ramp, with white chevrons painted along it. Origin: top-centre at the curb.
+ */
+export function humpSide(h = 54) {
+  const W = 26, img = new Img(W, h);
+  img.rect(0, 0, W, h, 'A');
+  img.rect(4, 0, W - 8, h, 's'); img.rect(8, 0, W - 16, h, 'S');          // ramps up to the crest
+  img.vline(0, 0, h - 1, 'a'); img.vline(W - 1, 0, h - 1, 'k');           // ramp feet, the far one in shadow
+  for (let y = 0; y < h; y++) { img.set(W - 3, y, 'a'); img.set(W - 2, y, 'k'); }
+  for (let y = 4; y < h - 4; y += 10) { img.line(7, y + 4, 13, y, 'W'); img.line(13, y, 19, y + 4, 'W'); } // chevrons
+  img.hline(1, W - 2, 0, 'G');
+  img.pivot = { x: 0.5, y: 0 };
   return img;
 }
 /**
@@ -153,19 +162,20 @@ export function curbExtSide() {
 }
 
 /** Extra life: a golden raccoon token, hidden on the maps (2 frames: a glint). */
+/** An extra life (M3.1, Ivan: hearts, not the raccoon token): a red pixel heart; frame 1 glints. */
 export function lifeToken(frame = 0) {
   const img = Img.fromGrid(`
-...KKKKK...
-..KyyyyyK..
-.KyKKyKKyK.
-KyKhKyKhKyK
-KyKWKyKWKyK
-KyyKKKKKyyK
-KyyyKkKyyyK
-.KyyyKyyyK.
-..KyyyyyK..
-...KKKKK...`);
-  if (frame) { img.set(3, 2, 'Y'); img.set(2, 3, 'Y'); img.set(3, 3, 'W'); }
+.KKK...KKK.
+KRRRK.KRRRK
+KRqWRKRRRRK
+KRqRRRRRRRK
+KRRRRRRRRrK
+.KRRRRRRrK.
+..KRRRRrK..
+...KRRrK...
+....KrK....
+.....K.....`);
+  if (frame) { img.set(2, 2, 'W'); img.set(3, 2, 'W'); img.set(2, 3, 'W'); img.set(7, 2, 'm'); }
   img.pivot = { x: 0.5, y: 1 };
   return img;
 }

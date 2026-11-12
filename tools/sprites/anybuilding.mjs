@@ -4,10 +4,22 @@ import { rng } from '../lib/rng.mjs';
 import { obliqueBuilding, roof } from './buildings.mjs';
 import { downtownBuilding, oldCityHall } from './downtown.mjs';
 import { schoolFacade, cafeFacade, greenhouseFacade } from './highpark.mjs';
-import { bigBoxFacade, broadviewFacade } from './eastend.mjs';
+import { bigBoxFacade, broadviewFacade, donJailFacade, donJailRoof } from './eastend.mjs';
 import { megaSpaFacade } from './waterfront.mjs';
+import { cnTowerBuilding, domeBuilding, aquariumBuilding, ferryTerminalBuilding } from './waterfront2.mjs';
 
 export function anyBuilding(gen) {
+  // M3.1 Waterfront landmarks: drawn whole (their footprint is the ground they stand on)
+  if (gen.kind === 'cntower') return cnTowerBuilding(gen.w, gen.d, gen.shaftH);
+  if (gen.kind === 'dome') return domeBuilding(gen.w, gen.d);
+  if (gen.kind === 'aquarium') return aquariumBuilding(gen.w, gen.d);
+  if (gen.kind === 'ferry') return ferryTerminalBuilding(gen.w, gen.d);
+  if (gen.kind === 'donjail') {
+    const fac = donJailFacade(gen.w), rf = donJailRoof(gen.w, gen.d);
+    const img = new Img(gen.w, gen.d + fac.h - 12);
+    img.blit(rf, 0, 0); img.hline(0, gen.w - 1, gen.d, 'K'); img.blit(fac, 0, gen.d - 12);
+    return { img, footprint: { w: gen.w, d: gen.d }, facadeH: fac.h - 12 };
+  }
   if (gen.kind === 'tower' || gen.kind === 'warehouse') return downtownBuilding(gen);
   if (gen.kind === 'oldcityhall') return oldCityHall(gen.w, gen.d);
   if (['school', 'cafe', 'greenhouse', 'bigbox', 'broadview', 'megaspa'].includes(gen.kind)) {

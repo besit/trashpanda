@@ -122,8 +122,7 @@ export function megaSpaFacade(w = 128) {
 export function lakeStrip(W = 768) {
   const H = 120, img = new Img(W, H), r = rng(509);
   for (let y = 40; y < H; y++) for (let x = 0; x < W; x++) img.set(x, y, (x + y * 3) % 23 === 0 ? 'C' : y < 46 ? 'c' : 'U');
-  // the islands on the horizon
-  for (let x = 0; x < W; x++) { const h = Math.round(3 + Math.sin(x / 40) * 2 + Math.sin(x / 13)); img.vline(x, 40 - h, 40, 'e'); if (x % 17 === 0) img.vline(x, 40 - h - 4, 40 - h, 'E'); }
+  // (M3.1: the islands on the horizon are their own, slower layer now: islandsStrip in waterfront2.mjs)
   // boats + a ferry
   for (let i = 0; i < 6; i++) { const bx = r.int(10, W - 30), by = r.int(52, 90); img.poly([[bx, by], [bx + 12, by], [bx + 10, by + 3], [bx + 2, by + 3]], 'W'); img.poly([[bx + 6, by - 12], [bx + 6, by], [bx + 12, by]], 'W'); }
   for (let s = 0; s < W; s += 384) { img.rect(s + 230, 66, 40, 8, 'W'); img.rect(s + 236, 60, 26, 6, 'H'); img.rect(s + 230, 74, 40, 2, 'u'); }

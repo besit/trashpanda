@@ -35,6 +35,8 @@ Jump straight to a scene:
 
 `?touch` forces touch controls.
 
+Start a run with **NEW GAME**: pick EASY / NORMAL / HARD (7 / 5 / 3 hits per life, score ×1 / ×1.5 / ×2) and enter your initials. Full-scale images of every district are in [docs/maps/](docs/maps/) (regenerate with `node tools/mapshots.mjs` while the dev server runs).
+
 The city is five districts so far: **High Park ← Queen West → Downtown → East End**, with the **Waterfront** south of Downtown. Ride off the map edge along a street that continues (Queen, Dundas/Bloor, or Spadina/University/Bay down to the lake) to cross.
 
 ## How the art is made

@@ -206,8 +206,9 @@ export function raccoonSideFrames() {
   const frames = [];
   const add = (name, list, rate, loop = true) => { anims[name] = { start: frames.length, count: list.length, rate, loop }; frames.push(...list); };
   add('idle', [0, 1].map((i) => raccoonFrame({ pedal: 1, sway: i, bob: i === 1 ? 0 : 0 })), 3);
-  add('ride', [0, 1, 2, 3].map((i) => raccoonFrame({ phase: i, pedal: i, sway: i % 2 })), 10);
-  add('boost', [0, 1, 2, 3].map((i) => raccoonFrame({ phase: i * 2, pedal: i, sway: 2, lean: 2 })), 16);
+  // M3.1 (Ivan: "more of this movement"): the tail swings through -2..+4 px at the tip instead of 0..1
+  add('ride', [0, 1, 2, 3].map((i) => raccoonFrame({ phase: i, pedal: i, sway: [-2, 1, 4, 1][i] })), 10);
+  add('boost', [0, 1, 2, 3].map((i) => raccoonFrame({ phase: i * 2, pedal: i, sway: [0, 3, 5, 3][i], lean: 2 })), 16);
   add('jump', [raccoonFrame({ tuck: true, lift: 3, sway: -1 }), raccoonFrame({ tuck: true, lift: 1, sway: 2 })], 6, false);
   add('dash', [raccoonFrame({ phase: 1, pedal: 1, lean: 3, sway: 3 })], 1, false);
   add('attack', [1, 2, 3].map((a) => raccoonFrame({ pedal: 1, attack: a, sway: 1 })), 18, false);
@@ -217,3 +218,6 @@ export function raccoonSideFrames() {
 export function attackPreview() {
   return { frames: [0, 1, 2, 3].map((a) => raccoonFrame({ pedal: 1, attack: a, sway: 1 })), cols: 4 };
 }
+
+/** M3.1: the ride cycle with the bigger tail swing */
+export function ridePreview() { return { frames: [0, 1, 2, 3].map((i) => raccoonFrame({ phase: i, pedal: i, sway: [-2, 1, 4, 1][i] })), cols: 4 }; }

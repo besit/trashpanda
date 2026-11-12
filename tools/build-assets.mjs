@@ -27,6 +27,7 @@ import { generateDowntown } from './map/downtown.mjs';
 import { generateEastEnd } from './map/eastend.mjs';
 import * as EE from './sprites/eastend.mjs';
 import * as WF from './sprites/waterfront.mjs';
+import * as WF2 from './sprites/waterfront2.mjs';
 import { generateWaterfront } from './map/waterfront.mjs';
 
 const OUT = path.resolve('public/gen');
@@ -112,6 +113,12 @@ addProp('carside_blue_r', P.car('blue', 0, 1, true));
 addProp('streetcar_E', P.streetcar(0)); addProp('streetcar_W', P.streetcar(Math.PI));
 addProp('streetcar_N', P.streetcar(-Math.PI / 2, 96, false, true)); addProp('streetcar_S', P.streetcar(Math.PI / 2, 96, false, true));
 addProp('streetcarside', P.streetcar(0, 96, true));
+// M3.1: 45-degree frames for vehicles taking a corner (Spadina <-> Queens Quay, the streets that end at the lake)
+const DIAG = { SE: Math.PI / 4, SW: (3 * Math.PI) / 4, NW: (-3 * Math.PI) / 4, NE: -Math.PI / 4 };
+for (const [d, yaw] of Object.entries(DIAG)) {
+  for (const c of CAR_COLORS) addProp(`car_${c}_${d}`, P.carDiag(c, yaw));
+  addProp(`suv_${d}`, P.suvDiag(yaw)); addProp(`streetcar_${d}`, P.streetcarDiag(yaw));
+}
 ['red', 'blue', 'white', 'yellow', 'teal', 'suv'].forEach((k) => DVP_SCALES.forEach((sc, i) => addProp(`dvp_${k}_${i}`, dvpCar(k, sc))));
 manifest.dvpScales = DVP_SCALES;
 // M2: High Park, Downtown, mission props
@@ -137,10 +144,17 @@ for (const st of ['red', 'green', 'tsp']) addProp(`sigpole_${st}`, SP.signalPole
   }
   addProp('paintgob_0', paintGob(0)); addProp('paintgob_1', paintGob(1)); }
 addProp('lotlight', EE.lotLight()); addProp('asphaltpatch', EE.asphaltPatch()); addProp('soilsapling', EE.soilSapling());
+addProp('cartshelter', EE.cartShelter()); addProp('pallets', EE.palletStack());
 addProp('monstersuv_0', EE.monsterSuv(0)); addProp('monstersuv_1', EE.monsterSuv(1));
 // M3: the Waterfront
 addProp('cntower', WF.cnTowerMap()); addProp('stadium', WF.stadium()); addProp('cinesphere', WF.cinesphere()); addProp('pod', WF.pod());
 addProp('pinkumbrella', WF.pinkUmbrella()); addProp('gardiner', WF.gardinerSeg()); addProp('spafence', WF.spaFence()); addProp('spafence_side', WF.spaFenceSide());
+addProp('podop', WF2.podOP()); addProp('cinesphereop', WF2.cinesphereOP()); addProp('sundial', WF2.sundialFolly()); addProp('ferryboat', WF2.ferryBoat());
+[0, 1].forEach((f) => { addProp(`plane_tp_${f}`, WF2.planeTurboprop(f)); addProp(`plane_cs_${f}`, WF2.planeCessna(f)); });
+manifest.anims.plane_tp = { frames: ['plane_tp_0', 'plane_tp_1'], rate: 14, loop: true, atlas: 'world' };
+manifest.anims.plane_cs = { frames: ['plane_cs_0', 'plane_cs_1'], rate: 14, loop: true, atlas: 'world' };
+[0, 1, 2].forEach((f) => addProp(`digger_${f}`, WF2.pinkDigger(f))); addProp('sandclod', WF2.sandClod());
+addProp('gardinerdeck', WF2.gardinerDeck()); addProp('gardinerpier', WF2.gardinerPier()); addProp('trackcurves', WF2.trackCurves()); addProp('marinadock', WF2.marinaDock());
 addProp('sailboat_0', WF.sailboat(0)); addProp('sailboat_1', WF.sailboat(1));
 manifest.anims.sailboat_bob = { frames: ['sailboat_0', 'sailboat_1'], rate: 1.5, loop: true, atlas: 'world' };
 addProp('vanside', SP.vanSide()); addProp('suvrat_0', SP.suvRatSide(0)); addProp('suvrat_1', SP.suvRatSide(1));
@@ -188,7 +202,7 @@ const tileColors = tileImgs.map((im) => {
   for (const c of im.px) if (c) { const [R, G, B] = hexToRgb(PALETTE[c]); r += R; g += G; b += B; n++; }
   return n ? (Math.round(r / n) << 16) | (Math.round(g / n) << 8) | Math.round(b / n) : 0;
 });
-const decalMakers = { dogbowl: () => PK.dogBowl(208, 128), diamond: () => PK.baseballDiamond('east'), tennis: () => PK.tennisCourts() };
+const decalMakers = { dogbowl: () => PK.dogBowl(208, 128), diamond: () => PK.baseballDiamond('east'), tennis: () => PK.tennisCourts(), pool: () => PK.outdoorPool() };
 for (const [id, map] of Object.entries(maps)) {
   const mapOut = {
     id, width: map.width, height: map.height, tileSize: map.tileSize,
@@ -196,7 +210,7 @@ for (const [id, map] of Object.entries(maps)) {
     ground: map.ground.map((row) => row.map((n) => idx[n])),
     objects: map.objects,
     improvements: Object.fromEntries(Object.entries(map.improvements).map(([k, v]) => [k, { ...v, tiles: v.tiles.map(([x, y, n]) => [x, y, idx[n]]) }])),
-    spawn: map.spawn, markers: map.markers, lanes: map.lanes, exits: map.exits, lifeTokens: map.lifeTokens,
+    spawn: map.spawn, markers: map.markers, lanes: map.lanes, exits: map.exits, lifeTokens: map.lifeTokens, eggs: map.eggs, overpasses: map.overpasses, underWalks: map.underWalks,
     intersections: map.intersections, walkways: map.walkways, labels: map.labels, critters: map.critters, landmarks: map.landmarks,
     decals: map.decals.map(({ gen, ...d }) => d),
     tileColors,
@@ -217,7 +231,7 @@ img('sky_day', sky('day')); img('sky_dusk', sky('dusk'));
 img('skyline_day', skyline('day')); img('skyline_dusk', skyline('dusk'));
 img('backrow_day', backRow('day')); img('backrow_dusk', backRow('dusk'));
 img('facades_qw', facadeStrip(11));
-img('facades_dt', facadeStripDT()); img('park_hp', parkStripHP()); img('school_side', schoolSide()); img('bigbox_ee', EE.bigBoxStrip()); img('lake_wf', WF.lakeStrip());
+img('facades_dt', facadeStripDT()); img('park_hp', parkStripHP()); img('school_side', schoolSide()); img('bigbox_ee', EE.bigBoxStrip()); img('lake_wf', WF.lakeStrip()); img('islands_wf', WF2.islandsStrip());
 img('street_paint', streetStrip(false)); img('street_protected', streetStrip(true)); img('street_plain', streetStrip('plain'));
 for (const k of ['escort', 'king', 'parkside', 'lot', 'quay']) img(`street_${k}`, streetStrip(k));
 img('dvp_bg', dvpBackdrop());

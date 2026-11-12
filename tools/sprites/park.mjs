@@ -169,6 +169,23 @@ export function tennisCourts() {
   return img;
 }
 
+/** High Park's outdoor pool (top-down, M3.1): concrete deck, lanes, a ladder, loungers, a fence. */
+export function outdoorPool() {
+  const w = 112, h = 80, img = new Img(w, h);
+  img.rect(0, 0, w, h, 'H'); for (let i = 0; i < 90; i++) img.set((i * 37) % w, (i * 53) % h, 'h');
+  const px = 12, py = 14, pw = 88, ph = 48;
+  img.rect(px - 2, py - 2, pw + 4, ph + 4, 'W');
+  img.rect(px, py, pw, ph, 'c'); img.dither(px, py, pw, ph, 'C', 'checker');
+  for (let y = py + 8; y < py + ph; y += 8) for (let x = px + 1; x < px + pw - 1; x += 2) img.set(x, y, x % 4 === 1 ? 'R' : 'W'); // lane ropes
+  for (let y = py + 4; y < py + ph; y += 8) img.hline(px + 4, px + pw - 5, y, 'U');
+  img.rect(px + pw - 6, py - 3, 1, 5, 'G'); img.rect(px + pw - 3, py - 3, 1, 5, 'G'); // ladder
+  for (let k = 0; k < 4; k++) { const x = 16 + k * 22; img.rect(x, 3, 14, 6, k % 2 ? 'y' : 'R'); img.rect(x, 3, 14, 1, 'W'); } // loungers
+  img.rect(0, 0, w, 1, 'g'); img.rect(0, 0, 1, h, 'g'); img.rect(w - 1, 0, 1, h, 'g'); img.rect(0, h - 1, w, 1, 'g');
+  for (let x = 0; x < w; x += 8) { img.set(x, 0, 'K'); img.set(x, h - 1, 'K'); }
+  for (let y = 0; y < h; y += 8) { img.set(0, y, 'K'); img.set(w - 1, y, 'K'); }
+  return img;
+}
+
 // ------------------------------------------------------------------
 // Baseball diamond (top-down): skinned infield, bases, mound, backstop.
 // ------------------------------------------------------------------
@@ -416,7 +433,7 @@ export function parkPreview() {
   return { frames: frames.map((f) => { const o = new Img(f.w + 6, H); o.blit(f, 3, H - f.h - 2); return o; }), cols: frames.length };
 }
 export function parkDecalsPreview() {
-  const frames = [dogBowl(224, 144), tennisCourts(), baseballDiamond('east')];
+  const frames = [dogBowl(224, 144), tennisCourts(), baseballDiamond('east'), outdoorPool()];
   const H = Math.max(...frames.map((f) => f.h)) + 4;
   return { frames: frames.map((f) => { const o = new Img(f.w + 6, H); o.rect(0, 0, f.w + 6, H, 'E'); o.blit(f, 3, 2); return o; }), cols: 3 };
 }

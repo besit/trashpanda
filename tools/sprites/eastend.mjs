@@ -36,6 +36,56 @@ export function broadviewFacade(w = 64) {
   return img;
 }
 
+/**
+ * The Don Jail (1864, William Thomas; now Bridgepoint's administration building), Gerrard St E: a long
+ * pale-stone Italianate block. Rows of small barred windows, a projecting centre pavilion with a heavy
+ * rusticated arched doorway, and a lantern on the hipped roof (3/4 facade). M3.1.
+ */
+export function donJailFacade(w = 192) {
+  const h = 58, img = new Img(w, h + 12), r = rng(1864), top = 12;
+  img.rect(0, top, w, h, 't');
+  for (let y = top + 3; y < top + h; y += 4) img.hline(0, w - 1, y, 'S');           // stone courses
+  for (let y = top; y < top + h; y += 4) for (let x = ((y / 4) % 2) * 6; x < w; x += 12) img.vline(x, y, y + 3, 'S');
+  img.rect(0, top, w, 3, 'H'); img.hline(0, w - 1, top + 3, 'S');                  // cornice
+  img.rect(0, top + h - 6, w, 6, 'S'); img.hline(0, w - 1, top + h - 6, 'h');       // plinth
+  const cx = Math.round(w / 2), pw = 44;
+  // wings: three storeys of small barred windows
+  for (let f = 0; f < 3; f++) for (let x = 8; x < w - 8; x += 12) {
+    if (Math.abs(x + 2 - cx) < pw / 2 + 4) continue;
+    const y = top + 8 + f * 15;
+    img.rect(x - 1, y - 1, 7, 10, 'S'); img.rect(x, y, 5, 8, 'k');
+    for (let bx = x + 1; bx < x + 5; bx += 2) img.vline(bx, y, y + 7, 'G');
+    if (r.chance(0.1)) img.rect(x + 1, y + 1, 1, 2, 'y');
+  }
+  // the centre pavilion: rusticated stone, a pediment, the big arched door
+  img.rect(cx - pw / 2, top - 6, pw, h + 6, 'T');
+  for (let y = top - 3; y < top + h; y += 4) img.hline(cx - pw / 2, cx + pw / 2 - 1, y, 't');
+  img.vline(cx - pw / 2, top - 6, top + h - 1, 'S'); img.vline(cx + pw / 2 - 1, top - 6, top + h - 1, 'S');
+  img.poly([[cx - pw / 2 - 2, top - 6], [cx, top - 12], [cx + pw / 2 + 1, top - 6]], 'H');
+  img.hline(cx - pw / 2 - 2, cx + pw / 2 + 1, top - 6, 'S');
+  for (const dx of [-14, 9]) for (let f = 0; f < 2; f++) { const y = top + 6 + f * 14; img.rect(cx + dx, y, 5, 9, 'k'); img.ellipse(cx + dx + 2, y, 2, 2, 'k'); img.vline(cx + dx + 2, y, y + 8, 'G'); }
+  // the doorway: heavy voussoirs (the carved "Father Time" keystone is a dot of detail)
+  img.ellipse(cx, top + h - 16, 10, 10, 't'); img.rect(cx - 10, top + h - 16, 21, 10, 't');
+  img.ellipse(cx, top + h - 16, 7, 7, 'k'); img.rect(cx - 7, top + h - 16, 15, 10, 'k');
+  img.rect(cx - 5, top + h - 14, 11, 8, 'w'); img.vline(cx, top + h - 14, top + h - 7, 'x');
+  img.rect(cx - 1, top + h - 27, 3, 3, 'S');
+  for (const dx of [-12, 11]) img.rect(cx + dx, top + h - 18, 2, 12, 'S');
+  img.rect(cx - 12, top + h - 6, 25, 2, 'h'); img.rect(cx - 14, top + h - 4, 29, 2, 'H'); // steps
+  return img;
+}
+/** its roof: grey slate hip with a little lantern over the centre */
+export function donJailRoof(w, d) {
+  const img = new Img(w, d);
+  img.rect(0, 0, w, d, 'G');
+  for (let y = 1; y < d; y += 3) img.hline(0, w - 1, y, 'g');
+  img.rect(0, 0, w, 2, 'h'); img.rect(0, 0, 2, d, 'h'); img.rect(w - 2, 0, 2, d, 'g');
+  const cx = Math.round(w / 2);
+  img.rect(cx - 8, Math.round(d / 2) - 6, 16, 12, 'H'); img.rect(cx - 6, Math.round(d / 2) - 4, 12, 8, 'S');
+  for (let x = cx - 5; x < cx + 6; x += 3) img.vline(x, Math.round(d / 2) - 4, Math.round(d / 2) + 3, 'k');
+  img.rect(cx - 2, Math.round(d / 2) - 9, 4, 4, 'g');
+  return img;
+}
+
 /** a parking-lot light pole (map prop) */
 export function lotLight() {
   const im = new Img(14, 40);
@@ -113,6 +163,28 @@ export function monsterSuv(frame = 0) {
   return img;
 }
 
+/**
+ * M3.1 (Ivan: "I can't jump over him, so he always strikes"): a cart shelter to climb onto. Its roof is
+ * higher than the Monster SUV, so the charge passes underneath; drop onto the SUV's roof from it.
+ * The roof is the top 6 px; it's 58 px tall. A stack of pallets beside it is the step up.
+ */
+export function cartShelter() {
+  const W = 84, H = 60, img = new Img(W, H);
+  img.rect(0, 0, W, 6, 'h'); img.rect(0, 0, W, 2, 'H'); img.rect(0, 5, W, 2, 'R'); // roof + its red edge
+  for (const x of [3, 40, 77]) { img.rect(x, 7, 4, H - 9, 'G'); img.vline(x, 7, H - 3, 'h'); }
+  // carts nested inside
+  for (let k = 0; k < 4; k++) { const x = 10 + k * 7; img.rect(x, 38, 16, 12, null); for (let y = 38; y < 50; y += 3) img.hline(x, x + 15, y, 'S'); for (let xx = x; xx < x + 16; xx += 3) img.vline(xx, 38, 49, 'S'); img.circle(x + 3, 54, 2, 'k'); img.circle(x + 13, 54, 2, 'k'); }
+  img.rect(46, 20, 26, 10, 'R'); img.rect(47, 21, 24, 8, 'q'); // a CARTS sign
+  img.outline('K'); img.pivot = { x: 0.5, y: (H - 2) / H };
+  return img;
+}
+export function palletStack() {
+  const W = 34, H = 30, img = new Img(W, H);
+  for (let k = 0; k < 4; k++) { const y = H - 2 - (k + 1) * 7; img.rect(1, y, W - 2, 3, 'X'); img.rect(1, y + 3, W - 2, 4, null); for (const x of [2, 15, 29]) img.rect(x, y + 3, 3, 4, 'x'); img.hline(1, W - 2, y, 'j'); }
+  img.outline('K'); img.pivot = { x: 0.5, y: (H - 2) / H };
+  return img;
+}
+
 export function eastEndPreview() {
-  return { frames: [bigBoxFacade(), broadviewFacade(), lotLight(), asphaltPatch(), soilSapling(), monsterSuv(0), monsterSuv(1)], cols: 4 };
+  return { frames: [bigBoxFacade(), broadviewFacade(), donJailFacade(), cartShelter(), palletStack(), lotLight(), asphaltPatch(), soilSapling(), monsterSuv(0), monsterSuv(1)], cols: 4 };
 }

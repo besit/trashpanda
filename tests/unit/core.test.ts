@@ -111,3 +111,25 @@ describe('M2: districts, missions, saves', async () => {
     }
   });
 });
+
+describe('M3.1: difficulty + score', () => {
+  it('difficulty sets hits per life and multiplies points', async () => {
+    const { award, awardOnce, hitsPerLife, POINTS } = await import('../../src/core/Score');
+    const easy = newGame('easy'), hard = newGame('hard'), normal = newGame();
+    expect([hitsPerLife(easy), hitsPerLife(normal), hitsPerLife(hard)]).toEqual([7, 5, 3]);
+    expect(award(easy, 'rat')).toBe(POINTS.rat);
+    expect(award(normal, 'rat')).toBe(Math.round(POINTS.rat * 1.5));
+    expect(award(hard, 'mission')).toBe(POINTS.mission * 2);
+    expect(hard.score).toBe(POINTS.mission * 2);
+    // plaques / hearts / eggs count once per run
+    expect(awardOnce(normal, 'plaque_x', 'plaque')).toBeGreaterThan(0);
+    expect(awardOnce(normal, 'plaque_x', 'plaque')).toBe(0);
+  });
+  it('v2 saves become a normal run with a score of 0', () => {
+    const s = migrate({ version: 2, upgrades: [], completedMissions: ['bike_lane_war'], lives: 2 })!;
+    expect(s.version).toBe(SAVE_VERSION);
+    expect([s.difficulty, s.score, s.name]).toEqual(['normal', 0, 'RAC']);
+    expect(s.runId).toBeTruthy();
+    expect(migrate({ version: 3, difficulty: 'impossible', score: -5, name: 'toolong' })!.difficulty).toBe('normal');
+  });
+});

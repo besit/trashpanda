@@ -15,6 +15,10 @@ test('title -> new game -> intro cutscene -> explore', async ({ page }) => {
   await page.keyboard.press('Enter'); // start
   await page.waitForTimeout(300);
   await page.keyboard.press('Enter'); // NEW GAME (no save yet)
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Enter'); // M3.1: difficulty (NORMAL)
+  await page.waitForTimeout(300);
+  for (let i = 0; i < 3; i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(120); } // initials
   await active(page, 'Cutscene');
   await page.waitForTimeout(500);
   await page.keyboard.press('Escape'); // skip

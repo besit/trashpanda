@@ -189,6 +189,8 @@ export function buildTiles() {
   // sand (Sugar Beach) + Queens Quay's grassy streetcar median with rails
   { const t = base('D'); speckle(t, 'j', 14, 202); speckle(t, 'Y', 5, 203); add('sand', t); }
   for (let s2 = 0; s2 < 2; s2++) { const t = base('E'); speckle(t, 'l', 12, 204 + s2); t.rect(0, 3, 16, 3, 's'); t.rect(0, 10, 16, 3, 's'); t.hline(0, 15, 4, 'h'); t.hline(0, 15, 11, 'h'); add(`tracks_grass${s2}`, t); }
+  // M3.1: the Union Station rail corridor north of Bremner Blvd: ballast, ties, rails (E-W)
+  for (let s2 = 0; s2 < 2; s2++) { const t = base('s'); speckle(t, 'S', 14, 206 + s2); speckle(t, 'g', 6, 208 + s2); for (let x = s2 * 2; x < 16; x += 4) t.rect(x, 2, 2, 12, 'w'); t.hline(0, 15, 4, 'H'); t.hline(0, 15, 5, 'g'); t.hline(0, 15, 10, 'H'); t.hline(0, 15, 11, 'g'); add(`rail${s2}`, t); }
   // zoo pen ground (packed dirt + straw)
   { const t = base('X'); speckle(t, 'x', 10, 182); speckle(t, 'y', 6, 183); speckle(t, 'j', 6, 184); add('pen', t); }
   return tiles;
