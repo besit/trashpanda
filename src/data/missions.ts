@@ -6,6 +6,7 @@ import type { EscortDef } from '../action/Escort';
 import type { ChaseDef, BuildDef } from '../action/Parkside';
 import type { BossKind } from '../action/Boss';
 import type { AutoScrollDef } from '../action/LaneEater';
+import type { DepaveDef } from '../action/ParkingLot';
 
 export type DistrictId = 'queenwest' | 'downtown' | 'north' | 'waterfront' | 'highpark' | 'eastend';
 
@@ -26,8 +27,8 @@ export interface MissionDef {
   /** pan the payoff camera vertically (N-S streets) instead of along x */
   focusAxis?: 'x' | 'y';
   action: {
-    bg: 'queen' | 'king' | 'parkside';
-    street: 'plain' | 'paint' | 'protected' | 'escort' | 'king' | 'parkside';
+    bg: 'queen' | 'king' | 'parkside' | 'bigbox';
+    street: 'plain' | 'paint' | 'protected' | 'escort' | 'king' | 'parkside' | 'lot';
     sky: 'day' | 'dusk';
     length: number; // px of street
     intro: string;
@@ -35,7 +36,9 @@ export interface MissionDef {
     hint?: [string, string];
     groundY?: number;
     waves: Wave[];
-    boss?: { at: number; kind: BossKind | 'laneeater' };
+    boss?: { at: number; kind: BossKind | 'laneeater' | 'monstersuv' };
+    /** M3 (The Great Parking Lot): break up asphalt patches in a locked arena */
+    depave?: DepaveDef;
     /** M3 (The Lane Eater): the screen scrolls on its own; riders to rally; ambushes */
     autoscroll?: AutoScrollDef;
     escort?: EscortDef;
@@ -161,6 +164,29 @@ MISSIONS.lane_eater = {
       ambush: [{ at: 700, rats: ['construction'] }, { at: 1250, rats: ['basic', 'construction'] }, { at: 1900, rats: ['traffic', 'basic'] }, { at: 2500, rats: ['construction', 'basic'] }],
     },
     boss: { at: 2950, kind: 'laneeater' },
+  },
+};
+
+MISSIONS.great_parking_lot = {
+  id: 'great_parking_lot',
+  title: 'THE GREAT PARKING LOT',
+  district: 'eastend',
+  upgrades: ['parking_to_park'],
+  requires: ['king_of_street'],
+  briefing: 'lot_before',
+  debrief: 'lot_after',
+  focusX: 70 * 16,
+  focusY: 72 * 16,
+  action: {
+    bg: 'bigbox', street: 'lot', sky: 'day', length: 2300,
+    intro: 'DEPAVE MEGAMART\'S LOT. TOW THE MONSTER SUV!',
+    hint: ['PUMP THE CRACKED ASPHALT   STOMP SUV ROOFS', 'RED: PUMP ASPHALT   GREEN: STOMP ROOFS'],
+    waves: [
+      { at: 260, rats: ['basic', 'basic', 'construction'] },
+      { at: 760, rats: ['traffic', 'construction'], suvs: 1 },
+    ],
+    depave: { at: 1250, patches: [70, 140, 210, 280, 340], rats: ['construction', 'basic', 'construction'] },
+    boss: { at: 1850, kind: 'monstersuv' },
   },
 };
 

@@ -4,12 +4,13 @@ import { rng } from '../lib/rng.mjs';
 import { obliqueBuilding, roof } from './buildings.mjs';
 import { downtownBuilding, oldCityHall } from './downtown.mjs';
 import { schoolFacade, cafeFacade, greenhouseFacade } from './highpark.mjs';
+import { bigBoxFacade, broadviewFacade } from './eastend.mjs';
 
 export function anyBuilding(gen) {
   if (gen.kind === 'tower' || gen.kind === 'warehouse') return downtownBuilding(gen);
   if (gen.kind === 'oldcityhall') return oldCityHall(gen.w, gen.d);
-  if (gen.kind === 'school' || gen.kind === 'cafe' || gen.kind === 'greenhouse') {
-    const fac = gen.kind === 'school' ? schoolFacade({ w: gen.w, floors: gen.floors, seed: gen.seed }) : gen.kind === 'cafe' ? cafeFacade(gen.w) : greenhouseFacade(gen.w);
+  if (['school', 'cafe', 'greenhouse', 'bigbox', 'broadview'].includes(gen.kind)) {
+    const fac = gen.kind === 'school' ? schoolFacade({ w: gen.w, floors: gen.floors, seed: gen.seed }) : gen.kind === 'cafe' ? cafeFacade(gen.w) : gen.kind === 'greenhouse' ? greenhouseFacade(gen.w) : gen.kind === 'bigbox' ? bigBoxFacade(gen.w) : broadviewFacade(gen.w);
     const rf = roof(gen.w, gen.d, rng(gen.seed), 'school');
     if (gen.kind === 'greenhouse') { // a glass roof: pale panes on a white grid
       rf.rect(0, 0, gen.w, gen.d, 'C');

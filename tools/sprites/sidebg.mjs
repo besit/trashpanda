@@ -121,6 +121,10 @@ export function streetStrip(protectedLane = false) {
     // King St: tracks in the far lane with red transit paint
     img.rect(0, 20, W, 14, 'r'); for (let i = 0; i < 24; i++) img.set(r.int(0, W - 1), r.int(20, 33), r.pick(['R', 'b']));
     for (const y of [24, 30]) { img.hline(0, W - 1, y, 'h'); img.hline(0, W - 1, y + 1, 'g'); }
+  } else if (protectedLane === 'lot') {
+    // MEGAMART's parking lot: no curb lane, painted stalls + wheel stops
+    img.rect(0, 12, W, 4, 'S');
+    for (let x = 0; x < W; x += 32) { img.vline(x, 18, 40, 'W'); img.vline(x + 1, 18, 40, 'H'); img.rect(x + 10, 42, 12, 3, 'T'); }
   } else if (protectedLane === 'parkside') {
     // Parkside Dr: two plain lanes, a SLOW stencil, no tracks
     img.hline(0, W - 1, 36, 'y'); img.hline(0, W - 1, 38, 'y');

@@ -86,6 +86,17 @@ export const UPGRADES: Record<string, Upgrade> = {
     blurb: 'TORONTO SCHOOL-ZONE CAMERAS CUT SPEEDING 45%... AND IT CAME BACK WHEN THEY WENT. HUMPS AND RAISED CROSSINGS DON\'T GO AWAY.',
     stat: { key: 'protectedIntersections', amount: 1 },
   },
+  parking_to_park: {
+    id: 'parking_to_park',
+    name: 'THE LOT BECOMES A PARK',
+    tree: 'publicSpace',
+    livability: 3,
+    categories: { greenPublic: 12, walking: 5, carDependence: 4 },
+    mapPatches: ['parking_to_park'],
+    headline: 'MEGAMART\'S PARKING LOT IS A PARK NOW.',
+    blurb: 'IN DECEMBER 2021 TORONTO STOPPED REQUIRING MOST NEW BUILDINGS TO INCLUDE CAR PARKING. LESS ASPHALT BY LAW: MORE ROOM FOR HOMES, TREES AND PARKS.',
+    stat: { key: 'parksCreated', amount: 1 },
+  },
   bloor_lanes_kept: {
     id: 'bloor_lanes_kept',
     name: 'BLOOR KEEPS ITS BIKE LANES',

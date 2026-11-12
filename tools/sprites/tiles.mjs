@@ -173,6 +173,16 @@ export function buildTiles() {
   { const t = base('j'); speckle(t, 'X', 12, 180); speckle(t, 'D', 6, 181); add('trail', t); }
   // Hillside Gardens flower bed: dark soil with rows of tulips (red, yellow, pink, white)
   { const t = base('w'); speckle(t, 'x', 8, 185); for (let y = 2; y < 16; y += 4) for (let x = 1 + (y % 8 === 2 ? 0 : 2); x < 16; x += 4) { const c = ['R', 'y', 'P', 'W'][((x + y) >> 2) % 4]; t.set(x, y, c); t.set(x, y + 1, 'E'); } add('flowerbed', t); }
+  // ---- M3: East End ----
+  // parking lot: plain asphalt, a stall line, a wheel stop
+  { const t = asphalt(190); speckle(t, 's', 4, 191); add('lot', t); }
+  { const t = asphalt(192); t.vline(0, 0, 15, 'W'); t.vline(1, 0, 15, 'H'); add('lot_stall', t); }
+  { const t = asphalt(193); t.vline(0, 0, 15, 'W'); t.rect(4, 12, 9, 2, 'T'); t.hline(4, 12, 14, 'S'); add('lot_stop', t); }
+  // a bridge deck edge over the Don: concrete railing on the north / south side
+  { const t = sidewalk(194); t.rect(0, 0, 16, 4, 'H'); t.hline(0, 15, 4, 'S'); for (let x = 1; x < 16; x += 4) t.rect(x, 1, 2, 2, 'g'); add('bridge_rail_n', t); }
+  { const t = sidewalk(195); t.rect(0, 12, 16, 4, 'H'); t.hline(0, 15, 11, 'S'); for (let x = 1; x < 16; x += 4) t.rect(x, 13, 2, 2, 'g'); add('bridge_rail_s', t); }
+  // the DVP's concrete median (jersey barrier) between the north- and southbound lanes
+  { const t = asphalt(196); t.rect(5, 0, 6, 16, 'h'); t.vline(5, 0, 15, 'H'); t.vline(10, 0, 15, 'G'); add('median_ns', t); }
   // zoo pen ground (packed dirt + straw)
   { const t = base('X'); speckle(t, 'x', 10, 182); speckle(t, 'y', 6, 183); speckle(t, 'j', 6, 184); add('pen', t); }
   return tiles;

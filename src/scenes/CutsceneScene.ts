@@ -134,6 +134,8 @@ export class CutsceneScene extends Phaser.Scene {
         const bg = s.bg ?? 'queen';
         if (bg === 'king') this.layer('facades_dt', FRONT_Y.king, 140, 1.0, 200);
         else if (bg === 'parkside') this.layer('park_hp', FRONT_Y.parkside, 120, 1.0, 100);
+        else if (bg === 'bigbox') this.layer('bigbox_ee', STREET_Y - 120, 120, 1.0, 0);
+        else if (bg === 'lake') this.layer('lake_wf', STREET_Y - 120, 120, 1.0, 0);
         else { this.layer(`backrow_${s.sky}`, BACKROW_Y, 80, 0.3); this.layer('facades_qw', FRONT_Y.queen, 96, 1.0, 300); }
         this.layer(`street_${s.street}`, STREET_Y, 70, 1.0);
         if (s.street === 'protected') this.addDecor(['planter'], STREET_Y + 32, 70, 70, 1.5);

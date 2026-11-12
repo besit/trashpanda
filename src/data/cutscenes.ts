@@ -4,7 +4,7 @@ export type Expr = 'grin' | 'laugh' | 'shock';
 export type Step =
   | { t: 'bg'; sky: 'day' | 'dusk' }
   /** pan: tracking speed in px/s (facades, street, furniture and world actors scroll together); parked: curb parking */
-  | { t: 'side'; sky: 'day' | 'dusk'; street: 'plain' | 'protected' | 'paint' | 'escort' | 'king' | 'parkside'; bg?: 'queen' | 'king' | 'parkside'; pan?: number; parked?: boolean; patios?: boolean }
+  | { t: 'side'; sky: 'day' | 'dusk'; street: 'plain' | 'protected' | 'paint' | 'escort' | 'king' | 'parkside' | 'lot' | 'quay'; bg?: 'queen' | 'king' | 'parkside' | 'bigbox' | 'lake'; pan?: number; parked?: boolean; patios?: boolean }
   | { t: 'pan'; to: number; ms?: number }
   | { t: 'caption'; text: string; y?: number; font?: 'font_outline' | 'font_big' | 'font_red'; hold?: number }
   | { t: 'clear' }
@@ -325,6 +325,50 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'clear' },
     { t: 'caption', text: 'SAME STREET.', y: 22, hold: 600 },
     { t: 'caption', text: 'SLOW BY DESIGN.', y: 40, font: 'font_big', hold: 2000 },
+    { t: 'sfx', name: 'bell' },
+    { t: 'wait', ms: 400 },
+  ],
+
+  // ---- The Great Parking Lot: before (M3) ----
+  lot_before: [
+    { t: 'side', sky: 'day', street: 'lot', bg: 'bigbox' },
+    { t: 'music', song: 'none' },
+    { t: 'caption', text: 'MEGAMART. LESLIEVILLE.', y: 18, hold: 600 },
+    { t: 'actor', id: 'c1', frame: 'carside_red', atlas: 'world', x: 60, y: GROUND + 4, depth: 60 },
+    { t: 'actor', id: 'c2', frame: 'suvside', atlas: 'world', x: 150, y: GROUND + 4, depth: 60 },
+    { t: 'actor', id: 'c3', frame: 'carside_blue_r', atlas: 'world', x: 245, y: GROUND + 4, depth: 60 },
+    { t: 'actor', id: 'c4', frame: 'carside_red', atlas: 'world', x: 335, y: GROUND + 4, depth: 60 },
+    { t: 'actor', id: 'weed', frame: 'sapling', atlas: 'world', x: 200, y: GROUND + 20, depth: 70 },
+    { t: 'caption', text: 'ACRES OF ASPHALT, HALF EMPTY MOST DAYS.', y: 20, hold: 400 },
+    { t: 'caption', text: 'ONE BRAVE WEED.', y: 32, hold: 1300 },
+    { t: 'clear' },
+    { t: 'music', song: 'dogfraud' },
+    { t: 'sfx', name: 'carHonk' },
+    { t: 'actor', id: 'suv', frame: 'monstersuv_1', atlas: 'world', x: 520, y: GROUND + 20, depth: 80, flip: true, rise: true },
+    { t: 'move', id: 'suv', x: 230, ms: 1600, ease: 'Sine.easeOut', wait: true },
+    { t: 'sfx', name: 'squeak' },
+    { t: 'frame', id: 'weed', frame: 'cone' },
+    { t: 'say', who: 'RAT', text: 'BY ORDER OF THE RAT KING: EVERY SQUARE METRE IS A PARKING SPOT. ESPECIALLY THAT WEED.' },
+    { t: 'actor', id: 'tp', frame: 'rs_2', anim: 'rs_ride', x: -30, y: GROUND + 2, depth: 90 },
+    { t: 'move', id: 'tp', x: 60, ms: 900, ease: 'Cubic.easeOut', wait: true, anim: 'rs_idle' },
+    { t: 'sfx', name: 'bell' },
+    { t: 'say', who: 'TRASH PANDA', text: 'A WHOLE PARK FITS IN HERE. TIME TO DEPAVE.' },
+  ],
+
+  // ---- The Great Parking Lot: after (M3) ----
+  lot_after: [
+    { t: 'side', sky: 'day', street: 'parkside', bg: 'parkside' },
+    { t: 'music', song: 'improve' },
+    { t: 'caption', text: 'THE SAME SPOT. NEXT SPRING.', y: 18, hold: 600 },
+    { t: 'actor', id: 'k1', frame: 'ped_kid_E_0', anim: 'ped_kid_E', x: -20, y: SIDEWALK, depth: 40, scale: 2 },
+    { t: 'actor', id: 'k2', frame: 'ped_dog_E_0', anim: 'ped_dog_E', x: -80, y: SIDEWALK, depth: 40, scale: 2 },
+    { t: 'actor', id: 'b1', frame: 'cys_c_0', anim: 'cys_c', x: -140, y: GROUND, depth: 60 },
+    { t: 'move', id: 'k1', x: 260, ms: 5000 },
+    { t: 'move', id: 'k2', x: 200, ms: 5000 },
+    { t: 'move', id: 'b1', x: 420, ms: 4200 },
+    { t: 'wait', ms: 2200 },
+    { t: 'caption', text: 'TREES WHERE THE CARS SAT.', y: 22, hold: 600 },
+    { t: 'caption', text: 'A PARK FOR LESLIEVILLE.', y: 40, font: 'font_big', hold: 2200 },
     { t: 'sfx', name: 'bell' },
     { t: 'wait', ms: 400 },
   ],

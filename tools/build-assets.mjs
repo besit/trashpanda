@@ -24,6 +24,8 @@ import { fontSheet, CHARS } from './sprites/font.mjs';
 import { generateQueenWest } from './map/queenwest.mjs';
 import { generateHighPark } from './map/highpark.mjs';
 import { generateDowntown } from './map/downtown.mjs';
+import { generateEastEnd } from './map/eastend.mjs';
+import * as EE from './sprites/eastend.mjs';
 
 const OUT = path.resolve('public/gen');
 fs.mkdirSync(OUT, { recursive: true });
@@ -83,7 +85,7 @@ const chars = [];
 manifest.atlases.chars = { ...packAtlas(chars, path.join(OUT, 'chars')), png: 'gen/chars.png', json: 'gen/chars.json' };
 
 // ---------- maps ----------
-const maps = { queenwest: generateQueenWest(), highpark: generateHighPark(), downtown: generateDowntown() };
+const maps = { queenwest: generateQueenWest(), highpark: generateHighPark(), downtown: generateDowntown(), eastend: generateEastEnd() };
 
 // ---------- shared world atlas: props, vehicles, side-view mission props ----------
 const world = [];
@@ -132,6 +134,8 @@ for (const st of ['red', 'green', 'tsp']) addProp(`sigpole_${st}`, SP.signalPole
     addProp(suffix ? `laneeater_${f}_${suffix}` : `laneeater_${f}`, laneEater(f, broken.map(([k]) => k)));
   }
   addProp('paintgob_0', paintGob(0)); addProp('paintgob_1', paintGob(1)); }
+addProp('lotlight', EE.lotLight()); addProp('asphaltpatch', EE.asphaltPatch()); addProp('soilsapling', EE.soilSapling());
+addProp('monstersuv_0', EE.monsterSuv(0)); addProp('monstersuv_1', EE.monsterSuv(1));
 addProp('vanside', SP.vanSide()); addProp('suvrat_0', SP.suvRatSide(0)); addProp('suvrat_1', SP.suvRatSide(1));
 addProp('desk', SP.desk()); addProp('stamp_0', SP.stamp(0)); addProp('stamp_1', SP.stamp(1)); addProp('camcarried', SP.camCarried());
 addProp('buildspot', SP.buildSpot()); addProp('humpside', SP.humpSide()); addProp('raisedside', SP.raisedCrossSide()); addProp('life_0', SP.lifeToken(0)); addProp('life_1', SP.lifeToken(1));
@@ -206,9 +210,9 @@ img('sky_day', sky('day')); img('sky_dusk', sky('dusk'));
 img('skyline_day', skyline('day')); img('skyline_dusk', skyline('dusk'));
 img('backrow_day', backRow('day')); img('backrow_dusk', backRow('dusk'));
 img('facades_qw', facadeStrip(11));
-img('facades_dt', facadeStripDT()); img('park_hp', parkStripHP()); img('school_side', schoolSide());
+img('facades_dt', facadeStripDT()); img('park_hp', parkStripHP()); img('school_side', schoolSide()); img('bigbox_ee', EE.bigBoxStrip());
 img('street_paint', streetStrip(false)); img('street_protected', streetStrip(true)); img('street_plain', streetStrip('plain'));
-for (const k of ['escort', 'king', 'parkside']) img(`street_${k}`, streetStrip(k));
+for (const k of ['escort', 'king', 'parkside', 'lot']) img(`street_${k}`, streetStrip(k));
 img('dvp_bg', dvpBackdrop());
 
 // ---------- fonts ----------
