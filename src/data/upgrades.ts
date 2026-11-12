@@ -86,6 +86,17 @@ export const UPGRADES: Record<string, Upgrade> = {
     blurb: 'TORONTO SCHOOL-ZONE CAMERAS CUT SPEEDING 45%... AND IT CAME BACK WHEN THEY WENT. HUMPS AND RAISED CROSSINGS DON\'T GO AWAY.',
     stat: { key: 'protectedIntersections', amount: 1 },
   },
+  public_waterfront: {
+    id: 'public_waterfront',
+    name: 'THE SHORE STAYS PUBLIC',
+    tree: 'publicSpace',
+    livability: 3,
+    categories: { greenPublic: 12, walking: 4, cycling: 3 },
+    mapPatches: ['public_waterfront'],
+    headline: 'THE FENCES ARE DOWN. THE WATERFRONT IS EVERYONE\'S.',
+    blurb: 'THE MEGA SPA IS FICTION. BUT IN 2024 ONTARIO SIGNED A 95-YEAR LEASE FOR A PRIVATE SPA AT ONTARIO PLACE, AND ABOUT 850 TREES THERE WERE CUT DOWN. WHO IS THE WATERFRONT FOR?',
+    stat: { key: 'parksCreated', amount: 1 },
+  },
   parking_to_park: {
     id: 'parking_to_park',
     name: 'THE LOT BECOMES A PARK',

@@ -183,6 +183,12 @@ export function buildTiles() {
   { const t = sidewalk(195); t.rect(0, 12, 16, 4, 'H'); t.hline(0, 15, 11, 'S'); for (let x = 1; x < 16; x += 4) t.rect(x, 13, 2, 2, 'g'); add('bridge_rail_s', t); }
   // the DVP's concrete median (jersey barrier) between the north- and southbound lanes
   { const t = asphalt(196); t.rect(5, 0, 6, 16, 'h'); t.vline(5, 0, 15, 'H'); t.vline(10, 0, 15, 'G'); add('median_ns', t); }
+  // ---- M3: Waterfront ----
+  // the Martin Goodman Trail: dark asphalt with a dashed yellow centre line
+  for (let s2 = 0; s2 < 2; s2++) { const t = base('a'); speckle(t, 'A', 10, 200 + s2); if (s2 === 0) for (let x = 1; x < 16; x += 8) t.rect(x, 7, 4, 2, 'y'); add(`mgt${s2}`, t); }
+  // sand (Sugar Beach) + Queens Quay's grassy streetcar median with rails
+  { const t = base('D'); speckle(t, 'j', 14, 202); speckle(t, 'Y', 5, 203); add('sand', t); }
+  for (let s2 = 0; s2 < 2; s2++) { const t = base('E'); speckle(t, 'l', 12, 204 + s2); t.rect(0, 3, 16, 3, 's'); t.rect(0, 10, 16, 3, 's'); t.hline(0, 15, 4, 'h'); t.hline(0, 15, 11, 'h'); add(`tracks_grass${s2}`, t); }
   // zoo pen ground (packed dirt + straw)
   { const t = base('X'); speckle(t, 'x', 10, 182); speckle(t, 'y', 6, 183); speckle(t, 'j', 6, 184); add('pen', t); }
   return tiles;

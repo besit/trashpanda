@@ -42,6 +42,10 @@ export class Crowd {
       const s = scene.add.sprite(c.x, c.y, 'world', `${c.kind}_0`).setOrigin(0.5, 0.85).play(`${c.kind}_swim`);
       this.swimmers.push({ s, home: { x: c.x, y: c.y }, vx: 0, vy: 0, t: Math.random() * 3, r: c.kind === 'swan' ? 22 : 14 });
     }
+    for (const c of critters) if (c.kind === 'sailboat') { // drift lazily about their mooring
+      const s = scene.add.sprite(c.x, c.y, 'world', 'sailboat_0').setOrigin(0.5, 0.93).play('sailboat_bob');
+      this.swimmers.push({ s, home: { x: c.x, y: c.y }, vx: 0, vy: 0, t: Math.random() * 3, r: 60 });
+    }
     for (const c of critters) if (c.kind === 'capybara') {
       const s = scene.add.sprite(c.x, c.y, 'world', 'capy_2').setOrigin(0.5, 1).play('capy_sit');
       this.capys.push({ s, home: { x: c.x, y: c.y }, vx: 0, vy: 0, t: Math.random() * 2 });

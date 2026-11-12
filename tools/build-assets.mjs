@@ -26,6 +26,8 @@ import { generateHighPark } from './map/highpark.mjs';
 import { generateDowntown } from './map/downtown.mjs';
 import { generateEastEnd } from './map/eastend.mjs';
 import * as EE from './sprites/eastend.mjs';
+import * as WF from './sprites/waterfront.mjs';
+import { generateWaterfront } from './map/waterfront.mjs';
 
 const OUT = path.resolve('public/gen');
 fs.mkdirSync(OUT, { recursive: true });
@@ -85,7 +87,7 @@ const chars = [];
 manifest.atlases.chars = { ...packAtlas(chars, path.join(OUT, 'chars')), png: 'gen/chars.png', json: 'gen/chars.json' };
 
 // ---------- maps ----------
-const maps = { queenwest: generateQueenWest(), highpark: generateHighPark(), downtown: generateDowntown(), eastend: generateEastEnd() };
+const maps = { queenwest: generateQueenWest(), highpark: generateHighPark(), downtown: generateDowntown(), eastend: generateEastEnd(), waterfront: generateWaterfront() };
 
 // ---------- shared world atlas: props, vehicles, side-view mission props ----------
 const world = [];
@@ -136,6 +138,11 @@ for (const st of ['red', 'green', 'tsp']) addProp(`sigpole_${st}`, SP.signalPole
   addProp('paintgob_0', paintGob(0)); addProp('paintgob_1', paintGob(1)); }
 addProp('lotlight', EE.lotLight()); addProp('asphaltpatch', EE.asphaltPatch()); addProp('soilsapling', EE.soilSapling());
 addProp('monstersuv_0', EE.monsterSuv(0)); addProp('monstersuv_1', EE.monsterSuv(1));
+// M3: the Waterfront
+addProp('cntower', WF.cnTowerMap()); addProp('stadium', WF.stadium()); addProp('cinesphere', WF.cinesphere()); addProp('pod', WF.pod());
+addProp('pinkumbrella', WF.pinkUmbrella()); addProp('gardiner', WF.gardinerSeg()); addProp('spafence', WF.spaFence()); addProp('spafence_side', WF.spaFenceSide());
+addProp('sailboat_0', WF.sailboat(0)); addProp('sailboat_1', WF.sailboat(1));
+manifest.anims.sailboat_bob = { frames: ['sailboat_0', 'sailboat_1'], rate: 1.5, loop: true, atlas: 'world' };
 addProp('vanside', SP.vanSide()); addProp('suvrat_0', SP.suvRatSide(0)); addProp('suvrat_1', SP.suvRatSide(1));
 addProp('desk', SP.desk()); addProp('stamp_0', SP.stamp(0)); addProp('stamp_1', SP.stamp(1)); addProp('camcarried', SP.camCarried());
 addProp('buildspot', SP.buildSpot()); addProp('humpside', SP.humpSide()); addProp('raisedside', SP.raisedCrossSide()); addProp('life_0', SP.lifeToken(0)); addProp('life_1', SP.lifeToken(1));
@@ -210,9 +217,9 @@ img('sky_day', sky('day')); img('sky_dusk', sky('dusk'));
 img('skyline_day', skyline('day')); img('skyline_dusk', skyline('dusk'));
 img('backrow_day', backRow('day')); img('backrow_dusk', backRow('dusk'));
 img('facades_qw', facadeStrip(11));
-img('facades_dt', facadeStripDT()); img('park_hp', parkStripHP()); img('school_side', schoolSide()); img('bigbox_ee', EE.bigBoxStrip());
+img('facades_dt', facadeStripDT()); img('park_hp', parkStripHP()); img('school_side', schoolSide()); img('bigbox_ee', EE.bigBoxStrip()); img('lake_wf', WF.lakeStrip());
 img('street_paint', streetStrip(false)); img('street_protected', streetStrip(true)); img('street_plain', streetStrip('plain'));
-for (const k of ['escort', 'king', 'parkside', 'lot']) img(`street_${k}`, streetStrip(k));
+for (const k of ['escort', 'king', 'parkside', 'lot', 'quay']) img(`street_${k}`, streetStrip(k));
 img('dvp_bg', dvpBackdrop());
 
 // ---------- fonts ----------

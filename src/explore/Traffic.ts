@@ -51,6 +51,7 @@ export class Traffic {
   private spawn(lane: Lane, at?: number, kind: Kind = 'car') {
     // King St corridor: no through traffic (a rare local delivery still turns in)
     if (kind === 'car' && this.has(lane.noCars) && Math.random() < 0.88) return;
+    if (kind !== 'streetcar' && lane.transitOnly) return;
     const horiz = lane.axis === 'x';
     const f = face(lane);
     const len = kind === 'streetcar' ? 100 : kind === 'bike' ? 16 : 32;

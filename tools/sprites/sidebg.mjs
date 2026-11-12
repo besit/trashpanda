@@ -125,6 +125,17 @@ export function streetStrip(protectedLane = false) {
     // MEGAMART's parking lot: no curb lane, painted stalls + wheel stops
     img.rect(0, 12, W, 4, 'S');
     for (let x = 0; x < W; x += 32) { img.vline(x, 18, 40, 'W'); img.vline(x + 1, 18, 40, 'H'); img.rect(x + 10, 42, 12, 3, 'T'); }
+  } else if (protectedLane === 'quay') {
+    // mission 8: the waterfront promenade. Granite edge, the Martin Goodman Trail (yellow centre dashes),
+    // then the wooden boardwalk to the bottom of the screen. No car lanes at all.
+    img.rect(0, 0, W, 12, 'H'); for (let x = 0; x < W; x += 12) img.vline(x, 0, 11, 'h'); img.hline(0, W - 1, 6, 'h');
+    img.rect(0, 12, W, 4, 'h'); img.hline(0, W - 1, 15, 'G');
+    img.rect(0, 16, W, 26, 'a'); for (let i = 0; i < 50; i++) img.set(r.int(0, W - 1), r.int(16, 41), r.pick(['A', 's']));
+    for (let x = 0; x < W; x += 16) img.rect(x + 3, 28, 8, 1, 'y');
+    img.hline(0, W - 1, 42, 'G');
+    img.rect(0, 43, W, H - 43, 'x'); for (let y = 45; y < H; y += 4) img.hline(0, W - 1, y, 'w');
+    for (let i = 0; i < 14; i++) img.set(r.int(0, W - 1), r.int(43, H - 1), 'X');
+    return img;
   } else if (protectedLane === 'parkside') {
     // Parkside Dr: two plain lanes, a SLOW stencil, no tracks
     img.hline(0, W - 1, 36, 'y'); img.hline(0, W - 1, 38, 'y');

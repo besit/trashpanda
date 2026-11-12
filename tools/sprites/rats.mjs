@@ -22,6 +22,9 @@ const M = {
   steel: { ramp: ['g', 'G', 'h', 'H'] },
   wood: { ramp: ['w', 'x', 'X'] },
   suit: { ramp: ['K', 'g', 'G', 'h'] },
+  navy: { ramp: ['K', 'K', 'u', 'U'] },
+  gold: { ramp: ['o', 'y', 'Y', 'W'], spec: 1 },
+  leather: { ramp: ['K', 'w', 'x'] },
   hair: { ramp: ['g', 'h', 'H'] },
 };
 
@@ -92,6 +95,17 @@ function ratModel(variant, pose) {
     objs.push({ d: sd.capsule(P(1.2, 12), [armA[0], 2.9, armA[2]], 0.85, 0.75), m: M.suit });
     objs.push({ d: sd.box([armA[0] + 0.6, 2.9, armA[2] + 1.6], [1.0, 1.0, 1.4]), m: M.wood });
     objs.push({ d: sd.box([armA[0] + 0.6, 2.9, armA[2] - 0.2], [1.6, 1.4, 0.5]), m: M.red });
+  } else if (variant === 'lobbyist') {
+    // M3: Dog Fraud's lobbyist. Navy suit, gold tie, slicked-back hair, a briefcase stuffed with cash.
+    objs.push({ d: (p) => Math.max(smin(sd.ellipsoid(P(0, 8.6), [3.9, 3.6, 4.0])(p), sd.ellipsoid(P(0.6, 12.5), [2.9, 2.8, 2.6])(p), 1.6), -sd.ellipsoid(P(2.9, 11.5), [1.2, 1.5, 2.6])(p)), m: M.navy });
+    objs.push({ d: sd.ellipsoid(P(2.2, 12.6), [0.8, 1.0, 0.5]), m: M.white });
+    objs.push({ d: sd.box(P(3.1, 10.4), [0.55, 0.6, 2.2]), m: M.gold });
+    objs.push({ d: (p) => Math.max(sd.ellipsoid([hc[0] - 1.5, 0, hc[2] + 1.6], [2.6, 3.0, 2.0])(p), -(p[2] - (hc[2] + 2.3))), m: M.eye }); // slick hair
+    objs.push({ d: sd.capsule(P(1.2, 12), [armA[0], 2.9, armA[2]], 0.85, 0.75), m: M.navy });
+    const bc = [armA[0] + 0.4, 3.0, armA[2] - 2.6];
+    objs.push({ d: sd.box(bc, [2.6, 0.9, 1.9]), m: M.leather });
+    objs.push({ d: sd.box([bc[0], bc[1] + 0.95, bc[2] + 0.2], [0.5, 0.1, 0.4]), m: M.gold });
+    objs.push({ d: sd.box([bc[0] - 1.2, bc[1], bc[2] + 2.0], [0.6, 0.7, 0.4]), m: { ramp: ['E', 'l', 'L'] } }); // cash poking out
   } else if (variant === 'traffic') {
     // flagger: white cap, purple vest, STOP paddle
     objs.push({ d: (p) => Math.max(sd.sphere([hc[0] - 0.2, 0, hc[2] + 0.9], 2.9)(p), -(p[2] - (hc[2] + 1.4))), m: M.white });
@@ -125,7 +139,7 @@ export function bureaucratAnims() {
   return { frames, anims };
 }
 
-export const RAT_VARIANTS = ['basic', 'construction', 'traffic'];
+export const RAT_VARIANTS = ['basic', 'construction', 'traffic', 'lobbyist'];
 export function ratAnims(variant) {
   const frames = [], anims = {};
   const add = (name, list, rate, loop = true) => { anims[name] = { start: frames.length, count: list.length, rate, loop }; frames.push(...list); };

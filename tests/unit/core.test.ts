@@ -72,7 +72,7 @@ describe('save system', () => {
 
 describe('M2: districts, missions, saves', async () => {
   // generate the maps directly (no dependency on `npm run assets` having run, e.g. in CI)
-  const GEN: Record<string, string> = { queenwest: 'generateQueenWest', highpark: 'generateHighPark', downtown: 'generateDowntown' };
+  const GEN: Record<string, string> = { queenwest: 'generateQueenWest', highpark: 'generateHighPark', downtown: 'generateDowntown', eastend: 'generateEastEnd', waterfront: 'generateWaterfront' };
   const maps: Record<string, any> = {};
   for (const id of Object.keys(GEN)) { const path = `../../tools/map/${id}.mjs`; const m = await import(/* @vite-ignore */ path); maps[id] = m[GEN[id]](); }
   const { MISSIONS, missionAvailable } = await import('../../src/data/missions');
@@ -98,14 +98,15 @@ describe('M2: districts, missions, saves', async () => {
     expect(missionAvailable('streetcar_through', [])).toBe(false);
     for (const id of ['streetcar_through', 'king_of_street', 'slow_down_dog']) expect(missionAvailable(id, ['bike_lane_war'])).toBe(true);
   });
-  it('streets continue across district edges at the same rows', () => {
+  it('streets continue across district edges (matched by name, on the opposite edge)', () => {
     for (const id of Object.keys(DISTRICTS)) {
       const map = load(id);
       for (const e of map.exits) {
         const other = load(e.to);
         // matched by street name: rows may differ between districts
-        const back = other.exits.find((o: { side: string; to: string; street: string }) => o.to === id && o.side !== e.side && o.street === e.street);
-        expect(back, `${id} ${e.side} -> ${e.to} @${e.y0}`).toBeTruthy();
+        const opposite: Record<string, string> = { w: 'e', e: 'w', n: 's', s: 'n' };
+        const back = other.exits.find((o: { side: string; to: string; street: string }) => o.to === id && o.side === opposite[e.side] && o.street === e.street);
+        expect(back, `${id} ${e.side} -> ${e.to} (${e.street})`).toBeTruthy();
       }
     }
   });

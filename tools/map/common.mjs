@@ -145,6 +145,8 @@ export class District {
    * street name, not by row (M2.1, Ivan): maps can differ in size and street rows can differ.
    */
   exit(side, row, to, street) { this.exits.push({ side, y0: (row - 3) * TS, y1: (row + 7) * TS, to, street }); }
+  /** a N-S street that continues across the north ('n') or south ('s') edge */
+  exitNS(side, col, to, street) { this.exits.push({ side, x0: (col - 1) * TS, x1: (col + 5) * TS, to, street }); }
 
   out(extra = {}) {
     for (const l of this.lanes) { delete l.stopsWB; delete l.stopsEB; if (l.stops === undefined) delete l.stops; }

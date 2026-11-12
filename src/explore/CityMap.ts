@@ -20,9 +20,14 @@ export interface Lane {
   /** upgrade id: through-car traffic removed (King St corridor) */ noCars?: string;
   /** upgrade id: traffic calmed (slower cars) */ calm?: string;
   /** drivers speed here until calmed */ speedy?: boolean;
+  /** a dedicated transit right-of-way: streetcars only (Queens Quay) */ transitOnly?: boolean;
   /** [start, end] px along the lane's axis when the street doesn't span the whole map */ range?: [number, number];
 }
-export interface Exit { side: 'w' | 'e'; y0: number; y1: number; to: string; street: string }
+/** a street continuing across a map edge: w/e exits span rows y0..y1, n/s exits span columns x0..x1 */
+export interface Exit { side: 'w' | 'e' | 'n' | 's'; y0?: number; y1?: number; x0?: number; x1?: number; to: string; street: string }
+export const OPPOSITE = { w: 'e', e: 'w', n: 's', s: 'n' } as const;
+/** the exit's span along its edge [lo, hi] (px) */
+export const exitSpan = (e: Exit): [number, number] => (e.side === 'w' || e.side === 'e' ? [e.y0!, e.y1!] : [e.x0!, e.x1!]);
 export interface Intersection { x0: number; x1: number; y0: number; y1: number; tee?: boolean }
 export interface MapData {
   id?: string;

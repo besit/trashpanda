@@ -4,12 +4,14 @@ import { sfx } from '../audio/sfx';
 import { puff, floatText } from '../ui/fx';
 import type { Hitbox } from './SidePlayer';
 
-export type RatKind = 'basic' | 'construction' | 'traffic';
+export type RatKind = 'basic' | 'construction' | 'traffic' | 'lobbyist';
 
-const DEFS: Record<RatKind, { hp: number; speed: number; reach: number; windup: number; cooldown: number; ranged?: boolean }> = {
+const DEFS: Record<RatKind, { hp: number; speed: number; reach: number; windup: number; cooldown: number; ranged?: boolean; support?: boolean }> = {
   basic: { hp: 3, speed: 52, reach: 22, windup: 0.38, cooldown: 0.7 },
   construction: { hp: 3, speed: 40, reach: 110, windup: 0.55, cooldown: 1.6, ranged: true },
   traffic: { hp: 4, speed: 34, reach: 30, windup: 0.6, cooldown: 1.0 },
+  // M3: never fights; hangs back and shields the rats near him (they take half damage). Corner him first.
+  lobbyist: { hp: 4, speed: 62, reach: 0, windup: 1, cooldown: 1, support: true },
 };
 
 type State = 'enter' | 'walk' | 'windup' | 'attack' | 'recover' | 'hurt' | 'dead';
@@ -23,6 +25,9 @@ export class Rat {
   private warn?: Phaser.GameObjects.BitmapText;
   facing: 1 | -1 = -1;
   readonly def;
+  /** a lobbyist is nearby: hits do half damage (set by the scene every frame) */
+  shielded = false;
+  private glintT = 0;
 
   constructor(private scene: Phaser.Scene, x: number, y: number, readonly kind: RatKind, private onThrow: (r: Rat) => void) {
     this.def = DEFS[kind];
@@ -47,7 +52,8 @@ export class Rat {
   takeHit(h: Hitbox, fromX: number): boolean {
     if (!this.alive || h.id === this.lastHit) return false;
     this.lastHit = h.id;
-    this.hp -= h.dmg;
+    this.hp -= this.shielded ? h.dmg * 0.5 : h.dmg;
+    if (this.shielded) { puff(this.scene, this.sprite.x, this.sprite.y - 18, 0xf5c22e, 6, 18, 95); if (Math.random() < 0.4) floatText(this.scene, this.sprite.x, this.sprite.y - 34, 'LOBBIED!', 'font_outline', 0xf5c22e, 600); }
     this.warn?.destroy(); this.warn = undefined;
     const dir = this.sprite.x < fromX ? -1 : 1;
     this.body.setVelocity(dir * h.kb, -120 - h.kb * 0.3);
@@ -87,6 +93,15 @@ export class Rat {
     const ground = b.blocked.down || b.touching.down;
     if (this.state !== 'hurt' && this.state !== 'attack') this.facing = dx > 0 ? 1 : -1;
     this.sprite.setFlipX(this.facing === -1);
+    if (this.shielded && (this.glintT -= dt) <= 0) { this.glintT = 0.3; puff(this.scene, this.sprite.x + Phaser.Math.Between(-6, 6), this.sprite.y - Phaser.Math.Between(8, 26), 0xf5c22e, 1, 6, 95); }
+    if (this.def.support && (this.state === 'enter' || this.state === 'walk')) {
+      // keep 120-170 px away from the raccoon, backing off (and visibly nervous) when approached
+      const want = dist < 120 ? -1 : dist > 170 ? 1 : 0;
+      if (ground) b.setVelocityX(want * this.facing * this.def.speed);
+      if (want === 0) { if (this.sprite.anims.isPlaying) { this.sprite.anims.stop(); this.sprite.setFrame(`rat_${this.kind}_0`); } }
+      else if (!this.sprite.anims.isPlaying) this.sprite.play(`rat_${this.kind}_walk`);
+      return;
+    }
 
     switch (this.state) {
       case 'enter':

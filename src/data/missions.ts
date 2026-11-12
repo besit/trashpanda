@@ -27,8 +27,8 @@ export interface MissionDef {
   /** pan the payoff camera vertically (N-S streets) instead of along x */
   focusAxis?: 'x' | 'y';
   action: {
-    bg: 'queen' | 'king' | 'parkside' | 'bigbox';
-    street: 'plain' | 'paint' | 'protected' | 'escort' | 'king' | 'parkside' | 'lot';
+    bg: 'queen' | 'king' | 'parkside' | 'bigbox' | 'lake';
+    street: 'plain' | 'paint' | 'protected' | 'escort' | 'king' | 'parkside' | 'lot' | 'quay';
     sky: 'day' | 'dusk';
     length: number; // px of street
     intro: string;
@@ -187,6 +187,29 @@ MISSIONS.great_parking_lot = {
     ],
     depave: { at: 1250, patches: [70, 140, 210, 280, 340], rats: ['construction', 'basic', 'construction'] },
     boss: { at: 1850, kind: 'monstersuv' },
+  },
+};
+
+MISSIONS.waterfront_heist = {
+  id: 'waterfront_heist',
+  title: 'THE WATERFRONT HEIST',
+  district: 'waterfront',
+  upgrades: ['public_waterfront'],
+  requires: ['king_of_street'],
+  briefing: 'wf_before',
+  debrief: 'wf_after',
+  focusX: 26 * 16,
+  focusY: 51 * 16,
+  action: {
+    bg: 'lake', street: 'quay', sky: 'dusk', length: 2450,
+    intro: 'THE MEGA SPA IS FENCING OFF THE SHORE. TEAR IT DOWN!',
+    hint: ['CORNER THE LOBBYISTS FIRST   PUMP THE FENCES', 'GOLD RATS TAKE HALF DAMAGE: CATCH THE LOBBYIST'],
+    waves: [
+      { at: 300, rats: ['basic', 'lobbyist', 'basic'] },
+      { at: 820, rats: ['construction', 'traffic', 'lobbyist', 'basic'] },
+      { at: 1950, rats: ['basic', 'construction', 'lobbyist', 'traffic', 'lobbyist', 'basic'] },
+    ],
+    depave: { at: 1350, patches: [70, 150, 230, 310], rats: ['basic', 'lobbyist', 'construction'], style: 'fence' },
   },
 };
 

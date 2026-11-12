@@ -32,6 +32,7 @@ export function generateDowntown() {
   D.cross(JN, QUEEN, { tee: true }); D.cross(JN, KING);
   D.exit('w', QUEEN, 'queenwest', 'queen'); D.exit('w', DUNDAS, 'queenwest', 'dundas');
   D.exit('e', QUEEN, 'eastend', 'queen'); D.exit('e', DUNDAS, 'eastend', 'dundas');
+  D.exitNS('s', SP, 'waterfront', 'spadina'); D.exitNS('s', UN, 'waterfront', 'university'); D.exitNS('s', BY, 'waterfront', 'bay');
 
   const bricks = ['red', 'buff', 'darkred', 'red', 'cream', 'grey', 'teal', 'mustard'];
   const glass = ['blue', 'teal', 'dark', 'sky', 'bronze'];
@@ -163,6 +164,7 @@ export function generateDowntown() {
     { text: 'CITY HALL', x: cx, y: 22 * TS, kind: 'landmark' },
     { text: '< QUEEN WEST', x: 4 * TS, y: (QUEEN - 4) * TS, kind: 'exit' },
     { text: 'EAST END >', x: (W - 4) * TS, y: (QUEEN - 4) * TS, kind: 'exit' },
+    { text: 'v WATERFRONT', x: (UN + 2) * TS, y: (H - 2) * TS, kind: 'exit' },
   );
   // hidden extra lives: at the west end of Graffiti Alley, and tucked behind City Hall
   const lifeTokens = [{ x: 2 * TS, y: (laneY + 1) * TS + 4 }, { x: cx + 124, y: 22 * TS }];

@@ -38,6 +38,7 @@ export class ActionScene extends Phaser.Scene {
   private dogFraud?: Phaser.GameObjects.Image;
   private peloton?: Peloton;
   private depave?: DepaveSpots;
+  private lobbyTip = false;
   private depaveDone = false;
   private monster?: MonsterSuv;
   private eater?: LaneEater;
@@ -144,6 +145,7 @@ export class ActionScene extends Phaser.Scene {
     if (a.bg === 'king') layer('facades_dt', FRONT_Y.king, 1.0);
     else if (a.bg === 'parkside') layer('park_hp', FRONT_Y.parkside, 1.0);
     else if (a.bg === 'bigbox') layer('bigbox_ee', STREET_Y - 120, 1.0);
+    else if (a.bg === 'lake') layer('lake_wf', STREET_Y - 120, 1.0);
     else { layer(`backrow_${sky}`, BACKROW_Y, 0.3); layer('facades_qw', FRONT_Y.queen, 1.0); }
     layer(`street_${a.street}`, STREET_Y, 1.0);
   }
@@ -234,7 +236,7 @@ export class ActionScene extends Phaser.Scene {
       g.fillStyle(0x16121f).fillRect(x - 1, 17, w + 2, 7).fillStyle(0x443f54).fillRect(x, 18, w, 5).fillStyle(0xd42a24).fillRect(x, 18, (w * this.monster.hp) / this.monster.maxHp, 5);
       this.hud.label.setText(this.monster.title);
     } else if (this.lock?.kind === 'depave') {
-      this.hud.label.setText(`DEPAVED ${this.depave?.done ?? 0}/${this.depave?.total ?? 0}   RATS ${this.rats.filter((r) => r.alive).length}`);
+      this.hud.label.setText(`${this.depave?.verb ?? 'DEPAVED'} ${this.depave?.done ?? 0}/${this.depave?.total ?? 0}   RATS ${this.rats.filter((r) => r.alive).length}`);
     } else if (this.eater?.boss && this.eater.alive) {
       const w = 140, x = GAME_W / 2 - w / 2;
       g.fillStyle(0x16121f).fillRect(x - 1, 17, w + 2, 7).fillStyle(0x443f54).fillRect(x, 18, w, 5).fillStyle(0xf5c22e).fillRect(x, 18, (w * this.eater.totalHp) / this.eater.maxHp, 5);
@@ -307,6 +309,11 @@ export class ActionScene extends Phaser.Scene {
 
   private spawnRat(kind: RatKind, x: number) {
     const r = new Rat(this, x, this.groundY - 30, kind, (rat) => this.throwCone(rat));
+    if (kind === 'lobbyist' && !this.lobbyTip) {
+      this.lobbyTip = true;
+      const t = floatText(this, this.cameras.main.scrollX + GAME_W / 2, 100, 'LOBBYIST! RATS NEAR HIM TAKE HALF DAMAGE.\nCORNER HIM FIRST!', 'font_outline', 0xf5c22e, 2600);
+      t.setScrollFactor(0).setX(GAME_W / 2);
+    }
     this.physics.add.collider(r.sprite, this.ground);
     this.rats.push(r);
   }
@@ -364,7 +371,7 @@ export class ActionScene extends Phaser.Scene {
     music.stop();
     sfx.ding();
     const a = this.mission.action;
-    const head = a.escort ? 'RIGHT ON TIME!' : a.build ? 'SCHOOL ZONE SLOWED!' : a.autoscroll ? 'BLOOR IS SAFE!' : a.depave ? 'THE LOT IS GREEN!' : 'STREET CLEARED!';
+    const head = a.escort ? 'RIGHT ON TIME!' : a.build ? 'SCHOOL ZONE SLOWED!' : a.autoscroll ? 'BLOOR IS SAFE!' : a.depave?.style === 'fence' ? 'THE SHORE IS PUBLIC!' : a.depave ? 'THE LOT IS GREEN!' : 'STREET CLEARED!';
     const t = text(this, GAME_W / 2, 66, head, 'font_big').setScrollFactor(0).setDepth(3000);
     const ts = fitText(t, GAME_W - 16); t.setScale(0.1);
     this.tweens.add({ targets: t, scale: ts, duration: 300, ease: 'Back.easeOut' });
@@ -434,8 +441,8 @@ export class ActionScene extends Phaser.Scene {
         const l = this.lockArena('depave', a.depave.rats.length);
         this.depave = new DepaveSpots(this, a.depave, l.left, this.groundY);
         this.spawnRats(a.depave.rats, l.left);
-        this.flashGo('DEPAVE IT!');
-        floatText(this, l.left + GAME_W / 2, 110, 'PUMP THE CRACKED ASPHALT', 'font_outline', 0xfff08a, 1600).setScrollFactor(0);
+        this.flashGo(this.depave.fence ? 'TEAR IT DOWN!' : 'DEPAVE IT!');
+        floatText(this, GAME_W / 2, 110, this.depave.fence ? 'PUMP THE FENCES DOWN' : 'PUMP THE CRACKED ASPHALT', 'font_outline', 0xfff08a, 1600).setScrollFactor(0);
       }
       else if (a.boss?.kind === 'monstersuv' && !this.monster && px > a.boss.at) {
         const l = this.lockArena('boss', 0);
@@ -580,6 +587,8 @@ export class ActionScene extends Phaser.Scene {
     }
 
     // ---- rats ----
+    const lobbyists = this.rats.filter((r) => r.alive && r.kind === 'lobbyist');
+    for (const r of this.rats) r.shielded = r.kind !== 'lobbyist' && lobbyists.some((l) => Math.abs(l.sprite.x - r.sprite.x) < 120);
     for (const r of this.rats) {
       r.update(dt, px);
       if (!r.alive) continue;
@@ -623,7 +632,7 @@ export class ActionScene extends Phaser.Scene {
     if (L && !this.finished) {
       const ratsDone = this.killed - L.startKills >= L.total - (L.kind === 'build' ? L.suvsLeft + this.cars.filter((c) => c.alive).length : 0) && L.suvsLeft <= 0 && !this.cars.some((c) => c.alive && !c.tame);
       if (L.kind === 'wave' && ratsDone) this.endArena();
-      else if (L.kind === 'depave' && this.depave?.allDone && this.rats.every((r) => !r.alive)) { this.depaveDone = true; this.depave.finish(); this.endArena('GREEN! >>'); }
+      else if (L.kind === 'depave' && this.depave?.allDone && this.rats.every((r) => !r.alive)) { this.depaveDone = true; this.depave.finish(); this.endArena(this.depave.fence ? 'OPEN! >>' : 'GREEN! >>'); }
       else if (L.kind === 'caught' && this.rats.every((r) => !r.alive)) { floatText(this, px, this.groundY - 60, 'CAMERA RECOVERED!', 'font_outline', 0x9bd35a, 900); this.endArena('TO THE SCHOOL! >>'); }
       else if (L.kind === 'build' && this.build?.allDone && this.rats.every((r) => !r.alive)) {
         // calmed: any car still around now crawls through politely and leaves

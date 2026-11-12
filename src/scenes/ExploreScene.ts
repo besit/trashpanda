@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { GAME_W, GAME_H, DEBUG } from '../config';
 import { InputManager } from '../input/InputManager';
 import { TouchControls, wantsTouch } from '../input/TouchControls';
-import { CityMap, type MapData, type Exit } from '../explore/CityMap';
+import { CityMap, type MapData, type Exit, OPPOSITE, exitSpan } from '../explore/CityMap';
 import { TopDownPlayer } from '../explore/TopDownPlayer';
 import { Traffic } from '../explore/Traffic';
 import { Crowd } from '../explore/Crowd';
@@ -20,7 +20,7 @@ import { sfx } from '../audio/sfx';
 import { openPause, type MapInfo } from './PauseScene';
 import type { Manifest } from './BootScene';
 
-interface ExploreData { from?: 'mission' | 'district'; missionId?: string; won?: boolean; district?: string; entry?: { side: 'w' | 'e'; street?: string; dy?: number; y?: number; fromDistrict?: string } }
+interface ExploreData { from?: 'mission' | 'district'; missionId?: string; won?: boolean; district?: string; entry?: { side: 'w' | 'e' | 'n' | 's'; street?: string; dy?: number; y?: number; fromDistrict?: string } }
 type Hud = { lives: Phaser.GameObjects.BitmapText; box: Phaser.GameObjects.Graphics; meter: Phaser.GameObjects.Graphics; score: Phaser.GameObjects.BitmapText; tier: Phaser.GameObjects.BitmapText; stamina: Phaser.GameObjects.Graphics; prompt: Phaser.GameObjects.BitmapText; label: Phaser.GameObjects.BitmapText };
 
 const DIR_V = [[1, 0], [0.7, 0.7], [0, 1], [-0.7, 0.7], [-1, 0], [-0.7, -0.7], [0, -1], [0.7, -0.7]];
@@ -78,12 +78,15 @@ export class ExploreScene extends Phaser.Scene {
       // arrive on the same street (matched by name; rows can differ between districts)
       const e = data.entry;
       const ex = (md.exits ?? []).find((x) => x.side === e.side && x.street === e.street && (!e.fromDistrict || x.to === e.fromDistrict));
-      const y = ex ? Phaser.Math.Clamp(ex.y0 + (e.dy ?? 40), ex.y0 + 8, ex.y1 - 8) : e.y ?? md.spawn.y;
-      start = { x: e.side === 'w' ? 12 : this.map.widthPx - 12, y };
+      // dy = how far along the exit's span the player was (rows for w/e exits, columns for n/s ones)
+      const [lo, hi] = ex ? exitSpan(ex) : [0, 0];
+      const along = ex ? Phaser.Math.Clamp(lo + (e.dy ?? 40), lo + 8, hi - 8) : undefined;
+      if (e.side === 'n' || e.side === 's') start = { x: along ?? md.spawn.x, y: e.side === 'n' ? 30 : this.map.heightPx - 14 };
+      else start = { x: e.side === 'w' ? 12 : this.map.widthPx - 12, y: along ?? e.y ?? md.spawn.y };
     }
     else if (ctx.state.player.district === this.district && ctx.state.player.x > 0 && ctx.state.player.x < this.map.widthPx && ctx.state.player.y < this.map.heightPx) start = ctx.state.player;
     this.player = new TopDownPlayer(this, start.x, start.y);
-    if (data.entry) this.player.dir = data.entry.side === 'w' ? 0 : 4;
+    if (data.entry) this.player.dir = { w: 0, e: 4, n: 2, s: 6 }[data.entry.side];
     this.physics.world.setBounds(0, 0, this.map.widthPx, this.map.heightPx);
     this.physics.add.collider(this.player.sprite, this.map.solids);
 
@@ -141,11 +144,17 @@ export class ExploreScene extends Phaser.Scene {
   private buildExitSigns(exits: Exit[]) {
     const seen = new Set<string>();
     for (const e of exits) {
-      const key = `${e.side}${e.to}${e.y0}`;
+      const key = `${e.side}${e.to}${exitSpan(e)[0]}`;
       if (seen.has(key)) continue; seen.add(key);
       const name = DISTRICTS[e.to]?.name ?? e.to.toUpperCase();
+      if (e.side === 'n' || e.side === 's') {
+        const cx = (e.x0! + e.x1!) / 2, y = e.side === 'n' ? 10 : this.map.heightPx - 10;
+        const t = text(this, cx, y, e.side === 'n' ? `^ ${name}` : `v ${name}`, 'font_outline', 0.5).setOrigin(0.5, 0.5).setDepth(y + 60).setTint(0xfff08a);
+        this.tweens.add({ targets: t, y: y + (e.side === 'n' ? -3 : 3), duration: 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        continue;
+      }
       const x = e.side === 'w' ? 6 : this.map.widthPx - 6;
-      const t = text(this, x, e.y0 + 12, e.side === 'w' ? `< ${name}` : `${name} >`, 'font_outline', e.side === 'w' ? 0 : 1).setOrigin(e.side === 'w' ? 0 : 1, 0.5).setDepth(e.y0 + 40).setTint(0xfff08a);
+      const t = text(this, x, e.y0! + 12, e.side === 'w' ? `< ${name}` : `${name} >`, 'font_outline', e.side === 'w' ? 0 : 1).setOrigin(e.side === 'w' ? 0 : 1, 0.5).setDepth(e.y0! + 40).setTint(0xfff08a);
       this.tweens.add({ targets: t, x: x + (e.side === 'w' ? -3 : 3), duration: 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
   }
@@ -395,7 +404,8 @@ export class ExploreScene extends Phaser.Scene {
     if (this.busy) return;
     this.busy = true; this.leaving = true;
     this.player.frozen = true;
-    const entry = { side: e.side === 'w' ? 'e' : 'w', street: e.street, dy: Phaser.Math.Clamp(this.player.y, e.y0 + 8, e.y1 - 8) - e.y0, fromDistrict: this.district } as const;
+    const [lo, hi] = exitSpan(e), ns = e.side === 'n' || e.side === 's';
+    const entry = { side: OPPOSITE[e.side], street: e.street, dy: Phaser.Math.Clamp(ns ? this.player.x : this.player.y, lo + 8, hi - 8) - lo, fromDistrict: this.district };
     ctx.state.player = { scene: 'explore', district: e.to, x: -1, y: -1 };
     ctx.save();
     sfx.chain();
@@ -420,8 +430,11 @@ export class ExploreScene extends Phaser.Scene {
     if (!this.busy) {
       const px = this.player.x, py = this.player.y;
       for (const e of this.map.data.exits ?? []) {
-        if (py < e.y0 || py > e.y1) continue;
-        if ((e.side === 'w' && px < 8 && this.input2.moveX < -0.2) || (e.side === 'e' && px > this.map.widthPx - 8 && this.input2.moveX > 0.2)) { void this.goDistrict(e); break; }
+        const [lo, hi] = exitSpan(e), along = e.side === 'n' || e.side === 's' ? px : py;
+        if (along < lo || along > hi) continue;
+        const m = this.input2, W = this.map.widthPx, H = this.map.heightPx;
+        if ((e.side === 'w' && px < 8 && m.moveX < -0.2) || (e.side === 'e' && px > W - 8 && m.moveX > 0.2)
+          || (e.side === 'n' && py < 10 && m.moveY < -0.2) || (e.side === 's' && py > H - 10 && m.moveY > 0.2)) { void this.goDistrict(e); break; }
       }
     }
     // what's nearby: a mission marker or a landmark
