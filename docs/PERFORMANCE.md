@@ -65,6 +65,17 @@ The p95 frame time is 16.7–16.8 ms everywhere.
 
 The Downtown building atlas (2048×1024, 810 KB) dominates: dithered glass compresses poorly. If it grows, the options are flatter glass bands or quantizing the reflection dither to 2×2 blocks.
 
+### 2026-11-13 (M3.2)
+Same harness, on the scenes M3.2 changed. The Waterfront was sampled after 40 s, with its new yachts and the three-section streetcars in its traffic.
+
+| Scene | 1× | 4× | 6× | Heap (6×) |
+|---|---|---|---|---|
+| Explore, Waterfront (after 40 s) | 60.1 | 60.1 | 60.2 | 21 MB |
+| Action, M5 (the reworked Lane Eater) | 60.2 | 60.3 | 60.2 | 17 MB |
+| Action, M8 | 60.2 | 60.1 | 60.1 | 16 MB |
+
+p95 is 16.7–16.8 ms everywhere. JS is 384 KB gzipped (was 370). The world atlas gained 36 streetcar-section frames, two yacht frames and an umbrella (it's 256 KB now). **First load was not re-measured with M3.1's transfer-size method** this pass; it was about 2.38 MB then, so lazy map JSON in M4 is still needed.
+
 ### 2026-11-12 (M3.1)
 Same harness. The Waterfront was sampled after 40 s, once its traffic had built up (about 110 vehicles, including the Gardiner and turning traffic).
 

@@ -58,7 +58,7 @@ export class TitleScene extends Phaser.Scene {
 
     this.prompt = text(this, GAME_W / 2, 128, wantsTouch() ? 'TAP TO START' : 'PRESS ENTER', 'font_outline');
     this.tweens.add({ targets: this.prompt, alpha: 0.2, duration: 500, yoyo: true, repeat: -1 });
-    text(this, GAME_W - 4, GAME_H - 4, 'M3.1 PREVIEW', 'font', 1).setTint(0x9793a6);
+    text(this, GAME_W - 4, GAME_H - 4, 'M3.2 PREVIEW', 'font', 1).setTint(0x9793a6);
 
     // menu (shown after first input)
     this.menu = this.add.container(GAME_W / 2, 118).setVisible(false);

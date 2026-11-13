@@ -36,7 +36,7 @@ export class CutsceneScene extends Phaser.Scene {
   private pan = 0;
   private panX = 0;
   private actors = new Map<string, Phaser.GameObjects.Sprite | Phaser.GameObjects.Image>();
-  private followers: { g: Phaser.GameObjects.Container; a: Phaser.GameObjects.GameObject & { x: number; y: number; active: boolean } }[] = [];
+  private followers: { g: Phaser.GameObjects.Container; a: Phaser.GameObjects.GameObject & { x: number; y: number; active: boolean }; lift: number }[] = [];
   private boxTop = false;
   private triggers: { id: string; frame: string; atScreenX: number; by?: string; ahead?: number; sfx?: 'signal' | 'ding' | 'bell'; done: boolean }[] = [];
   private next = 'Explore';
@@ -268,7 +268,8 @@ export class CutsceneScene extends Phaser.Scene {
         if (s.rise) { a.y = s.y + 70; this.tweens.add({ targets: a, y: s.y, duration: 900, ease: 'Sine.easeOut' }); }
         if (s.turnOn) this.triggers.push({ id: s.id, ...s.turnOn, done: false });
         if (s.sign) { // a picket sign carried above the actor
-          const g = this.add.container(a.x, a.y - 44).setDepth((s.depth ?? 60) + 1);
+          const lift = s.signLift ?? 40;
+          const g = this.add.container(a.x, a.y - lift - 4).setDepth((s.depth ?? 60) + 1);
           const lines = s.sign.split('\n');
           const w = Math.max(...lines.map((l) => l.length)) * 6 + 8, h = lines.length * 9 + 6;
           const board = this.add.graphics();
@@ -277,7 +278,7 @@ export class CutsceneScene extends Phaser.Scene {
           const tt = text(this, 0, 0, s.sign, 'font').setTint(0x7d47a8).setCenterAlign();
           g.add([board, tt]);
           this.bgGroup.push(g);
-          this.followers.push({ g, a });
+          this.followers.push({ g, a, lift });
         }
         break;
       }
@@ -425,7 +426,7 @@ export class CutsceneScene extends Phaser.Scene {
       if (a && a.x <= reach) { t.done = true; a.setFrame(t.frame); if (t.sfx) sfx[t.sfx](); }
     }
     this.updateDvp(dt);
-    for (const f of this.followers) if (f.a.active && f.g.active) f.g.setPosition(f.a.x, f.a.y - 40 + Math.sin(this.time.now / 150));
+    for (const f of this.followers) if (f.a.active && f.g.active) f.g.setPosition(f.a.x, f.a.y - f.lift + Math.sin(this.time.now / 150));
     if (this.input2.justPressed('back') || this.input2.justPressed('pause')) { this.skipping = true; this.advance?.(); this.time.removeAllEvents(); void this.finish(); return; }
     if (this.input2.justPressed('confirm')) this.advance?.();
   }

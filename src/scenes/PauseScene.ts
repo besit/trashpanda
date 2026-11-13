@@ -13,11 +13,12 @@ import { music } from '../audio/Sequencer';
 import { sfx } from '../audio/sfx';
 import type { CityMap, MapData } from '../explore/CityMap';
 import { UPGRADES } from '../data/upgrades';
+import { fullscreenSupported, isFullscreen, isInstalled, toggleFullscreen } from '../core/fullscreen';
 
 export interface PauseData { from: string; mode?: 'menu' | 'map' | 'controls' }
 export interface MapInfo { map: CityMap; district?: string; player: { x: number; y: number }; markers: { x: number; y: number; label: string; done: boolean }[] }
 
-type Item = { label: () => string; act?: () => void; left?: () => void; right?: () => void; t?: Phaser.GameObjects.BitmapText };
+type Item = { label: () => string; act?: () => void; left?: () => void; right?: () => void; t?: Phaser.GameObjects.BitmapText; /** fires on pointerUP (browsers only allow fullscreen from a touch's pointerup) */ onUp?: boolean };
 
 /** Open the pause overlay from a gameplay scene (no-op if already open). */
 export function openPause(scene: Phaser.Scene, mode: PauseData['mode'] = 'menu') {
@@ -56,7 +57,8 @@ export class PauseScene extends Phaser.Scene {
     this.show(data.mode ?? 'menu');
     this.scale.on('resize', this.relayout, this);
     this.events.once('shutdown', () => { this.scale.off('resize', this.relayout, this); music.duck(false); });
-    this.input.on('pointerdown', (p: Phaser.Input.Pointer) => this.tap(p));
+    this.input.on('pointerdown', (p: Phaser.Input.Pointer) => this.tap(p, false));
+    this.input.on('pointerup', (p: Phaser.Input.Pointer) => this.tap(p, true));
   }
 
   private relayout() { this.show(this.mode); }
@@ -102,10 +104,13 @@ export class PauseScene extends Phaser.Scene {
       { label: () => `MUSIC  < ${bar(ctx.settings.music)} > ${pct(ctx.settings.music)}`, left: vol('music', -0.1), right: vol('music', 0.1), act: vol('music', 0.1) },
       { label: () => `SOUND  < ${bar(ctx.settings.sfx)} > ${pct(ctx.settings.sfx)}`, left: vol('sfx', -0.1), right: vol('sfx', 0.1), act: vol('sfx', 0.1) },
       { label: () => `SCREEN SHAKE  ${ctx.settings.shake ? 'ON' : 'OFF'}`, act: () => { ctx.settings.shake = !ctx.settings.shake; ctx.applySettings(); sfx.blip(); this.refresh(); }, left: () => this.items[this.sel].act!(), right: () => this.items[this.sel].act!() },
+      ...(fullscreenSupported() ? [{ onUp: true, label: () => `FULLSCREEN  ${isFullscreen() ? 'ON' : 'OFF'}`, act: () => { void toggleFullscreen().then(() => this.time.delayedCall(250, () => this.refresh())); sfx.blip(); } }]
+        : wantsTouch() && !isInstalled() ? [{ label: () => 'FULLSCREEN: SHARE > ADD TO HOME SCREEN' }] : []),
       { label: () => 'SAVE + QUIT TO TITLE', act: () => void this.quit() },
     ];
     this.sel = Math.min(this.sel, this.items.length - 1);
-    this.items.forEach((it, i) => { it.t = text(this, cx, 66 + i * 14, '', 'font_outline'); this.root.add(it.t); });
+    const step = this.items.length > 7 ? 12 : 14; // M3.2: the FULLSCREEN line makes 8: keep clear of the bottom
+    this.items.forEach((it, i) => { it.t = text(this, cx, 64 + i * step, '', 'font_outline'); this.root.add(it.t); });
     this.root.add(text(this, cx, GAME_H - 12, wantsTouch() ? 'TAP AN OPTION' : 'ARROWS: CHOOSE  E/ENTER: OK  ESC: BACK', 'font').setTint(0x9793a6));
     this.refresh();
   }
@@ -243,17 +248,30 @@ export class PauseScene extends Phaser.Scene {
   }
 
   // ---------- input ----------
-  private tap(p: Phaser.Input.Pointer) {
+  private tap(p: Phaser.Input.Pointer, up: boolean) {
+    if (up) { // only the items that need a real gesture (fullscreen) act on release
+      if (this.mode !== 'menu') return;
+      const it = this.itemAt(p);
+      if (it?.onUp) it.act?.();
+      return;
+    }
     if (Phaser.Math.Distance.Between(p.x, p.y, this.closeBtn.x, this.closeBtn.y) < 16) { this.viewDistrict = ''; this.back(); return; }
     if (this.mode === 'map' && p.y < 34) { if (p.x < 60) this.pageMap(-1); else if (p.x > GAME_W - 70) this.pageMap(1); return; }
     if (this.mode !== 'menu') return; // map + controls stay open until closed
-    this.items.forEach((it, i) => {
-      const b = it.t!.getBounds();
-      if (p.y > b.y - 4 && p.y < b.bottom + 4 && p.x > b.x - 30 && p.x < b.right + 30) {
-        this.sel = i; this.refresh();
-        if (it.left && p.x < GAME_W / 2 - 20) it.left(); else (it.act ?? it.right)?.();
-      }
-    });
+    const it = this.itemAt(p);
+    if (!it) return;
+    this.sel = this.items.indexOf(it); this.refresh();
+    if (it.onUp) return;
+    if (it.left && p.x < GAME_W / 2 - 20) it.left(); else (it.act ?? it.right)?.();
+  }
+  /** the menu line under a pointer: the nearest one, within half a line */
+  private itemAt(p: Phaser.Input.Pointer) {
+    let best: Item | undefined, bd = 1e9;
+    for (const it of this.items) {
+      const b = it.t!.getBounds(), d = Math.abs(p.y - b.centerY);
+      if (d < bd && d < 8 && p.x > b.x - 30 && p.x < b.right + 30) { bd = d; best = it; }
+    }
+    return best;
   }
 
   private resume() {

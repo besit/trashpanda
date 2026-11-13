@@ -30,7 +30,9 @@ test('N/S exits: University Ave rides from Downtown down to the Waterfront and b
   await page.keyboard.up('ArrowDown');
   await page.waitForTimeout(800);
   const p = await page.evaluate(() => (window as unknown as W).__TP!.player());
-  expect(Math.abs(p.x - 71.5 * 16)).toBeLessThan(24); // same column: University lines up on both maps
+  // M3.2: the Waterfront was re-laid (Strachan added in the west), so University is at col 84 there: you
+  // arrive at the same spot across the street (2.5 tiles in from its west sidewalk)
+  expect(Math.abs(p.x - 85.5 * 16)).toBeLessThan(24);
   expect(p.y).toBeLessThan(60);                       // arrived at the north edge
   await page.keyboard.down('ArrowUp');
   await page.waitForFunction(() => (window as unknown as W).__TP?.district === 'downtown', null, { timeout: 10_000 });

@@ -1,0 +1,15 @@
+{
+  "name": "Trash Panda: Right of Way",
+  "short_name": "Trash Panda",
+  "description": "A raccoon on a bicycle making Toronto a better place to live.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#16121f",
+  "theme_color": "#16121f",
+  "icons": [
+    { "src": "gen/icon_192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "gen/icon_512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

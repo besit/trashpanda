@@ -156,7 +156,7 @@ MISSIONS.lane_eater = {
   action: {
     bg: 'queen', street: 'protected', sky: 'day', length: 3300,
     intro: 'OUTRIDE THE LANE EATER! RING YOUR BELL AT EVERY RIDER!',
-    hint: ['E NEAR A RIDER: THEY JOIN (EACH ONE TAKES A HIT FOR YOU)', 'RED NEAR A RIDER: THEY JOIN YOUR PELOTON'],
+    hint: ["E NEAR A RIDER, THEN STAY BESIDE THEM TILL THEY'RE ROLLING", "RED NEAR A RIDER, THEN STAY BESIDE THEM TILL THEY'RE ROLLING"],
     waves: [],
     autoscroll: {
       speed: 62, end: 2950,

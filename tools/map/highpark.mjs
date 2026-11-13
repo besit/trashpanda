@@ -37,14 +37,17 @@ export function generateHighPark() {
   D.cross(PS, BLOOR, { ewTracks: false }); D.cross(PS, QUEEN);
   D.cross(RX, BLOOR, { ewTracks: false, nsTracks: true }); D.cross(RX, QUEEN, { nsTracks: true });
   D.exit('e', QUEEN, 'queenwest', 'queen'); D.exit('e', BLOOR, 'queenwest', 'dundas');
+  // M3.2 (Ivan): south from High Park you come out on the Waterfront, at the west end of the Martin Goodman Trail
+  D.exitNS('s', PS, 'waterfront', 'trail'); D.exitNS('s', RX, 'waterfront', 'trail');
 
   // ---------- water: Grenadier Pond + Spring Creek ponds ----------
   const inPoly = (poly, x, y) => { let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, yi] = poly[i], [xj, yj] = poly[j]; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c; } return c; };
   const grenadier = [[0.06, 0.33], [0.12, 0.30], [0.15, 0.36], [0.16, 0.47], [0.19, 0.58], [0.27, 0.68], [0.38, 0.76], [0.42, 0.84], [0.41, 0.97], [0.09, 0.97], [0.08, 0.78], [0.07, 0.60], [0.06, 0.45]].map(([u, v]) => [U(u), V(v)]);
+  // M3.2 (Ivan): the little pond that sat under the roads by the playground is gone; the south-east one
+  // moved east of Spring Rd so no road runs over water
   const creeks = [
-    [[0.80, 0.12], [0.85, 0.11], [0.87, 0.16], [0.84, 0.21], [0.80, 0.19]],
-    [[0.74, 0.71], [0.79, 0.70], [0.82, 0.76], [0.80, 0.82], [0.75, 0.80]],
-    [[0.80, 0.86], [0.87, 0.85], [0.90, 0.92], [0.88, 0.98], [0.81, 0.97]],
+    [[0.83, 0.10], [0.88, 0.09], [0.90, 0.14], [0.87, 0.19], [0.83, 0.17]],
+    [[0.925, 0.84], [0.975, 0.83], [0.995, 0.90], [0.985, 0.97], [0.93, 0.96]],
   ].map((poly) => poly.map(([u, v]) => [U(u), V(v)]));
   const water = (x, y) => inPoly(grenadier, x + 0.5, y + 0.5) || creeks.some((c) => inPoly(c, x + 0.5, y + 0.5));
   for (let y = PARK.y0; y <= PARK.y1; y++) for (let x = PARK.x0; x <= PARK.x1; x++) if (water(x, y)) D.set(x, y, `water${(x * 3 + y) % 3}`);
@@ -63,7 +66,7 @@ export function generateHighPark() {
     }
   }
   // swans + wood ducks on the pond (Ivan: "I want some Wood Ducks and Swans in the water")
-  for (const [u, v, k] of [[0.20, 0.72, 'swan'], [0.30, 0.86, 'swan'], [0.12, 0.50, 'woodduck'], [0.15, 0.62, 'woodduck'], [0.25, 0.90, 'woodduck'], [0.83, 0.16, 'woodduck'], [0.84, 0.91, 'swan']]) {
+  for (const [u, v, k] of [[0.20, 0.72, 'swan'], [0.30, 0.86, 'swan'], [0.12, 0.50, 'woodduck'], [0.15, 0.62, 'woodduck'], [0.25, 0.90, 'woodduck'], [0.865, 0.14, 'woodduck'], [0.96, 0.90, 'swan']]) {
     const [x, y] = P(u, v); D.critters.push({ kind: k, x, y });
   }
 
@@ -73,7 +76,7 @@ export function generateHighPark() {
     PP([[0.56, 0.10], [0.42, 0.16], [0.31, 0.22], [0.27, 0.32], [0.27, 0.45], [0.31, 0.51], [0.38, 0.52], [0.42, 0.50]]),                                       // West Rd
     PP([[0.57, 0.08], [0.70, 0.13], [0.78, 0.20], [0.80, 0.27], [0.76, 0.38], [0.73, 0.50], [0.77, 0.61], [0.78, 0.70], [0.83, 0.81], [0.86, 0.92], [0.89, 1]]), // Spring Rd
     PP([[0.42, 0.51], [0.52, 0.55], [0.66, 0.59], [0.77, 0.65], [1, 0.65]]),                                                                                // Centre Rd -> High Park Blvd
-    PP([[0.38, 0.57], [0.45, 0.67], [0.53, 0.72], [0.66, 0.74], [0.77, 0.74]]),                                                                                // Deer Pen Rd
+    PP([[0.38, 0.57], [0.45, 0.67], [0.53, 0.72], [0.66, 0.74], [0.80, 0.745]]),                                                                                // Deer Pen Rd
     PP([[0.88, 0.65], [0.89, 0.52], [1, 0.40]]),                                                                                                            // Howard Park
   ];
   const trails = [
@@ -83,38 +86,63 @@ export function generateHighPark() {
     PP([[0.497, 0.30], [0.60, 0.33], [0.66, 0.42], [0.70, 0.50], [0.70, 0.606]]),                                   // Colborne Lodge Dr -> Centre Rd
     PP([[0.315, 0.65], [0.38, 0.72], [0.44, 0.92], [0.43, 1]]),                                                     // the cherry walk -> the Queensway
   ];
-  // M3.1 (Ivan's screenshot): a park road used to end in the middle of the sidewalk. Now it stops at the
-  // park edge and a driveway (asphalt through the sidewalk and curb) joins it to the street.
-  for (const pts of roads) for (const [px, py] of [pts[0], pts[pts.length - 1]]) {
-    const tx = Math.floor(px / TS);
-    if (py <= PARK.y0 * TS + 1) for (let y = BLOOR + 4; y < PARK.y0; y++) for (const x of [tx - 1, tx]) D.set(x, y, `asphalt${(x + y) % 4}`);
-    if (py >= PARK.y1 * TS - 1) for (let y = PARK.y1 + 1; y <= QUEEN - 1; y++) for (const x of [tx - 1, tx]) D.set(x, y, `asphalt${(x + y) % 4}`);
-  }
-  D.decals.push({ key: 'hp_paths', x: 0, y: (PARK.y0 - 1) * TS, gen: { kind: 'paths', style: 'trail', w: (PARK.x1 + 2) * TS, h: (PARK.y1 - PARK.y0 + 3) * TS, paths: trails, roads, ox: 0, oy: (PARK.y0 - 1) * TS, width: 5 } });
+  // M3.2 (Ivan's screenshots): a park road that reaches the street carries straight on across the sidewalk
+  // and is cut SQUARE at the curb (the decal's own edge does the cutting), instead of a rounded end in the
+  // grass and a patch of driveway. Same for the trail that meets the Queensway.
+  const TOP = (BLOOR + 4) * TS, BOT = QUEEN * TS, EAST = (PS + 1) * TS;
+  const toCurb = (pts) => {
+    const [fx, fy] = pts[0], [lx, ly] = pts[pts.length - 1];
+    if (fy <= PARK.y0 * TS + 1) pts.unshift([fx, TOP - 30]);
+    if (ly >= PARK.y1 * TS - 1) pts.push([lx, BOT + 30]);
+    if (lx >= PARK.x1 * TS - 1) pts.push([EAST + 30, ly]);
+    return pts;
+  };
+  roads.forEach(toCurb); trails.forEach(toCurb);
+  const roadEnds = [...roads, ...trails].flatMap((pts) => [pts[0], pts[pts.length - 1]]);
+  D.decals.push({ key: 'hp_paths', x: 0, y: TOP, gen: { kind: 'paths', style: 'trail', w: EAST, h: BOT - TOP, paths: trails, roads, ox: 0, oy: TOP, width: 5 } });
   const nearRoad = (px, py, d) => nearPolyline(roads, px, py, d + 8) || nearPolyline(trails, px, py, d);
   const zones = []; // [x, y, w, h] px rects kept clear of trees
   const zone = (u, v, w, h) => { const [x, y] = P(u, v); const z = [x - w / 2, y - h / 2, w, h]; zones.push(z); return { x: Math.round(z[0]), y: Math.round(z[1]), w, h, cx: x, cy: y }; };
+  // M3.2 (Ivan: the pool, the tennis courts and the cafe sat on roads): search outward from the map spot for
+  // the nearest rect that clears every road, trail, pond and other feature. `lean` (radians) tries that
+  // direction first, so a feature moves the way Ivan asked.
+  const clearRect = (cx, cy, w, h, m = 8) => {
+    for (let y = cy - h / 2 - m; y <= cy + h / 2 + m; y += 6) for (let x = cx - w / 2 - m; x <= cx + w / 2 + m; x += 6) {
+      if (nearPolyline(roads, x, y, 15) || nearPolyline(trails, x, y, 7) || water(Math.floor(x / TS), Math.floor(y / TS))) return false;
+      if (x < PARK.x0 * TS + 8 || x > PARK.x1 * TS - 8 || y < PARK.y0 * TS + 8 || y > (PARK.y1 + 1) * TS - 8) return false;
+    }
+    return !zones.some(([x, y, zw, zh]) => cx + w / 2 > x - 8 && cx - w / 2 < x + zw + 8 && cy + h / 2 > y - 8 && cy - h / 2 < y + zh + 8);
+  };
+  const place = (u, v, w, h, lean = null, name = '') => {
+    const [x0, y0] = P(u, v);
+    for (let rad = 0; rad < 0.25; rad += 0.006) {
+      const n = rad === 0 ? 1 : 16;
+      for (let k = 0; k < n; k++) {
+        // angles alternate either side of `lean` (or go round from 0)
+        const a = lean === null ? (k / n) * Math.PI * 2 : lean + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (Math.PI / 8);
+        const x = x0 + Math.cos(a) * rad * (PARK.x1 - PARK.x0) * TS, y = y0 + Math.sin(a) * rad * (PARK.y1 - PARK.y0) * TS * 0.8;
+        if (clearRect(x, y, w, h)) { const z = [x - w / 2, y - h / 2, w, h]; zones.push(z); return { x: Math.round(z[0]), y: Math.round(z[1]), w, h, cx: x, cy: y }; }
+      }
+    }
+    throw new Error(`no clear spot in High Park for ${name}`);
+  };
 
   // ---------- park features (positions from the map) ----------
   // sports fields (NW), the pool, tennis courts
   // M3.1 (Ivan): one diamond is enough; the pool takes the second diamond's spot
-  const d1 = zone(0.36, 0.33, 96, 96), pool = zone(0.455, 0.27, 112, 80);
+  const d1 = zone(0.36, 0.33, 96, 96), pool = place(0.43, 0.25, 112, 80, -2.4, 'pool'); // M3.2: up-left, off Colborne Lodge Dr
   D.decals.push({ key: 'diamond', x: d1.x, y: d1.y }, { key: 'pool', x: pool.x, y: pool.y });
   D.prop('blank', pool.x, pool.y + pool.h, { solidBox: [12, -66, 88, 52], invisible: true }); // the water: ride around it
   D.labels.push({ text: 'POOL', x: pool.cx, y: pool.cy, kind: 'landmark' });
-  const tn = zone(0.60, 0.20, 86, 93); D.decals.push({ key: 'tennis', x: tn.x, y: tn.y });
-  // the off-leash dog park (fenced dirt)
-  const dog = zone(0.53, 0.43, 112, 96);
-  for (let y = Math.floor(dog.y / TS); y < Math.ceil((dog.y + dog.h) / TS); y++) for (let x = Math.floor(dog.x / TS); x < Math.ceil((dog.x + dog.w) / TS); x++) D.set(x, y, 'pen');
-  for (let x = Math.floor(dog.x / TS); x < Math.ceil((dog.x + dog.w) / TS); x++) { D.prop('fence_h', x * TS, dog.y + 2, { solidBox: [0, -4, 16, 4] }); D.prop('fence_h', x * TS, dog.y + dog.h, { solidBox: [0, -4, 16, 4] }); }
-  D.labels.push({ text: 'DOG PARK', x: dog.cx, y: dog.cy, kind: 'landmark' });
+  const tn = place(0.62, 0.20, 86, 93, 0, 'tennis'); D.decals.push({ key: 'tennis', x: tn.x, y: tn.y }); // M3.2: a little to the right
+  // (M3.2, Ivan: "remove the brown patch at the centre": the fenced dog park is gone; the oaks fill in)
   // the Grenadier Cafe (+ its patio), at the bottom of West Rd
-  const cafe = zone(0.33, 0.47, 96, 72);
+  const cafe = place(0.35, 0.44, 96, 72, -0.9, 'cafe'); // M3.2: up and right, off West Rd
   D.addBuilding(cafe.x + 8, 80, { w: 80, d: 32, floors: 1, brick: 'buff', seed: 1955, kind: 'cafe' }, { base: cafe.y + 52 }, { graffiti: null });
   for (const [dx, k] of [[8, 'patio_r'], [36, 'patio_f'], [64, 'patio_r']]) D.prop(k, cafe.x + 8 + dx, cafe.y + 68);
   D.landmarks.push({ id: 'cafe', x: cafe.cx, y: cafe.y + 60, label: 'GRENADIER CAFE', fact: 'COFFEE, FRIES AND A\nVIEW OF THE POND.\nCYCLISTS WELCOME.' });
   // the greenhouse
-  const gh = zone(0.60, 0.64, 96, 80);
+  const gh = place(0.60, 0.64, 96, 80, null, 'greenhouse');
   D.addBuilding(gh.x + 8, 80, { w: 80, d: 40, floors: 1, seed: 3, kind: 'greenhouse' }, { base: gh.y + 70 }, { graffiti: null });
   // the zoo along Deer Pen Rd: capybaras + llamas
   // M3.1 (Ivan): one pen, smaller, and no road through it. Search outward from the zoo's spot on the map
@@ -147,11 +175,11 @@ export function generateHighPark() {
   for (let y = Math.floor(hs.y / TS); y < Math.ceil((hs.y + hs.h) / TS); y++) for (let x = Math.floor(hs.x / TS); x < Math.ceil((hs.x + hs.w) / TS); x++) if ((x + y) % 2 === 0 && !water(x, y)) D.set(x, y, 'flowerbed');
   D.labels.push({ text: 'HILLSIDE GARDENS', x: hs.cx, y: hs.cy, kind: 'landmark' });
   // the Jamie Bell Adventure Playground (the big wooden castle playground)
-  const jb = zone(0.88, 0.75, 112, 80);
+  const jb = place(0.91, 0.75, 112, 80, 0, 'jamie bell'); // M3.2: a little to the right
   D.prop('adventure', jb.cx, jb.y + jb.h - 6, { solidBox: [-46, -16, 92, 14], landmark: 'JAMIE BELL ADVENTURE PLAYGROUND' });
   D.landmarks.push({ id: 'jamiebell', x: jb.cx, y: jb.y + jb.h + 6, label: 'JAMIE BELL', fact: 'ADVENTURE PLAYGROUND.\nREBUILT BY THE COMMUNITY\nAFTER A 2012 FIRE.' });
   // Colborne Lodge (the Howards' house)
-  const cl = zone(0.62, 0.89, 64, 56);
+  const cl = place(0.62, 0.89, 64, 56, null, 'colborne lodge');
   D.addBuilding(cl.x + 8, 48, { w: 48, d: 32, floors: 2, brick: 'cream', seed: 1837, kind: 'baygable' }, { base: cl.y + 50 }, { graffiti: null });
   D.landmarks.push({ id: 'colborne', x: cl.cx, y: cl.y + 58, label: 'COLBORNE LODGE', fact: 'JOHN + JEMIMA HOWARD\nAGREED IN 1873 TO PASS\nTHEIR LAND TO THE CITY' });
   // the HIGH PARK sign at the Bloor gate
@@ -175,7 +203,8 @@ export function generateHighPark() {
     const [x, y] = at; D.prop('picnic', x - 12, y, { solid: 6 }); D.prop('picnic_l', x + 14, y + 6, { solid: 6 }); D.prop('bin_green', x + 1, y - 12); zones.push([x - 26, y - 18, 52, 32]); }
 
   // ---------- trees: cherry blossoms on the pond shore + Hillside, black oak savanna everywhere else ----------
-  const blocked = (px, py) => nearRoad(px, py, 14) || zones.some(([x, y, w, h]) => px > x - 8 && px < x + w + 8 && py > y - 8 && py < y + h + 12) || water(Math.floor(px / TS), Math.floor(py / TS)) || water(Math.floor(px / TS) + 1, Math.floor(py / TS)) || water(Math.floor(px / TS) - 1, Math.floor(py / TS));
+  const blocked = (px, py) => nearRoad(px, py, 14) || nearRoad(px, py - 14, 14) || // trunk AND canopy clear of roads
+    zones.some(([x, y, w, h]) => px > x - 8 && px < x + w + 8 && py > y - 8 && py < y + h + 12) || water(Math.floor(px / TS), Math.floor(py / TS)) || water(Math.floor(px / TS) + 1, Math.floor(py / TS)) || water(Math.floor(px / TS) - 1, Math.floor(py / TS));
   const trees = [];
   const plant = (key, px, py) => { if (blocked(px, py) || trees.some(([x, y]) => Math.hypot(x - px, y - py) < 24)) return; trees.push([px, py]); D.prop(key, px, py, { solid: 5 }); };
   // the cherry walk: just east of the pond, v 0.30 -> 0.70
@@ -211,18 +240,66 @@ export function generateHighPark() {
   for (const [a, b] of [[0, Math.floor(U(0.54))], [Math.floor(U(0.54)) + 4, PS], [PS + 4, RX], [RX + 4, W]]) D.row(a, b, { base: (BLOOR - 3) * TS }, 'shop', [1, 2, 2], bricks);
   D.tprop('subway', Math.floor(U(0.54)) + 2, BLOOR - 3, 0, 12, { solidBox: [-12, -10, 24, 10] }); // High Park station
   D.tprop('subway', RX + 5, BLOOR - 3, 0, 12, { solidBox: [-12, -10, 24, 10] });                  // Dundas West station
+  // M3.2 (Ivan: "fill in the space between the townhouses with small roads (no traffic), trees, more homes,
+  // playgrounds, benches"): Roncesvalles' side streets. Every house row faces a quiet street (sidewalk,
+  // 2 tiles of asphalt, sidewalk) that runs from Parkside / Roncesvalles; front gardens with trees between
+  // the rows; a parkette with a playground on each side of Roncesvalles. No traffic lanes: people walk there.
   const houses = ['baygable', 'baygable', 'queenanne', 'secondempire', 'house'];
-  D.row(PS + 4, RX, { top: (BLOOR + 7) * TS }, houses, [1, 2], bricks, 40);
+  const sideStreet = (x0, x1, row, name) => {
+    // sidewalk / asphalt / asphalt / sidewalk; it cuts through the main street's sidewalk at each end
+    for (let x = x0; x <= x1; x++) {
+      D.set(x, row - 1, `sidewalk${x % 3}`); D.set(x, row, x % 9 === 4 ? 'asphalt0' : `asphalt${(x + 1) % 4}`); D.set(x, row + 1, `asphalt${(x + 3) % 4}`); D.set(x, row + 2, `sidewalk${(x + 1) % 3}`);
+    }
+    D.walkways.push([[x0 * TS, (row - 1) * TS + 8], [(x1 + 1) * TS, (row - 1) * TS + 8]], [[x0 * TS, (row + 2) * TS + 8], [(x1 + 1) * TS, (row + 2) * TS + 8]]);
+    // a street lamp and a tree every so often on the south sidewalk
+    for (let x = x0 + 2; x < x1 - 1; x += 6) { D.tprop('streetlight', x, row + 2, 4, 14); if (r.chance(0.6)) D.tprop('tree_b', x + 3, row + 3, 8, 6, { solid: 4 }); }
+    if (name) D.labels.push({ text: name, x: ((x0 + x1) / 2) * TS, y: (row + 1) * TS });
+  };
+  /** a row of houses whose fronts face the side street at `row` (their base sits on its north sidewalk) */
+  const facing = (x0, x1, row) => D.row(x0, x1, { base: (row - 1) * TS }, houses, [2, 2, 3], bricks, 40);
+  /** front gardens: hedges of trees + a bench now and then, in the strip of lawn between rows */
+  const gardens = (x0, x1, y0, y1) => {
+    for (let x = x0 + 1; x < x1; x += 3) for (let y = y0; y <= y1; y += 2) if (r.chance(0.45)) D.tprop(r.pick(['tree_a', 'tree_b', 'tree_c']), x, y, 8, 12, { solid: 4 });
+    for (let x = x0 + 3; x < x1 - 2; x += 8) if (r.chance(0.5)) D.tprop('bench', x, y1, 8, 12);
+  };
+  /** a parkette: paths, a playground, benches, trees */
+  const parkette = (x0, x1, y0, y1, label) => {
+    D.fill(x0, y0, x1, y1, (x, y) => `lawn${(x * 5 + y * 3) % 3}`);
+    const my = Math.floor((y0 + y1) / 2);
+    for (let x = x0; x <= x1; x++) D.set(x, my, `plaza${x % 2}`);
+    for (let y = y0; y <= y1; y++) D.set(Math.floor((x0 + x1) / 2), y, `plaza${y % 2}`);
+    D.prop('playground', (x0 + 3) * TS + 8, (my - 1) * TS, { solidBox: [-20, -10, 40, 10] });
+    for (const x of [x0 + 2, x1 - 3]) D.tprop('bench', x, my + 1, 8, 12);
+    D.tprop('bin_green', Math.floor((x0 + x1) / 2) + 1, my + 1, 4, 12);
+    for (const [x, y] of [[x1 - 1, y0 + 1], [x1 - 4, y0 + 1], [x0 + 1, y1], [x1 - 1, y1], [x1 - 6, y1]]) D.tprop(r.pick(['tree_a', 'tree_oak', 'tree_c']), x, y, 8, 10, { solid: 4 });
+    D.labels.push({ text: label, x: ((x0 + x1) / 2) * TS, y: (y0 + 1) * TS, kind: 'landmark' });
+  };
+  // west of Roncesvalles (between Parkside and Ronc)
+  const L0 = PS + 4, L1 = RX - 1;
+  D.row(L0, RX, { base: 21 * TS }, houses, [1, 2], bricks, 40);
+  for (const row of [23, 33, 63, 72, 81]) sideStreet(L0, L1, row, '');
+  gardens(L0, L1, 26, 28);
+  facing(L0, RX, 33); gardens(L0, L1, 36, 39);
   D.row(PS + 18, RX, { base: SCHOOL.base * TS }, houses, [2], bricks, 40);
-  for (const by of [62, 76]) { D.row(PS + 4, RX, { base: by * TS }, houses, [2], bricks, 40); for (let y = by; y < by + 2; y++) for (let x = PS + 4; x < RX; x++) D.set(x, y, `sidewalk${x % 3}`); }
   for (let y = SCHOOL.base; y < SCHOOL.base + 2; y++) for (let x = PS + 18; x < RX; x++) D.set(x, y, `sidewalk${x % 3}`);
-  D.row(RX + 4, W, { top: (BLOOR + 7) * TS }, houses, [1, 2], bricks, 40);
+  parkette(SCHOOL.x1 + 2, L1, SCHOOL.base + 2, SCHOOL.base + 9, 'PARKETTE');
+  facing(L0, RX, 63); facing(L0, RX, 72); facing(L0, RX, 81);
+  gardens(L0, L1, 66, 68); gardens(L0, L1, 75, 77); gardens(L0, L1, 84, 86);
+  // east of Roncesvalles
+  const R0 = RX + 4, R1 = W - 1;
+  D.row(R0, W, { base: 21 * TS }, houses, [1, 2], bricks, 40);
+  for (const row of [23, 33, 50, 63, 72, 81]) sideStreet(R0, R1, row, '');
+  gardens(R0, R1, 26, 28);
+  facing(R0, W, 33);
   const rev = D.row(RX + 4, RX + 8, { base: 40 * TS }, 'shop', [2], ['cream'], 40, { widths: [4] });
   D.prop('marquee', (RX + 6) * TS, rev[0].base - 19, { depth: rev[0].base + 0.3 });
   D.landmarks.push({ id: 'revue', x: (RX + 6) * TS, y: 40 * TS + 10, label: 'THE REVUE CINEMA', fact: 'RONCESVALLES AVE\nOPENED 1912' });
   D.row(RX + 8, W, { base: 40 * TS }, ['shop', 'baygable', 'house'], [2], bricks, 40);
-  for (const by of [58, 74]) D.row(RX + 4, W, { base: by * TS }, houses, [2], bricks, 40);
-  for (const y0 of [40, 58, 74]) for (let y = y0; y < y0 + 2; y++) for (let x = RX + 4; x < W; x++) D.set(x, y, `sidewalk${x % 3}`);
+  for (let y = 40; y < 42; y++) for (let x = R0; x < W; x++) D.set(x, y, `sidewalk${x % 3}`);
+  facing(R0, W, 50);
+  parkette(R0, R1, 53, 59, 'PARKETTE');
+  facing(R0, W, 63); facing(R0, W, 72); facing(R0, W, 81);
+  gardens(R0, R1, 66, 68); gardens(R0, R1, 75, 77); gardens(R0, R1, 84, 86);
   for (const [a, b] of [[0, PS], [PS + 4, RX], [RX + 4, W]]) D.row(a, b, { top: (QUEEN + 7) * TS }, 'rear', [1, 1, 2], bricks, 48, { graffiti: [0, 1] });
 
   // ---------- street furniture, stops, parked cars ----------
@@ -230,7 +307,7 @@ export function generateHighPark() {
   D.furnish(BLOOR, 's', PS + 4, W);
   D.furnish(QUEEN, 'n', PS + 4, W);
   D.furnish(QUEEN, 's', 0, W);
-  for (let x = 2; x < PS - 1; x += 7) D.tprop('streetlight', x, QUEEN - 1, 4, 8);
+  for (let x = 2; x < PS - 1; x += 7) if (!roadEnds.some(([ex, ey]) => ey > BOT && Math.abs(ex - (x * TS + 4)) < 24)) D.tprop('streetlight', x, QUEEN - 1, 4, 8);
   const stops = { queen_wb: [(RX - 1) * TS, (PS - 1) * TS], queen_eb: [(RX + 5) * TS, (PS + 5) * TS], ronc_sb: [(BLOOR - 3) * TS - 40, (QUEEN - 3) * TS - 40], ronc_nb: [(QUEEN + 7) * TS + 40, (BLOOR + 7) * TS + 40] };
   for (const c of [PS, RX]) { D.tprop('ttcstop', c - 2, QUEEN - 1, 8, 8); D.tprop('ttcstop', c + 5, QUEEN + 4, 8, 6); }
   const stopZone = (xs) => xs.map((s) => [s - 112, s + 24]);
@@ -275,6 +352,7 @@ export function generateHighPark() {
     { text: 'GRENADIER POND', x: U(0.24) * TS, y: V(0.85) * TS, kind: 'landmark' },
     { text: 'SCHOOL', x: (SCHOOL.x0 + 6) * TS, y: (SCHOOL.base - 4) * TS, kind: 'landmark' },
     { text: 'QUEEN WEST >', x: (W - 4) * TS, y: (QUEEN - 4) * TS, kind: 'exit' },
+    { text: 'v WATERFRONT', x: (PS + 2) * TS, y: (H - 2) * TS, kind: 'exit' },
   );
   // hidden extra lives: behind the greenhouse, and in the north woods above the pond
   const lifeTokens = [{ x: gh.x + 100, y: gh.y + 10 }, { x: P(0.10, 0.20)[0], y: P(0.10, 0.20)[1] }];

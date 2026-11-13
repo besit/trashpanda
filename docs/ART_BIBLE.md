@@ -80,6 +80,11 @@ Each district gets landmarks and textures you can't mistake for anywhere else. Q
 - Sugar Beach's pink umbrellas and white chairs, sailboats, the Cinesphere's geodesic dome, the pods on stilts
 - the MEGA SPA (fictional, pink and glass) and its chain-link PRIVATE fences
 
+**Rules added in M3.2:**
+- Long vehicles bend where the real one bends: the Flexity turns as three sections, cut at its accordion joints.
+- A landmark is drawn from the photos Ivan sends, in its real shape first (the CN Tower's trefoil, the dome's nested roof panels, the aquarium's sharks), then simplified.
+- At skyline scale, a landmark keeps the one feature people recognize (the CN Tower pod's white donut), even if it has to be exaggerated.
+
 **Rules added in M3.1:**
 - A landmark too tall for the map (the CN Tower) is drawn as its base plus a shaft that leaves the top edge. It's a building, so its footprint is solid and you can ride behind it.
 - Only a building's footprint is solid; everything above it fades when the player is behind.

@@ -535,3 +535,35 @@ Ivan created the Firebase project (`trashpanda-trow`), published the rules from 
 HIGH SCORES then showed "WORLD TOP 10 / 1. TST 000001 N" next to the device table. The test entry needs deleting by hand in the Firestore console, since the rules deny deletes from clients.
 
 **Caught before deploying:** the e2e suite wins missions, so it would have posted real scores to the live board. Posting is now skipped for `?debug` sessions (they have cheat hooks) and automated browsers (`navigator.webdriver`, which Playwright sets). Reading the board still works everywhere.
+
+## 2026-11-13 (later): M3.2, Ivan's M3.1 review
+
+Ivan's notes covered the Lane Eater, the Waterfront and High Park, plus fullscreen on phones. All of them are in; the review doc is [docs/reviews/M3.2.md](reviews/M3.2.md), with a screenshot for each change.
+
+### The Lane Eater, redesigned to Ivan's pattern
+- **Why the machine never showed:** it started 180 px off screen and moved at the scroll speed +10 px/s, **minus 6 px/s per rider**. With any peloton at all it fell further behind and never appeared. Now its front is held a set distance inside the view, and riders push that distance back.
+- **The peloton was free:** ringing near a rider recruited them instantly, so spamming E while riding past worked. Now a rung rider *clips in* from a standstill and joins only if you stay within 50 px. The bot showed full speed fails and riding at about camera speed succeeds, which is the intent: slow down for riders while asphalt lands around you.
+- **The boss** is Ivan's cycle: charge across the whole screen, only the grinder hurts, slam into the edge, roll back, overheat (the only hittable window), leave that side and come back from it. A perfect bot needs 3 to 5 overheats.
+- **Small fixes:** riders level with the raccoon (the rider frames have blank rows under the wheels: measured, then corrected); draw order follows height; the intro raccoon goes behind the machine; outro signs 16 px higher.
+
+**Failure along the way:** my first e2e test for the clip-in passed half the time. The second E press could land on the same frame as the test's teleport and get lost. The game was fine; the test now retries the bell until the rider is clipping in.
+
+### Waterfront, re-laid again
+- **Strachan** is the west street, aligned with the Ontario Place causeway. Spadina moved east, and University to Bay shrank from 32 to 20 tiles.
+- **New connections:** Ossington, Strachan and Bellwoods in Queen West all lead south onto Strachan. High Park's Parkside and Roncesvalles lead south onto the west end of the trail. That's a connection around a corner (south edge to west edge), so arrivals now fall back to any side with the same street name.
+- **Quays and slips:** HTO Park, the Power Plant, a quay of trees, Harbour Square Park West, the ferry terminal and Sugar Beach, with motor yachts in the slips. The facts for the two new plaques are in URBAN_RESEARCH §22 (the Power Plant's exact build year couldn't be confirmed, so the plaque says "1920s").
+- **Spadina's tracks:** the junction tiles had overwritten the rails in the intersection's north row and on the stop line, so the curve decal started from nothing. Those tiles are now track.
+- **The 3-section streetcar:** the Flexity model takes a module list, and the sections are rendered at 8 facings and trimmed. A turning car lays them along the same route the traffic code steers it on. Assembled straight, the three sections match the one-piece sprite almost pixel for pixel.
+- **Art:** the CN Tower base as a trefoil with glass elevators; the closed SkyDome with arc seams; the aquarium with its roof sharks; the Power Plant; the skyline pod's white donut. The first trefoil looked like a delta wing (the foils were too long and tapered too fast); shorter foils that taper steadily up the shaft fixed it. [waterfront v03](../art/history/waterfront/v03/preview.png), [cn_tower v02](../art/history/cn_tower/v02/preview.png), [vehicles v05](../art/history/vehicles/v05/preview.png).
+
+### High Park
+- **Road ends:** the roads now run across the sidewalk and are cut square by the decal's own edge at the curb, which replaces the driveway patch.
+- **Feature placement:** placement is no longer hand-tuned. Each feature is found by an outward search from its spot on the City's map, leaning the way Ivan asked (pool up-left, tennis and playground right, cafe up-right).
+- **Removed and moved:** the dog park and the pond under the roads are gone; Deer Pen Rd now ends on Spring Rd; the south-east pond moved east of the road.
+- **East side:** side streets with houses facing them, gardens and two parkettes. They're unnamed, because I couldn't place the real side streets' order from memory.
+- **Trees:** canopies are now kept off the roads. A tree had been planted with its trunk just clear of Centre Rd and its crown over it.
+
+### Fullscreen
+- **Android and iPad:** the Fullscreen API runs on the first tap, from a real DOM `pointerup`. Browsers refuse it from Phaser's pointerdown, so the pause menu's FULLSCREEN line also acts on pointerup.
+- **iPhone:** Safari has no page fullscreen, so a web-app manifest and icon make Add to Home Screen open the game fullscreen in landscape.
+- **Pause menu:** the new line made 8 items, so the spacing tightens to keep the list clear of the bottom of the screen.

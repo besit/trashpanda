@@ -8,13 +8,17 @@ import { type Lane, type Intersection, underDepth, ELEVATED_DEPTH } from './City
 import { sfx } from '../audio/sfx';
 
 type Kind = 'car' | 'streetcar' | 'bike';
-interface Turn { to: Lane; r: number; c: [number, number]; s: [number, number]; e: [number, number]; h0: number; h1: number; t: number }
+interface Turn { to: Lane; r: number; c: [number, number]; s: [number, number]; e: [number, number]; h0: number; h1: number; t: number; d1: [number, number]; d2: [number, number] }
 interface Vehicle {
   s: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite; lane: Lane; kind: Kind;
   speed: number; v: number; len: number; honkCd: number; stopT: number; served: Set<number>; off: number;
   /** sprite key without the facing ('car_red', 'suv', 'streetcar', 'cy_b') */ base: string;
   /** the corner this vehicle will take, and the turn in progress */ plan?: Turn; turning?: Turn;
+  /** a streetcar that turns is drawn as three articulated sections (rear, mid, front) that follow its route */
+  parts?: Phaser.GameObjects.Image[]; after?: Turn;
 }
+/** section centres along the car from its middle (rear, mid, front; the Flexity's 5 modules split 2-1-2) */
+const SC_OFF = [-28.8, 0, 28.8];
 // 8 facings (screen angle, y down) -> sprite suffix; cyclists only have the 4 straight ones
 const FACE8 = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'];
 const faceOf = (ang: number, eight: boolean) => {
@@ -95,7 +99,10 @@ export class Traffic {
     if (kind === 'car' && this.has(lane.calm)) speed *= 0.5;
     if (lane.elevated) speed = 120 + Math.random() * 30; // the Gardiner, when it's moving
     const plan = this.planTurn(lane, kind);
-    this.vehicles.push({ s, lane, kind, speed, v: speed, len, honkCd: 0, stopT: 0, served: new Set(), off, base, plan });
+    const v: Vehicle = { s, lane, kind, speed, v: speed, len, honkCd: 0, stopT: 0, served: new Set(), off, base, plan };
+    // M3.2 (Ivan): a streetcar taking a corner bends at its joints instead of turning as one long piece
+    if (kind === 'streetcar' && plan) { s.setVisible(false); v.parts = ['r', 'm', 'f'].map((k) => this.scene.add.image(0, 0, 'world', `scsec_${k}_${f}`)); this.placeParts(v); }
+    this.vehicles.push(v);
   }
 
   /** pick the corner (if any) a new vehicle will take, and lay out its quarter-circle */
@@ -113,7 +120,7 @@ export class Traffic {
       const c: [number, number] = [s[0] + d2[0] * t.r, s[1] + d2[1] * t.r];
       const h0 = Math.atan2(d1[1], d1[0]); let h1 = Math.atan2(d2[1], d2[0]);
       if (h1 - h0 > Math.PI) h1 -= Math.PI * 2; if (h0 - h1 > Math.PI) h1 += Math.PI * 2;
-      return { to, r: t.r, c, s, e, h0, h1, t: 0 };
+      return { to, r: t.r, c, s, e, h0, h1, t: 0, d1, d2 };
     }
     return undefined;
   }
@@ -132,13 +139,40 @@ export class Traffic {
     if (v.kind === 'bike') { const sp = v.s as Phaser.GameObjects.Sprite; const k = `${v.base}_${f}`; if (sp.anims.currentAnim?.key !== k) sp.play(k); }
     else (v.s as Phaser.GameObjects.Image).setFrame(`${v.base}_${f}`);
     if (T.t >= 1) {
-      v.lane = T.to; v.turning = undefined; v.off = 0;
+      v.lane = T.to; v.turning = undefined; v.off = 0; v.after = T;
       v.s.setPosition(T.e[0], T.e[1]);
       if (v.kind !== 'bike') (v.s as Phaser.GameObjects.Image).setFrame(`${v.base}_${face(T.to)}`);
     }
   }
 
   private posOf(v: Vehicle) { return v.lane.axis === 'x' ? v.s.x : v.s.y; }
+
+  /** a point `d` px along a turn's route (negative = still on the first street, past the arc = the second) */
+  private routeAt(T: Turn, d: number): [number, number] {
+    const arc = (T.r * Math.PI) / 2;
+    if (d <= 0) return [T.s[0] + T.d1[0] * d, T.s[1] + T.d1[1] * d];
+    if (d >= arc) return [T.e[0] + T.d2[0] * (d - arc), T.e[1] + T.d2[1] * (d - arc)];
+    const a0 = Math.atan2(T.s[1] - T.c[1], T.s[0] - T.c[0]), a1 = Math.atan2(T.e[1] - T.c[1], T.e[0] - T.c[0]);
+    let da = a1 - a0; if (da > Math.PI) da -= Math.PI * 2; if (da < -Math.PI) da += Math.PI * 2;
+    const a = a0 + (da * d) / arc;
+    return [T.c[0] + Math.cos(a) * T.r, T.c[1] + Math.sin(a) * T.r];
+  }
+
+  /** lay the three sections of a turning streetcar along its route, each with the facing of its own stretch */
+  private placeParts(v: Vehicle) {
+    const T = v.turning ?? v.plan ?? v.after, parts = v.parts!;
+    if (!T) return;
+    const arc = (T.r * Math.PI) / 2;
+    const dc = v.turning ? T.t * arc : v.plan ? (this.posOf(v) - (v.lane.axis === 'x' ? T.s[0] : T.s[1])) * v.lane.dir : arc + (this.posOf(v) - (v.lane.axis === 'x' ? T.e[0] : T.e[1])) * v.lane.dir;
+    parts.forEach((im, i) => {
+      const d = dc + SC_OFF[i], [x, y] = this.routeAt(T, d), a = this.routeAt(T, d - 9), b = this.routeAt(T, d + 9);
+      const key = `scsec_${'rmf'[i]}_${faceOf(Math.atan2(b[1] - a[1], b[0] - a[0]), true)}`;
+      if (im.frame.name !== key) { im.setFrame(key); const pv = this.manifest.pivots[key]; if (pv) im.setOrigin(pv.x, pv.y); }
+      im.setPosition(Math.round(x), Math.round(y)).setDepth(y + 2);
+    });
+    // the whole car is out of the corner: back to the one-piece sprite
+    if (v.after && dc + SC_OFF[0] > arc + 12) { parts.forEach((im) => im.destroy()); v.parts = undefined; v.after = undefined; v.s.setVisible(true); }
+  }
 
   update(dtMs: number, px: number, py: number) {
     const dt = dtMs / 1000;
@@ -161,7 +195,7 @@ export class Traffic {
     }
 
     for (const v of this.vehicles) {
-      if (v.turning) { this.steer(v, dt); v.s.setDepth(v.s.y + 2); continue; }
+      if (v.turning) { this.steer(v, dt); v.s.setDepth(v.s.y + 2); if (v.parts) this.placeParts(v); continue; }
       const l = v.lane, pos = this.posOf(v), front = pos + (l.dir * v.len) / 2;
       let target = v.speed;
       // its corner is here: start the turn
@@ -216,11 +250,12 @@ export class Traffic {
       if (l.axis === 'x') v.s.x += v.v * l.dir * dt; else v.s.y += v.v * l.dir * dt;
       v.s.setDepth(l.under ? underDepth(v.s.y) : l.elevated ? ELEVATED_DEPTH + 1 + v.s.y / 100000 : v.s.y + 2);
       if (v.kind === 'bike') (v.s as Phaser.GameObjects.Sprite).anims.timeScale = Math.max(0.05, v.v / 45);
+      if (v.parts) this.placeParts(v);
     }
     // despawn
     this.vehicles = this.vehicles.filter((v) => {
       const p = this.posOf(v), [a, b] = this.span(v.lane);
-      if (p < a - v.len * 1.5 || p > b + v.len * 1.5) { v.s.destroy(); return false; }
+      if (p < a - v.len * 1.5 || p > b + v.len * 1.5) { v.s.destroy(); v.parts?.forEach((im) => im.destroy()); return false; }
       return true;
     });
   }

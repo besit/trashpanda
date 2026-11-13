@@ -6,7 +6,8 @@ import { downtownBuilding, oldCityHall } from './downtown.mjs';
 import { schoolFacade, cafeFacade, greenhouseFacade } from './highpark.mjs';
 import { bigBoxFacade, broadviewFacade, donJailFacade, donJailRoof } from './eastend.mjs';
 import { megaSpaFacade } from './waterfront.mjs';
-import { cnTowerBuilding, domeBuilding, aquariumBuilding, ferryTerminalBuilding } from './waterfront2.mjs';
+import { ferryTerminalBuilding } from './waterfront2.mjs';
+import { cnTowerBuilding, domeBuilding, aquariumBuilding, powerPlantBuilding } from './waterfront3.mjs';
 
 export function anyBuilding(gen) {
   // M3.1 Waterfront landmarks: drawn whole (their footprint is the ground they stand on)
@@ -14,6 +15,7 @@ export function anyBuilding(gen) {
   if (gen.kind === 'dome') return domeBuilding(gen.w, gen.d);
   if (gen.kind === 'aquarium') return aquariumBuilding(gen.w, gen.d);
   if (gen.kind === 'ferry') return ferryTerminalBuilding(gen.w, gen.d);
+  if (gen.kind === 'powerplant') return powerPlantBuilding(gen.w, gen.d);
   if (gen.kind === 'donjail') {
     const fac = donJailFacade(gen.w), rf = donJailRoof(gen.w, gen.d);
     const img = new Img(gen.w, gen.d + fac.h - 12);

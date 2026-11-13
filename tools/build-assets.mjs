@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { Img, save } from './lib/raster.mjs';
 import { packAtlas, packTileset } from './lib/pack.mjs';
-import { raccoonSideFrames, PIVOT_Y as RS_PIVOT_Y } from './sprites/raccoon_side.mjs';
+import { raccoonSideFrames, appIcon, PIVOT_Y as RS_PIVOT_Y } from './sprites/raccoon_side.mjs';
 import { raccoonTopFrame, DIRS } from './sprites/raccoon_top.mjs';
 import { ratAnims, RAT_VARIANTS, bureaucratAnims, foremanAnims, BOSS_FH } from './sprites/rats.mjs';
 import { dogFraudPortrait, dogFraudStanding } from './sprites/dogfraud.mjs';
@@ -28,6 +28,7 @@ import { generateEastEnd } from './map/eastend.mjs';
 import * as EE from './sprites/eastend.mjs';
 import * as WF from './sprites/waterfront.mjs';
 import * as WF2 from './sprites/waterfront2.mjs';
+import * as WF3 from './sprites/waterfront3.mjs';
 import { generateWaterfront } from './map/waterfront.mjs';
 
 const OUT = path.resolve('public/gen');
@@ -113,11 +114,14 @@ addProp('carside_blue_r', P.car('blue', 0, 1, true));
 addProp('streetcar_E', P.streetcar(0)); addProp('streetcar_W', P.streetcar(Math.PI));
 addProp('streetcar_N', P.streetcar(-Math.PI / 2, 96, false, true)); addProp('streetcar_S', P.streetcar(Math.PI / 2, 96, false, true));
 addProp('streetcarside', P.streetcar(0, 96, true));
+// M3.2: the three articulated sections, straight facings (the 45-degree ones are below)
+for (const [d, yaw] of Object.entries({ E: 0, W: Math.PI, N: -Math.PI / 2, S: Math.PI / 2 })) for (const part of ['r', 'm', 'f']) addProp(`scsec_${part}_${d}`, P.streetcarSection(part, yaw));
 // M3.1: 45-degree frames for vehicles taking a corner (Spadina <-> Queens Quay, the streets that end at the lake)
 const DIAG = { SE: Math.PI / 4, SW: (3 * Math.PI) / 4, NW: (-3 * Math.PI) / 4, NE: -Math.PI / 4 };
 for (const [d, yaw] of Object.entries(DIAG)) {
   for (const c of CAR_COLORS) addProp(`car_${c}_${d}`, P.carDiag(c, yaw));
   addProp(`suv_${d}`, P.suvDiag(yaw)); addProp(`streetcar_${d}`, P.streetcarDiag(yaw));
+  for (const part of ['r', 'm', 'f']) addProp(`scsec_${part}_${d}`, P.streetcarSection(part, yaw));
 }
 ['red', 'blue', 'white', 'yellow', 'teal', 'suv'].forEach((k) => DVP_SCALES.forEach((sc, i) => addProp(`dvp_${k}_${i}`, dvpCar(k, sc))));
 manifest.dvpScales = DVP_SCALES;
@@ -157,6 +161,9 @@ manifest.anims.plane_cs = { frames: ['plane_cs_0', 'plane_cs_1'], rate: 14, loop
 addProp('gardinerdeck', WF2.gardinerDeck()); addProp('gardinerpier', WF2.gardinerPier()); addProp('trackcurves', WF2.trackCurves()); addProp('marinadock', WF2.marinaDock());
 addProp('sailboat_0', WF.sailboat(0)); addProp('sailboat_1', WF.sailboat(1));
 manifest.anims.sailboat_bob = { frames: ['sailboat_0', 'sailboat_1'], rate: 1.5, loop: true, atlas: 'world' };
+// M3.2: HTO Park's umbrellas, motor yachts moored in the slips
+addProp('yellowumbrella', WF3.yellowUmbrella()); addProp('yacht_0', WF3.yacht(0)); addProp('yacht_1', WF3.yacht(1));
+manifest.anims.yacht_bob = { frames: ['yacht_0', 'yacht_1'], rate: 1.2, loop: true, atlas: 'world' };
 addProp('vanside', SP.vanSide()); addProp('suvrat_0', SP.suvRatSide(0)); addProp('suvrat_1', SP.suvRatSide(1));
 addProp('desk', SP.desk()); addProp('stamp_0', SP.stamp(0)); addProp('stamp_1', SP.stamp(1)); addProp('camcarried', SP.camCarried());
 addProp('buildspot', SP.buildSpot()); addProp('humpside', SP.humpSide()); addProp('raisedside', SP.raisedCrossSide()); addProp('life_0', SP.lifeToken(0)); addProp('life_1', SP.lifeToken(1));
@@ -242,6 +249,13 @@ font('font', 'W', 'plain');
 font('font_outline', 'W', 'outline');
 font('font_big', 'Y', 'outline', 'K', 2);
 font('font_red', 'q', 'outline', 'K', 2);
+
+// ---------- home-screen icons (M3.2: the web-app manifest, so iPhones can launch it fullscreen) ----------
+{
+  const ic = appIcon();
+  save(ic, path.join(OUT, 'icon_192.png'), 3);
+  save(ic, path.join(OUT, 'icon_512.png'), 8);
+}
 
 // clean stale outputs from older builds (e.g. M1's single queenwest-in-world atlas leftovers)
 fs.writeFileSync(path.join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 1));

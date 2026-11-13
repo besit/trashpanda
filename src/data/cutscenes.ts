@@ -18,7 +18,7 @@ export type Step =
   | { t: 'title'; text: string; sub?: string }
   | { t: 'dvp'; lanes: number }
   | { t: 'dvpAdd' }
-  | { t: 'actor'; id: string; frame: string; anim?: string; x: number; y: number; flip?: boolean; depth?: number; atlas?: 'chars' | 'world'; sign?: string; scale?: number; /** stands on the street and scrolls with it */ world?: boolean;
+  | { t: 'actor'; id: string; frame: string; anim?: string; x: number; y: number; flip?: boolean; depth?: number; atlas?: 'chars' | 'world'; sign?: string; /** how far above the actor's feet the sign floats (default 40) */ signLift?: number; scale?: number; /** stands on the street and scrolls with it */ world?: boolean;
       /** rises up from below its spot (fences going up, umbrellas opening); vehicles enter from the sides */ rise?: boolean;
       /** switch frame when actor `by` (or screen x) reaches this actor */ turnOn?: { frame: string; atScreenX: number; by?: string; ahead?: number; sfx?: 'signal' | 'ding' | 'bell' } }
   | { t: 'frame'; id: string; frame: string; anim?: string; flip?: boolean }
@@ -406,7 +406,7 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'move', id: 'b2', x: 440, ms: 1100, ease: 'Sine.easeIn', keepAnim: true },
     { t: 'sfx', name: 'laugh' },
     { t: 'say', who: 'DOG FRAUD', text: 'BEHOLD THE LANE EATER! IT EATS BIKE LANES AND POOPS... ANOTHER CAR LANE!' },
-    { t: 'actor', id: 'tp', frame: 'rs_2', anim: 'rs_ride', x: -30, y: BIKELANE, depth: 90, flip: false },
+    { t: 'actor', id: 'tp', frame: 'rs_2', anim: 'rs_ride', x: -30, y: BIKELANE, depth: 65, flip: false }, // behind the machine (Ivan, M3.1)
     { t: 'move', id: 'tp', x: 300, ms: 1200, ease: 'Cubic.easeOut', wait: true, anim: 'rs_idle' },
     { t: 'sfx', name: 'bell' },
     { t: 'say', who: 'TRASH PANDA', text: 'ONE RACCOON CAN\'T STOP THAT. A STREET FULL OF RIDERS CAN.' },
@@ -418,12 +418,12 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'side', sky: 'day', street: 'protected' },
     { t: 'music', song: 'improve' },
     { t: 'caption', text: 'THE NEXT SATURDAY.', y: 18, hold: 500 },
-    { t: 'actor', id: 'r1', frame: 'cys_a_0', anim: 'cys_a', x: -40, y: BIKELANE, depth: 60, sign: 'KEEP\nBLOOR SAFE' },
+    { t: 'actor', id: 'r1', frame: 'cys_a_0', anim: 'cys_a', x: -40, y: BIKELANE, depth: 60, sign: 'KEEP\nBLOOR SAFE', signLift: 56 },
     { t: 'actor', id: 'r2', frame: 'cys_c_0', anim: 'cys_c', x: -100, y: BIKELANE + 4, depth: 61 },
-    { t: 'actor', id: 'r3', frame: 'cys_b_0', anim: 'cys_b', x: -160, y: BIKELANE, depth: 60, sign: 'BIKE LANES\nSAVE LIVES' },
+    { t: 'actor', id: 'r3', frame: 'cys_b_0', anim: 'cys_b', x: -160, y: BIKELANE, depth: 60, sign: 'BIKE LANES\nSAVE LIVES', signLift: 56 },
     { t: 'actor', id: 'r4', frame: 'cys_d_0', anim: 'cys_d', x: -220, y: BIKELANE + 4, depth: 61 },
     { t: 'actor', id: 'tp', frame: 'rs_2', anim: 'rs_ride', x: -280, y: BIKELANE, depth: 62 },
-    { t: 'actor', id: 'r5', frame: 'cys_a_0', anim: 'cys_a', x: -340, y: BIKELANE + 4, depth: 61, sign: 'WE RIDE\nBLOOR' },
+    { t: 'actor', id: 'r5', frame: 'cys_a_0', anim: 'cys_a', x: -340, y: BIKELANE + 4, depth: 61, sign: 'WE RIDE\nBLOOR', signLift: 56 },
     { t: 'pan', to: 70, ms: 1500 },
     { t: 'move', id: 'r1', x: 330, ms: 3600, ease: 'Sine.easeOut' },
     { t: 'move', id: 'r2', x: 275, ms: 3600, ease: 'Sine.easeOut' },

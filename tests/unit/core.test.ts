@@ -98,14 +98,18 @@ describe('M2: districts, missions, saves', async () => {
     expect(missionAvailable('streetcar_through', [])).toBe(false);
     for (const id of ['streetcar_through', 'king_of_street', 'slow_down_dog']) expect(missionAvailable(id, ['bike_lane_war'])).toBe(true);
   });
-  it('streets continue across district edges (matched by name, on the opposite edge)', () => {
+  it('streets continue across district edges (matched by name, on the opposite edge, or around a corner)', () => {
+    // M3.2: High Park's south edge meets the Waterfront's WEST end (the trail), so a connection may turn a
+    // corner; it still has to come back by the same street name
+    const CORNERS = new Set(['highpark s waterfront trail', 'waterfront w highpark trail']);
     for (const id of Object.keys(DISTRICTS)) {
       const map = load(id);
       for (const e of map.exits) {
         const other = load(e.to);
         // matched by street name: rows may differ between districts
         const opposite: Record<string, string> = { w: 'e', e: 'w', n: 's', s: 'n' };
-        const back = other.exits.find((o: { side: string; to: string; street: string }) => o.to === id && o.side === opposite[e.side] && o.street === e.street);
+        const corner = CORNERS.has(`${id} ${e.side} ${e.to} ${e.street}`);
+        const back = other.exits.find((o: { side: string; to: string; street: string }) => o.to === id && (corner || o.side === opposite[e.side]) && o.street === e.street);
         expect(back, `${id} ${e.side} -> ${e.to} (${e.street})`).toBeTruthy();
       }
     }

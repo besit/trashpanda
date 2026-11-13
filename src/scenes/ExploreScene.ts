@@ -81,12 +81,19 @@ export class ExploreScene extends Phaser.Scene {
     if (data.entry) {
       // arrive on the same street (matched by name; rows can differ between districts)
       const e = data.entry;
-      const ex = (md.exits ?? []).find((x) => x.side === e.side && x.street === e.street && (!e.fromDistrict || x.to === e.fromDistrict));
+      const exits = md.exits ?? [];
+      let ex = exits.find((x) => x.side === e.side && x.street === e.street && (!e.fromDistrict || x.to === e.fromDistrict));
+      // M3.2: a connection can turn a corner (High Park's south edge -> the Waterfront's west end): the same
+      // street and district on another side of the map
+      const turned = !ex;
+      if (!ex) ex = exits.find((x) => x.street === e.street && (!e.fromDistrict || x.to === e.fromDistrict));
+      const side = ex?.side ?? e.side;
       // dy = how far along the exit's span the player was (rows for w/e exits, columns for n/s ones)
       const [lo, hi] = ex ? exitSpan(ex) : [0, 0];
-      const along = ex ? Phaser.Math.Clamp(lo + (e.dy ?? 40), lo + 8, hi - 8) : undefined;
-      if (e.side === 'n' || e.side === 's') start = { x: along ?? md.spawn.x, y: e.side === 'n' ? 30 : this.map.heightPx - 14 };
-      else start = { x: e.side === 'w' ? 12 : this.map.widthPx - 12, y: along ?? e.y ?? md.spawn.y };
+      const along = ex ? (turned ? (lo + hi) / 2 : Phaser.Math.Clamp(lo + (e.dy ?? 40), lo + 8, hi - 8)) : undefined;
+      if (side === 'n' || side === 's') start = { x: along ?? md.spawn.x, y: side === 'n' ? 30 : this.map.heightPx - 14 };
+      else start = { x: side === 'w' ? 12 : this.map.widthPx - 12, y: along ?? e.y ?? md.spawn.y };
+      data.entry = { ...e, side };
     }
     else if (ctx.state.player.district === this.district && ctx.state.player.x > 0 && ctx.state.player.x < this.map.widthPx && ctx.state.player.y < this.map.heightPx) start = ctx.state.player;
     this.player = new TopDownPlayer(this, start.x, start.y);

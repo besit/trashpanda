@@ -221,3 +221,12 @@ export function attackPreview() {
 
 /** M3.1: the ride cycle with the bigger tail swing */
 export function ridePreview() { return { frames: [0, 1, 2, 3].map((i) => raccoonFrame({ phase: i, pedal: i, sway: [-2, 1, 4, 1][i] })), cols: 4 }; }
+
+/** M3.2: the home-screen / manifest icon (64x64 art, saved at 3x and 8x) */
+export function appIcon() {
+  const ic = new Img(64, 64);
+  ic.rect(0, 0, 64, 64, 'v');
+  ic.blit(raccoonFrame({ phase: 1, pedal: 1, sway: 1 }), 4, 12);
+  return ic;
+}
+export function appIconPreview() { return { frames: [appIcon()], cols: 1 }; }

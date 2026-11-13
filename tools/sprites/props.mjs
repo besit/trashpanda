@@ -166,9 +166,10 @@ export function suvModel() {
 // further than the roof line), with a big windshield on the slope and a red cap over it. Five modules,
 // black accordion joints; a red roof edge, white bands framing the window strip, red body, white skirt
 // line; the white swoosh rising from the front skirt; grey double doors; a pantograph on the middle module.
-export function streetcarModel(length = 96) {
+export function streetcarModel(length = 96, mods = [0, 1, 2, 3, 4], shift = 0) {
   const half = length / 2, segs = 5, segL = length / segs;
   const objs = [];
+  const has = (s) => mods.includes(s);
   const RAKE = 0.42; // how far the end face leans back per unit of height
   const livery = (cx, nose) => (p) => {
     const z = p[2], lx = p[0] - cx;
@@ -199,7 +200,8 @@ export function streetcarModel(length = 96) {
     return ['K', 'k', 'g'];                             // bogies
   };
   for (let s = 0; s < segs; s++) {
-    const cx = -half + segL * (s + 0.5);
+    if (!has(s)) continue;
+    const cx = -half + segL * (s + 0.5) - shift;
     const nose = s === segs - 1 ? 1 : s === 0 ? -1 : 0;
     const box = sd.box([cx, 0, 8.6], [segL / 2 - 0.9 + (nose ? 1.6 : 0), 6.3, 8.1], 1.2);
     // cab ends: cut the box with a plane that leans back toward the roof (the rake)
@@ -209,12 +211,14 @@ export function streetcarModel(length = 96) {
       return Math.max(box(p), ((p[0] - x0) * nose + RAKE * (p[2] - 1.5)) / L);
     } : box;
     objs.push({ d, m: mat(R.red, { spec: 1, fn: livery(cx, nose) }) });
-    if (s < segs - 1) objs.push({ d: sd.box([cx + segL / 2, 0, 8.4], [0.9, 5.6, 7.4], 0.4), m: mat(['K', 'k', 'k', 'g']) }); // accordion joint
+    // accordion joints: inside the section, and (for a section of an articulated car) at both cut ends
+    if (s > 0 && !has(s - 1)) objs.push({ d: sd.box([cx - segL / 2, 0, 8.4], [0.9, 5.6, 7.4], 0.4), m: mat(['K', 'k', 'k', 'g']) });
+    if (s < segs - 1) objs.push({ d: sd.box([cx + segL / 2, 0, 8.4], [0.9, 5.6, 7.4], 0.4), m: mat(['K', 'k', 'k', 'g']) }); // accordion joint (also closes a cut end)
   }
   // pantograph on the middle module
-  objs.push({ d: sd.capsule([-5, 0, 17], [2, 0, 22], 0.4), m: mat(R.dark) });
-  objs.push({ d: sd.capsule([2, -3, 22], [2, 3, 22], 0.4), m: mat(R.dark) });
-  objs.push({ d: sd.box([0, 0, 17.2], [6, 3, 0.8]), m: mat(R.steel) });
+  if (has(2)) objs.push({ d: sd.capsule([-5 - shift, 0, 17], [2 - shift, 0, 22], 0.4), m: mat(R.dark) });
+  if (has(2)) objs.push({ d: sd.capsule([2 - shift, -3, 22], [2 - shift, 3, 22], 0.4), m: mat(R.dark) });
+  if (has(2)) objs.push({ d: sd.box([-shift, 0, 17.2], [6, 3, 0.8]), m: mat(R.steel) });
   return objs;
 }
 export function streetcar(yaw = 0, length = 96, side = false, vertical = false) {
@@ -226,6 +230,30 @@ export function streetcar(yaw = 0, length = 96, side = false, vertical = false) 
 }
 /** a streetcar mid-turn (M3.1): drawn at 45 degrees for the corners it takes */
 export function streetcarDiag(yaw) { return draw(streetcarModel(96), 104, 104, 52, 56, yaw); }
+/**
+ * M3.2 (Ivan: "can we have streetcars turn in 3 sections?"): the Flexity as three articulated pieces that
+ * each take their own facing through a corner: REAR (modules 0-1, a cab), MID (module 2, the pantograph),
+ * FRONT (modules 3-4, a cab). Each frame is trimmed; the pivot is the section's centre on the ground.
+ */
+export const SC_SECTIONS = { r: { mods: [0, 1], shift: -28.8 }, m: { mods: [2], shift: 0 }, f: { mods: [3, 4], shift: 28.8 } };
+export function streetcarSection(part, yaw) {
+  const { mods, shift } = SC_SECTIONS[part];
+  return trim(draw(streetcarModel(96, mods, shift), 96, 96, 48, 56, yaw));
+}
+/** crop a rendered sprite to its pixels, keeping the pivot on the same spot */
+export function trim(img) {
+  let x0 = img.w, y0 = img.h, x1 = -1, y1 = -1;
+  for (let y = 0; y < img.h; y++) for (let x = 0; x < img.w; x++) {
+    if (!isClear(img, x, y)) { if (x < x0) x0 = x; if (y < y0) y0 = y; if (x > x1) x1 = x; if (y > y1) y1 = y; }
+  }
+  if (x1 < 0) return img;
+  const out = img.crop(x0, y0, x1 - x0 + 1, y1 - y0 + 1);
+  const px = img.pivot.x * img.w - x0, py = img.pivot.y * img.h - y0;
+  out.pivot = { x: px / out.w, y: py / out.h };
+  return out;
+}
+const CLEAR = new Img(1, 1).px[0];
+function isClear(img, x, y) { return img.px[y * img.w + x] === CLEAR; }
 /** a car / SUV at 45 degrees (turning) */
 export function carDiag(color, yaw) { return draw(carModel(color), 36, 36, 18, 24, yaw); }
 export function suvDiag(yaw) { return draw(suvModel(), 40, 40, 20, 27, yaw); }
@@ -244,4 +272,12 @@ export function vehiclesPreview() {
   const items = [car('blue', 0), car('red', Math.PI), car('white', Math.PI / 2), car('yellow', -Math.PI / 2), suv(0), suv(Math.PI / 2), streetcar(0), streetcar(Math.PI)];
   const frames = items.map((it) => { const f = new Img(116, 52); f.blit(it, Math.round((116 - it.w) / 2), 52 - it.h); return f; });
   return { frames, cols: 4 };
+}
+
+/** M3.2: the articulated streetcar's three sections at all 8 facings (rows: rear, mid, front) */
+export function streetcarSectionsPreview() {
+  const yaws = [0, Math.PI / 4, Math.PI / 2, (3 * Math.PI) / 4, Math.PI, (-3 * Math.PI) / 4, -Math.PI / 2, -Math.PI / 4];
+  const frames = [];
+  for (const part of ['r', 'm', 'f']) for (const y of yaws) { const f = streetcarSection(part, y), c = new Img(72, 72); c.blit(f, 36 - Math.round(f.pivot.x * f.w), 44 - Math.round(f.pivot.y * f.h)); frames.push(c); }
+  return { frames, cols: 8 };
 }

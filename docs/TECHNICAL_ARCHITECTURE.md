@@ -59,6 +59,13 @@ tools/        asset generators (never shipped): raster + SDF renderers, sprite m
   - `autoX` keeps the auto-scroll as a float (Phaser floors `scrollX`).
 - **Tools:** `tools/mapshots.mjs` renders full-scale district PNGs from the running game.
 
+## M3.2 additions
+- **Fullscreen** (`src/core/fullscreen.ts`): the Fullscreen API on the first tap of a touch device (a real DOM `pointerup`/`touchend`, which browsers require) plus a pause-menu toggle that acts on `pointerup`; a best-effort landscape lock. iPhone Safari has no page fullscreen, so `public/manifest.webmanifest` (`display: fullscreen`, landscape) and an apple-touch-icon make Add to Home Screen launch it bare.
+- **Articulated streetcars** (`Traffic.placeParts`): a streetcar with a planned turn is drawn as three section sprites (`scsec_r|m|f_<facing>`) laid along its route: straight, quarter arc, straight (`routeAt`). Each section picks the 8-way facing of its own stretch; the hidden one-piece sprite keeps doing the traffic logic. After the turn it swaps back.
+- **Exits around a corner:** an arriving exit is matched on the opposite side first, then on any side with the same street name and district (High Park's south edge -> the Waterfront's west end). Turned arrivals land mid-span.
+- **Lane Eater** (`src/action/LaneEater.ts`): chase keeps the machine's front a set gap inside the view (92 px alone, 14 px less per rider, at least 30); the boss is a state machine `backoff -> enter -> charge -> bounce -> hot -> leave -> enter...`, weak points mirrored with the facing; `Peloton` riders have a `wait | clip | done` state.
+- **High Park placement** (`tools/map/highpark.mjs`): park features are placed by an outward search for the nearest rect clear of roads, trails, ponds and other features (`place(u, v, w, h, lean)`); the paths decal is cut at the curbs so roads end square.
+
 ## Data formats
 - **Map JSON** (`gen/<district>.json`, one per district; generators in `tools/map/`, sharing `common.mjs`):
   - `ground[y][x]` tile indices

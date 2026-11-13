@@ -7,6 +7,8 @@ import { ActionScene } from './scenes/ActionScene';
 import { CutsceneScene } from './scenes/CutsceneScene';
 import { PauseScene } from './scenes/PauseScene';
 import { ctx } from './core/ctx';
+import { autoFullscreenOnFirstTap } from './core/fullscreen';
+import { wantsTouch } from './input/TouchControls';
 
 setGameW(viewWidthFor(window.innerWidth, window.innerHeight));
 
@@ -64,3 +66,6 @@ window.addEventListener('keydown', (e) => {
   clearTimeout(toastT); toastT = window.setTimeout(() => (toast.style.opacity = '0'), 1200);
 });
 ctx.applySettings();
+// phones: the first tap goes fullscreen (M3.2, Ivan); iPhone uses the home-screen manifest instead
+autoFullscreenOnFirstTap(wantsTouch());
+document.addEventListener('fullscreenchange', () => setTimeout(fit, 50));
