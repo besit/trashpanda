@@ -1,10 +1,11 @@
 # Online leaderboard: Firebase setup
 
-The game already has a leaderboard client. It's switched off until it knows which Firebase project to use. Without one, the game keeps a high-score table on each device (title screen > HIGH SCORES).
+**Status: live** since 2026-11-13, on the Firebase project `trashpanda-trow`. Without a configured project, the game keeps only a high-score table on each device (title screen > HIGH SCORES).
 
 - **Code:** [src/core/Leaderboard.ts](../src/core/Leaderboard.ts) talks to Firestore's REST API. There's no Firebase SDK, so the bundle stays small.
 - **Config:** [src/data/leaderboard.config.ts](../src/data/leaderboard.config.ts) holds the two values to fill in.
 - **When it writes:** after every mission won, the run's entry is created or updated. There's one entry per run: initials, score, difficulty, missions done.
+- **What never posts:** `?debug` sessions (they have cheat hooks) and automated browsers such as the Playwright tests (`navigator.webdriver`).
 - **Where it shows:** HIGH SCORES displays "WORLD TOP 10" beside this device's table once it's configured.
 
 ## What you need to do (about 10 minutes)

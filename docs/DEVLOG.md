@@ -517,3 +517,21 @@ Ivan's M3 notes ran to about forty items across the five districts, the missions
 - Unit tests: 16 (difficulty, score, v2 → v3 migration added). End-to-end: 22 (difficulty + initials, the uncapped-fps scroll, turning traffic, plaque scoring added).
 - 60 fps (p95 16.8 ms) in every changed scene at 1×, 4× and 6× CPU throttle. That includes the Waterfront after 40 s of traffic build-up (about 110 vehicles).
 - First load about 2.38 MB: 1,542 KB boot, 466 KB Queen West, 370 KB gzipped JS. That's against the 2.5 MB budget, so lazy map JSON is due in M4.
+
+## 2026-11-13: The online leaderboard goes live
+
+Ivan created the Firebase project (`trashpanda-trow`), published the rules from [LEADERBOARD.md](LEADERBOARD.md) and sent the web config. Only `projectId` and `apiKey` went into [src/data/leaderboard.config.ts](../src/data/leaderboard.config.ts). The rest of the config (authDomain, storageBucket, appId) isn't needed, because the game talks to Firestore's REST API without the SDK.
+
+**Checked against the live database before switching it on:**
+
+| Request | Expected | Got |
+|---|---|---|
+| top-10 query | allowed (empty) | 200, empty |
+| entry with lowercase initials | refused | 403 |
+| valid entry `TST`, score 1 | accepted, server timestamp | 200, `updated` stamped |
+| same entry again at once | refused (20 s rate limit) | 403 |
+| delete | refused | 403 |
+
+HIGH SCORES then showed "WORLD TOP 10 / 1. TST 000001 N" next to the device table. The test entry needs deleting by hand in the Firestore console, since the rules deny deletes from clients.
+
+**Caught before deploying:** the e2e suite wins missions, so it would have posted real scores to the live board. Posting is now skipped for `?debug` sessions (they have cheat hooks) and automated browsers (`navigator.webdriver`, which Playwright sets). Reading the board still works everywhere.

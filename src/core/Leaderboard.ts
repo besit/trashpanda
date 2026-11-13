@@ -1,6 +1,7 @@
 // Online leaderboard over Firestore's REST API (M3.1). No Firebase SDK: two fetch calls keep the bundle
 // small. Every call is best-effort: offline, unconfigured or rejected by the rules -> it quietly does
 // nothing and the game carries on with local high scores.
+import { DEBUG } from '../config';
 import { LEADERBOARD } from '../data/leaderboard.config';
 import type { GameState } from './GameState';
 import type { Difficulty } from './Score';
@@ -9,13 +10,18 @@ export interface OnlineEntry { name: string; score: number; difficulty: Difficul
 
 const base = () => `https://firestore.googleapis.com/v1/projects/${LEADERBOARD.projectId}/databases/(default)/documents`;
 export const leaderboardEnabled = () => !!(LEADERBOARD.projectId && LEADERBOARD.apiKey);
+/**
+ * Only real play posts scores: never a `?debug` session (it has cheat hooks like skipTo/improve) and never
+ * an automated browser (Playwright sets navigator.webdriver), so the e2e suite can't pollute the board.
+ */
+export const submitAllowed = () => leaderboardEnabled() && !DEBUG && !(typeof navigator !== 'undefined' && navigator.webdriver);
 
 /**
  * Write this run's entry (one document per run, id = runId). The server stamps `updated`, which the rules
  * use to rate-limit updates; the rules also only let a run's score go up.
  */
 export async function submitRun(s: GameState): Promise<boolean> {
-  if (!leaderboardEnabled() || s.score <= 0) return false;
+  if (!submitAllowed() || s.score <= 0) return false;
   const doc = `projects/${LEADERBOARD.projectId}/databases/(default)/documents/${LEADERBOARD.collection}/${s.runId}`;
   const body = {
     writes: [{
