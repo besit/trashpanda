@@ -21,7 +21,13 @@
    - **Website restrictions:** `https://besit.github.io/*`, plus `http://localhost:*` for testing.
    - **API restrictions:** Cloud Firestore API only.
 
-**The `apiKey` is not a secret.** A Firebase web key only says which project to talk to, and it ends up in the published JavaScript either way. What protects the data is the rules below plus the key restrictions in step 6.
+**The `apiKey` is not a secret.** A Firebase web key only says which project to talk to, and it ends up in the published JavaScript either way. **The rules below are the only thing protecting the data.**
+
+Tested on 2026-11-13, with step 6 applied:
+- **Firestore's REST API ignores the key entirely.** Requests with no key, a bogus key, or any `Referer` header all succeed, subject to the rules. So the website restriction doesn't limit Firestore, and `localhost` works without being listed.
+- **The API restriction does work.** The same key is refused (403) by other Google APIs, so nobody can spend it on anything but Firestore.
+
+That's why step 6 is still worth doing, but a `Referer` header is trivially faked anyway.
 
 ## Firestore rules
 
