@@ -1,4 +1,4 @@
-// The SUV Rat: Dog Fraud's through-traffic. Drives along the raccoon's lane, honking.
+// The SUV Rat: Dog Fjord's through-traffic. Drives along the raccoon's lane, honking.
 // Jump on the roof (stomp) or pump the bumper to make it give up and turn off ("RIGHT TURN ONLY!").
 import Phaser from 'phaser';
 import { sfx } from '../audio/sfx';

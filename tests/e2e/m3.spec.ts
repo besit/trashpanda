@@ -13,7 +13,7 @@ const PRE = {
 async function seed(page: Page, district: string) {
   await page.goto('./');
   await page.evaluate(([district, pre]) => {
-    localStorage.setItem('trashpanda.save.v1', JSON.stringify({ version: 2, upgrades: pre.upgrades, completedMissions: pre.missions, flags: { sawIntro: true, exploreHint: true }, ratsDefeated: 0, lanesAddedByDogFraud: 0, playTimeMs: 0, lives: 3, player: { scene: 'explore', district, x: -1, y: -1 } }));
+    localStorage.setItem('trashpanda.save.v1', JSON.stringify({ version: 2, upgrades: pre.upgrades, completedMissions: pre.missions, flags: { sawIntro: true, exploreHint: true }, ratsDefeated: 0, playTimeMs: 0, lives: 3, player: { scene: 'explore', district, x: -1, y: -1 } }));
   }, [district, PRE] as const);
 }
 

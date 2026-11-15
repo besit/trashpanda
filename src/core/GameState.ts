@@ -11,7 +11,6 @@ export interface GameState {
   completedMissions: string[];
   flags: Record<string, boolean>;
   ratsDefeated: number;
-  lanesAddedByDogFraud: number;
   playTimeMs: number;
   /** M2.1: lose all hearts in a mission = lose a life; extra lives are hidden on the maps */
   lives: number;
@@ -39,7 +38,6 @@ export function newGame(difficulty: Difficulty = 'normal', name = 'RAC'): GameSt
     completedMissions: [],
     flags: {},
     ratsDefeated: 0,
-    lanesAddedByDogFraud: 0,
     playTimeMs: 0,
     lives: START_LIVES,
     ridersRallied: 0,

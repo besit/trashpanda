@@ -18,8 +18,8 @@ It should look colourful and urban, never neon fantasy, and never generic modern
 | Toronto brick (red + buff) | Victorian main streets |
 | Lake blues | glass, lake, sky |
 | Park greens | trees, grass, protected lanes |
-| Pinks | Dog Fraud, dusk |
-| Purples | dusk skyline, Dog Fraud's campaign colour (rat caps) |
+| Pinks | Dog Fjord, dusk |
+| Purples | dusk skyline, Dog Fjord's campaign colour (rat caps) |
 | Yellows / oranges | signals, cones, hard hats, sunlight |
 | Teal | bike share, painted facades |
 
@@ -31,7 +31,7 @@ Every sprite uses only palette keys, so consistency is guaranteed by constructio
 - **Side view:** characters are about 36px tall (raccoon on bike, 48×36 frame) and rats about 27px. Side-view vehicles are rendered at 2.2× so they're in scale with the raccoon.
 
 ## Readability rules
-1. Silhouette first: the raccoon's tail and bike, Dog Fraud's pear head and horns, the rats' ears and tail.
+1. Silhouette first: the raccoon's tail and bike, Dog Fjord's pear head and horns, the rats' ears and tail.
 2. Faces need at least a 2px eye with a pupil.
 3. Nothing thinner than about 1.3 world units in SDF models (or it vanishes in sampling).
 4. Telegraph every enemy attack (windup pose plus a red "!").
@@ -39,7 +39,7 @@ Every sprite uses only palette keys, so consistency is guaranteed by constructio
 
 ## Characters
 - **Raccoon:** grey `G/h`, mask `k`, white brow and muzzle, ringed tail (alternating `h`/`g`). Red cruiser, wicker basket with pizza, yellow bell. Attack prop: a **yellow bike pump** with a black T-handle (v03). The lid didn't read; the first pump read as a gun. Rule: weapons must never look like firearms, so swing them, don't point them, and keep them bright.
-- **Dog Fraud:** see GAME_DESIGN. The shape language comes from Ivan's reference: a street-art paste-up of a real politician with horns and a moustache. Only the *satirical shapes and tone* were taken. Since v06 (Ivan's review) he has a flushed pink pear head, a **swept white coif**, folded dog ears, a big dog nose and muzzle with whisker spots, a **tan eye patch** (dog marking; a darker one read as a black eye), a smug squint and a tiny suit. **No moustache.** The character is a cartoon bulldog, and no facial features of the real person were traced or matched. The reference image lives in the gitignored `reference/` folder and isn't redistributed.
+- **Dog Fjord:** see GAME_DESIGN. The shape language comes from Ivan's reference: a street-art paste-up of a real politician with horns and a moustache. Only the *satirical shapes and tone* were taken. Since v06 (Ivan's review) he has a flushed pink pear head, a **swept white coif**, folded dog ears, a big dog nose and muzzle with whisker spots, a **tan eye patch** (dog marking; a darker one read as a black eye), a smug squint and a tiny suit. **No moustache.** The character is a cartoon bulldog, and no facial features of the real person were traced or matched. The reference image lives in the gitignored `reference/` folder and isn't redistributed.
 - **Rats:** brown fur `w/x/X/j`, pink ears, nose, hands and tail, big white eyes with angry brows, buck teeth. Variants are distinguished by accessory colour: purple cap, yellow hard hat with orange vest, white cap with purple vest and red STOP paddle.
 
 ## Toronto artifacts (Ivan's direction: every district unmistakable)
@@ -119,7 +119,7 @@ Every version is kept in `art/history/<asset>/vNN/` (preview, 1× sheet, frozen 
 ## References received
 | File (gitignored) | Used for | How |
 |---|---|---|
-| `reference/DogFraud.jpg` | Dog Fraud | shape language and tone only (see above) |
+| `reference/DogFjord.jpg` | Dog Fjord | shape language and tone only (see above) |
 | `reference/trinity-bellwoods_gates.png` | Trinity Bellwoods gates (v02) | proportions + details: smooth white stone, domed inner piers, gabled outer piers, inscribed lintels, arched carriage gate |
 | `reference/TrinityBelwwods.jpg` | park layout | positions of paths, diamonds, courts, picnic areas, squirrel (squeezed into our wider park) |
 | `reference/CN-tower.jpg` | CN Tower profile | pod bands, SkyPod, antenna proportions |

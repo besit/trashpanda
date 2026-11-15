@@ -1,4 +1,4 @@
-// Dog Fraud's rat minions. One SDF base model + per-variant accessories. Side view (facing right).
+// Dog Fjord's rat minions. One SDF base model + per-variant accessories. Side view (facing right).
 import { sd, scene, render, RAMP, orthoCam, smin, yawInv } from '../lib/sdf.mjs';
 
 export const FW = 32, FH = 32;
@@ -70,7 +70,7 @@ function ratModel(variant, pose) {
   }
 
   if (variant === 'basic') {
-    // purple Dog Fraud campaign cap
+    // purple Dog Fjord campaign cap
     objs.push({ d: (p) => Math.max(sd.sphere([hc[0] - 0.2, 0, hc[2] + 0.9], 2.9)(p), -(p[2] - (hc[2] + 1.4))), m: M.purple });
     objs.push({ d: sd.box([hc[0] + 2.6, 0, hc[2] + 1.5], [1.6, 1.8, 0.25]), m: M.purple });
   } else if (variant === 'construction') {
@@ -82,7 +82,7 @@ function ratModel(variant, pose) {
     objs.push({ d: sd.box(P(0, 8.6), [3.95, 3.55, 0.45]), m: M.stripe });
     if (attack !== 1 && attack !== 2) objs.push({ d: sd.cone([armA[0] + 1.2, 2.9, armA[2] - 2.8], 1.8, 4.5), m: M.cone });
   } else if (variant === 'bureaucrat') {
-    // Dog Fraud's permit office: grey suit, red tie, round glasses, a comb-over, rubber stamp in hand
+    // Dog Fjord's permit office: grey suit, red tie, round glasses, a comb-over, rubber stamp in hand
     objs.push({ d: (p) => Math.max(smin(sd.ellipsoid(P(0, 8.6), [3.9, 3.6, 4.0])(p), sd.ellipsoid(P(0.6, 12.5), [2.9, 2.8, 2.6])(p), 1.6), -sd.ellipsoid(P(2.9, 11.5), [1.2, 1.5, 2.6])(p)), m: M.suit });
     objs.push({ d: sd.box(P(2.5, 10.4), [0.5, 0.5, 2.2]), m: M.red });
     objs.push({ d: sd.ellipsoid(P(2.2, 12.6), [0.8, 1.0, 0.5]), m: M.white });

@@ -7,7 +7,7 @@ Living document. The master prompt is the source of intent; this records what we
 ## Pillars
 1. **Every mission visibly improves the city.** If an improvement can be shown, it is shown, in both views.
 2. **Feels great on a bike.** Momentum, lean, dash and hop. Traversal is fun on its own.
-3. **Satire with a sincere heart.** Dog Fraud is absurd; the before/after moments are earnest and mostly wordless.
+3. **Satire with a sincere heart.** Dog Fjord is absurd; the before/after moments are earnest and mostly wordless.
 4. **Evidence, not opinion.** Civic claims trace back to [URBAN_RESEARCH.md](URBAN_RESEARCH.md).
 5. **Small, polished, fast.** 45–60 minutes total, 60 fps on phones, no scope creep.
 
@@ -118,7 +118,7 @@ The cost is a 0.3 s wipe at the seam. The design target of "one city" is kept: s
 
 ## Characters
 - **The raccoon:** grey, bandit mask, big ringed tail. Rides a red steel cruiser with swept bars, a bell, and a wicker basket holding a pizza slice. Attack: a **bike pump** swung like a bat (3-hit combo). It replaced the trash-can lid at the M0 review because the lid didn't read at this scale.
-- **Dog Fraud:** a cartoon bulldog politician and fictional parody, not a likeness of anyone.
+- **Dog Fjord:** a cartoon bulldog politician and fictional parody, not a likeness of anyone.
   - Huge flushed pink pear head, swept white hair, folded dog ears, big dog nose and muzzle, a tan eye patch, smug squint, tiny dark suit and dotted tie. The moustache was removed at the M0 review.
   - Laugh: "FRA-HA-HA-HA-HA!" Catchphrase: "**ANOTHER CAR LANE.**" ("car" added at the M0 review so the joke can't be misread as pro-bike-lane).
   - Expressions so far: grin, laugh, shock.
@@ -155,7 +155,7 @@ The cost is a 0.3 s wipe at the seam. The design target of "one city" is kept: s
 | side | Pedestrian Takeover | Queen West (Kensington-style) | Pedestrian street | crowd-gathering |
 | side | Intersection Repair | High Park | Protected intersection | puzzle |
 | side | Public Consultation | citywide | support | signature hunt (exploration) |
-| side | Protest Delivery | Downtown | — | courier run avoiding Dog Fraud's PR rats (changed from "avoid police") |
+| side | Protest Delivery | Downtown | — | courier run avoiding Dog Fjord's PR rats (changed from "avoid police") |
 | side | Tree Corridor | East End | Green corridor | planting run |
 | bonus | GO Electrification, Rail Deck Park | | | if scope allows |
 
@@ -188,7 +188,7 @@ The payoff is design that slows cars without needing a camera.
 
 ### Mission 5: The Lane Eater (Bloor West)
 The real 2026 removals happen on Bloor (URBAN_RESEARCH §1), so this mission is about *defending* lanes rather than adding them. It must play differently from the Bike Lane War:
-- **The threat:** Dog Fraud's "Lane Eater", a huge rat-driven asphalt grinder, crawls along Bloor chewing up the protected lane and spitting out fresh car-lane paint ("ANOTHER CAR LANE" in its exhaust).
+- **The threat:** Dog Fjord's "Lane Eater", a huge rat-driven asphalt grinder, crawls along Bloor chewing up the protected lane and spitting out fresh car-lane paint ("ANOTHER CAR LANE" in its exhaust).
 - **The twist (auto-scroll + crowd):** the screen scrolls on its own, with the machine behind you, always on screen at the left edge (M3.2). Riding ahead, you **ring your bell at cyclists, who join a growing peloton** behind you (a "critical mass"). M3.2 (Ivan: "just pass them while ringing"): a rung rider **clips in**, pedalling up from a standstill, and joins only if you stay within 50 px of them until their bar fills. Each rider in the peloton blocks one hit and holds the machine back. Meanwhile the conveyor **lobs hot asphalt** ahead of you (a red shadow marks the landing spot; the puddles burn), more often further down the street.
 - **The boss (M3.2, Ivan's pattern):** it **charges across the whole screen**, and only the grinder drum hurts, so jump it. It slams into the edge of the screen, rolls back and **overheats**. Only then can its three weak points be pumped: the conveyor, the foreman's cab and the grinder. Then it drives off that side and comes back from it, charging the other way. The foreman calls a rat each stall; the conveyor lobs gobs while it lines up off screen. Below half health it charges faster and cools quicker.
 - **The ending:** the peloton fills Bloor and the machine stalls. The payoff is public pressure, not a court win: the after-vignette shows a protest ride with signs.
@@ -205,14 +205,14 @@ Each mission has 2–4 beats: a ride section (curbs, cones, parked cars to hop),
 
 ## Cutscenes
 - **Tracking shots (Ivan, M1.1 → M2):** side vignettes pan the whole street as one plane (facades, sidewalk, parked cars, planters, standing actors), so riders and streetcars hold their place on screen and visibly move. A `pan` step eases the speed, for example to stop before the rats walk in.
-- Every main mission has a before/after pair. Dog Fraud appears in the world (at his podium) for the first time in *King of the Street*.
+- Every main mission has a before/after pair. Dog Fjord appears in the world (at his podium) for the first time in *King of the Street*.
 - Data-driven timelines (`src/data/cutscenes.ts`): captions with typewriter text, darkening, villain close-up rising into frame, dialogue box with a talking bob, the ROAD ROAD ROAD gag, title cards with blinds wipes, and shake.
 - Before/after: the same composition before and after a mission. In M0 this is the map-level transformation sweep; per-mission vignette scenes (parent and child at a crossing) come in M1.
 
 ## Audio
 Runtime chip synth (2 pulse channels, triangle, noise) with three original songs:
 - *Queen St. Cruise* (exploration)
-- *Historic Investment* (Dog Fraud's minor-key villain march)
+- *Historic Investment* (Dog Fjord's minor-key villain march)
 - *Rat Rush* (action)
 
 Plus an improvement sting and about 25 synthesized SFX: bike bell, streetcar bell, chain ticks, squeaks, FRA-HA-HA laugh, construction rattle, and others.

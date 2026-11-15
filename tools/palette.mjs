@@ -20,7 +20,7 @@ export const PALETTE = {
   e: '#173f2b', E: '#2a6e38', l: '#55a144', L: '#9bd35a',
   // blues (lake, glass, sky)
   u: '#162750', U: '#25529b', c: '#3a88cf', C: '#7cc6f2', i: '#cdefff',
-  // pinks (Dog Fraud, sunset)
+  // pinks (Dog Fjord, sunset)
   p: '#93374a', P: '#d9646f', m: '#ffa199', M: '#ffd3c4',
   // browns (wood, wicker, fur accents)
   w: '#3f2719', x: '#74482a', X: '#b17b47', j: '#d9a86c',

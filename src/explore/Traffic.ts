@@ -44,7 +44,7 @@ export class Traffic {
   private byId = new Map<string, Lane>();
   /** the Gardiner's jam cycle (s): flowing, then a jam builds at a choke point and clears again */
   private jamT = 0;
-  get jammed() { return this.jamT % 34 > 22; }
+  get jammed() { return this.jamT % 26 > 11; } // M3.3 (Ivan: "congestion doesn't happen often enough"): 15 s of jam in every 26
 
   constructor(private scene: Phaser.Scene, lanes: Lane[], private intersections: Intersection[], private mapW: number, private mapH: number, upgrades: string[]) {
     this.manifest = scene.registry.get('manifest') as Manifest;

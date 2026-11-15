@@ -34,7 +34,7 @@ export const SONG_MAIN: Song = {
 };
 
 const DF = ['Cm', 'Cm', 'Ab', 'Gd'];
-export const SONG_DOGFRAUD: Song = {
+export const SONG_DOGFJORD: Song = {
   name: 'historic-investment', bpm: 108,
   tracks: [
     { ch: 'p1', duty: 0.125, vol: 0.13, vib: 0.012, bars: [

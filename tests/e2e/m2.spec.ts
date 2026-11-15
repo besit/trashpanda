@@ -12,7 +12,7 @@ const ev = <R>(page: Page, fn: () => R) => page.evaluate(fn);
 async function seed(page: Page, district = 'queenwest') {
   await page.goto('./');
   await page.evaluate((d) => {
-    const s = { version: 2, upgrades: ['queen_protected_lanes'], completedMissions: ['bike_lane_war'], flags: { sawIntro: true, exploreHint: true, visited_queenwest: true }, ratsDefeated: 7, lanesAddedByDogFraud: 0, playTimeMs: 0, player: { scene: 'explore', district: d, x: -1, y: -1 } };
+    const s = { version: 2, upgrades: ['queen_protected_lanes'], completedMissions: ['bike_lane_war'], flags: { sawIntro: true, exploreHint: true, visited_queenwest: true }, ratsDefeated: 7, playTimeMs: 0, player: { scene: 'explore', district: d, x: -1, y: -1 } };
     localStorage.setItem('trashpanda.save.v1', JSON.stringify(s));
   }, district);
 }

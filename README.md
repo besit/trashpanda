@@ -4,6 +4,10 @@ A raccoon on a bicycle making Toronto a better place to live. It's a browser gam
 
 **Play:** https://besit.github.io/trashpanda/ (desktop keyboard, gamepad, or phone in landscape)
 
+## Satire, fiction and AI
+
+*Trash Panda: Right of Way* is a work of satire and parody. **Dog Fjord** and his rats are fictional cartoon characters; nothing they say or do is a statement of fact about any real person. The game's facts about Toronto's streets and policies are sourced in [docs/URBAN_RESEARCH.md](docs/URBAN_RESEARCH.md), and anything invented is labelled as fiction in the game. The game was made with the help of AI (Claude, by Anthropic); AI can make mistakes, so if you spot one, please open an issue.
+
 ## Controls
 | Action | Keyboard | Arrow-key layout | Gamepad | Touch |
 |---|---|---|---|---|

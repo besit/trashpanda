@@ -6,12 +6,13 @@ import { InputManager } from '../input/InputManager';
 import { CUTSCENES, type Step } from '../data/cutscenes';
 import { text, iris, shake, blinds, fitText } from '../ui/fx';
 import { music } from '../audio/Sequencer';
-import { SONG_MAIN, SONG_DOGFRAUD, SONG_ACTION, SONG_IMPROVE } from '../audio/songs';
+import { SONG_MAIN, SONG_DOGFJORD, SONG_ACTION, SONG_IMPROVE } from '../audio/songs';
 import { sfx } from '../audio/sfx';
 import { synth } from '../audio/Synth';
 import { ctx } from '../core/ctx';
 import type { Manifest } from './BootScene';
 import { ScrollLayer, STREET_Y, FRONT_Y, BACKROW_Y, SKYLINE_Y } from '../ui/sideLayout';
+import { VILLAIN } from '../data/villain';
 
 const STAGE_W = 384;
 const GROUND_PARKED = STREET_Y + 22; // parked cars along the curb in side vignettes
@@ -149,7 +150,10 @@ export class CutsceneScene extends Phaser.Scene {
       }
       case 'caption': {
         const font = s.font ?? 'font_outline';
-        const t = text(this, GAME_W / 2, s.y ?? 70 + this.captions.length * 16, s.text, font).setDepth(200);
+        const y = s.y ?? 70 + this.captions.length * 16;
+        // M3.3 (Ivan: text on text): a caption replaces any caption still sitting on its line
+        this.captions = this.captions.filter((c) => { const cy = (c as Phaser.GameObjects.BitmapText).y; if (Math.abs(cy - y) < 14) { c.destroy(); return false; } return true; });
+        const t = text(this, GAME_W / 2, y, s.text, font).setDepth(200);
         fitText(t, GAME_W - 16); // sized from the full line, then typed out (M2.1: big captions ran off screen)
         t.setText('');
         this.captions.push(t);
@@ -165,7 +169,7 @@ export class CutsceneScene extends Phaser.Scene {
         await this.wait(s.ms ?? 800);
         break;
       case 'music':
-        if (s.song === 'none') music.stop(); else music.play({ main: SONG_MAIN, dogfraud: SONG_DOGFRAUD, action: SONG_ACTION, improve: SONG_IMPROVE }[s.song]);
+        if (s.song === 'none') music.stop(); else music.play({ main: SONG_MAIN, dogfjord: SONG_DOGFJORD, action: SONG_ACTION, improve: SONG_IMPROVE }[s.song]);
         break;
       case 'sfx':
         sfx[s.name]();
@@ -200,13 +204,13 @@ export class CutsceneScene extends Phaser.Scene {
       }
       case 'say': {
         if (s.expr) this.portrait?.setFrame(`df_${s.expr}`);
-        const villain = s.who === 'DOG FRAUD' || s.who === 'RAT';
+        const villain = s.who === VILLAIN || s.who === 'RAT';
         const by = this.boxTop && !this.portrait ? 8 : GAME_H - 52;
         const box = this.add.graphics().setDepth(300);
         box.fillStyle(0x16121f, 0.92).fillRect(8, by, GAME_W - 16, 44).lineStyle(1, villain ? 0xd9646f : 0x9bd35a).strokeRect(8, by, GAME_W - 16, 44);
         const name = text(this, 16, by + 4, s.who, 'font', 0).setDepth(301).setTint(villain ? 0xff6347 : 0x9bd35a);
         const t = text(this, 16, by + 16, '', 'font_outline', 0).setDepth(301).setMaxWidth(GAME_W - 34);
-        const bob = this.portrait && s.who === 'DOG FRAUD' ? this.tweens.add({ targets: this.portrait, scaleY: 2.04, duration: 90, yoyo: true, repeat: -1 }) : null;
+        const bob = this.portrait && s.who === VILLAIN ? this.tweens.add({ targets: this.portrait, scaleY: 2.04, duration: 90, yoyo: true, repeat: -1 }) : null;
         await this.typewrite(t, s.text, true);
         bob?.stop(); this.portrait?.setScale(2);
         const arrow = text(this, GAME_W - 18, by + 36, '>', 'font_outline').setDepth(301);

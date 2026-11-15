@@ -12,7 +12,7 @@
 //   slips of moored yachts between them (Ivan's M3.1 note + aerial reference): HTO Park (yellow umbrellas),
 //   the Power Plant gallery, a quay of trees, Harbour Square Park West with the Sundial Folly at the foot
 //   of University, the Jack Layton Ferry Terminal at the foot of Bay with a ferry, Sugar Beach
-// - out west at the foot of Strachan: Ontario Place, the pods and the Cinesphere, and Dog Fraud's fictional
+// - out west at the foot of Strachan: Ontario Place, the pods and the Cinesphere, and Dog Fjord's fictional
 //   MEGA SPA on the island (mission 8 opens it up and the spa goes)
 // Exits (matched by street name): north on Strachan to Queen West (Ossington, Strachan and Bellwoods all
 // come down to it), Spadina / University / Bay to Downtown, west along the trail to High Park.

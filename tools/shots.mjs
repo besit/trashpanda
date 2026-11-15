@@ -35,7 +35,7 @@ if (want('title')) {
 if (want('intro')) {
   await p.goto(base + '?debug&scene=Cutscene');
   await sleep(4200); await shot(p, '03_intro_captions');
-  await sleep(4200); await shot(p, '04_intro_dogfraud');
+  await sleep(4200); await shot(p, '04_intro_dogfjord');
   for (let i = 0; i < 2; i++) { await p.keyboard.press('Enter'); await sleep(700); await p.keyboard.press('Enter'); await sleep(500); }
   await sleep(1800); await shot(p, '05_intro_dvp');
   for (let i = 0; i < 2; i++) { await p.keyboard.press('Enter'); await sleep(700); await p.keyboard.press('Enter'); await sleep(500); }

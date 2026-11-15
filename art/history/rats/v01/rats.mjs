@@ -1,4 +1,4 @@
-// Dog Fraud's rat minions. One SDF base model + per-variant accessories. Side view (facing right).
+// Dog Fjord's rat minions. One SDF base model + per-variant accessories. Side view (facing right).
 import { sd, scene, render, RAMP, orthoCam, smin, yawInv } from '../lib/sdf.mjs';
 
 export const FW = 32, FH = 32;
@@ -66,7 +66,7 @@ function ratModel(variant, pose) {
   }
 
   if (variant === 'basic') {
-    // purple Dog Fraud campaign cap
+    // purple Dog Fjord campaign cap
     objs.push({ d: (p) => Math.max(sd.sphere([hc[0] - 0.2, 0, hc[2] + 0.9], 2.9)(p), -(p[2] - (hc[2] + 1.4))), m: M.purple });
     objs.push({ d: sd.box([hc[0] + 2.6, 0, hc[2] + 1.5], [1.6, 1.8, 0.25]), m: M.purple });
   } else if (variant === 'construction') {

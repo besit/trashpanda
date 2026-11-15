@@ -1,4 +1,4 @@
-// Dog Fraud's rats (side view). Small readable state machines with clear telegraphs.
+// Dog Fjord's rats (side view). Small readable state machines with clear telegraphs.
 import Phaser from 'phaser';
 import { sfx } from '../audio/sfx';
 import { puff, floatText } from '../ui/fx';

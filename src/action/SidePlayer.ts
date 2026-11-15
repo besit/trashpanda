@@ -70,7 +70,9 @@ export class SidePlayer {
     return true;
   }
 
-  bounce() { this.body.setVelocityY(-260); this.airDashUsed = false; }
+  /** M3.3: a stomp bounce keeps its height for a moment (the variable-jump cut used to shrink it to 5 px) */
+  private bounceGrace = 0;
+  bounce() { this.body.setVelocityY(-260); this.airDashUsed = false; this.bounceGrace = 0.14; }
 
   update(input: InputManager, dtMs: number) {
     const dt = dtMs / 1000, b = this.body, v = b.velocity;
@@ -79,6 +81,7 @@ export class SidePlayer {
     this.invulnT = Math.max(0, this.invulnT - dt);
     this.hurtT = Math.max(0, this.hurtT - dt);
     this.comboT = Math.max(0, this.comboT - dt);
+    this.bounceGrace = Math.max(0, this.bounceGrace - dt);
     if (ground) { this.coyoteT = SIDE.coyote; this.airDashUsed = false; } else this.coyoteT -= dt;
     if (ground && !this.wasGround) { sfx.land(); puff(this.scene, this.sprite.x, this.sprite.y, 0xc9c5d1, 5, 12, 101); }
     this.wasGround = ground;
@@ -96,7 +99,7 @@ export class SidePlayer {
     // jump (buffered + coyote)
     if (ctl && input.justPressed('jump')) this.bufferT = SIDE.buffer; else this.bufferT -= dt;
     if (this.bufferT > 0 && this.coyoteT > 0) { v.y = -SIDE.jumpVel; this.bufferT = 0; this.coyoteT = 0; sfx.jump(); puff(this.scene, this.sprite.x, this.sprite.y, 0xc9c5d1, 4, 10, 101); }
-    if (!input.isDown('jump') && v.y < 0) v.y *= Math.pow(SIDE.jumpCut, dt * 20); // variable height
+    if (!input.isDown('jump') && v.y < 0 && this.bounceGrace <= 0) v.y *= Math.pow(SIDE.jumpCut, dt * 20); // variable height
 
     // dash (one air dash)
     if (ctl && input.justPressed('dash') && this.dashCd <= 0 && (ground || !this.airDashUsed)) {
@@ -142,7 +145,9 @@ export class SidePlayer {
     else if (!ground) anim = 'rs_jump';
     else if (Math.abs(v.x) > 10) anim = this.boosting ? 'rs_boost' : 'rs_ride';
     if (anim) {
-      if (s.anims.currentAnim?.key !== anim) s.play(anim, true);
+      // M3.3 (Ivan: 'the sprite gets stuck on the pump frame'): after a swing anims.stop() leaves currentAnim
+      // set, so the idle never restarted when it was already the current key. Restart whenever nothing plays.
+      if (s.anims.currentAnim?.key !== anim || !s.anims.isPlaying) s.play(anim, true);
       if (anim === 'rs_ride') s.anims.timeScale = Phaser.Math.Clamp(Math.abs(v.x) / 90, 0.5, 2);
     } else {
       s.anims.stop();

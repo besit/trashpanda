@@ -10,7 +10,7 @@ const save = (page: Page) => page.evaluate(() => JSON.parse(localStorage.getItem
 async function seed(page: Page, lives: number) {
   await page.goto('./');
   await page.evaluate((lives) => {
-    localStorage.setItem('trashpanda.save.v1', JSON.stringify({ version: 2, upgrades: ['queen_protected_lanes'], completedMissions: ['bike_lane_war'], flags: { sawIntro: true, exploreHint: true }, ratsDefeated: 0, lanesAddedByDogFraud: 0, playTimeMs: 0, lives, player: { scene: 'explore', district: 'downtown', x: -1, y: -1 } }));
+    localStorage.setItem('trashpanda.save.v1', JSON.stringify({ version: 2, upgrades: ['queen_protected_lanes'], completedMissions: ['bike_lane_war'], flags: { sawIntro: true, exploreHint: true }, ratsDefeated: 0, playTimeMs: 0, lives, player: { scene: 'explore', district: 'downtown', x: -1, y: -1 } }));
   }, lives);
 }
 const knockOut = (page: Page) => page.evaluate(() => { const p = (window as unknown as W).__TP!.player; p.hp = 0; p.dead = true; });

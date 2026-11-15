@@ -1,5 +1,5 @@
 // Waterfront art (M3): the CN Tower base + the domed stadium for the map, the Cinesphere + pods on their
-// islands, Sugar Beach's pink umbrellas, sailboats, the elevated Gardiner deck, and Dog Fraud's fictional
+// islands, Sugar Beach's pink umbrellas, sailboats, the elevated Gardiner deck, and Dog Fjord's fictional
 // MEGA SPA (fences, its building, its parking garage) for mission 8. Plus the side-view lake strip.
 import { Img } from '../lib/raster.mjs';
 import { rng } from '../lib/rng.mjs';

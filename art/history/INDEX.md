@@ -82,81 +82,81 @@ v01: cyclists (bike share, parent with kid seat...), 4 directions.
 
 ![cyclists v01](cyclists/v01/preview.png)
 
-## dogfraud
+## dogfjord
 
-### dogfraud v06
+### dogfjord v06
 
 2026-11-10
 
 v06 per Ivan's M0 review: moustache removed, swept white hair, more dog (longer muzzle, bigger nose with nostrils, whisker spots, flews, folded dog ears, tan eye patch).
 
-![dogfraud v06](dogfraud/v06/preview.png)
+![dogfjord v06](dogfjord/v06/preview.png)
 
-### dogfraud v05
+### dogfjord v05
 
 2026-11-09
 
 Laugh: real open mouth (teeth, tongue) for FRA-HA-HA.
 
-![dogfraud v05](dogfraud/v05/preview.png)
+![dogfjord v05](dogfjord/v05/preview.png)
 
-### dogfraud v04
+### dogfjord v04
 
 2026-11-09
 
 Nose + moustache brought forward of muzzle; ears moved out/forward.
 
-![dogfraud v04](dogfraud/v04/preview.png)
+![dogfjord v04](dogfjord/v04/preview.png)
 
-### dogfraud v03
+### dogfjord v03
 
 2026-11-09
 
 More dog: protruding muzzle w/ split lip, droopy jowls over collar, big pointed horn-ears, smug arched brows, smaller body.
 
-![dogfraud v03](dogfraud/v03/preview.png)
+![dogfjord v03](dogfjord/v03/preview.png)
 
-### dogfraud v02
+### dogfjord v02
 
 2026-11-09
 
 Fix framing (origin anchored at bottom).
 
-![dogfraud v02](dogfraud/v02/preview.png)
+![dogfjord v02](dogfjord/v02/preview.png)
 
-### dogfraud v01
+### dogfjord v01
 
 2026-11-09
 
 First pass portrait (grin / laugh / shock). SDF: pear head (skull+jowls smooth-union), dog nose, handlebar moustache, horn-like ear tufts, painted face features, tiny suit + dotted tie.
 
-![dogfraud v01](dogfraud/v01/preview.png)
+![dogfjord v01](dogfjord/v01/preview.png)
 
-## dogfraud_inworld
+## dogfjord_inworld
 
-### dogfraud_inworld v03
+### dogfjord_inworld v03
 
 2026-11-12
 
 M3.1 (Ivan): arms and torso separated by tone (darker sleeves, light sleeve edge, seam) instead of one diagonal shadow.
 
-![dogfraud_inworld v03](dogfraud_inworld/v03/preview.png)
+![dogfjord_inworld v03](dogfjord_inworld/v03/preview.png)
 
-### dogfraud_inworld v02
+### dogfjord_inworld v02
 
 2026-11-12
 
 M2.1 (Ivan: the upper torso looked weird): the head render is clipped at the jowls, and a proper suit is drawn: shoulders as wide as the jowls, lapels, shirt V, dotted tie, arms + paws; podium gets a microphone.
 
-![dogfraud_inworld v02](dogfraud_inworld/v02/preview.png)
+![dogfjord_inworld v02](dogfjord_inworld/v02/preview.png)
 
-### dogfraud_inworld v01
+### dogfjord_inworld v01
 
 2026-11-10
 
-M2: Dog Fraud in the world (side vignettes). The portrait's SDF head re-rendered at 0.44 scale on a tiny suit; the first pass doubled the shirt + tie (the head render already includes them). Podium with the DF crest.
+M2: Dog Fjord in the world (side vignettes). The portrait's SDF head re-rendered at 0.44 scale on a tiny suit; the first pass doubled the shirt + tie (the head render already includes them). Podium with the DF crest.
 
-![dogfraud_inworld v01](dogfraud_inworld/v01/preview.png)
+![dogfjord_inworld v01](dogfjord_inworld/v01/preview.png)
 
 ## downtown
 

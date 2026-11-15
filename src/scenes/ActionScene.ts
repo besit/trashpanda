@@ -38,7 +38,7 @@ export class ActionScene extends Phaser.Scene {
   private rats: Rat[] = [];
   private cars: SuvRat[] = [];
   private boss?: Boss;
-  private dogFraud?: Phaser.GameObjects.Image;
+  private dogFjord?: Phaser.GameObjects.Image;
   private peloton?: Peloton;
   private depave?: DepaveSpots;
   private lobbyTip = false;
@@ -75,8 +75,15 @@ export class ActionScene extends Phaser.Scene {
 
   constructor() { super('Action'); }
 
-  create(data: { mission?: string }) {
+  /** started from the debug SELECT MISSION list: the end of the mission returns to a replay menu (M3.3) */
+  private debugRun = false;
+
+  /** M3.3 (Ivan): a finished mission can be replayed from its marker, but a replay earns NO points */
+  private replay = false;
+
+  create(data: { mission?: string; debug?: boolean; replay?: boolean }) {
     this.mission = MISSIONS[data?.mission ?? 'bike_lane_war'] ?? MISSIONS.bike_lane_war;
+    this.debugRun = !!data?.debug; this.replay = !!data?.replay;
     this.rats = []; this.cars = []; this.boss = undefined; this.escort = undefined; this.chase = undefined; this.build = undefined;
     this.waveIdx = 0; this.lock = null; this.finished = false; this.killed = 0; this.layers = []; this.usedHits.clear();
     this.bossDone = false; this.buildDone = false; this.chaseDone = false;
@@ -165,7 +172,7 @@ export class ActionScene extends Phaser.Scene {
   }
 
   private queenDecor() {
-    // parked cars to hop on + Dog Fraud's "ANOTHER CAR LANE" cones (the ride beat)
+    // parked cars to hop on + Dog Fjord's "ANOTHER CAR LANE" cones (the ride beat)
     for (const [x, key] of [[480, 'carside_red'], [930, 'suvside']] as const) {
       const img = this.add.image(x, this.groundY + 2, 'world', key).setOrigin(0.5, 1).setDepth(50);
       const z = this.add.zone(x, this.groundY - img.height * 0.45, img.width - 10, 6);
@@ -177,14 +184,37 @@ export class ActionScene extends Phaser.Scene {
     for (const x of [200, 640, 1080]) for (let i = 0; i < 3; i++) this.add.image(x + i * 14, this.groundY + 1, 'world', 'cone').setOrigin(0.5, 1).setDepth(40);
   }
 
-  /** planes coming in to Billy Bishop over the islands: a turboprop descending west, a Cessna crossing east */
+  /**
+   * Planes at Billy Bishop over the islands. M3.3 (Ivan: "airplanes should not fall into water"): every plane
+   * crosses the whole screen along the approach line (top-left to bottom-right): the turboprop LANDS left to
+   * right, coming down onto the island; the Cessna TAKES OFF right to left, climbing. Nothing dips into the lake.
+   */
   private planes() {
-    const tp = this.add.sprite(GAME_W + 60, 26, 'world', 'plane_tp_0').setScrollFactor(0).setDepth(1).play('plane_tp');
-    const loopTp = () => { tp.setPosition(GAME_W + 60, 22); this.tweens.add({ targets: tp, x: GAME_W * 0.38, y: 62, duration: 14000, ease: 'Linear', onComplete: () => { tp.setVisible(false); this.time.delayedCall(6000, () => { tp.setVisible(true); loopTp(); }); } }); };
-    loopTp();
-    const cs = this.add.sprite(-40, 16, 'world', 'plane_cs_0').setScrollFactor(0).setDepth(1).play('plane_cs');
-    const loopCs = () => { cs.setPosition(-40, 14 + Math.random() * 10); this.tweens.add({ targets: cs, x: GAME_W + 40, y: cs.y + 6, duration: 16000, delay: 4000, ease: 'Linear', onComplete: loopCs }); };
-    loopCs();
+    const fly = (s: Phaser.GameObjects.Sprite, x0: number, y0: number, x1: number, y1: number, ms: number, then: () => void) => {
+      s.setPosition(x0, y0).setVisible(true);
+      this.tweens.add({ targets: s, x: x1, y: y1, duration: ms, ease: 'Linear', onComplete: () => { s.setVisible(false); then(); } });
+    };
+    const tp = this.add.sprite(0, 0, 'world', 'plane_tp_0').setScrollFactor(0).setDepth(1).setFlipX(true).setVisible(false).play('plane_tp');
+    const cs = this.add.sprite(0, 0, 'world', 'plane_cs_0').setScrollFactor(0).setDepth(1).setFlipX(true).setVisible(false).play('plane_cs');
+    const land = () => fly(tp, -70, 4, GAME_W + 70, 48, 15000, () => this.time.delayedCall(5000, land));
+    const takeOff = () => fly(cs, GAME_W + 60, 46, -60, 2, 13000, () => this.time.delayedCall(7000, takeOff));
+    land();
+    this.time.delayedCall(6500, takeOff);
+  }
+
+  /**
+   * M3.3 (Ivan: "the jump attack happens simply over the car... it dies in one jump"): a stomp counts only
+   * when the raccoon LANDS on the roof: falling, feet within a short band of the roof top, over its width,
+   * and not again on the same target for a moment (the bounce used to score every 150 ms while hovering).
+   */
+  private stompAt = new Map<object, number>();
+  private landingOn(pRect: Phaser.Geom.Rectangle, roofY: number, x0: number, x1: number, target: object) {
+    if (this.player.body.velocity.y <= 40) return false;
+    if (pRect.bottom > roofY + 10 || pRect.bottom < roofY - 16) return false;
+    if (pRect.right <= x0 || pRect.x >= x1) return false;
+    if (this.time.now - (this.stompAt.get(target) ?? -1e9) < 380) return false;
+    this.stompAt.set(target, this.time.now);
+    return true;
   }
 
   /** a prop you can stand on (one-way from below), its top at `top` */
@@ -208,9 +238,12 @@ export class ActionScene extends Phaser.Scene {
     const t2 = fitText(text(this, GAME_W / 2, 48 + h1 / 2 + 8, a.intro, 'font_outline').setOrigin(0.5, 0).setScrollFactor(0).setDepth(1000), GAME_W - 16, true);
     const hint = a.hint ? (wantsTouch() ? a.hint[1] : a.hint[0]) : wantsTouch() ? 'RED: PUMP   BLUE: DASH   GREEN: JUMP' : 'E: PUMP (3-HIT COMBO)   Q: DASH   SPACE: JUMP';
     const t3 = fitText(text(this, GAME_W / 2, t2.y + t2.height + 6, hint, 'font_outline').setOrigin(0.5, 0).setScrollFactor(0).setDepth(1000).setTint(0xfff08a), GAME_W - 16, true);
+    if (this.replay) t3.setText(`${t3.text}\nREPLAY: NO POINTS THIS TIME`);
+    const top = 48 - (h1 * s1) / 2 - 8, bottom = t3.y + t3.height + 8;
+    const band = this.add.graphics().setScrollFactor(0).setDepth(999).fillStyle(0x16121f, 0.72).fillRect(0, top, GAME_W, bottom - top);
     sfx.bell();
     await new Promise((r) => this.time.delayedCall(2600, r));
-    t1.destroy(); t2.destroy(); t3.destroy();
+    t1.destroy(); t2.destroy(); t3.destroy(); band.destroy();
     this.flashGo(this.chase ? 'AFTER THEM!' : 'RIDE!');
     this.player.frozen = false;
   }
@@ -220,15 +253,20 @@ export class ActionScene extends Phaser.Scene {
    * scrollFactor 0, or right over the banner). A new line replaces the old one.
    */
   private sayObj?: Phaser.GameObjects.BitmapText;
+  private sayBox?: Phaser.GameObjects.Graphics;
   private say(msg: string, tint = 0xfff08a, hold = 1600) {
-    this.sayObj?.destroy();
+    this.sayObj?.destroy(); this.sayBox?.destroy();
     const t = fitText(text(this, GAME_W / 2, 34, msg, 'font_outline').setOrigin(0.5, 0).setScrollFactor(0).setDepth(2001).setTint(tint), GAME_W - 16, true);
-    this.sayObj = t;
-    this.tweens.add({ targets: t, alpha: 0, delay: hold, duration: 400, onComplete: () => { t.destroy(); if (this.sayObj === t) this.sayObj = undefined; } });
+    // M3.3 (Ivan: text over text): the hint sits in its own dark box, like the dialogue box without a name
+    const g = this.add.graphics().setScrollFactor(0).setDepth(2000.5);
+    g.fillStyle(0x16121f, 0.82).fillRoundedRect(GAME_W / 2 - t.width / 2 - 7, 30, t.width + 14, t.height + 8, 3).lineStyle(1, 0x69657a).strokeRoundedRect(GAME_W / 2 - t.width / 2 - 7, 30, t.width + 14, t.height + 8, 3);
+    this.sayObj = t; this.sayBox = g;
+    this.tweens.add({ targets: [t, g], alpha: 0, delay: hold, duration: 400, onComplete: () => { t.destroy(); g.destroy(); if (this.sayObj === t) { this.sayObj = undefined; this.sayBox = undefined; } } });
   }
 
   /** award points and float them where they were earned (world coordinates) */
   private pts(kind: ScoreKind, x: number, y: number, n = 1) {
+    if (this.replay) return;
     const p = award(ctx.state, kind, n);
     this.earned += p;
     floatText(this, x, y, `+${p}`, 'font_outline', 0xfff08a, 300).setDepth(2500);
@@ -412,9 +450,9 @@ export class ActionScene extends Phaser.Scene {
     const bk = this.mission.action.boss?.kind;
     const kind = bk === 'foreman' ? 'foreman' : 'bureaucrat';
     if (kind === 'bureaucrat') {
-      // Dog Fraud watches from his podium on the sidewalk (Ivan: "where was Dog Fraud?")
-      this.dogFraud = this.add.image(l.left + 70, STREET_Y + 10, 'chars', 'dfs_pod').setOrigin(0.5, 0.97).setDepth(20);
-      this.time.delayedCall(400, () => { if (this.dogFraud) { floatText(this, l.left + GAME_W / 2, this.dogFraud.y - 84, 'GET HIM, PAPERWORK!', 'font_red', 0xffffff, 1400); sfx.laugh(); this.dogFraud.setFrame('dfs_podlaugh'); this.time.delayedCall(1500, () => this.dogFraud?.setFrame('dfs_pod')); } });
+      // Dog Fjord watches from his podium on the sidewalk (Ivan: "where was Dog Fjord?")
+      this.dogFjord = this.add.image(l.left + 70, STREET_Y + 10, 'chars', 'dfs_pod').setOrigin(0.5, 0.97).setDepth(20);
+      this.time.delayedCall(400, () => { if (this.dogFjord) { floatText(this, l.left + GAME_W / 2, this.dogFjord.y - 84, 'GET HIM, PAPERWORK!', 'font_red', 0xffffff, 1400); sfx.laugh(); this.dogFjord.setFrame('dfs_podlaugh'); this.time.delayedCall(1500, () => this.dogFjord?.setFrame('dfs_pod')); } });
     }
     this.boss = new Boss(this, l.left + GAME_W - 90, this.groundY, {
       summon: (x) => { this.spawnRat('basic', Math.min(l.left + GAME_W + 10, x + 120)); this.time.delayedCall(400, () => this.spawnRat('basic', l.left - 10)); },
@@ -447,19 +485,20 @@ export class ActionScene extends Phaser.Scene {
     const ts = fitText(t, GAME_W - 16), th = t.height; t.setScale(0.1);
     this.tweens.add({ targets: t, scale: ts, duration: 300, ease: 'Back.easeOut' });
     const sub0 = this.escort ? `DELAY: ${this.escort.delay.toFixed(1)} S\nCLEARED: ${this.escort.cleared}` : this.peloton ? `RIDERS RALLIED: ${this.peloton.joinedTotal}\nRATS DEFEATED: ${this.killed}` : `RATS DEFEATED: ${this.killed}`;
-    const firstWin = !ctx.state.completedMissions.includes(this.mission.id);
+    const firstWin = !ctx.state.completedMissions.includes(this.mission.id) && !this.replay;
     if (firstWin) this.earned += award(ctx.state, 'mission');
-    const sub = `${sub0}\nSCORE +${this.earned}${firstWin ? ' (MISSION BONUS)' : ''}`;
-    if (this.peloton) ctx.state.ridersRallied += this.peloton.joinedTotal;
+    const sub = this.replay ? `${sub0}\nREPLAY: NO POINTS` : `${sub0}\nSCORE +${this.earned}${firstWin ? ' (MISSION BONUS)' : ''}`;
+    if (this.peloton && !this.replay) ctx.state.ridersRallied += this.peloton.joinedTotal;
     fitText(text(this, GAME_W / 2, 60 + th / 2 + 8, sub, 'font_outline').setOrigin(0.5, 0).setScrollFactor(0).setDepth(3000).setCenterAlign(), GAME_W - 16, true);
-    ctx.state.ratsDefeated += this.killed + (this.escort?.cleared ?? 0);
+    if (!this.replay) ctx.state.ratsDefeated += this.killed + (this.escort?.cleared ?? 0);
     await new Promise((r) => this.time.delayedCall(2000, r));
     await iris(this, 'close', this.player.sprite.x - this.cameras.main.scrollX, this.player.sprite.y - 16, 500);
     this.physics.world.gravity.y = 0;
     ctx.save();
-    const next = { from: 'mission', missionId: this.mission.id, won: true, district: this.mission.district };
-    if (this.mission.debrief) this.scene.start('Cutscene', { id: this.mission.debrief, next: 'Explore', nextData: next });
-    else this.scene.start('Explore', next);
+    const next = { from: 'mission', missionId: this.mission.id, won: true, district: this.mission.district, replay: this.replay };
+    const [to, toData] = this.debugRun ? ['Title', { replay: { kind: 'mission', id: this.mission.id } }] as const : ['Explore', next] as const;
+    if (this.mission.debrief) this.scene.start('Cutscene', { id: this.mission.debrief, next: to, nextData: toData });
+    else this.scene.start(to, toData);
   }
 
   /**
@@ -482,8 +521,8 @@ export class ActionScene extends Phaser.Scene {
     ctx.save();
     await new Promise((r) => this.time.delayedCall(2200, r));
     await iris(this, 'close');
-    if (out) { this.physics.world.gravity.y = 0; this.scene.start('Explore', { district: this.mission.district }); }
-    else this.scene.restart({ mission: this.mission.id });
+    if (out) { this.physics.world.gravity.y = 0; if (this.debugRun) this.scene.start('Title', { replay: { kind: 'mission', id: this.mission.id } }); else this.scene.start('Explore', { district: this.mission.district }); }
+    else this.scene.restart({ mission: this.mission.id, debug: this.debugRun });
   }
 
   /** every beat of the mission is done: the mission ends right away (Ivan: no riding past the boss) */
@@ -534,7 +573,7 @@ export class ActionScene extends Phaser.Scene {
         this.digger = new SpaDigger(this, l.left + GAME_W - 100, this.groundY, { left: l.left, right: l.left + GAME_W }, (fx) => { if (this.player.hurt(fx)) { shake(this, 150, 0.01); hitStop(this, 70); } });
         this.time.delayedCall(1500, () => { const L2 = this.lock; if (L2) ['basic', 'lobbyist'].forEach((k, i) => this.time.delayedCall(i * 600, () => this.spawnRat(k as RatKind, L2.left + 14))); });
         this.flashGo('BOSS!');
-        this.time.delayedCall(1300, () => this.say('THE BUCKET SLAMS ON THE RED MARK.\nPUMP THE ARM WHILE IT\'S STUCK. STOMP THE CAB!', 0xfff08a, 3400));
+        this.time.delayedCall(1300, () => this.say('THE BUCKET SLAMS WHERE ITS SHADOW FALLS.\nPUMP THE ARM WHILE IT\'S STUCK. STOMP THE CAB!', 0xfff08a, 3400));
       }
       else if (a.boss && a.boss.kind !== 'laneeater' && a.boss.kind !== 'monstersuv' && a.boss.kind !== 'spadigger' && !this.boss && px > a.boss.at) this.startBoss();
       else if (a.build && !this.build && this.chaseDone && px > a.build.at) this.startBuild();
@@ -567,7 +606,7 @@ export class ActionScene extends Phaser.Scene {
           const l = this.lockArena('boss', 0);
           this.eater.startBoss(l.left, l.left + GAME_W);
           this.peloton.parkAt = l.left + GAME_W - 20; this.peloton.dismissWaiting();
-          this.time.delayedCall(900, () => this.say('IT CHARGES: JUMP THE GRINDER!\nWHEN IT OVERHEATS AT THE EDGE, PUMP IT!', 0xfff08a, 3000));
+          this.time.delayedCall(900, () => this.say('IT CHARGES: JUMP THE GRINDER!\nPUMP THE CAB + CONVEYOR ANY TIME. THE GRINDER WHEN IT OVERHEATS!', 0xfff08a, 3400));
           this.flashGo('BOSS!');
         }
       }
@@ -594,7 +633,7 @@ export class ActionScene extends Phaser.Scene {
       d.update(dt, px, pRect);
       if (d.alive) {
         const rr = d.roofRect();
-        if (pb.velocity.y > 40 && pRect.bottom <= d.roofY() + 12 && pRect.right > rr.x && pRect.x < rr.right) {
+        if (this.landingOn(pRect, d.roofY(), rr.x, rr.right, d)) {
           if (d.hit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 0, id: 7900 + Math.floor(this.time.now / 150) }, 'stomp')) { this.player.bounce(); hitStop(this, 70); }
         } else {
           const ar = d.armRect();
@@ -612,7 +651,7 @@ export class ActionScene extends Phaser.Scene {
       m.update(dt, px);
       if (m.alive) {
         const mr = m.rect();
-        if (pb.velocity.y > 40 && pRect.bottom <= m.roofY() + 12 && pRect.right > mr.x + 6 && pRect.x < mr.right - 6) {
+        if (this.landingOn(pRect, m.roofY(), mr.x + 6, mr.right - 6, m)) {
           if (m.hit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 0, id: 7700 + Math.floor(this.time.now / 150) }, 'stomp')) { this.player.bounce(); hitStop(this, 70); }
         } else {
           const tr = m.tyreRect();
@@ -657,7 +696,7 @@ export class ActionScene extends Phaser.Scene {
       if (!c.alive || c.tame) continue;
       const cr = c.rect();
       // stomp the roof
-      if (pb.velocity.y > 40 && pRect.bottom <= c.roofY() + 10 && pRect.right > cr.x + 4 && pRect.x < cr.right - 4) {
+      if (this.landingOn(pRect, c.roofY(), cr.x + 4, cr.right - 4, c)) {
         if (c.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 0, id: 9000 + Math.floor(this.time.now / 150) })) { this.player.bounce(); hitStop(this, 60); if (!c.alive) { this.killed++; this.pts('suv', c.x, this.groundY - 50); } }
         continue;
       }
@@ -685,8 +724,8 @@ export class ActionScene extends Phaser.Scene {
         this.bossDone = true;
         this.killed++; this.pts('boss', this.boss.sprite.x, this.groundY - 90);
         for (const r of this.rats) if (r.alive) r.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 99, kb: 120, id: 99999 }, px);
-        if (this.dogFraud) {
-          const df = this.dogFraud;
+        if (this.dogFjord) {
+          const df = this.dogFjord;
           floatText(this, df.x + 60, df.y - 84, 'THIS ISN\'T OVER!', 'font_red', 0xffffff, 900);
           this.tweens.add({ targets: df, x: df.x - 200, duration: 1400, delay: 500, ease: 'Quad.easeIn' });
         }
@@ -707,10 +746,10 @@ export class ActionScene extends Phaser.Scene {
       for (const h of hits) if (overlap(h, rRect) && r.takeHit(h, px)) {
         wasHit = true;
         hitStop(this, h.dmg > 1 ? 90 : 50); shake(this, 90, h.dmg > 1 ? 0.008 : 0.004);
-        if (!r.alive) { this.killed++; r.reward = `+${award(ctx.state, 'rat')}`; this.earned += POINTS_OF(r.reward); }
+        if (!r.alive) { this.killed++; if (!this.replay) { r.reward = `+${award(ctx.state, 'rat')}`; this.earned += POINTS_OF(r.reward); } }
       }
       if (!wasHit && pb.velocity.y > 60 && pRect.bottom < rRect.y + 10 && overlap({ x: pRect.x, y: pRect.y, w: pRect.width, h: pRect.height }, rRect)) {
-        if (r.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 60, id: 5000 + Math.floor(this.time.now / 200) }, px)) { this.player.bounce(); hitStop(this, 50); if (!r.alive) { this.killed++; r.reward = `+${award(ctx.state, 'rat')}`; this.earned += POINTS_OF(r.reward); } }
+        if (r.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 60, id: 5000 + Math.floor(this.time.now / 200) }, px)) { this.player.bounce(); hitStop(this, 50); if (!r.alive) { this.killed++; if (!this.replay) { r.reward = `+${award(ctx.state, 'rat')}`; this.earned += POINTS_OF(r.reward); } } }
         continue;
       }
       const rab = r.attackBox();
@@ -757,7 +796,7 @@ export class ActionScene extends Phaser.Scene {
     // ---- low health: a heartbeat beep ----
     if (!a.noCombat && this.player.hp === 1 && !this.finished) { this.lowHpT -= dt; if (this.lowHpT <= 0) { sfx.blip(); this.lowHpT = 900; } }
     this.scoreObjectives();
-    this.hud.score.setText(fmtScore(ctx.state.score));
+    this.hud.score.setText(this.replay ? 'REPLAY' : fmtScore(ctx.state.score));
     if (this.player.dead) void this.lose();
     if (this.player.sprite.y > GAME_H + 40) { this.player.hp = 0; this.player.dead = true; }
     this.drawHud();

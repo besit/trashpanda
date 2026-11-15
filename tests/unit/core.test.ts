@@ -60,7 +60,7 @@ describe('save system', () => {
     expect(SaveSystem.load()).toEqual(s);
   });
   it('export/import string round-trips', () => {
-    const s = newGame(); s.flags.metDogFraud = true;
+    const s = newGame(); s.flags.metDogFjord = true;
     expect(SaveSystem.importString(SaveSystem.exportString(s))).toEqual(s);
     expect(SaveSystem.importString('not base64!!')).toBeNull();
   });

@@ -1,4 +1,4 @@
-// Mission 5 (M3): Dog Fraud's LANE EATER, a rat-driven paving machine that chews up Bloor's protected bike
+// Mission 5 (M3): Dog Fjord's LANE EATER, a rat-driven paving machine that chews up Bloor's protected bike
 // lane and lays "ANOTHER CAR LANE" paint behind it. Side view, faces right (it chases you).
 // Three weak points for the boss: the CONVEYOR on top, the FOREMAN's cab (megaphone), the GRINDER drum.
 import { Img } from '../lib/raster.mjs';

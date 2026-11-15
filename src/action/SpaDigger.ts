@@ -83,7 +83,6 @@ export class SpaDigger {
         break;
       }
       case 'raise':
-        if (this.marker) this.marker.setAlpha(0.5 + 0.5 * Math.sin(this.scene.time.now / 50));
         if (this.t <= 0) {
           this.state = 'slam'; this.t = 0.18; this.img.setFrame('digger_2'); this.slamHit = 0;
           shake(this.scene, 220, 0.012); sfx.hit();
@@ -112,11 +111,14 @@ export class SpaDigger {
     }
   }
 
+  /** M3.3 (Ivan: "shall we remove the red mark?"): the warning is the bucket's SHADOW on the ground, which grows as the bucket rises */
   private showMarker() {
     this.marker?.destroy();
     const g = this.scene.add.graphics().setDepth(41);
     const x = this.img.x + BUCKET_DX;
-    g.fillStyle(0xd42a24, 0.55).fillEllipse(x, this.groundY, 52, 10).lineStyle(1, 0xff6347).strokeEllipse(x, this.groundY, 52, 10);
+    g.fillStyle(0x16121f, 0.45).fillEllipse(0, 0, 54, 11);
+    g.setPosition(x, this.groundY).setScale(0.35, 0.35);
+    this.scene.tweens.add({ targets: g, scaleX: 1, scaleY: 1, duration: (0.9 / this.rage) * 1000, ease: 'Sine.easeIn' });
     this.marker = g;
   }
 

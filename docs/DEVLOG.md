@@ -25,7 +25,7 @@ I can't drive a GUI editor, so all art is authored in code with two techniques:
 1. **Hand-painted grids + procedural parts** (`tools/lib/raster.mjs`): text grids where each character is a palette colour, plus primitives (lines, ellipses, polygons), an auto-outline pass and rim lighting. Used for the side-view hero sprites, where expressiveness matters most.
 2. **A tiny SDF renderer** (`tools/lib/sdf.mjs`): characters and vehicles are modelled from spheres, capsules, tori and boxes, then ray-marched into the 48-colour palette with stepped shading, Bayer dithering and an auto-outline. One model renders in all 8 directions and every animation frame, consistently. It's the same idea as the 3D-to-pixel pipelines some indie games use, scaled down to a few hundred lines.
 
-Master palette (`tools/palette.mjs`): TTC reds, Toronto brick, lake blues, concrete greys, park greens, Dog Fraud pinks, and sunset oranges and purples. Outlines use a near-black purple instead of flat black, for a warmer arcade look.
+Master palette (`tools/palette.mjs`): TTC reds, Toronto brick, lake blues, concrete greys, park greens, Dog Fjord pinks, and sunset oranges and purples. Outlines use a near-black purple instead of flat black, for a warmer arcade look.
 
 ### Side-view raccoon v01
 ![raccoon side v01](../art/history/raccoon_side/v01/preview.png)
@@ -53,7 +53,7 @@ Known issues: the tail clips the frame edge, the eye is too small to emote, and 
 
 ![rats v03](../art/history/rats/v03/preview.png)
 
-### Dog Fraud v01 → v05
+### Dog Fjord v01 → v05
 Taken from Ivan's street-art reference as *shape language only*: flushed pear head, horn-ears, handlebar moustache, smug grin, tiny suit. He's built as a cartoon bulldog, not a likeness.
 - **v01:** the framing bug put the head out of frame.
 - **v02:** first real look. Characterful, but closer to a pig than a dog.
@@ -61,7 +61,7 @@ Taken from Ivan's street-art reference as *shape language only*: flushed pear he
 - **v04:** nose and moustache brought forward.
 - **v05:** the laugh frame gets a real open mouth (teeth and tongue) for FRA-HA-HA.
 
-![dog fraud v05](../art/history/dogfraud/v05/preview.png)
+![dog fjord v05](../art/history/dogfjord/v05/preview.png)
 
 ### Environment
 - **Tiles:** asphalt, embedded streetcar tracks (E-W, N-S, crossing), sidewalks with slab seams, curbs, zebras, painted and protected bike lanes (green paint, curb, bollards), parking, grass, park path, laneway, tree pits. The bike stencil first rendered as blobs, so it was replaced with a hand-painted glyph. The flipped north-lane tiles showed an upside-down bike, so proper north-side tiles were drawn.
@@ -84,7 +84,7 @@ Taken from Ivan's street-art reference as *shape language only*: flushed pear he
   - coyote time, jump buffer, variable jump, air dash
   - 3-hit trash-can-lid combo; stomps; hit-stop and shake
   - rats with telegraphed windups; construction rats lob cones you can swat
-- **Audio:** a WebAudio chip synth (pulse waves with 12.5/25/50% duty via PeriodicWave, triangle, LFSR noise) and a lookahead sequencer. Songs: *Queen St. Cruise*, *Historic Investment* (Dog Fraud), *Rat Rush*, plus an improvement sting.
+- **Audio:** a WebAudio chip synth (pulse waves with 12.5/25/50% duty via PeriodicWave, triangle, LFSR noise) and a lookahead sequencer. Songs: *Queen St. Cruise*, *Historic Investment* (Dog Fjord), *Rat Rush*, plus an improvement sting.
 
 ### Bugs found by testing (and fixed)
 1. **Quick key taps were ignored:** a key pressed and released within one frame cleared Phaser's just-down flag before the scene read it. The input manager now latches taps from keydown events. Headless tests found this, and it would also have bitten fast human tappers.
@@ -126,7 +126,7 @@ The e2e test never let a cone land, which is why it slipped through. The fix res
 | "Another CAR lane" | The catchphrase, intro title and rat signs now say ANOTHER CAR LANE. |
 | The park should be Trinity Bellwoods, north of Queen, with the white gates | The whole district was rebuilt (below). |
 | Queen has no bike lanes; the mission should add them | Queen now starts with curb parking lanes. The mission turns them into protected lanes, and the parked cars drive away as the sweep passes. |
-| Dog Fraud: no moustache, white hair, a bit more dog | Dog Fraud v06 (below). |
+| Dog Fjord: no moustache, white hair, a bit more dog | Dog Fjord v06 (below). |
 | Stretch to fill wide screens | The view width now adapts from 384 to 480px. An 844×390 phone gets 468px of city and no black bars. |
 | A bike pump reads better than the lid | Raccoon side v03 (below). |
 | Speed cameras: main mission | *Slow Down, Dog* is now main mission 4, in the High Park school zone. |
@@ -167,13 +167,13 @@ Failed first passes:
 ![people](../art/history/people/v01/preview.png)
 ![cyclists](../art/history/cyclists/v01/preview.png)
 
-### Dog Fraud v06
+### Dog Fjord v06
 - Removed the moustache.
 - Added a big **swept white coif**.
 - More dog: a longer muzzle, a bigger nose with nostrils, whisker spots, flews, and folded dog ears (the horns now read as ears).
 - Added an eye patch. The first one was dark pink and read as a **black eye**, so it became a tan fur patch.
 
-![dog fraud v06](../art/history/dogfraud/v06/preview.png)
+![dog fjord v06](../art/history/dogfjord/v06/preview.png)
 
 ### Bike pump (raccoon side v03)
 - **First try:** a grey tube thrust straight forward. It read as a **gun**. Rejected immediately.
@@ -185,7 +185,7 @@ Failed first passes:
 ### Intro: "ANOTHER CAR LANE"
 The ROAD×8 gag is replaced by Ivan's idea. A baked backdrop shows a ravine of autumn woods, the river, the lake at sunset and the skyline with the CN Tower. The road is drawn live, so a lane can be added on screen.
 - Five lanes of back-view cars (pre-rendered at 8 depth scales), crawling.
-- Dog Fraud: "...ANOTHER CAR LANE!"
+- Dog Fjord: "...ANOTHER CAR LANE!"
 - A sixth lane paves in from the horizon. Cars pour in for a moment of hope, then gridlock. Caption: "SIX LANES. STILL NOT MOVING." (induced demand: URBAN_RESEARCH §14).
 
 The first pass let the jam *drain* away from the camera over time, so the road emptied. Lanes now refill from behind the camera.
@@ -216,7 +216,7 @@ The first passes overlapped captions and let the streetcar hide the cyclist enti
 Ivan played M1 and sent notes on each area, plus three new references: a photo of the gates, the Friends of Trinity Bellwoods park map, and a CN Tower photo.
 
 ### Intro
-- The parkway is no longer named on screen. Dog Fraud now says "STUCK IN TRAFFIC? I HAVE THE SOLUTION."
+- The parkway is no longer named on screen. Dog Fjord now says "STUCK IN TRAFFIC? I HAVE THE SOLUTION."
 - The "FIVE LANES / SIX LANES" captions are gone (too direct).
 - When the sixth lane appears, the cars no longer surge into it. The lane just fills with the same crawl as the others.
 - The river is about 3× wider.
@@ -317,7 +317,7 @@ Ivan circled a spot right under a window on a teal building. A script had alread
 Failures along the way:
 - The capybaras v01 read as loaves until they got a head.
 - The SUV Rat's driver sat on the roof; the fix locates the glass band in the image and puts the driver behind the front window.
-- In-world Dog Fraud v01 wore two ties, because the portrait head already includes its shirt and tie.
+- In-world Dog Fjord v01 wore two ties, because the portrait head already includes its shirt and tie.
 - The SCHOOL stencil doesn't fit in 16 px, so the lane says SLOW.
 - The font has no `[ ]`, and `*` looks like `#`.
 
@@ -371,12 +371,12 @@ His description: a single row under the 2nd-floor windows changes colour, from t
 - **Flexity streetcars** on the map and in the side view; the old 3-section car is gone.
 - **High Park re-laid from the map**: Grenadier Pond (with swans and wood ducks), Spring Creek ponds, all five park roads, the Grenadier Cafe, the dog park, the zoo, the greenhouse, Hillside Gardens, the Jamie Bell Adventure Playground, Colborne Lodge, and cherry trees along the pond.
 - Downtown: Graffiti Alley between Queen and King and **rideable** (King's buildings were covering it), murals on every wall, the news van out of the CHUM building's east wall onto John, Osgoode Hall dropped.
-- Dog Fraud's standing body redrawn (the portrait's own shoulders are clipped off); the Foreman Rat; smaller picnic tables; a Hillside tulip-bed tile.
+- Dog Fjord's standing body redrawn (the portrait's own shoulders are clipped off); the Foreman Rat; smaller picnic tables; a Hillside tulip-bed tile.
 
 ### Missions
 - **M1** gets a boss: **the Foreman Rat** (cones, a jackhammer shove, a whistle, and a JACKHAMMER charge that leaves him dizzy).
 - **M2**: a progress strip with every signal, blocker and cone, a LAST STOP with people who cheer, 4 signals and 3 blockers, 12 s of slack. The end vignette is now a tracking shot of the streetcar while each signal flips to the white transit bar as its nose arrives.
-- **M3**: Dog Fraud watches the boss fight from his podium ("GET HIM, PAPERWORK!") and runs off when it ends. The end vignette has people at the patios and the streetcar fully on screen.
+- **M3**: Dog Fjord watches the boss fight from his podium ("GET HIM, PAPERWORK!") and runs off when it ends. The end vignette has people at the patios and the streetcar fully on screen.
 - **M4**:
   - The haulers have a health bar (8 pumps to drop the camera).
   - The pond is in the park, and they leap over the sidewalk into it.
@@ -404,7 +404,7 @@ Ivan's M2 answers: district seams are fine; keep the speed camera ("maybe we eve
   - **Roundhouse Park** with the CN Tower and the domed stadium.
   - **Queens Quay** with the streetcar in its grassy median. Its lanes are `transitOnly`: streetcars only, no cars or bikes.
   - The **Martin Goodman Trail** (bike-only lanes), the promenade, the boardwalk, **Sugar Beach**'s pink umbrellas, sailboats drifting about their moorings.
-  - Out west, an island with the **Cinesphere**, two pods and Dog Fraud's fictional **MEGA SPA**, fenced off behind a locked gate on the causeway.
+  - Out west, an island with the **Cinesphere**, two pods and Dog Fjord's fictional **MEGA SPA**, fenced off behind a locked gate on the causeway.
 
 ### Three new missions
 - **5. The Lane Eater** (High Park, Bloor West):
@@ -502,7 +502,7 @@ Ivan's M3 notes ran to about forty items across the five districts, the missions
   - pods, the Cinesphere, the digger, the planes
   - rail tiles, the pool, the Don Jail
 - **The game font is drawable onto sprites now** (`drawText`): the FERRY and MEGA SPA signs use it.
-- **Dog Fraud's arms and torso** are separated by tone. **The tail bounces more** in both views.
+- **Dog Fjord's arms and torso** are separated by tone. **The tail bounces more** in both views.
 
 ### Failures
 - **The top-view tail never swung at all.** `sin(2·angle)` is 0 at all four frame phases (t = 0, ¼, ½, ¾). Nobody noticed for three milestones.

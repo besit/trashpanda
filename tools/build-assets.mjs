@@ -6,7 +6,7 @@ import { packAtlas, packTileset } from './lib/pack.mjs';
 import { raccoonSideFrames, appIcon, PIVOT_Y as RS_PIVOT_Y } from './sprites/raccoon_side.mjs';
 import { raccoonTopFrame, DIRS } from './sprites/raccoon_top.mjs';
 import { ratAnims, RAT_VARIANTS, bureaucratAnims, foremanAnims, BOSS_FH } from './sprites/rats.mjs';
-import { dogFraudPortrait, dogFraudStanding } from './sprites/dogfraud.mjs';
+import { dogFjordPortrait, dogFjordStanding } from './sprites/dogfjord.mjs';
 import { PED_VARIANTS, CYC_VARIANTS, PED_DIRS, pedFrame, cycFrame, cycSideFrame, PED_FW, PED_FH, PED_OX, PED_OY } from './sprites/people.mjs';
 import { buildTiles } from './sprites/tiles.mjs';
 import { BRICKS } from './sprites/buildings.mjs';
@@ -63,10 +63,10 @@ const chars = [];
   fa.frames.forEach((f, i) => chars.push({ name: `rat_foreman_${i}`, img: f }));
   for (const [k, a] of Object.entries(fa.anims)) manifest.anims[`rat_foreman_${k}`] = { frames: Array.from({ length: a.count }, (_, i) => `rat_foreman_${a.start + i}`), rate: a.rate, loop: a.loop };
   manifest.pivots.rat_foreman = { x: 0.47, y: (BOSS_FH - 1) / BOSS_FH };
-  for (const e of ['grin', 'laugh', 'shock']) chars.push({ name: `df_${e}`, img: dogFraudPortrait(e) });
-  // in-world Dog Fraud (side vignettes)
+  for (const e of ['grin', 'laugh', 'shock']) chars.push({ name: `df_${e}`, img: dogFjordPortrait(e) });
+  // in-world Dog Fjord (side vignettes)
   for (const [n, e, pod] of [['dfs_grin', 'grin', false], ['dfs_laugh', 'laugh', false], ['dfs_pod', 'grin', true], ['dfs_podlaugh', 'laugh', true]]) {
-    const im = dogFraudStanding(e, pod); chars.push({ name: n, img: im }); manifest.pivots[n] = im.pivot;
+    const im = dogFjordStanding(e, pod); chars.push({ name: n, img: im }); manifest.pivots[n] = im.pivot;
   }
   for (const v of PED_VARIANTS) for (const d of PED_DIRS) {
     for (let f = 0; f < 4; f++) chars.push({ name: `ped_${v.id}_${d}_${f}`, img: pedFrame(v, d, f / 4) });

@@ -24,7 +24,7 @@ import { sfx } from '../audio/sfx';
 import { openPause, type MapInfo } from './PauseScene';
 import type { Manifest } from './BootScene';
 
-interface ExploreData { from?: 'mission' | 'district'; missionId?: string; won?: boolean; district?: string; entry?: { side: 'w' | 'e' | 'n' | 's'; street?: string; dy?: number; y?: number; fromDistrict?: string } }
+interface ExploreData { from?: 'mission' | 'district'; missionId?: string; won?: boolean; replay?: boolean; district?: string; entry?: { side: 'w' | 'e' | 'n' | 's'; street?: string; dy?: number; y?: number; fromDistrict?: string } }
 type Hud = { lives: Phaser.GameObjects.BitmapText; points: Phaser.GameObjects.BitmapText; box: Phaser.GameObjects.Graphics; meter: Phaser.GameObjects.Graphics; score: Phaser.GameObjects.BitmapText; tier: Phaser.GameObjects.BitmapText; stamina: Phaser.GameObjects.Graphics; prompt: Phaser.GameObjects.BitmapText; label: Phaser.GameObjects.BitmapText };
 
 const DIR_V = [[1, 0], [0.7, 0.7], [0, 1], [-0.7, 0.7], [-1, 0], [-0.7, -0.7], [0, -1], [0.7, -0.7]];
@@ -42,7 +42,7 @@ export class ExploreScene extends Phaser.Scene {
   private toasts: Phaser.GameObjects.BitmapText[] = [];
   private shownLiv = 60;
   private busy = false;
-  private near: { kind: 'mission' | 'landmark'; id: string } | null = null;
+  private near: { kind: 'mission' | 'landmark'; id: string; replay?: boolean } | null = null;
   private data0: ExploreData = {};
 
   constructor() { super('Explore'); }
@@ -128,10 +128,11 @@ export class ExploreScene extends Phaser.Scene {
     music.play(SONG_MAIN);
     this.shownLiv = livability(ctx.state.upgrades);
 
-    if (data.from === 'mission' && data.missionId && data.won) {
+    if (data.from === 'mission' && data.missionId && data.won && !data.replay) {
       void this.celebrate(data.missionId);
     } else {
       if (data.from === 'district') void blinds(this, 1, true); else void iris(this, 'open', GAME_W / 2, GAME_H / 2);
+      if (data.from === 'mission' && data.replay) this.toast('MISSION REPLAYED.\nREPLAYS EARN NO POINTS.', 3200);
       if (data.from === 'district' || !ctx.state.flags[`visited_${this.district}`]) this.districtCard();
       ctx.state.flags[`visited_${this.district}`] = true;
       if (!ctx.state.flags.exploreHint) {
@@ -148,9 +149,12 @@ export class ExploreScene extends Phaser.Scene {
   /** Big district name card on arrival. */
   private districtCard() {
     const d = DISTRICTS[this.district];
-    const t = text(this, GAME_W / 2, 52, d.name, 'font_big').setScrollFactor(0).setDepth(20010).setAlpha(0);
-    const s = text(this, GAME_W / 2, 72, d.sub, 'font_outline').setScrollFactor(0).setDepth(20010).setAlpha(0).setTint(0xfff08a);
-    this.tweens.add({ targets: [t, s], alpha: 1, duration: 300, hold: 1800, yoyo: true, delay: 200, onComplete: () => { t.destroy(); s.destroy(); } });
+    // M3.3: on a dark band across the middle, clear of the HUD box (it used to sit over it on phones)
+    const cy = Math.round(GAME_H / 2) - 10;
+    const g = this.add.graphics().setScrollFactor(0).setDepth(20009).setAlpha(0).fillStyle(0x16121f, 0.7).fillRect(0, cy - 22, GAME_W, 46);
+    const t = text(this, GAME_W / 2, cy - 6, d.name, 'font_big').setScrollFactor(0).setDepth(20010).setAlpha(0);
+    const s = text(this, GAME_W / 2, cy + 14, d.sub, 'font_outline').setScrollFactor(0).setDepth(20010).setAlpha(0).setTint(0xfff08a);
+    this.tweens.add({ targets: [t, s, g], alpha: 1, duration: 300, hold: 1800, yoyo: true, delay: 200, onComplete: () => { t.destroy(); s.destroy(); g.destroy(); } });
   }
 
   /** "< HIGH PARK" street signs where a street continues into the next district. */
@@ -354,7 +358,7 @@ export class ExploreScene extends Phaser.Scene {
     this.tweens.add({ targets: o, v: after, duration: 1200, ease: 'Cubic.easeOut', onUpdate: () => { this.drawMeter(o.v); sfx.blip(); } });
     await this.wait(1300);
     // the evidence: in a box at the bottom; it stays until you press a key (and pages if it's long)
-    await this.infoBox(up?.name ?? 'IMPROVED!', up?.blurb ?? '');
+    await this.infoBox(up?.name ?? 'IMPROVED!', up?.blurb ?? '', up?.source);
     banner.destroy();
     cam.pan(this.player.x, this.player.y, 600, 'Sine.easeInOut');
     await this.wait(650);
@@ -371,11 +375,13 @@ export class ExploreScene extends Phaser.Scene {
    * A semi-transparent box at the bottom of the screen: a title line + up to 3 lines of text per page.
    * It waits for E / Enter / a tap; longer text pages through (M2.1: the payoff text used to vanish).
    */
-  private infoBox(title: string, body: string): Promise<void> {
+  private infoBox(title: string, body: string, source?: string): Promise<void> {
     return new Promise((resolve) => {
       const lines = wrapLines(this, 'font_outline', body, GAME_W - 36).filter((l) => l);
       const pages: string[][] = [];
       for (let i = 0; i < lines.length; i += 3) pages.push(lines.slice(i, i + 3));
+      // M3.3 (Ivan): the claim's source, on its own page (the links are under ABOUT > SOURCES and in the docs)
+      if (source) pages.push(['SOURCE:', ...wrapLines(this, 'font_outline', source, GAME_W - 36).slice(0, 2)]);
       if (!pages.length) pages.push(['']);
       const h = 52, y = GAME_H - h - 6;
       const box = this.add.graphics().setScrollFactor(0).setDepth(20010);
@@ -413,7 +419,7 @@ export class ExploreScene extends Phaser.Scene {
 
   private wait(ms: number) { return new Promise<void>((r) => this.time.delayedCall(ms, r)); }
 
-  private async startMission(id: string) {
+  private async startMission(id: string, replay = false) {
     if (this.busy) return;
     this.busy = true;
     this.player.frozen = true;
@@ -427,8 +433,8 @@ export class ExploreScene extends Phaser.Scene {
     await this.wait(350);
     await iris(this, 'close', GAME_W / 2, GAME_H / 2 - 10, 450);
     const brief = MISSIONS[id]?.briefing;
-    if (brief) this.scene.start('Cutscene', { id: brief, next: 'Action', nextData: { mission: id } });
-    else this.scene.start('Action', { mission: id });
+    if (brief) this.scene.start('Cutscene', { id: brief, next: 'Action', nextData: { mission: id, replay } });
+    else this.scene.start('Action', { mission: id, replay });
   }
 
   /** Ride off the edge of the map along a street: the next district loads. */
@@ -472,13 +478,14 @@ export class ExploreScene extends Phaser.Scene {
     }
     // what's nearby: a mission marker or a landmark
     this.near = null;
-    for (const m of this.markers) if (!m.done && Phaser.Math.Distance.Between(this.player.x, this.player.y, m.x, m.y) < 22) this.near = { kind: 'mission', id: m.id };
+    // M3.3 (Ivan): a FIXED marker can be replayed, for no points
+    for (const m of this.markers) if (Phaser.Math.Distance.Between(this.player.x, this.player.y, m.x, m.y) < 22) this.near = { kind: 'mission', id: m.id, replay: m.done };
     if (!this.near) for (const l of this.map.data.landmarks ?? []) if (Phaser.Math.Distance.Between(this.player.x, this.player.y, l.x, l.y + 24) < 40) this.near = { kind: 'landmark', id: l.id };
     const key = wantsTouch() ? 'RED' : 'E';
-    this.hud.prompt.setText(this.busy || !this.near ? '' : this.near.kind === 'mission' ? `${key}: START MISSION` : `${key}: READ THE PLAQUE`);
+    this.hud.prompt.setText(this.busy || !this.near ? '' : this.near.kind === 'mission' ? (this.near.replay ? `${key}: REPLAY (NO POINTS)` : `${key}: START MISSION`) : `${key}: READ THE PLAQUE`);
     this.touch?.setLabel('act', this.near ? (this.near.kind === 'mission' ? 'GO!' : 'READ') : 'BELL');
     if (!this.busy && this.input2.justPressed('act')) {
-      if (this.near?.kind === 'mission') void this.startMission(this.near.id);
+      if (this.near?.kind === 'mission') void this.startMission(this.near.id, !!this.near.replay);
       else if (this.near?.kind === 'landmark') {
         const l = this.map.data.landmarks!.find((x) => x.id === this.near!.id)!;
         sfx.select(); this.plaque([l.label, ...l.fact.split('\n')]);

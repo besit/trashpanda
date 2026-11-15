@@ -46,7 +46,7 @@ export function vanSide() {
   return img;
 }
 
-/** The SUV Rat: Dog Fraud's through-traffic, a dark SUV with a rat at the wheel (faces right; flipped in game). */
+/** The SUV Rat: Dog Fjord's through-traffic, a dark SUV with a rat at the wheel (faces right; flipped in game). */
 export function suvRatSide(frame = 0) {
   const base = suv(Math.PI, true);
   const img = base.clone(); img.pivot = base.pivot;

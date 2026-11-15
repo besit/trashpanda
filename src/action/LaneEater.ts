@@ -1,5 +1,5 @@
 // Mission 5, "The Lane Eater" (Bloor West). Different from every other mission:
-//  - The screen AUTO-SCROLLS. Dog Fraud's paving machine follows behind, chewing up the protected bike lane
+//  - The screen AUTO-SCROLLS. Dog Fjord's paving machine follows behind, chewing up the protected bike lane
 //    and painting car-lane lines where it was. It is always on screen at the left edge (Ivan, M3.1: "it was
 //    not shown to me until I went backwards"), and its conveyor lobs hot asphalt at you.
 //  - Riders wait along the curb. Ring your bell (E) beside one and they CLIP IN: they pedal up to speed,
@@ -256,11 +256,13 @@ export class LaneEater {
   private clearWarn() { this.warn?.destroy(); this.warn = undefined; }
 
   takeHits(hits: Hitbox[], onBroken: (k: ZoneKey) => void) {
-    if (this.move !== 'hot') return; // only while it's overheated against the edge
+    if (!this.boss || !this.alive) return;
     for (const h of hits) {
       if (h.id === this.lastHit) continue;
       for (const k of Object.keys(ZONES) as ZoneKey[]) {
         if (this.hp[k] <= 0) continue;
+        // M3.3 (Ivan): the cab and the conveyor can be pumped any time; only the grinder is protected until it overheats
+        if (k === 'grinder' && this.move !== 'hot') continue;
         const r = this.zoneRect(k);
         if (h.x < r.right && h.x + h.w > r.x && h.y < r.bottom && h.y + h.h > r.y) {
           this.lastHit = h.id; this.hp[k] -= h.dmg;
