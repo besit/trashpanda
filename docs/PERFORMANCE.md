@@ -135,3 +135,21 @@ The older scenes are unchanged (60.1–60.3 fps). The p95 frame time is 16.7–1
 - ~~The full city map (6 districts) is roughly 10× the tiles of this chunk.~~ Solved in M2 by loading districts as separate maps (one in memory at a time).
 - Downtown's building atlas (810 KB): see M2 notes above.
 - **M3: boot size 1.44 MB.** All five map JSONs load at boot for the City Map. Make them lazy, or use per-district minimap PNGs, before the North district lands in M4.
+
+### 2026-11-14 (M3.3)
+**Downloads.** Three changes to the pipeline, none visible in play:
+- Every generated PNG is written as an exact 8-bit indexed PNG (the art uses a 48-colour palette). Verified against the previous RGBA files pixel for pixel: 43 files, 0 differ. Generated art 3,832 KB -> 699 KB.
+- Phaser's Arcade-only build (no Matter, no Impact). JS 1,405 KB raw / 384 KB gzipped -> 1,306 KB raw / about 350 KB gzipped.
+- Map JSON loads on demand (Explore for its own district, the city map when you page to one) instead of every district at boot.
+
+Measured on `dist/` with PNG bytes as served and JS/JSON gzipped (GitHub Pages serves both gzipped):
+
+| Item | Size |
+|---|---|
+| JS (gzipped) | 345 KB |
+| Boot assets (shared atlases, fonts, side-view strips, tileset, manifest) | 164 KB |
+| Queen West on entry (building atlas, map JSON, decals) | 93 KB |
+| **First load for a new game** | **0.59 MB** (was 2.38 MB at M3.1; budget 2.5 MB) |
+| Other districts on entry | High Park 146 KB, Downtown 159 KB, East End 116 KB, Waterfront 83 KB |
+
+The North district (M4) now has plenty of room. Frame rate was not re-measured this pass: nothing changed on the per-frame paths (the streetcar sections, the stomp helper and the captions are a few arithmetic ops), and the M3.2 numbers stand.

@@ -164,11 +164,18 @@ export class Traffic {
     if (!T) return;
     const arc = (T.r * Math.PI) / 2;
     const dc = v.turning ? T.t * arc : v.plan ? (this.posOf(v) - (v.lane.axis === 'x' ? T.s[0] : T.s[1])) * v.lane.dir : arc + (this.posOf(v) - (v.lane.axis === 'x' ? T.e[0] : T.e[1])) * v.lane.dir;
+    // M3.3 (Ivan): the one-piece sprites are foreshortened when they face N/S (the 32-degree camera), so the
+    // sections sit closer together the more vertical the car is, easing between the two through the turn,
+    // and they are drawn front over middle over rear so a rear section's joint never covers the one ahead
+    const [ca, cb] = [this.routeAt(T, dc - 9), this.routeAt(T, dc + 9)];
+    const hc = Math.atan2(cb[1] - ca[1], cb[0] - ca[0]);
+    const k = Math.hypot(Math.cos(hc), 0.66 * Math.sin(hc));
+    const yc = this.routeAt(T, dc)[1];
     parts.forEach((im, i) => {
-      const d = dc + SC_OFF[i], [x, y] = this.routeAt(T, d), a = this.routeAt(T, d - 9), b = this.routeAt(T, d + 9);
+      const d = dc + SC_OFF[i] * k, [x, y] = this.routeAt(T, d), a = this.routeAt(T, d - 9), b = this.routeAt(T, d + 9);
       const key = `scsec_${'rmf'[i]}_${faceOf(Math.atan2(b[1] - a[1], b[0] - a[0]), true)}`;
       if (im.frame.name !== key) { im.setFrame(key); const pv = this.manifest.pivots[key]; if (pv) im.setOrigin(pv.x, pv.y); }
-      im.setPosition(Math.round(x), Math.round(y)).setDepth(y + 2);
+      im.setPosition(Math.round(x), Math.round(y)).setDepth(yc + 2 + i * 0.01);
     });
     // the whole car is out of the corner: back to the one-piece sprite
     if (v.after && dc + SC_OFF[0] > arc + 12) { parts.forEach((im) => im.destroy()); v.parts = undefined; v.after = undefined; v.s.setVisible(true); }

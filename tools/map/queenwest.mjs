@@ -243,6 +243,7 @@ export function generateQueenWest() {
   D.critters.push({ kind: 'white_squirrel', x: R(0.26, 0.48)[0], y: R(0.26, 0.48)[1] }); // where the park map draws its squirrel
   D.landmarks.push({ id: 'tb_gates', x: GATE_X, y: (QUEEN - 3) * TS - 10, label: 'THE UNIVERSITY OF', fact: 'TRINITY COLLEGE\n1852 - 1925' });
   // two hidden extra lives: deep in the park's north-west trees, and at the far east end of the back lane
-  const lifeTokens = [{ x: R(0.04, 0.06)[0], y: R(0.04, 0.06)[1] }, { x: (W - 2) * TS, y: (laneRow + 1) * TS + 10 }];
+  // M3.3 (Ivan): one heart in the open, one hidden behind a building (here: behind a Queen St shop, in the laneway)
+  const lifeTokens = [{ x: R(0.04, 0.06)[0], y: R(0.04, 0.06)[1] }, D.hiddenHeart(950, 1000, { x: (W - 2) * TS, y: (laneRow + 1) * TS + 10 })];
   return D.out({ spawn: { x: 45 * TS + 8, y: (QUEEN - 2) * TS + 8 }, lifeTokens });
 }

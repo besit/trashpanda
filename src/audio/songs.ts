@@ -73,3 +73,42 @@ export const SONG_IMPROVE: Song = {
     { ch: 'drums', vol: 0.18, bars: ['k . . . s . . . k . k . s . s s', 'k . . . . . . . o . . . . . . .'] },
   ],
 };
+
+// ---------- M3.3 ----------
+CH.Bd = ['B3', 'D#4', 'F#4', 'A4']; ROOT.Bd = 'B';
+const BOSS = ['Em', 'Em', 'F', 'Em', 'Em', 'Em', 'C', 'Bd'];
+/** the boss fights: a driving E-minor march with a Phrygian F, faster than Rat Rush */
+export const SONG_BOSS: Song = {
+  name: 'another-lane-of-trouble', bpm: 172,
+  tracks: [
+    { ch: 'p1', duty: 0.25, vol: 0.14, vib: 0.006, bars: [
+      'E5 . E5 . G5 . E5 . B5 - - . A5 . G5 .', 'F#5 - - . E5 . D5 . E5 - - - . . B4 .',
+      'F5 . F5 . A5 . F5 . C6 - - . Bb5 . A5 .', 'G5 - - . F#5 . E5 . B4 - - - . . . .',
+      'E5 . E5 . G5 . E5 . B5 - - . D6 . E6 .', 'D6 - - . B5 . G5 . E5 - - - . . . .',
+      'C6 . C6 . E6 . C6 . G5 - - . A5 . B5 .', 'D#6 - - - B5 - - - F#5 - - - D#5 - B4 -',
+    ] },
+    { ch: 'p2', duty: 0.125, vol: 0.05, bars: arp(BOSS) },
+    { ch: 'tri', vol: 0.23, bars: driveBass(BOSS) },
+    { ch: 'drums', vol: 0.23, bars: [...rep('k . h k s . h h k . h k s . o .', 7), 'k . s . k s . s k s k s s s s s'] },
+  ],
+};
+/** mission won: a short rising fanfare (not looped) */
+export const SONG_WIN: Song = {
+  name: 'street-cleared', bpm: 150, loop: false,
+  tracks: [
+    { ch: 'p1', duty: 0.25, vol: 0.16, bars: ['C5 . E5 . G5 . C6 . E6 . . . D6 . E6 .', 'G6 - - - - - E6 . G6 - - - - - - .'] },
+    { ch: 'p2', duty: 0.5, vol: 0.07, bars: ['E4 . . . G4 . . . C5 . . . E5 . . .', 'C5 - - - - - G4 . C5 - - - - - - .'] },
+    { ch: 'tri', vol: 0.2, bars: ['C3 . . . C3 . . . F3 . . . G3 . . .', 'C3 - - - - - G2 . C3 - - - - - - .'] },
+    { ch: 'drums', vol: 0.18, bars: ['k . . . s . . . k . k . s . s s', 'k . . . . . . . o . . . . . . .'] },
+  ],
+};
+/** a life lost: four falling steps and a thud (not looped) */
+export const SONG_LOSE: Song = {
+  name: 'bonk', bpm: 104, loop: false,
+  tracks: [
+    { ch: 'p1', duty: 0.5, vol: 0.14, vib: 0.01, bars: ['E5 - - - Eb5 - - - D5 - - - Db5 - - -', 'C5 - - - - - - - . . . . . . . .'] },
+    { ch: 'p2', duty: 0.25, vol: 0.06, bars: ['C5 - - - B4 - - - Bb4 - - - A4 - - -', 'Ab4 - - - - - - - . . . . . . . .'] },
+    { ch: 'tri', vol: 0.22, bars: ['A2 - - - Ab2 - - - G2 - - - Gb2 - - -', 'F2 - - - - - - - . . . . . . . .'] },
+    { ch: 'drums', vol: 0.2, bars: ['. . . . . . . . . . . . . . . .', 'k . . . . . . . . . . . . . . .'] },
+  ],
+};

@@ -7,6 +7,7 @@ This is the evidence base for every civic improvement in *Trash Panda: Right of 
 - Say when evidence is mixed or thin, and label uncertain claims as uncertain.
 - Present opposing arguments fairly.
 - In-game text (blurbs, "did you know?" cards) may only use claims recorded here, with a source.
+- M3.3: every upgrade names its source in the game (`source` in `src/data/upgrades.ts`), on the results card and under ABOUT > SOURCES. The links are here; the game shows names, because opening web pages from a fullscreen phone game is awkward.
 - The Livability numbers in the game are **game abstractions**, not measurements. The game does not claim to rank real cities.
 
 Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (more research before content ships) · ⬜ not started

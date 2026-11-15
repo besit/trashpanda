@@ -12,6 +12,7 @@ import { ctx } from '../core/ctx';
 import { music } from '../audio/Sequencer';
 import { sfx } from '../audio/sfx';
 import type { CityMap, MapData } from '../explore/CityMap';
+import type { Manifest } from './BootScene';
 import { UPGRADES } from '../data/upgrades';
 import { fullscreenSupported, isFullscreen, isInstalled, toggleFullscreen } from '../core/fullscreen';
 
@@ -163,7 +164,13 @@ export class PauseScene extends Phaser.Scene {
     const vi = DISTRICT_ORDER.indexOf(view);
     if (vi > 0) this.root.add(text(this, 14, 12, '<', 'font_big').setTint(0xfff08a));
     if (vi < DISTRICT_ORDER.length - 1) this.root.add(text(this, GAME_W - 40, 12, '>', 'font_big').setTint(0xfff08a));
-    if (!md) return;
+    if (!md) {
+      // M3.3: another district's map data arrives on demand (it used to load every map at boot)
+      const d = (this.registry.get('manifest') as Manifest).districts?.[view];
+      if (d && !this.load.isLoading()) { this.load.json(`map_${view}`, d.map); this.load.once('complete', () => { if (this.mode === 'map' && this.viewDistrict === view && this.scene.isActive()) this.show('map'); }); this.load.start(); }
+      this.root.add(text(this, cx, GAME_H / 2, 'LOADING...', 'font_outline').setTint(0x9793a6));
+      return;
+    }
     const key = 'minimap_live';
     if (this.textures.exists(key)) this.textures.remove(key);
     const tex = this.textures.createCanvas(key, md.width, md.height)!;
@@ -198,7 +205,7 @@ export class PauseScene extends Phaser.Scene {
       c.fillStyle = b.mapColor ?? '#8a7f94'; c.fillRect(b.x / ts + 0.15, b.y / ts + 0.15, b.w / ts - 0.3, b.d / ts - 0.3);
     }
     tex.refresh();
-    const availW = GAME_W - 24, availH = GAME_H - 54;
+    const availW = GAME_W - 24, availH = GAME_H - 64;
     const s = Math.max(1, Math.floor(Math.min(availW / md.width, availH / md.height) * 2) / 2);
     const w = md.width * s, h = md.height * s;
     const x0 = Math.round(cx - w / 2), y0 = Math.round(34 + (availH - h) / 2);
@@ -217,6 +224,10 @@ export class PauseScene extends Phaser.Scene {
     this.viewHasPlayer = !!live;
     this.blink = this.add.graphics();
     this.root.add(this.blink);
+    // M3.3: what there is to find here, and what you've found (plaques, hidden hearts, easter eggs)
+    const fl = ctx.state.flags, plq = md.landmarks ?? [], hearts = md.lifeTokens ?? [], eggs = md.eggs ?? [];
+    const tally = [`PLAQUES ${plq.filter((l) => fl[`score_plaque_${view}_${l.id}`]).length}/${plq.length}`, `HEARTS ${hearts.filter((_, i) => fl[`life_${view}_${i}`]).length}/${hearts.length}`, ...(eggs.length ? [`EGGS ${eggs.filter((e) => fl[`score_egg_${e.id}`]).length}/${eggs.length}`] : [])];
+    this.root.add(text(this, cx, GAME_H - 19, tally.join('   '), 'font').setTint(0xfff08a));
     this.root.add(text(this, cx, GAME_H - 9, wantsTouch() ? `< > TAP THE ARROWS   YOU: ${DISTRICTS[here]?.short ?? ''}   X: CLOSE` : `A/D: DISTRICTS   YOU: ${DISTRICTS[here]?.name ?? ''}   M / ESC: CLOSE`, 'font').setTint(0x9793a6));
     this.drawBlink();
   }

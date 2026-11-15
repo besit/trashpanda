@@ -66,6 +66,19 @@ tools/        asset generators (never shipped): raster + SDF renderers, sprite m
 - **Lane Eater** (`src/action/LaneEater.ts`): chase keeps the machine's front a set gap inside the view (92 px alone, 14 px less per rider, at least 30); the boss is a state machine `backoff -> enter -> charge -> bounce -> hot -> leave -> enter...`, weak points mirrored with the facing; `Peloton` riders have a `wait | clip | done` state.
 - **High Park placement** (`tools/map/highpark.mjs`): park features are placed by an outward search for the nearest rect clear of roads, trails, ponds and other features (`place(u, v, w, h, lean)`); the paths decal is cut at the curbs so roads end square.
 
+## M3.3 additions
+- **8-bit PNGs** (`tools/lib/png8.mjs`): every generated image is written as an exact indexed PNG (palette + tRNS, adaptive filters, zlib 9) when it has at most 256 colours, which all of ours do. `TP_PNG_RGBA=1` forces the old RGBA output and `TP_GEN_OUT=<dir>` redirects the build, so the two can be diffed pixel for pixel (`tools/scratch/pngdiff.mjs`: 43 files, 0 differ). Generated art: 3.8 MB -> 0.7 MB.
+- **Phaser Arcade-only build:** a Vite alias maps `phaser` to `phaser/dist/phaser-arcade-physics.js`. JS 384 -> ~350 KB gzipped.
+- **Lazy map JSON:** Boot no longer loads every district's map; Explore loads its own in `preload`, and the city map loads a district's JSON the first time you page to it (`PauseScene.buildMap`, a LOADING line meanwhile). First load 2.38 -> 0.59 MB.
+- **Exits with `arrive`:** an exit may name the street it lands on (`exit(side, row, to, street, arrive)`), so Queens Quay east lands on Leslie, and Leslie, Carlaw and Broadview south all land on Queens Quay. Such connections may arrive on any side.
+- **Hidden hearts:** `District.hiddenHeart(nx, ny, fallback)` picks the building nearest a point whose back is open ground and returns the spot under its roof, just behind the footprint. The unit test requires two hearts per district.
+- **Cutscenes:** `ids: string[]` plays several timelines back to back (a debrief, then an interstitial); `vars` substitutes `{LIV}`-style tokens in captions and dialogue.
+- **Replays:** `ActionScene` takes `replay` (no points: `pts()`, rat rewards, the mission bonus and the stats are skipped) and `debug` (the end returns to `Title` with `{ replay: { kind, id } }`, which opens the replay menu).
+- **Stomps:** `ActionScene.landingOn(pRect, roofY, x0, x1, target)`: falling, feet within [roof - 16, roof + 10], over the target, and at most once per 650 ms per target (a plain bounce lands again in about half a second, so a chain needs a second approach). `SidePlayer.bounce()` holds a 0.14 s grace before the variable-jump cut.
+- **Music variants:** `music.play(song, { bpm, transpose })`; the sequencer keys the current song on both.
+- **Articulated streetcars:** section spacing along the route is scaled by `hypot(cos h, 0.66 sin h)` of the car's heading (the N/S sprites are foreshortened), and the sections are drawn front over middle over rear.
+- **ABOUT / SOURCES:** `src/data/villain.ts` holds the name, the notice and the credits; every `Upgrade` has a `source` string shown on the results card and under ABOUT.
+
 ## Data formats
 - **Map JSON** (`gen/<district>.json`, one per district; generators in `tools/map/`, sharing `common.mjs`):
   - `ground[y][x]` tile indices

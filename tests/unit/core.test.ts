@@ -104,12 +104,15 @@ describe('M2: districts, missions, saves', async () => {
     const CORNERS = new Set(['highpark s waterfront trail', 'waterfront w highpark trail']);
     for (const id of Object.keys(DISTRICTS)) {
       const map = load(id);
+      expect(map.lifeTokens.length, `${id} hearts`).toBe(2); // M3.3: one in the open, one hidden behind a building
       for (const e of map.exits) {
         const other = load(e.to);
         // matched by street name: rows may differ between districts
         const opposite: Record<string, string> = { w: 'e', e: 'w', n: 's', s: 'n' };
         const corner = CORNERS.has(`${id} ${e.side} ${e.to} ${e.street}`);
-        const back = other.exits.find((o: { side: string; to: string; street: string }) => o.to === id && (corner || o.side === opposite[e.side]) && o.street === e.street);
+        // M3.3: an exit may name the street it ARRIVES on (`arrive`); such connections may land on any side
+        const want = e.arrive ?? e.street;
+        const back = other.exits.find((o: { side: string; to: string; street: string }) => o.to === id && (corner || e.arrive || o.side === opposite[e.side]) && o.street === want);
         expect(back, `${id} ${e.side} -> ${e.to} (${e.street})`).toBeTruthy();
       }
     }

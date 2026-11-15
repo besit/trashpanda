@@ -15,7 +15,7 @@ export const BV = 34;    // Broadview Ave cols 34..37 (streetcar)
 export const CW = 64;    // Carlaw Ave cols 64..67
 export const LS = 94;    // Leslie St cols 94..97
 const RIVER = { x0: 4, x1: 8 }, DVP = { x0: 11, x1: 16 };
-const FB = 12;           // the Riverdale Park footbridge deck (rows 12..13)
+const FB = 12;           // the Riverdale Park footbridge deck (row 12; M3.3, Ivan: narrower, it was two deck rows + two rails)
 const BRIDGES = [GERRARD, DUNDAS, QUEEN];
 
 export function generateEastEnd() {
@@ -37,7 +37,7 @@ export function generateEastEnd() {
   }
   // the valley is solid from the west edge through the DVP: you cross on the bridges (and can't drop off
   // them onto the trail or the highway below)
-  const onDeck = (y) => BRIDGES.some((row) => y >= row - 3 && y <= row + 6) || (y >= FB - 1 && y <= FB + 2);
+  const onDeck = (y) => BRIDGES.some((row) => y >= row - 3 && y <= row + 6) || (y >= FB - 1 && y <= FB + 1);
   for (let y = 0; y < H; y++) {
     if (onDeck(y)) continue;
     D.prop('blank', 0, (y + 1) * TS, { solidBox: [0, -TS, (DVP.x1 + 1) * TS, TS], invisible: true });
@@ -53,11 +53,13 @@ export function generateEastEnd() {
   D.nsStreet(LS, 0, H - 1);
   for (const row of BRIDGES) { D.cross(BV, row, { nsTracks: true }); D.cross(CW, row, { tee: row === GERRARD }); D.cross(LS, row); }
   D.exit('w', QUEEN, 'downtown', 'queen'); D.exit('w', DUNDAS, 'downtown', 'dundas');
+  // M3.3 (Ivan): south on Broadview, Carlaw or Leslie lands you on the Waterfront's east end (Queens Quay)
+  for (const [c, name] of [[BV, 'broadview'], [CW, 'carlaw'], [LS, 'leslie']]) D.exitNS('s', c, 'waterfront', name, 'queensquay');
   // the bridge inscription
   D.landmarks.push({ id: 'riversign', x: 9 * TS, y: (QUEEN - 3) * TS - 4, label: 'THE QUEEN ST BRIDGE', fact: 'THIS RIVER I STEP IN IS\nNOT THE RIVER I STAND IN\n(ELDON GARNET, 1996)' });
 
   // ---------- the Riverdale Park footbridge: Riverdale Park West -> East over the river + the DVP ----------
-  for (let x = 0; x <= DVP.x1 + 2; x++) { D.set(x, FB - 1, 'bridge_rail_n'); D.set(x, FB, `sidewalk${x % 2}`); D.set(x, FB + 1, `sidewalk${(x + 1) % 2}`); D.set(x, FB + 2, 'bridge_rail_s'); }
+  for (let x = 0; x <= DVP.x1 + 2; x++) { D.set(x, FB - 1, 'bridge_rail_n'); D.set(x, FB, `sidewalk${x % 2}`); D.set(x, FB + 1, 'bridge_rail_s'); }
   D.landmarks.push({ id: 'footbridge', x: 13 * TS, y: FB * TS + 4, label: 'RIVERDALE PARK BRIDGE', fact: 'WALK + BIKE ONLY. IT JOINS\nRIVERDALE PARK WEST + EAST\nHIGH OVER THE DON + THE DVP.' });
   D.labels.push({ text: 'RIVERDALE PK WEST', x: 3 * TS, y: (FB - 3) * TS, kind: 'landmark' });
 
@@ -67,13 +69,13 @@ export function generateEastEnd() {
   const RP = { x0: DVP.x1 + 3, x1: BV - 2, y0: 3, y1: 19 }; // the bridge's deck ends at RP.x0: the first path picks it up
   D.fill(RP.x0, RP.y0, RP.x1, RP.y1, (x, y) => `lawn${(x * 5 + y) % 3}`);
   const rpPaths = [
-    [[RP.x0 * TS - 4, (FB + 1) * TS], [(RP.x0 + 3) * TS, (FB + 1) * TS], [(RP.x0 + 5) * TS, (FB - 2) * TS], [(RP.x0 + 9) * TS, (RP.y0 + 3) * TS], [(BV - 1) * TS, (RP.y0 + 2) * TS]],
+    [[RP.x0 * TS - 4, FB * TS + 8], [(RP.x0 + 3) * TS, FB * TS + 8], [(RP.x0 + 5) * TS, (FB - 2) * TS], [(RP.x0 + 9) * TS, (RP.y0 + 3) * TS], [(BV - 1) * TS, (RP.y0 + 2) * TS]],
     [[(RP.x0 + 5) * TS, (FB - 2) * TS], [(RP.x0 + 9) * TS, (RP.y1 - 3) * TS], [(BV - 1) * TS, (RP.y1 - 1) * TS]],
   ];
   D.decals.push({ key: 'ee_paths', x: RP.x0 * TS, y: RP.y0 * TS, gen: { kind: 'paths', w: (RP.x1 - RP.x0 + 2) * TS, h: (RP.y1 - RP.y0 + 1) * TS, paths: rpPaths, ox: RP.x0 * TS, oy: RP.y0 * TS } });
   for (let i = 0; i < 260; i++) {
     const px = r.int(RP.x0 * TS + 8, RP.x1 * TS), py = r.int(RP.y0 * TS + 8, RP.y1 * TS);
-    if (!nearPolyline(rpPaths, px, py, 18) && Math.abs(py - (FB + 1) * TS) > 26 && r.chance(0.12)) D.prop(r.chance(0.5) ? 'tree_a' : 'tree_c', px, py, { solid: 5 });
+    if (!nearPolyline(rpPaths, px, py, 18) && Math.abs(py - FB * TS - 8) > 26 && r.chance(0.12)) D.prop(r.chance(0.5) ? 'tree_a' : 'tree_c', px, py, { solid: 5 });
   }
   // benches at the top of the hill, facing the skyline
   for (const dx of [0, 1.5, 3]) D.prop('bench', (RP.x0 + 7 + dx) * TS, (RP.y0 + 5) * TS);
@@ -158,11 +160,13 @@ export function generateEastEnd() {
     { text: 'DON RIVER', x: 6 * TS, y: 64 * TS, vertical: true, kind: 'landmark' }, { text: 'DVP', x: 13 * TS, y: 92 * TS, vertical: true },
     { text: 'LESLIEVILLE', x: 80 * TS, y: (QUEEN - 5) * TS, kind: 'landmark' },
     { text: '< DOWNTOWN', x: 4 * TS, y: (QUEEN - 4) * TS, kind: 'exit' },
+    { text: 'V WATERFRONT', x: (LS + 2) * TS, y: (H - 2) * TS, kind: 'exit' },
   );
   // hidden extra lives: in the trees on Riverdale hill, and behind MEGAMART
-  const lifeTokens = [{ x: (RP.x0 + 1) * TS + 8, y: (RP.y1 - 1) * TS }, { x: (LOT.x1 - 1) * TS, y: (LOT.y1 + 1) * TS + 6 }];
+  // M3.3: the second heart hides behind a Leslieville house
+  const lifeTokens = [{ x: (RP.x0 + 1) * TS + 8, y: (RP.y1 - 1) * TS }, D.hiddenHeart(896, 712, { x: (LOT.x1 - 1) * TS, y: (LOT.y1 + 1) * TS + 6 })];
   // the bridge decks are redrawn over the DVP traffic + trail walkers passing under them
-  const overpasses = [...BRIDGES.map((row) => [0, row - 3, DVP.x1 + 2, row + 6]), [0, FB - 1, DVP.x1 + 2, FB + 2]];
+  const overpasses = [...BRIDGES.map((row) => [0, row - 3, DVP.x1 + 2, row + 6]), [0, FB - 1, DVP.x1 + 2, FB + 1]];
   // easter egg: the benches at the top of Riverdale hill
   const eggs = [{ id: 'riverdale_view', x: (RP.x0 + 6) * TS, y: (RP.y0 + 4) * TS, w: 5 * TS, h: 3 * TS, label: 'THE VIEW FROM THE HILL', fact: 'THE WHOLE SKYLINE AT ONCE.\nPEOPLE COME UP HERE\nFOR THE SUNSET.' }];
   return D.out({ spawn: { x: 40 * TS, y: (QUEEN - 2) * TS + 8 }, lifeTokens, eggs, overpasses, underWalks: [trailIdx] });

@@ -80,6 +80,12 @@ Each district gets landmarks and textures you can't mistake for anywhere else. Q
 - Sugar Beach's pink umbrellas and white chairs, sailboats, the Cinesphere's geodesic dome, the pods on stilts
 - the MEGA SPA (fictional, pink and glass) and its chain-link PRIVATE fences
 
+**Rules added in M3.3:**
+- Symmetry is read as intent: a tower, a mast or any upright landmark is drawn symmetric about one column, even if that costs a 2 px stair on both sides at once. A quarter-pixel offset "for smoothness" reads as a tilt.
+- At dusk a landmark keeps a lit element (window band, red mast light) so it separates from the sky.
+- Animals in a top-down view are drawn mid-motion: a swimming shark bends.
+- Every PNG ships as an exact indexed PNG. The art is a palette, so nothing is lost; if an image ever needs more than 256 colours, the pipeline falls back to RGBA by itself.
+
 **Rules added in M3.2:**
 - Long vehicles bend where the real one bends: the Flexity turns as three sections, cut at its accordion joints.
 - A landmark is drawn from the photos Ivan sends, in its real shape first (the CN Tower's trefoil, the dome's nested roof panels, the aquarium's sharks), then simplified.

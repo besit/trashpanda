@@ -167,7 +167,8 @@ export function generateDowntown() {
     { text: 'v WATERFRONT', x: (UN + 2) * TS, y: (H - 2) * TS, kind: 'exit' },
   );
   // hidden extra lives: at the west end of Graffiti Alley, and tucked behind City Hall
-  const lifeTokens = [{ x: 2 * TS, y: (laneY + 1) * TS + 4 }, { x: cx + 124, y: 22 * TS }];
+  // M3.3: the second heart hides behind a building near the centre
+  const lifeTokens = [{ x: 2 * TS, y: (laneY + 1) * TS + 4 }, D.hiddenHeart(976, 760, { x: cx + 124, y: 22 * TS })];
   // easter eggs (M3.1 scoring): ride the length of Graffiti Alley
   const eggs = [{ id: 'graffiti_alley', x: 2 * TS, y: laneY * TS, w: (SP - 4) * TS, h: 2 * TS, label: 'GRAFFITI ALLEY', fact: 'RUSH LANE, SOUTH OF QUEEN:\nEVERY WALL IS PAINTED.' }];
   return D.out({ spawn: { x: 3 * TS, y: (QUEEN - 2) * TS + 8 }, lifeTokens, eggs });

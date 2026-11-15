@@ -11,6 +11,8 @@ export interface Track {
   vib?: number;
 }
 export interface Song { name: string; bpm: number; tracks: Track[]; loop?: boolean }
+/** M3.3: a song played a little differently per district (tempo, key), so five districts don't share one loop */
+export interface SongVariant { bpm?: number; transpose?: number }
 
 interface Parsed { notes: { step: number; len: number; tok: string }[]; steps: number }
 
@@ -34,17 +36,20 @@ export class Sequencer {
   private timer: number | null = null;
   private totalSteps = 0;
   private stepDur = 0.1;
+  private transpose = 0;
   current = '';
 
-  play(song: Song) {
+  play(song: Song, variant: SongVariant = {}) {
     if (!synth.ctx) return;
-    if (this.current === song.name && this.timer !== null) return;
+    const key = `${song.name}@${variant.bpm ?? song.bpm}/${variant.transpose ?? 0}`;
+    if (this.current === key && this.timer !== null) return;
     this.stop();
     this.song = song;
-    this.current = song.name;
+    this.current = key;
+    this.transpose = variant.transpose ?? 0;
     this.parsed = song.tracks.map(parse);
     this.totalSteps = Math.max(...this.parsed.map((p) => p.steps));
-    this.stepDur = 60 / song.bpm / 4;
+    this.stepDur = 60 / (variant.bpm ?? song.bpm) / 4;
     this.startTime = synth.now + 0.08;
     this.nextStep = 0;
     this.timer = window.setInterval(() => this.schedule(), 25);
@@ -82,7 +87,7 @@ export class Sequencer {
       else if (tok === 'o') synth.noise({ start: t, dur: 0.16, vol: vol * 0.4, hp: 6000, out: 'music' });
       return;
     }
-    synth.tone({ freq: noteFreq(tok), start: t, dur: dur * 0.95, vol, type: tr.ch === 'tri' ? 'tri' : tr.duty ?? 0.5, out: 'music', vib: tr.vib, release: 0.02 });
+    synth.tone({ freq: noteFreq(tok) * Math.pow(2, this.transpose / 12), start: t, dur: dur * 0.95, vol, type: tr.ch === 'tri' ? 'tri' : tr.duty ?? 0.5, out: 'music', vib: tr.vib, release: 0.02 });
   }
 }
 

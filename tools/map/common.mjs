@@ -145,9 +145,32 @@ export class District {
    * A street that continues into the neighbouring district across the map edge. Exits are matched by
    * street name, not by row (M2.1, Ivan): maps can differ in size and street rows can differ.
    */
-  exit(side, row, to, street) { this.exits.push({ side, y0: (row - 3) * TS, y1: (row + 7) * TS, to, street }); }
-  /** a N-S street that continues across the north ('n') or south ('s') edge */
-  exitNS(side, col, to, street) { this.exits.push({ side, x0: (col - 1) * TS, x1: (col + 5) * TS, to, street }); }
+  exit(side, row, to, street, arrive) { this.exits.push({ side, y0: (row - 3) * TS, y1: (row + 7) * TS, to, street, ...(arrive ? { arrive } : {}) }); }
+  /** a N-S street that continues across the north ('n') or south ('s') edge. `arrive` (M3.3): the street it lands
+   *  on when that's a different one (two streets can lead to the same street on the next map) */
+  exitNS(side, col, to, street, arrive) { this.exits.push({ side, x0: (col - 1) * TS, x1: (col + 5) * TS, to, street, ...(arrive ? { arrive } : {}) }); }
+  /**
+   * M3.3 hidden hearts: a spot under a building's roof, just behind its footprint, so it's hidden until you ride
+   * behind the building (which then fades). Picks the building nearest (nx, ny) whose back is open ground.
+   */
+  hiddenHeart(nx, ny, fallback) {
+    const blds = this.objects.filter((o) => o.type === 'building').sort((a, b) => Math.hypot(a.x + a.w / 2 - nx, a.y - ny) - Math.hypot(b.x + b.w / 2 - nx, b.y - ny));
+    const blocked = (px, py) => this.objects.some((o) => {
+      if (o.type === 'building') return px >= o.x - 2 && px < o.x + o.w + 2 && py >= o.y - 2 && py < o.y + o.d + 2;
+      if (o.solidBox) { const [dx, dy, w, h] = o.solidBox; return px >= o.x + dx - 4 && px < o.x + dx + w + 4 && py >= o.y + dy - 4 && py < o.y + dy + h + 4; }
+      if (o.solid) return Math.abs(px - o.x) < o.solid + 8 && Math.abs(py - o.y) < o.solid + 8;
+      return false;
+    });
+    for (const b of blds) {
+      const px = b.x + Math.round(b.w / 2), py = b.y - 8;
+      if (py < b.y + b.d - b.imgH + 6) continue; // still under the roof image
+      const tile = this.get(Math.floor(px / TS), Math.floor(py / TS)) ?? '';
+      if (!/^(grass|lawn|laneway|lot$)/.test(tile)) continue;
+      if ([-7, 0, 7].some((dx) => blocked(px + dx, py)) || blocked(px, py - 7)) continue;
+      return { x: px, y: py };
+    }
+    return fallback;
+  }
 
   out(extra = {}) {
     for (const l of this.lanes) { delete l.stopsWB; delete l.stopsEB; if (l.stops === undefined) delete l.stops; }

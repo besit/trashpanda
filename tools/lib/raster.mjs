@@ -3,6 +3,7 @@ import { PNG } from 'pngjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { PALETTE, hexToRgb } from '../palette.mjs';
+import { encodePNG8 } from './png8.mjs';
 
 const RGB = Object.fromEntries(Object.entries(PALETTE).map(([k, v]) => [k, hexToRgb(v)]));
 const T = null; // transparent
@@ -155,6 +156,8 @@ export function toPNG(img, scale = 1, bg = null) {
     if (rgb) { png.data[i] = rgb[0]; png.data[i + 1] = rgb[1]; png.data[i + 2] = rgb[2]; png.data[i + 3] = 255; }
     else png.data[i + 3] = 0;
   }
+  // M3.3: the same pixels as an 8-bit indexed PNG, about half the bytes (the art is a 48-colour palette)
+  if (!process.env.TP_PNG_RGBA) { const p8 = encodePNG8(W, H, png.data); if (p8) return p8; }
   return PNG.sync.write(png);
 }
 

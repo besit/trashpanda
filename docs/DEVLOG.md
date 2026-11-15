@@ -567,3 +567,28 @@ Ivan's notes covered the Lane Eater, the Waterfront and High Park, plus fullscre
 - **Android and iPad:** the Fullscreen API runs on the first tap, from a real DOM `pointerup`. Browsers refuse it from Phaser's pointerdown, so the pause menu's FULLSCREEN line also acts on pointerup.
 - **iPhone:** Safari has no page fullscreen, so a web-app manifest and icon make Add to Home Screen open the game fullscreen in landscape.
 - **Pause menu:** the new line made 8 items, so the spacing tightens to keep the list clear of the bottom of the screen.
+
+## 2026-11-14: M3.3, the rename, Ivan's M3.2 notes and the audit pass
+
+Ivan asked two things on top of his M3.2 notes: rename the villain (the working name contained the word "fraud", which is literally an accusation, and he has a permanent-residence application in progress), and take a full creative + technical look at the project and improve whatever I could without his input, in order of value for effort. The audit is [docs/plans/AUDIT.md](plans/AUDIT.md); the review doc is [docs/reviews/M3.3.md](reviews/M3.3.md).
+
+### The rename
+The villain is **Dog Fjord**. The rename ran through code, docs, the art history and the gitignored reference; the name lives in one constant now. ABOUT on the title screen carries the satire notice, the fiction label, the AI notice Ivan asked for, the credits and a SOURCES page per claim. The title footer points at it. Earlier entries in this log keep the old name: they're history.
+
+**Failure along the way:** Windows refused to rename the `art/history/dogfraud` folders (a file handle somewhere); copying the trees and deleting the originals worked.
+
+### Bugs Ivan reported, with their causes
+- **The pump-frame freeze:** `SidePlayer` stops the animation during a swing and afterwards only restarts the idle if the *current* key differs. After a swing from idle the current key is still `rs_idle`, so nothing restarted. One extra condition (`!anims.isPlaying`) fixed it.
+- **"It dies in one jump":** a stomp counted anywhere above the roof while falling, and the bounce made it count again every 150 ms. Stomps count only when landing (feet within a band of the roof), once per landing per target. Tracing the fix frame by frame also showed that a stomp bounce was cut to 5 px by the variable-jump logic; it keeps its height for 0.14 s now.
+- **Planes diving into the lake:** the turboprop's tween ended at 38 % of the width and hid. Landings now cross left to right onto the island; take-offs right to left, climbing.
+- **Text on text:** four vignettes placed a second caption two pixels below the first with no `clear`. A caption now replaces whatever sits on its line, and mission hints and title cards sit on dark panels.
+
+### What the audit changed
+- **Download:** every PNG is now an exact indexed PNG (3.8 MB -> 0.7 MB, 0 pixels different), Phaser is the Arcade-only build, and map JSON loads on demand. First load: 2.38 MB -> 0.59 MB.
+- **Story:** Dog Fjord reacts after every second win, quoting the Livability score. A boss theme, a win fanfare, a life-lost sting, and a tempo/key variant of the explore song per district.
+- **Exploration:** a collectibles tally on the city map; one heart per district hidden behind a building; replays from FIXED markers for no points.
+
+### Ivan's remaining notes
+Streetcar sections now space by heading (the N/S sprites are foreshortened: the one-piece north-facing car is 63 px tall for 96 units of length, so the sections sit at 2/3 spacing when vertical) and draw front over rear. The aquarium's sharks bend. The skyline tower is symmetric and lit at dusk. The footbridge is one tile. High Park's trails stop in the grass. The Gardiner jams more. Queens Quay east leads to Leslie St, and Leslie, Carlaw and Broadview south lead back (exits can name the street they arrive on). The Lane Eater rides further into view and lobs from its front. The digger's red mark is its bucket's shadow.
+
+**Not done:** the Explore CN Tower's shaft as a continuation of the base, the airport mission and the two new rats (M3.4), and the Monster SUV arena's shelters (Ivan's "leave only the pallets" is a judgement call; asked him).

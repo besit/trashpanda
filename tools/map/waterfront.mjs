@@ -60,6 +60,8 @@ export function generateWaterfront() {
   D.exitNS('n', SP, 'downtown', 'spadina'); D.exitNS('n', UN, 'downtown', 'university'); D.exitNS('n', BY, 'downtown', 'bay');
   // M3.2 (Ivan): from High Park you come down onto the trail at the west end; ride west along it to go back
   D.exit('w', QQ + 5, 'highpark', 'trail');
+  // M3.3 (Ivan): east along Queens Quay or Lake Shore -> the East End (you come out at the bottom of Leslie St)
+  D.exit('e', QQ, 'eastend', 'queensquay', 'leslie'); D.exit('e', LAKESHORE, 'eastend', 'lakeshore', 'leslie');
 
   // ---------- the Gardiner: a deck above Lake Shore, piers on the north sidewalk between the streets ----------
   for (let x = 0; x < W * TS; x += 32) D.prop('gardinerdeck', x, DECK_Y, { depth: 10000 });
@@ -239,7 +241,8 @@ export function generateWaterfront() {
     { text: '< HIGH PARK', x: 4 * TS, y: (QQ + 6) * TS, kind: 'exit' },
   );
   // hidden extra lives: behind the dome, and at the far end of Sugar Beach
-  const lifeTokens = [{ x: (SP + 5) * TS, y: 8 * TS }, { x: 118 * TS, y: (LAKE_Y + 3) * TS }];
+  // M3.3: the second heart hides behind a building off Queens Quay
+  const lifeTokens = [{ x: (SP + 5) * TS, y: 8 * TS }, D.hiddenHeart(952, 728, { x: 118 * TS, y: (LAKE_Y + 3) * TS })];
   // easter egg: ride onto the sand at Sugar Beach
   const eggs = [{ id: 'sugar_beach', x: 109 * TS, y: LAKE_Y * TS, w: 11 * TS, h: 7 * TS, label: 'SUGAR BEACH', fact: 'A CANDY-PINK BEACH IN THE\nMIDDLE OF THE CITY.' }];
   return D.out({ spawn: { x: (UN + 2) * TS, y: 4 * TS }, lifeTokens, eggs });

@@ -27,7 +27,8 @@ const PROFILE = [
 
 export const CN_PAL = {
   day: { shaft: 't', shaftHi: 'T', shaftLo: 'S', under: 'G', glass: 'g', rim: 'W', pod: 'W', podLo: 'H', antenna: 'W', band: 'h', tip: 'R', donut: 'W', donutLo: 'H', deck: 'g', rib: 'G', red: 'R' },
-  dusk: { shaft: 'v', shaftHi: 'V', shaftLo: 'u', under: 'u', glass: 'd', rim: 'V', pod: 'v', podLo: 'u', antenna: 'V', band: 'v', tip: 'R', donut: 'V', donutLo: 'v', deck: 'd', rib: 'u', red: 'R' },
+  // M3.3 (Ivan: it mixed with the night sky): lit window bands, pale rims and a brighter mast against the dark top of the sky
+  dusk: { shaft: 'v', shaftHi: 'V', shaftLo: 'u', under: 'u', glass: 'Y', rim: 'Z', pod: 'V', podLo: 'v', antenna: 'Z', band: 'R', tip: 'R', donut: 'Z', donutLo: 'V', deck: 'd', rib: 'u', red: 'R' },
   silhouette: { shaft: 'v', shaftHi: 'v', shaftLo: 'v', under: 'v', glass: 'O', rim: 'v', pod: 'v', podLo: 'v', antenna: 'v', band: 'v', tip: 'O', donut: 'v', donutLo: 'v', deck: 'v', rib: 'v', red: 'v' },
 };
 
@@ -41,8 +42,9 @@ export function cnTower(img, cx, base, H, pal = CN_PAL.day) {
     // the donut bulges: widest across its middle, rounded top and bottom
     const bulge = band[4] === 'donut' ? 4.4 * Math.sin(Math.PI * Math.min(1, Math.max(0, t))) ** 0.6 : 0;
     const hw = Math.max(band[4] === 'antenna' ? 0.5 : 0.8, (band[2] + (band[3] - band[2]) * t + bulge) * Math.max(k, 0.42));
-    // off-centre by a quarter pixel so the taper steps one side at a time (smooth, not 2px stairs)
-    const x0 = Math.round(cx + 0.25 - hw), x1 = Math.round(cx + 0.25 + hw) - (hw < 1 ? 0 : 1);
+    // M3.3 (Ivan: "the top looks tilted or offset"): every band is symmetric about the same column
+    const half = Math.max(0, Math.round(hw - 0.5)), cxi = Math.round(cx);
+    const x0 = cxi - half, x1 = cxi + half;
     const role = band[4];
     const py = base - 1 - y;
     for (let x = x0; x <= Math.max(x0, x1); x++) {

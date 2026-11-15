@@ -29,7 +29,7 @@ export interface Lane {
   /** [start, end] px along the lane's axis when the street doesn't span the whole map */ range?: [number, number];
 }
 /** a street continuing across a map edge: w/e exits span rows y0..y1, n/s exits span columns x0..x1 */
-export interface Exit { side: 'w' | 'e' | 'n' | 's'; y0?: number; y1?: number; x0?: number; x1?: number; to: string; street: string }
+export interface Exit { side: 'w' | 'e' | 'n' | 's'; y0?: number; y1?: number; x0?: number; x1?: number; to: string; street: string; /** M3.3: the street you arrive on, when it isn't this one (two streets can lead to one) */ arrive?: string }
 export const OPPOSITE = { w: 'e', e: 'w', n: 's', s: 'n' } as const;
 /** the exit's span along its edge [lo, hi] (px) */
 export const exitSpan = (e: Exit): [number, number] => (e.side === 'w' || e.side === 'e' ? [e.y0!, e.y1!] : [e.x0!, e.x1!]);

@@ -56,6 +56,14 @@ First pass procedural Queen West buildings: brick bond texture, sash windows (so
 
 ## cn_tower
 
+### cn_tower v03
+
+2026-11-15
+
+M3.3 (Ivan: the top looked tilted/offset; it mixed with the night sky): every band is symmetric about one column; at dusk the pod's window band is lit, the rims and mast are pale purple, the band light is red.
+
+![cn_tower v03](cn_tower/v03/preview.png)
+
 ### cn_tower v02
 
 2026-11-13
@@ -629,6 +637,14 @@ First pass vehicles: car (4 dirs/colours), SUV, 3-section TTC-style streetcar.
 ![vehicles v01](vehicles/v01/preview.png)
 
 ## waterfront
+
+### waterfront v04
+
+2026-11-15
+
+M3.3 (Ivan): the aquarium's roof sharks bend along an arc instead of lying straight; CN Tower base, dome, Power Plant unchanged.
+
+![waterfront v04](waterfront/v04/preview.png)
 
 ### waterfront v03
 

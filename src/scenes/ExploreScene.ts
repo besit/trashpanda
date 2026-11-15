@@ -125,7 +125,7 @@ export class ExploreScene extends Phaser.Scene {
     this.events.on('resume', () => this.input2.swallow());
     this.events.once('shutdown', () => { this.scale.off('resize', this.layout, this); if (!this.leaving) ctx.state.player = { scene: 'explore', district: this.district, x: this.player.x, y: this.player.y }; });
 
-    music.play(SONG_MAIN);
+    music.play(SONG_MAIN, DISTRICTS[this.district]?.music);
     this.shownLiv = livability(ctx.state.upgrades);
 
     if (data.from === 'mission' && data.missionId && data.won && !data.replay) {
@@ -364,7 +364,7 @@ export class ExploreScene extends Phaser.Scene {
     await this.wait(650);
     cam.startFollow(this.player.sprite, true, 0.12, 0.12);
     this.buildMarkers();
-    music.play(SONG_MAIN);
+    music.play(SONG_MAIN, DISTRICTS[this.district]?.music);
     this.player.frozen = false;
     this.busy = false;
     this.shownLiv = after;
@@ -443,7 +443,7 @@ export class ExploreScene extends Phaser.Scene {
     this.busy = true; this.leaving = true;
     this.player.frozen = true;
     const [lo, hi] = exitSpan(e), ns = e.side === 'n' || e.side === 's';
-    const entry = { side: OPPOSITE[e.side], street: e.street, dy: Phaser.Math.Clamp(ns ? this.player.x : this.player.y, lo + 8, hi - 8) - lo, fromDistrict: this.district };
+    const entry = { side: OPPOSITE[e.side], street: e.arrive ?? e.street, dy: Phaser.Math.Clamp(ns ? this.player.x : this.player.y, lo + 8, hi - 8) - lo, fromDistrict: this.district };
     ctx.state.player = { scene: 'explore', district: e.to, x: -1, y: -1 };
     ctx.save();
     sfx.chain();
@@ -514,6 +514,6 @@ export class ExploreScene extends Phaser.Scene {
     w.__TP = { ...(w.__TP ?? {}), scene: 'Explore', district: this.district, state: ctx.state, player: () => ({ x: this.player.x, y: this.player.y }), teleport: (x: number, y: number) => this.player.sprite.setPosition(x, y), startMission: (id: string) => this.startMission(id), improve: (id: string) => this.map.applyImprovement(id, true, this.player.x), improveNow: (id: string) => this.map.applyImprovement(id, false), traffic: () => this.traffic.count, map: this.map.data,
       goto: (district: string, y?: number) => this.scene.start('Explore', { from: 'district', district, entry: y !== undefined ? { side: 'w', y } : undefined }),
       exits: () => this.map.data.exits,
-      markers: () => this.markers.map((m) => m.id), busy: () => this.busy };
+      markers: () => this.markers.map((m) => m.id), busy: () => this.busy, song: () => music.current };
   }
 }

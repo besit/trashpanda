@@ -7,7 +7,7 @@ Living document. The master prompt is the source of intent; this records what we
 ## Pillars
 1. **Every mission visibly improves the city.** If an improvement can be shown, it is shown, in both views.
 2. **Feels great on a bike.** Momentum, lean, dash and hop. Traversal is fun on its own.
-3. **Satire with a sincere heart.** Dog Fjord is absurd; the before/after moments are earnest and mostly wordless.
+3. **Satire with a sincere heart.** Dog Fjord is absurd; the before/after moments are earnest and mostly wordless. The game says so itself: ABOUT on the title screen carries the satire notice, the fiction label and the AI notice (M3.3).
 4. **Evidence, not opinion.** Civic claims trace back to [URBAN_RESEARCH.md](URBAN_RESEARCH.md).
 5. **Small, polished, fast.** 45–60 minutes total, 60 fps on phones, no scope creep.
 
@@ -90,7 +90,9 @@ The cost is a 0.3 s wipe at the seam. The design target of "one city" is kept: s
   - EASY: 7 hits per life, score ×1
   - NORMAL: 5 hits per life, score ×1.5
   - HARD: 3 hits per life, score ×2
-- **Lives:** a mission's health bar has that many segments. Losing the bar costs a life (lives are hearts, found hidden on the maps).
+- **Lives:** a mission's health bar has that many segments. Losing the bar costs a life (lives are hearts, found hidden on the maps). M3.3 (Ivan): each district has two hearts, one in the open and one **behind a building**, under its roof, visible only once you ride behind it.
+- **Replays (M3.3, Ivan):** a FIXED marker can be replayed. A replay earns **no points** and says so on the prompt, the title card, the score field and the end card. Debug missions and vignettes end at a REPLAY / BACK / MAIN MENU menu.
+- **Collectibles tally (M3.3):** the city map shows plaques, hearts and eggs found per district.
 - **Base points** (`src/core/Score.ts`):
 
   | Event | Points |
@@ -118,7 +120,8 @@ The cost is a 0.3 s wipe at the seam. The design target of "one city" is kept: s
 
 ## Characters
 - **The raccoon:** grey, bandit mask, big ringed tail. Rides a red steel cruiser with swept bars, a bell, and a wicker basket holding a pizza slice. Attack: a **bike pump** swung like a bat (3-hit combo). It replaced the trash-can lid at the M0 review because the lid didn't read at this scale.
-- **Dog Fjord:** a cartoon bulldog politician and fictional parody, not a likeness of anyone.
+- **Dog Fjord** (M3.3: renamed from the working name; the name lives in `src/data/villain.ts`): a cartoon bulldog politician and fictional parody, not a likeness of anyone.
+  - **He reacts to losing (M3.3):** after the 2nd, 4th and 6th mission win a short interstitial plays after the debrief (a press conference, behind closed doors, a very large office). He quotes the Livability score and goes from dismissive to rattled; the third sets up the highway finale. Once per run each, never on replays (`fjord_1..3` in `cutscenes.ts`).
   - Huge flushed pink pear head, swept white hair, folded dog ears, big dog nose and muzzle, a tan eye patch, smug squint, tiny dark suit and dotted tie. The moustache was removed at the M0 review.
   - Laugh: "FRA-HA-HA-HA-HA!" Catchphrase: "**ANOTHER CAR LANE.**" ("car" added at the M0 review so the joke can't be misread as pro-bike-lane).
   - Expressions so far: grin, laugh, shock.
@@ -210,10 +213,12 @@ Each mission has 2–4 beats: a ride section (curbs, cones, parked cars to hop),
 - Before/after: the same composition before and after a mission. In M0 this is the map-level transformation sweep; per-mission vignette scenes (parent and child at a crossing) come in M1.
 
 ## Audio
-Runtime chip synth (2 pulse channels, triangle, noise) with three original songs:
-- *Queen St. Cruise* (exploration)
+Runtime chip synth (2 pulse channels, triangle, noise) with original songs:
+- *Queen St. Cruise* (exploration). M3.3: each district plays it at its own tempo and key (`DISTRICTS[id].music`: High Park slower in D, Downtown faster in D, the East End in Ab, the Waterfront in Eb).
 - *Historic Investment* (Dog Fjord's minor-key villain march)
 - *Rat Rush* (action)
+- *Another Lane of Trouble* (M3.3: every boss)
+- *Street Cleared* (M3.3: the win fanfare) and *Bonk* (M3.3: a life lost), both short and unlooped
 
 Plus an improvement sting and about 25 synthesized SFX: bike bell, streetcar bell, chain ticks, squeaks, FRA-HA-HA laugh, construction rattle, and others.
 

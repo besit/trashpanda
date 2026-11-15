@@ -31,7 +31,7 @@ import * as WF2 from './sprites/waterfront2.mjs';
 import * as WF3 from './sprites/waterfront3.mjs';
 import { generateWaterfront } from './map/waterfront.mjs';
 
-const OUT = path.resolve('public/gen');
+const OUT = path.resolve(process.env.TP_GEN_OUT || 'public/gen');
 fs.mkdirSync(OUT, { recursive: true });
 const t0 = Date.now();
 const manifest = { atlases: {}, anims: {}, pivots: {}, images: {}, fonts: {}, maps: {}, districts: {} };

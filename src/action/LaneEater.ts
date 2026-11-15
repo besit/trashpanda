@@ -187,7 +187,9 @@ export class LaneEater {
 
   /** a gob of hot asphalt from the conveyor, landing near `tx` in `tF` seconds, with a shadow where it'll land */
   private lob(tx: number, tF: number) {
-    const sx = this.x + this.dir * -20, sy = this.groundY - 92;
+    // M3.3 (Ivan: "I need to see the projectiles for their whole trajectory"): the gob leaves from the conveyor's
+    // mouth near the FRONT of the machine, which is always on screen, so the whole arc is visible
+    const sx = this.front - this.dir * 26, sy = this.groundY - 84;
     const mark = this.scene.add.ellipse(tx, this.groundY + 1, 6, 2, 0xff6347, 0.7).setDepth(41);
     this.scene.tweens.add({ targets: mark, scaleX: 3.2, scaleY: 2, duration: tF * 1000 });
     this.gobs.push({ img: this.scene.add.image(sx, sy, 'world', 'paintgob_0').setDepth(96), vx: (tx - sx) / tF, vy: -0.5 * 900 * tF + (this.groundY - sy) / tF, mark });
@@ -221,8 +223,9 @@ export class LaneEater {
   chase(dtMs: number, riders: number, px: number, pvx: number, camLeft: number, viewW: number, progress: number,
     playerRect: Phaser.Geom.Rectangle, onGround: boolean, hurt: (fromX: number) => void) {
     const dt = dtMs / 1000;
-    // where its front should be on screen: 92 px in (alone) back to 30 px in (a full peloton)
-    const gap = Phaser.Math.Clamp(92 - riders * 14, 30, 92);
+    // where its front should be on screen: 118 px in (alone) back to 44 px in (a full peloton). M3.3 (Ivan:
+    // "I would love to see more of the Lane Eater"): 26 px further in than M3.2
+    const gap = Phaser.Math.Clamp(118 - riders * 14, 44, 118);
     const targetX = camLeft + gap - LE_W / 2;
     this.x += Phaser.Math.Clamp(targetX - this.x, -40 * dt, 30 * dt) + (targetX - this.x > 60 ? (targetX - this.x) * dt * 2 : 0);
     this.draw(Math.floor(this.scene.time.now / 120) % 2);

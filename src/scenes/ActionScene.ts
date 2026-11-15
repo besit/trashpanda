@@ -23,7 +23,8 @@ import { text, iris, shake, hitStop, puff, floatText, fitText } from '../ui/fx';
 import { openPause } from './PauseScene';
 import { ScrollLayer, STREET_Y, GROUND_Y, FRONT_Y, BACKROW_Y, SKYLINE_Y } from '../ui/sideLayout';
 import { music } from '../audio/Sequencer';
-import { SONG_ACTION } from '../audio/songs';
+import { SONG_ACTION, SONG_BOSS, SONG_WIN, SONG_LOSE } from '../audio/songs';
+import { livability } from '../core/Livability';
 import { sfx } from '../audio/sfx';
 
 const overlap = (a: { x: number; y: number; w: number; h: number }, b: Phaser.Geom.Rectangle) => a.x < b.right && a.x + a.w > b.x && a.y < b.bottom && a.y + a.h > b.y;
@@ -152,7 +153,7 @@ export class ActionScene extends Phaser.Scene {
       }, rats: () => this.rats.filter((r) => r.alive).length, win: () => this.win(), boss: () => this.boss, eaterObj: () => this.eater, digger: () => this.digger, monster: () => this.monster, gy: () => this.groundY,
       state: () => (!this.sys.isActive() ? { finished: true } : { x: this.player.sprite.x, frozen: this.player.frozen, hp: this.player.hp,
         rats: this.rats.filter((r) => r.alive).map((r) => Math.round(r.sprite.x)), carsAt: this.cars.filter((c) => c.alive && !c.tame).map((c) => [Math.round(c.x), c.dir]), bossX: this.boss?.alive ? Math.round(this.boss.sprite.x) : this.monster?.alive ? Math.round(this.monster.x) : null, depaved: this.depave?.done ?? null, spots: this.depave?.openSpots ?? null, monsterStalled: this.monster?.stalled ?? null,
-        front: this.escort ? Math.round(this.escort.front) : null, scrolling: this.scrolling, peloton: this.peloton?.size ?? null, eater: this.eater ? { x: Math.round(this.eater.x), boss: this.eater.boss, hp: this.eater.totalHp, hot: this.eater.hot, move: this.eater.state, dir: this.eater.facing } : null, haul: this.chase ? Math.round(this.chase.rearX) : null, lock: this.lock?.kind ?? null, wave: this.waveIdx, boss: this.boss ? this.boss.hp : null, escort: this.escort ? { car: Math.round(this.escort.car.x), delay: +this.escort.delay.toFixed(1), done: this.escort.done } : null, chase: this.chase?.state ?? null, built: this.build?.built ?? null, cars: this.cars.filter((c) => c.alive).length, finished: this.finished, camX: Math.round(this.cameras.main.scrollX) }) };
+        front: this.escort ? Math.round(this.escort.front) : null, scrolling: this.scrolling, peloton: this.peloton?.size ?? null, eater: this.eater ? { x: Math.round(this.eater.x), boss: this.eater.boss, hp: this.eater.totalHp, hot: this.eater.hot, move: this.eater.state, dir: this.eater.facing } : null, haul: this.chase ? Math.round(this.chase.rearX) : null, lock: this.lock?.kind ?? null, wave: this.waveIdx, boss: this.boss ? this.boss.hp : null, escort: this.escort ? { car: Math.round(this.escort.car.x), delay: +this.escort.delay.toFixed(1), done: this.escort.done } : null, chase: this.chase?.state ?? null, built: this.build?.built ?? null, cars: this.cars.filter((c) => c.alive).length, finished: this.finished, camX: Math.round(this.cameras.main.scrollX), song: music.current }) };
   }
 
   private buildBackground() {
@@ -212,7 +213,9 @@ export class ActionScene extends Phaser.Scene {
     if (this.player.body.velocity.y <= 40) return false;
     if (pRect.bottom > roofY + 10 || pRect.bottom < roofY - 16) return false;
     if (pRect.right <= x0 || pRect.x >= x1) return false;
-    if (this.time.now - (this.stompAt.get(target) ?? -1e9) < 380) return false;
+    // 650 ms: a plain bounce comes back down in about half a second, so a chain of stomps takes a real
+    // second approach (Ivan: one jump used to kill the SUV by itself)
+    if (this.time.now - (this.stompAt.get(target) ?? -1e9) < 650) return false;
     this.stompAt.set(target, this.time.now);
     return true;
   }
@@ -461,7 +464,7 @@ export class ActionScene extends Phaser.Scene {
     }, kind);
     this.physics.add.collider(this.boss.sprite, this.ground);
     this.flashGo('BOSS!');
-    music.play(SONG_ACTION);
+    music.play(SONG_BOSS);
   }
 
   private startBuild() {
@@ -477,7 +480,7 @@ export class ActionScene extends Phaser.Scene {
     if (this.finished) return;
     this.finished = true;
     this.player.frozen = true;
-    music.stop();
+    music.play(SONG_WIN);
     sfx.ding();
     const a = this.mission.action;
     const head = a.escort ? 'RIGHT ON TIME!' : a.build ? 'SCHOOL ZONE SLOWED!' : a.autoscroll ? 'BLOOR IS SAFE!' : a.depave?.style === 'fence' ? 'THE SHORE IS PUBLIC!' : a.depave ? 'THE LOT IS GREEN!' : 'STREET CLEARED!';
@@ -497,7 +500,13 @@ export class ActionScene extends Phaser.Scene {
     ctx.save();
     const next = { from: 'mission', missionId: this.mission.id, won: true, district: this.mission.district, replay: this.replay };
     const [to, toData] = this.debugRun ? ['Title', { replay: { kind: 'mission', id: this.mission.id } }] as const : ['Explore', next] as const;
-    if (this.mission.debrief) this.scene.start('Cutscene', { id: this.mission.debrief, next: to, nextData: toData });
+    // M3.3: after every second win Dog Fjord reacts to the Livability score (once per beat, never on replays)
+    const done = ctx.state.completedMissions.includes(this.mission.id) ? ctx.state.completedMissions.length : ctx.state.completedMissions.length + 1;
+    const beat = !this.replay && !this.debugRun && [2, 4, 6].includes(done) && !ctx.state.flags[`fjord_${done}`] ? `fjord_${done / 2}` : null;
+    if (beat) { ctx.state.flags[`fjord_${done}`] = true; ctx.save(); }
+    const ids = [this.mission.debrief, beat].filter((x): x is string => !!x);
+    const vars = { LIV: String(livability([...ctx.state.upgrades, ...this.mission.upgrades])) };
+    if (ids.length) this.scene.start('Cutscene', { ids, vars, next: to, nextData: toData });
     else this.scene.start(to, toData);
   }
 
@@ -509,7 +518,7 @@ export class ActionScene extends Phaser.Scene {
   private async lose(msg = 'BONK!', costsLife = true) {
     if (this.finished) return;
     this.finished = true;
-    music.stop();
+    if (costsLife) music.play(SONG_LOSE); else music.stop();
     this.player.frozen = true;
     if (costsLife) ctx.state.lives = Math.max(0, ctx.state.lives - 1);
     const out = costsLife && ctx.state.lives <= 0;
@@ -565,14 +574,14 @@ export class ActionScene extends Phaser.Scene {
           this.oneWay(sx, this.groundY - 56, 80, 'cartshelter');
           this.oneWay(sx + step * 58, this.groundY - 26, 30, 'pallets');
         }
-        this.flashGo('BOSS!');
+        this.flashGo('BOSS!'); music.play(SONG_BOSS);
         this.time.delayedCall(1300, () => this.say('CLIMB THE CART SHELTERS: IT CAN\'T REACH YOU.\nSTOMP ITS ROOF. PUMP THE TYRES WHEN IT STALLS!', 0xfff08a, 3200));
       }
       else if (a.boss?.kind === 'spadigger' && !this.digger && px > a.boss.at) {
         const l = this.lockArena('boss', 2);
         this.digger = new SpaDigger(this, l.left + GAME_W - 100, this.groundY, { left: l.left, right: l.left + GAME_W }, (fx) => { if (this.player.hurt(fx)) { shake(this, 150, 0.01); hitStop(this, 70); } });
         this.time.delayedCall(1500, () => { const L2 = this.lock; if (L2) ['basic', 'lobbyist'].forEach((k, i) => this.time.delayedCall(i * 600, () => this.spawnRat(k as RatKind, L2.left + 14))); });
-        this.flashGo('BOSS!');
+        this.flashGo('BOSS!'); music.play(SONG_BOSS);
         this.time.delayedCall(1300, () => this.say('THE BUCKET SLAMS WHERE ITS SHADOW FALLS.\nPUMP THE ARM WHILE IT\'S STUCK. STOMP THE CAB!', 0xfff08a, 3400));
       }
       else if (a.boss && a.boss.kind !== 'laneeater' && a.boss.kind !== 'monstersuv' && a.boss.kind !== 'spadigger' && !this.boss && px > a.boss.at) this.startBoss();
@@ -607,7 +616,7 @@ export class ActionScene extends Phaser.Scene {
           this.eater.startBoss(l.left, l.left + GAME_W);
           this.peloton.parkAt = l.left + GAME_W - 20; this.peloton.dismissWaiting();
           this.time.delayedCall(900, () => this.say('IT CHARGES: JUMP THE GRINDER!\nPUMP THE CAB + CONVEYOR ANY TIME. THE GRINDER WHEN IT OVERHEATS!', 0xfff08a, 3400));
-          this.flashGo('BOSS!');
+          this.flashGo('BOSS!'); music.play(SONG_BOSS);
         }
       }
       this.peloton.update(dt, px, cam.scrollX);

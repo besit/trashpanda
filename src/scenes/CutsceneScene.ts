@@ -52,16 +52,23 @@ export class CutsceneScene extends Phaser.Scene {
   /** x offset that centres the 384-wide stage on wider screens */
   private get ox() { return Math.round((GAME_W - STAGE_W) / 2); }
 
-  create(data: { id?: string; next?: string; nextData?: object }) {
+  /** M3.3: text substitutions ({LIV} = the Livability score after this mission) */
+  private vars: Record<string, string> = {};
+  private sub(s: string) { return s.replace(/\{(\w+)\}/g, (m, k) => this.vars[k] ?? m); }
+
+  create(data: { id?: string; ids?: string[]; vars?: Record<string, string>; next?: string; nextData?: object }) {
     this.input2 = new InputManager(this);
     this.next = data?.next ?? 'Explore';
     this.nextData = data?.nextData;
     this.skipping = false;
     this.captions = []; this.layers = []; this.bgGroup = []; this.actors.clear(); this.followers = []; this.decor = []; this.worldActors.clear(); this.triggers = [];
     this.portrait = undefined; this.dvp = undefined; this.pan = 0; this.panX = 0; this.boxTop = false;
+    this.vars = data?.vars ?? {};
     synth.unlock();
     this.dark = this.add.rectangle(0, 0, GAME_W, GAME_H, 0x16121f, 0).setOrigin(0).setDepth(5);
-    void this.run(CUTSCENES[data?.id ?? 'intro'] ?? []);
+    // several timelines can play back to back (a debrief, then Dog Fjord's reaction)
+    const ids = data?.ids ?? [data?.id ?? 'intro'];
+    void this.run(ids.flatMap((id) => CUTSCENES[id] ?? []));
     text(this, GAME_W - 4, GAME_H - 4, 'ESC: SKIP', 'font', 1).setTint(0x69657a).setDepth(100002);
     this.input.on('pointerdown', () => this.advance?.());
   }
@@ -153,11 +160,12 @@ export class CutsceneScene extends Phaser.Scene {
         const y = s.y ?? 70 + this.captions.length * 16;
         // M3.3 (Ivan: text on text): a caption replaces any caption still sitting on its line
         this.captions = this.captions.filter((c) => { const cy = (c as Phaser.GameObjects.BitmapText).y; if (Math.abs(cy - y) < 14) { c.destroy(); return false; } return true; });
-        const t = text(this, GAME_W / 2, y, s.text, font).setDepth(200);
+        const full = this.sub(s.text);
+        const t = text(this, GAME_W / 2, y, full, font).setDepth(200);
         fitText(t, GAME_W - 16); // sized from the full line, then typed out (M2.1: big captions ran off screen)
         t.setText('');
         this.captions.push(t);
-        await this.typewrite(t, s.text);
+        await this.typewrite(t, full);
         await this.wait(s.hold ?? 1200);
         break;
       }
@@ -211,7 +219,7 @@ export class CutsceneScene extends Phaser.Scene {
         const name = text(this, 16, by + 4, s.who, 'font', 0).setDepth(301).setTint(villain ? 0xff6347 : 0x9bd35a);
         const t = text(this, 16, by + 16, '', 'font_outline', 0).setDepth(301).setMaxWidth(GAME_W - 34);
         const bob = this.portrait && s.who === VILLAIN ? this.tweens.add({ targets: this.portrait, scaleY: 2.04, duration: 90, yoyo: true, repeat: -1 }) : null;
-        await this.typewrite(t, s.text, true);
+        await this.typewrite(t, this.sub(s.text), true);
         bob?.stop(); this.portrait?.setScale(2);
         const arrow = text(this, GAME_W - 18, by + 36, '>', 'font_outline').setDepth(301);
         this.tweens.add({ targets: arrow, x: GAME_W - 15, duration: 300, yoyo: true, repeat: -1 });

@@ -97,7 +97,7 @@ export function generateHighPark() {
     if (lx >= PARK.x1 * TS - 1) pts.push([EAST + 30, ly]);
     return pts;
   };
-  roads.forEach(toCurb); trails.forEach(toCurb);
+  roads.forEach(toCurb); // M3.3 (Ivan): the dirt trails stop in the grass before the sidewalk, only the roads reach the curb
   const roadEnds = [...roads, ...trails].flatMap((pts) => [pts[0], pts[pts.length - 1]]);
   D.decals.push({ key: 'hp_paths', x: 0, y: TOP, gen: { kind: 'paths', style: 'trail', w: EAST, h: BOT - TOP, paths: trails, roads, ox: 0, oy: TOP, width: 5 } });
   const nearRoad = (px, py, d) => nearPolyline(roads, px, py, d + 8) || nearPolyline(trails, px, py, d);
@@ -355,6 +355,7 @@ export function generateHighPark() {
     { text: 'v WATERFRONT', x: (PS + 2) * TS, y: (H - 2) * TS, kind: 'exit' },
   );
   // hidden extra lives: behind the greenhouse, and in the north woods above the pond
-  const lifeTokens = [{ x: gh.x + 100, y: gh.y + 10 }, { x: P(0.10, 0.20)[0], y: P(0.10, 0.20)[1] }];
+  // M3.3: the second heart hides behind a house east of Parkside
+  const lifeTokens = [{ x: P(0.10, 0.20)[0], y: P(0.10, 0.20)[1] }, D.hiddenHeart(1110, 944, { x: gh.x + 100, y: gh.y + 10 })];
   return D.out({ spawn: { x: (W - 3) * TS, y: (QUEEN - 2) * TS + 8 }, lifeTokens });
 }

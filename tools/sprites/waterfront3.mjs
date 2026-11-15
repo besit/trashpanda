@@ -127,14 +127,25 @@ export function aquariumBuilding(w = 144, d = 64) {
   img.poly([[0, 0], [w * 0.36, 0], [w * 0.44, d * 0.32], [w * 0.36, d * 0.52], [0, d * 0.52]], 'W');
   img.line(w * 0.36, 0, w * 0.44, d * 0.32, 'G'); img.line(w * 0.44, d * 0.32, w * 0.36, d * 0.52, 'G'); img.hline(0, Math.round(w * 0.36), Math.round(d * 0.52), 'G');
   // two sharks in dark tiles (a body, a dorsal fin, a forked tail), swimming across the roof
-  const shark = (cx, cy, s, flip) => {
-    const f = flip ? -1 : 1;
-    img.poly([[cx - 22 * s * f, cy], [cx - 8 * s * f, cy - 5 * s], [cx + 14 * s * f, cy - 3 * s], [cx + 24 * s * f, cy], [cx + 14 * s * f, cy + 3 * s], [cx - 8 * s * f, cy + 5 * s]], 'k');
-    img.poly([[cx - 2 * s * f, cy - 4 * s], [cx + 4 * s * f, cy - 11 * s], [cx + 7 * s * f, cy - 3 * s]], 'k');   // dorsal fin
-    img.poly([[cx - 20 * s * f, cy], [cx - 30 * s * f, cy - 8 * s], [cx - 27 * s * f, cy], [cx - 30 * s * f, cy + 7 * s]], 'k'); // tail
-    img.poly([[cx + 2 * s * f, cy + 4 * s], [cx + 8 * s * f, cy + 10 * s], [cx + 10 * s * f, cy + 3 * s]], 'k');  // pectoral fin
+  // M3.3 (Ivan): a swimming shark bends: the body follows an arc (tail to nose), fins on the curve
+  const shark = (cx, cy, s, flip, bend = 0.34) => {
+    const f = flip ? -1 : 1, L = 27 * s;
+    const spine = (t) => [cx + f * (t - 0.5) * 2 * L, cy + bend * L * (Math.sin(Math.PI * t) - 0.64)];
+    const half = (t) => s * (t < 0.1 ? 1.1 : t < 0.3 ? 1.1 + (t - 0.1) * 17 : t < 0.72 ? 4.5 - (t - 0.3) * 1.5 : Math.max(0.7, 3.9 - (t - 0.72) * 11));
+    const up = [], dn = [];
+    for (let i = 0; i <= 18; i++) {
+      const t = i / 18, [x, y] = spine(t), [x2, y2] = spine(Math.min(1, t + 0.03)), dx = x2 - x, dy = y2 - y, n = Math.hypot(dx, dy) || 1, nx = -dy / n, ny = dx / n, h = half(t);
+      up.push([x + nx * h, y + ny * h]); dn.push([x - nx * h, y - ny * h]);
+    }
+    img.poly([...up, ...dn.reverse()], 'k');
+    const [tx, ty] = spine(0.02);                                                                                   // the forked tail
+    img.poly([[tx, ty], [tx - f * 7 * s, ty - 8 * s], [tx - f * 3 * s, ty]], 'k'); img.poly([[tx, ty], [tx - f * 7 * s, ty + 6 * s], [tx - f * 3 * s, ty]], 'k');
+    const [dx0, dy0] = spine(0.56);                                                                                 // dorsal fin, swept back
+    img.poly([[dx0 - f * 4 * s, dy0 - 2 * s], [dx0 - f * 2 * s, dy0 - 11 * s], [dx0 + f * 5 * s, dy0 - 2 * s]], 'k');
+    const [px0, py0] = spine(0.62);                                                                                 // pectoral fin
+    img.poly([[px0 - f * 3 * s, py0 + 3 * s], [px0 + f * 3 * s, py0 + 11 * s], [px0 + f * 7 * s, py0 + 2 * s]], 'k');
   };
-  shark(w * 0.30, d * 0.74, 0.9, false); shark(w * 0.74, d * 0.42, 1.0, true);
+  shark(w * 0.30, d * 0.72, 0.9, false, 0.4); shark(w * 0.74, d * 0.42, 1.0, true, -0.34);
   // rooftop units
   for (const [x, y] of [[w * 0.82, d * 0.78], [w * 0.88, d * 0.78], [w * 0.94, d * 0.78]]) { img.rect(Math.round(x), Math.round(y), 5, 4, 'h'); img.hline(Math.round(x), Math.round(x) + 4, Math.round(y), 'W'); }
   img.rect(0, d - 2, w, 2, 'G');
