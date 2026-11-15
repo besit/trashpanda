@@ -138,6 +138,9 @@ The cost is a 0.3 s wipe at the seam. The design target of "one city" is kept: s
 | **Foreman Rat** (M2.1, M1 boss) | the construction rat at boss size | cones, jackhammer shove, whistle, a JACKHAMMER charge that leaves him dizzy |
 | **The Lane Eater** (M3, M5 boss; reworked M3.2) | a yellow paving machine, rat foreman in the cab | charges edge to edge (jump the grinder), overheats against the edge (the only time it can be hit), comes back the other way; lobs asphalt; the foreman calls rats |
 | **The Monster SUV** (M3, M7 boss) | a lifted SUV with a crowned rat at the wheel | charges across the lot and stalls at the edge; stomp the roof, pump the tyres while it's stalled |
+| **Baggage Rat** (M3.4) | navy airline cap with a gold band, ramp vest, a wheeled suitcase | keeps its distance and **rolls a suitcase along the ground** at you (Ivan: "throwing but along the ground"): jump it, or swat it |
+| **Barrier Rat** (M3.4) | hard hat, orange vest, a striped ROAD CLOSED board held in front | hits from the front bounce off the board (BLOCKED!); it turns slowly, so dash past and hit it from behind, or stomp it |
+| **The Jet Tug** (M3.4, M11 boss) | a yellow baggage tug, a rat at the wheel, towing Dog Fjord's white private jet (AIR FJORD) | taxis across the park; its jet blast blows you back (no damage); hurts on contact while moving; stops to REFUEL at the edge, when the tug can be pumped; stomp the cabin any time; below half health it taxis faster and rolls a suitcase at you at every stop |
 | **The Pink Digger** (M3.1, M8 boss) | the fictional MEGA SPA's pink excavator, a rat in a bathrobe + sunglasses at the controls | raises the bucket over a red ground mark, slams, gets STUCK (pump the arm), flings sand clods every third cycle; stomp the cab roof; faster below half health |
 | Mega Rat (miniboss) | | planned for M4 |
 
@@ -155,6 +158,7 @@ The cost is a 0.3 s wipe at the seam. The design target of "one city" is kept: s
 | 8 | The Waterfront Heist ✅ M3 | Waterfront | Public waterfront | lobbyist waves + fence-tearing arena |
 | 9 | Finish the Line | Downtown → East End | Ontario Line | Mega Rat miniboss |
 | 10 | Death by Highway | Waterfront | Highway → boulevard + park | "...another lane?" scene, then Highway Mech final boss |
+| 11 | **Grounded** ✅ M3.4 *(Ivan: "a mission about the airport war")* | Waterfront (Little Norway Park) | The park stays a park; no jets | Baggage + Barrier Rats, a stakes arena, the Jet Tug boss |
 | side | Pedestrian Takeover | Queen West (Kensington-style) | Pedestrian street | crowd-gathering |
 | side | Intersection Repair | High Park | Protected intersection | puzzle |
 | side | Public Consultation | citywide | support | signature hunt (exploration) |
@@ -203,6 +207,11 @@ MEGAMART's lot south of Queen (URBAN_RESEARCH §6). Two rat waves, one with an S
 
 ### Mission 8: The Waterfront Heist (Waterfront), built in M3
 The fictional MEGA SPA is fencing off the shore (URBAN_RESEARCH §7). Three waves include **Lobbyists**. M3.1: while one is on screen, **every** rat on screen takes a third of the damage, and a cornered lobbyist swings his briefcase. The middle beat is a locked arena with four fence panels across the promenade to pump down while rats and a lobbyist defend. The finale is **the Pink Digger**. The background looks out at the Toronto Islands and the island airport. Payoff: the fences, the gate and the spa are gone, and the island is a public park with a beach.
+
+### Mission 11: Grounded (Waterfront), built in M3.4
+Dog Fjord's rats stake a jet runway through Little Norway Park (URBAN_RESEARCH §23; the stakes are fiction, the outcome is real: in July 2026 Ottawa said no to jets). A wave of Baggage Rats, a locked arena of four survey stakes to pump out while Barrier Rats guard them, a mixed wave, then the **Jet Tug**. Payoff: the stakes are gone, the park gets its trees and a bench back.
+
+**Monster SUV arena (M3.4, Ivan: "only leave the pallets"):** the cart shelters are gone. Three low pallet stacks stand in the lot; on one you're still in the SUV's way, but a jump from it clears the roof.
 
 Each mission has 2–4 beats: a ride section (curbs, cones, parked cars to hop), arena waves (camera locks), a mission-specific twist, then the finale. Every mission gets one twist of its own so combat doesn't repeat.
 

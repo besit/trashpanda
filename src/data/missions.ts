@@ -36,7 +36,7 @@ export interface MissionDef {
     hint?: [string, string];
     groundY?: number;
     waves: Wave[];
-    boss?: { at: number; kind: BossKind | 'laneeater' | 'monstersuv' | 'spadigger' };
+    boss?: { at: number; kind: BossKind | 'laneeater' | 'monstersuv' | 'spadigger' | 'jettug' };
     /** M3 (The Great Parking Lot): break up asphalt patches in a locked arena */
     depave?: DepaveDef;
     /** M3 (The Lane Eater): the screen scrolls on its own; riders to rally; ambushes */
@@ -212,6 +212,31 @@ MISSIONS.waterfront_heist = {
     ],
     depave: { at: 1250, patches: [70, 150, 230, 310], rats: ['basic', 'lobbyist', 'construction', 'traffic'], style: 'fence' },
     boss: { at: 2150, kind: 'spadigger' },
+  },
+};
+
+// M3.4 (Ivan: "a mission about the airport war"): GROUNDED. Dog Fjord's rats stake a jet runway through Little
+// Norway Park (fiction); you pull the stakes and ground the Jet Tug. The real story is URBAN_RESEARCH section 23.
+MISSIONS.island_airport = {
+  id: 'island_airport',
+  title: 'GROUNDED',
+  district: 'waterfront',
+  upgrades: ['quiet_airport'],
+  requires: ['waterfront_heist'],
+  briefing: 'air_before',
+  debrief: 'air_after',
+  focusX: 33 * 16,
+  focusY: 66 * 16,
+  action: {
+    bg: 'lake', street: 'quay', sky: 'day', length: 2450,
+    intro: 'KEEP THE RUNWAY OFF THE PARK! PULL THE STAKES!',
+    hint: ['JUMP THE ROLLING SUITCASES   GET BEHIND THE BARRIER RATS', 'JUMP THE SUITCASES   GET BEHIND THE BARRIER RATS'],
+    waves: [
+      { at: 300, rats: ['baggage', 'basic', 'baggage'] },
+      { at: 1500, rats: ['barrier', 'baggage', 'basic', 'barrier'] },
+    ],
+    depave: { at: 900, patches: [60, 140, 220, 300], rats: ['baggage', 'barrier', 'basic'], style: 'stakes' },
+    boss: { at: 2100, kind: 'jettug' },
   },
 };
 

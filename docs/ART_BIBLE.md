@@ -80,6 +80,11 @@ Each district gets landmarks and textures you can't mistake for anywhere else. Q
 - Sugar Beach's pink umbrellas and white chairs, sailboats, the Cinesphere's geodesic dome, the pods on stilts
 - the MEGA SPA (fictional, pink and glass) and its chain-link PRIVATE fences
 
+**Rules added in M3.4:**
+- Lettering on a sprite that faces both ways gets its own left-facing frame; a flipped sprite mirrors its text ("AIR FJORD" read backwards on the first pass).
+- A tall landmark is one model, rendered once. The CN Tower's shaft is the trefoil base continued (the foils merge into the core and carry on as thinning ribs), not a strip glued on top.
+- New enemies telegraph their rule in their silhouette: the Barrier Rat's board is held angled so its stripes show from the side; the Baggage Rat's suitcase is at its feet, where it will roll.
+
 **Rules added in M3.3:**
 - Symmetry is read as intent: a tower, a mast or any upright landmark is drawn symmetric about one column, even if that costs a 2 px stair on both sides at once. A quarter-pixel offset "for smoothness" reads as a tilt.
 - At dusk a landmark keeps a lit element (window band, red mast light) so it separates from the sky.

@@ -77,10 +77,11 @@ export function pitchInv(p, ang, pivot = [0, 0, 0]) {
 // ---------- cameras ----------
 // Oblique 3/4 (JRPG style): ground plane drawn top-down, vertical surfaces face-on.
 // screen (sx, sy) = (x, y - z * zScale)
-export function obliqueCam(zScale = 1) {
+export function obliqueCam(zScale = 1, far = 60) {
+  // `far` (M3.4): how high above the ground the rays start; the default sees up to z = 60, a tall tower needs more
   const axis = norm([0, 1, zScale]);
   return {
-    ray(sx, sy) { return { o: add([sx, sy, 0], mul([0, 1, 1 / zScale], 60)), d: mul([0, -1, -1 / zScale], 1 / len([0, 1, 1 / zScale])) }; },
+    ray(sx, sy) { return { o: add([sx, sy, 0], mul([0, 1, 1 / zScale], far)), d: mul([0, -1, -1 / zScale], 1 / len([0, 1, 1 / zScale])) }; },
     viewDir: mul(axis, -1),
   };
 }
@@ -105,19 +106,19 @@ const BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
  */
 export function render(scene, opts) {
   const { w, h, cx = w / 2, cy = h / 2, cam = obliqueCam(), light = norm([-0.55, 0.45, 1]), ambient = 0.28,
-    dither = 0.6, outline = 'K', scale = 1, ss = 1 } = opts;
+    dither = 0.6, outline = 'K', scale = 1, ss = 1, maxT = 220, steps = 160 } = opts;
   const img = new Img(w, h);
   const depth = new Float32Array(w * h).fill(Infinity);
   const eps = 0.01;
   for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
     const { o, d } = cam.ray((i + 0.5 - cx) / scale, (j + 0.5 - cy) / scale);
     let t = 0, hit = null;
-    for (let s = 0; s < 160; s++) {
+    for (let s = 0; s < steps; s++) {
       const p = add(o, mul(d, t));
       const [dist, mat] = scene(p);
       if (dist < 0.02) { hit = { p, mat }; break; }
       t += Math.max(dist * 0.9, 0.02);
-      if (t > 220) break;
+      if (t > maxT) break;
     }
     if (!hit) continue;
     const p = hit.p;

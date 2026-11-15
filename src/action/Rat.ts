@@ -4,15 +4,19 @@ import { sfx } from '../audio/sfx';
 import { puff, floatText } from '../ui/fx';
 import type { Hitbox } from './SidePlayer';
 
-export type RatKind = 'basic' | 'construction' | 'traffic' | 'lobbyist';
+export type RatKind = 'basic' | 'construction' | 'traffic' | 'lobbyist' | 'baggage' | 'barrier';
 
-const DEFS: Record<RatKind, { hp: number; speed: number; reach: number; windup: number; cooldown: number; ranged?: boolean; support?: boolean }> = {
+const DEFS: Record<RatKind, { hp: number; speed: number; reach: number; windup: number; cooldown: number; ranged?: boolean; support?: boolean; /** M3.4: blocks hits that come from the front (the Barrier Rat) */ shield?: boolean }> = {
   basic: { hp: 3, speed: 52, reach: 22, windup: 0.38, cooldown: 0.7 },
   construction: { hp: 3, speed: 40, reach: 110, windup: 0.55, cooldown: 1.6, ranged: true },
   traffic: { hp: 4, speed: 34, reach: 30, windup: 0.6, cooldown: 1.0 },
   // M3: hangs back and lobbies for every rat on screen. M3.1 (Ivan): they take a THIRD of the damage, and
   // when you corner him he swings his briefcase.
   lobbyist: { hp: 5, speed: 62, reach: 30, windup: 0.42, cooldown: 0.9, support: true },
+  // M3.4 (Ivan: "throwing but along the ground"): the Baggage Rat rolls a suitcase at you along the ground: jump it
+  baggage: { hp: 3, speed: 46, reach: 150, windup: 0.5, cooldown: 1.9, ranged: true },
+  // M3.4: the Barrier Rat holds a ROAD CLOSED board in front: hits from the front bounce off; get behind it or stomp
+  barrier: { hp: 4, speed: 36, reach: 26, windup: 0.5, cooldown: 1.1, shield: true },
 };
 
 type State = 'enter' | 'walk' | 'windup' | 'attack' | 'recover' | 'hurt' | 'dead';
@@ -31,6 +35,8 @@ export class Rat {
   /** the points label floated when it goes poof (set by ActionScene when it awards the kill) */
   reward = '';
   private glintT = 0;
+  private turnT = 0;
+  private age = 0;
 
   constructor(private scene: Phaser.Scene, x: number, y: number, readonly kind: RatKind, private onThrow: (r: Rat) => void) {
     this.def = DEFS[kind];
@@ -51,6 +57,9 @@ export class Rat {
     const w = this.def.reach;
     return { x: this.facing === 1 ? this.sprite.x : this.sprite.x - w, y: this.sprite.y - 24, w, h: 20, dmg: 1, kb: 0, id: 0 };
   }
+
+  /** M3.4: a shielded rat blocks a hit whose centre is on the side it faces (not while it's reeling) */
+  blocks(h: Hitbox) { return !!this.def.shield && this.alive && this.state !== 'hurt' && (h.x + h.w / 2 - this.sprite.x) * this.facing > 0; }
 
   takeHit(h: Hitbox, fromX: number): boolean {
     if (!this.alive || h.id === this.lastHit) return false;
@@ -90,11 +99,17 @@ export class Rat {
   update(dtMs: number, px: number) {
     if (!this.alive) return;
     const dt = dtMs / 1000;
-    this.t -= dt;
+    this.t -= dt; this.age += dt;
     const b = this.body;
     const dx = px - this.sprite.x, dist = Math.abs(dx);
     const ground = b.blocked.down || b.touching.down;
-    if (this.state !== 'hurt' && this.state !== 'attack') this.facing = dx > 0 ? 1 : -1;
+    // M3.4: a Barrier Rat turns slowly (its board is heavy), so a dash past it opens a window behind it
+    if (this.state !== 'hurt' && this.state !== 'attack') {
+      const want: 1 | -1 = dx > 0 ? 1 : -1;
+      if (!this.def.shield || this.age < 0.5) { this.facing = want; this.turnT = 0; } // (it turns freely while walking in)
+      else if (want !== this.facing) { this.turnT += dt; if (this.turnT > 0.8) { this.facing = want; this.turnT = 0; } }
+      else this.turnT = 0;
+    }
     this.sprite.setFlipX(this.facing === -1);
     if (this.shielded && (this.glintT -= dt) <= 0) { this.glintT = 0.3; puff(this.scene, this.sprite.x + Phaser.Math.Between(-6, 6), this.sprite.y - Phaser.Math.Between(8, 26), 0xf5c22e, 1, 6, 95); }
     // cornered (you got close): he fights back with the briefcase instead of backing off

@@ -20,7 +20,7 @@ import { DIFFICULTY, HighScores, fmtScore, type Difficulty } from '../core/Score
 import { fetchTop, leaderboardEnabled } from '../core/Leaderboard';
 import { fullscreenSupported, isInstalled } from '../core/fullscreen';
 
-export const VERSION_LABEL = 'M3.3 PREVIEW';
+export const VERSION_LABEL = 'M3.4 PREVIEW';
 
 /** M3.3 (Ivan): after a debug mission or vignette, come back to a REPLAY / BACK TO THE LIST / MAIN MENU menu */
 export interface Replay { kind: 'mission' | 'vignette'; id: string }

@@ -116,6 +116,19 @@ export const UPGRADES: Record<string, Upgrade> = {
     source: 'CITY OF TORONTO COUNCIL ITEM PH29.3 (DEC 2021) + BY-LAW 89-2022',
     stat: { key: 'parksCreated', amount: 1 },
   },
+  quiet_airport: {
+    id: 'quiet_airport',
+    name: 'THE PARK STAYS A PARK',
+    tree: 'publicSpace',
+    livability: 3,
+    categories: { greenPublic: 8, safety: 4, walking: 3 },
+    mapPatches: ['quiet_airport'],
+    headline: 'NO JETS. LITTLE NORWAY PARK STAYS A PARK.',
+    // the stakes are fiction; the outcome is real (URBAN_RESEARCH section 23)
+    blurb: 'THE STAKES ARE FICTION. BUT IN 2026 ONTARIO PASSED A LAW TO TAKE OVER THE ISLAND AIRPORT FOR JETS, AND IN JULY OTTAWA, WHICH HAS THE FINAL SAY, SAID NO: SAFETY WORK ONLY.',
+    source: 'TRANSPORT CANADA (MINISTER STEVEN MACKINNON, JULY 2026), AS REPORTED BY CBC, GLOBAL NEWS AND THE CANADIAN PRESS',
+    stat: { key: 'parksCreated', amount: 1 },
+  },
   bloor_lanes_kept: {
     id: 'bloor_lanes_kept',
     name: 'BLOOR KEEPS ITS BIKE LANES',

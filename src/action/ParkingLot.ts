@@ -10,22 +10,24 @@ import type { Hitbox } from './SidePlayer';
 import type { RatKind } from './Rat';
 
 /** a locked arena of spots to break: asphalt patches to depave (M7), or MEGA SPA fences to tear down (M8) */
-export interface DepaveDef { at: number; patches: number[]; rats: RatKind[]; style?: 'asphalt' | 'fence' }
+export interface DepaveDef { at: number; patches: number[]; rats: RatKind[]; style?: 'asphalt' | 'fence' | 'stakes' }
 
 export class DepaveSpots {
   private spots: { x: number; img: Phaser.GameObjects.Image; bar: Phaser.GameObjects.Graphics; hits: number; done: boolean; lastHit: number }[] = [];
   readonly need = 3;
   done = 0;
   readonly fence: boolean;
+  /** M3.4: survey stakes staking out a runway through the park: pump them out of the ground */
+  readonly stakes: boolean;
   constructor(private scene: Phaser.Scene, def: DepaveDef, left: number, private groundY: number) {
-    this.fence = def.style === 'fence';
+    this.fence = def.style === 'fence'; this.stakes = def.style === 'stakes';
     for (const dx of def.patches) {
       const x = left + dx;
-      const img = this.fence ? scene.add.image(x, groundY - 8, 'world', 'spafence_side').setOrigin(0.5, 1).setDepth(38) : scene.add.image(x, groundY + 2, 'world', 'asphaltpatch').setDepth(40);
+      const img = this.fence ? scene.add.image(x, groundY - 8, 'world', 'spafence_side').setOrigin(0.5, 1).setDepth(38) : this.stakes ? scene.add.image(x, groundY + 2, 'world', 'surveystake').setOrigin(0.5, 39 / 40).setDepth(42) : scene.add.image(x, groundY + 2, 'world', 'asphaltpatch').setDepth(40);
       this.spots.push({ x, img, bar: scene.add.graphics().setDepth(210), hits: 0, done: false, lastHit: -1 });
     }
   }
-  get verb() { return this.fence ? 'FENCES DOWN' : 'DEPAVED'; }
+  get verb() { return this.fence ? 'FENCES DOWN' : this.stakes ? 'STAKES PULLED' : 'DEPAVED'; }
   get total() { return this.spots.length; }
   /** x of every spot still to break (debug/bot) */
   get openSpots() { return this.spots.filter((s) => !s.done).map((s) => Math.round(s.x)); }
@@ -35,15 +37,21 @@ export class DepaveSpots {
     for (const s of this.spots) {
       s.bar.clear();
       if (s.done) continue;
-      const by = this.fence ? this.groundY - 62 : this.groundY - 26;
+      const by = this.fence ? this.groundY - 62 : this.stakes ? this.groundY - 50 : this.groundY - 26;
       s.bar.fillStyle(0x16121f).fillRect(s.x - 11, by, 22, 4).fillStyle(0x9bd35a).fillRect(s.x - 10, by + 1, (20 * s.hits) / this.need, 2);
       if (Math.abs(px - s.x) < 34) s.bar.fillStyle(0xfff08a).fillTriangle(s.x - 3, by - 8, s.x + 3, by - 8, s.x, by - 4);
       for (const h of hits) {
         if (h.id === s.lastHit || h.x > s.x + 20 || h.x + h.w < s.x - 20) continue;
         s.lastHit = h.id; s.hits += h.dmg > 1 ? 2 : 1;
         sfx.hammer(); puff(this.scene, s.x, this.groundY - (this.fence ? 30 : 2), 0x363644, 5, 14, 90);
-        if (!this.fence || s.hits < this.need) this.scene.tweens.add({ targets: s.img, x: s.x + (this.fence ? 2 : 0), duration: 40, yoyo: true, repeat: 1 });
-        if (s.hits >= this.need && this.fence) {
+        if (!this.fence || s.hits < this.need) this.scene.tweens.add({ targets: s.img, x: s.x + (this.fence ? 2 : 0), y: s.img.y - (this.stakes ? 3 : 0), duration: 40, yoyo: true, repeat: 1 });
+        if (s.hits >= this.need && this.stakes) {
+          // the stake pops out of the ground and tumbles away
+          s.done = true; this.done++; s.bar.clear();
+          this.scene.tweens.add({ targets: s.img, y: s.img.y - 60, x: s.x + (px < s.x ? 30 : -30), angle: px < s.x ? 200 : -200, alpha: 0, duration: 650, ease: 'Quad.easeOut', onComplete: () => s.img.destroy() });
+          sfx.ding(); puff(this.scene, s.x, this.groundY - 4, 0xd9a86c, 8, 18, 90);
+          floatText(this.scene, s.x, this.groundY - 56, this.done === this.total ? 'PARK!' : 'PULLED!', 'font_outline', 0x9bd35a, 600);
+        } else if (s.hits >= this.need && this.fence) {
           // the panel topples over backwards and is gone: the promenade is open again
           s.done = true; this.done++; s.bar.clear();
           this.scene.tweens.add({ targets: s.img, angle: px < s.x ? 80 : -80, alpha: 0, y: s.img.y + 6, duration: 520, ease: 'Quad.easeIn', onComplete: () => s.img.destroy() });

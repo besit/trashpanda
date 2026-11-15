@@ -592,3 +592,23 @@ The villain is **Dog Fjord**. The rename ran through code, docs, the art history
 Streetcar sections now space by heading (the N/S sprites are foreshortened: the one-piece north-facing car is 63 px tall for 96 units of length, so the sections sit at 2/3 spacing when vertical) and draw front over rear. The aquarium's sharks bend. The skyline tower is symmetric and lit at dusk. The footbridge is one tile. High Park's trails stop in the grass. The Gardiner jams more. Queens Quay east leads to Leslie St, and Leslie, Carlaw and Broadview south lead back (exits can name the street they arrive on). The Lane Eater rides further into view and lobs from its front. The digger's red mark is its bucket's shadow.
 
 **Not done:** the Explore CN Tower's shaft as a continuation of the base, the airport mission and the two new rats (M3.4), and the Monster SUV arena's shelters (Ivan's "leave only the pallets" is a judgement call; asked him).
+
+## 2026-11-15: M3.4, the island airport, two new rats, the whole CN Tower
+
+Ivan asked for "a mission about the airport war when Dog Fraud decides it", a rat that attacks along the ground, and (in M3.2) the CN Tower's shaft as a continuation of its base. All three are in: [docs/reviews/M3.4.md](reviews/M3.4.md).
+
+### The research changed the story
+I had drafted the airport mission before checking the latest news. The check turned up the ending: on about July 24, 2026 the federal transport minister said Ottawa would stick to safety work and not pursue jets, citing more than 87,000 consultation responses, and council voted 25–1 to demand the land back ([URBAN_RESEARCH §23](URBAN_RESEARCH.md)). So *Grounded* is the first mission whose payoff is the real outcome, not a fantasy one: the after-caption is "OTTAWA SAID NO TO JETS. THE PARK STAYED A PARK." The survey stakes through Little Norway Park are still fiction (the province said it wouldn't develop the park), and the blurb says so.
+
+### Two new rats
+- **Baggage Rat:** Ivan's ground attack. It rolls a suitcase at you along the ground; the physics image has no gravity and expires after 3 s. Jump it or swat it.
+- **Barrier Rat:** a ROAD CLOSED board held in front. Any hit whose centre is on its facing side is BLOCKED. The first version turned to face you instantly, which made "get behind it" impossible: the bot's hit from behind never landed. It now takes 0.8 s to turn, so a dash past it opens a window.
+
+### The Jet Tug
+A baggage tug towing Dog Fjord's private jet across the park. The jet blast behind the tail is a push, not damage: it shoves you toward whatever is coming. The tug can be pumped only while it refuels at the edge; the cabin can be stomped any time (the M3.3 landing rule). **Failure along the way:** the first render flipped the sprite to face left, which mirrored "AIR FJORD" into gibberish; left-facing frames are their own sprites now, and that's a rule in the art bible.
+
+### The CN Tower, whole
+The map's tower was an SDF-rendered trefoil base with a raster strip glued on top, which is what Ivan saw "change" partway up. The oblique camera could only see up to z = 60, so the whole thing couldn't be one render. The camera takes a `far` parameter now and the march goes further, and the tower is a single model: the foils merge into the core by z = 66 and carry on as three thinning ribs, the core narrows from 9 to 5, and the glass lifts ride up the corners. One render, 540 px tall, about a second.
+
+### Also
+The Monster SUV arena keeps only low pallet stacks (Ivan: "only leave the pallets"); on one you're in the way, a jump from one clears the roof.

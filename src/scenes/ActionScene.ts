@@ -13,6 +13,7 @@ import { Escort } from '../action/Escort';
 import { Peloton, LaneEater } from '../action/LaneEater';
 import { DepaveSpots, MonsterSuv } from '../action/ParkingLot';
 import { SpaDigger } from '../action/SpaDigger';
+import { JetTug } from '../action/JetTug';
 import { Chase, BuildSpots } from '../action/Parkside';
 import { MISSIONS, type MissionDef } from '../data/missions';
 import { ctx } from '../core/ctx';
@@ -46,6 +47,9 @@ export class ActionScene extends Phaser.Scene {
   private depaveDone = false;
   private monster?: MonsterSuv;
   private digger?: SpaDigger;
+  /** M3.4: mission 11's boss, and the suitcases Baggage Rats (and the tug) roll along the ground */
+  private tug?: JetTug;
+  private cases: Phaser.Physics.Arcade.Image[] = [];
   private eater?: LaneEater;
   private scrolling = false;
   /** the auto-scroll position as a float: Phaser floors cam.scrollX every frame (roundPixels), so at
@@ -120,7 +124,7 @@ export class ActionScene extends Phaser.Scene {
 
     if (a.escort) this.escort = new Escort(this, a.escort, -30);
     this.peloton = undefined; this.eater = undefined; this.scrolling = false; this.ambushIdx = 0; this.autoX = 0;
-    this.depave = undefined; this.depaveDone = false; this.monster = undefined; this.digger = undefined;
+    this.depave = undefined; this.depaveDone = false; this.monster = undefined; this.digger = undefined; this.tug = undefined; this.cases = [];
     if (a.autoscroll) {
       this.peloton = new Peloton(this, a.autoscroll.riders, this.groundY);
       this.eater = new LaneEater(this, -100, this.groundY); // front just off screen; it creeps in
@@ -150,9 +154,9 @@ export class ActionScene extends Phaser.Scene {
         while (this.waveIdx < a2.waves.length && a2.waves[this.waveIdx].at < x) this.waveIdx++;
         if (a2.chase && x > a2.chase.pondAt - 200) { this.chaseDone = true; this.chase?.camImage.setVisible(false); }
         this.player.body.reset(x, this.groundY - 10);
-      }, rats: () => this.rats.filter((r) => r.alive).length, win: () => this.win(), boss: () => this.boss, eaterObj: () => this.eater, digger: () => this.digger, monster: () => this.monster, gy: () => this.groundY,
+      }, rats: () => this.rats.filter((r) => r.alive).length, ratObjs: () => this.rats.filter((r) => r.alive), killAll: () => { for (const r of this.rats) if (r.alive) { r.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 99, kb: 0, id: 424242 + this.killed }, 0); this.killed++; } }, win: () => this.win(), boss: () => this.boss, eaterObj: () => this.eater, digger: () => this.digger, monster: () => this.monster, tug: () => this.tug, cases: () => this.cases.filter((c) => c.active), gy: () => this.groundY,
       state: () => (!this.sys.isActive() ? { finished: true } : { x: this.player.sprite.x, frozen: this.player.frozen, hp: this.player.hp,
-        rats: this.rats.filter((r) => r.alive).map((r) => Math.round(r.sprite.x)), carsAt: this.cars.filter((c) => c.alive && !c.tame).map((c) => [Math.round(c.x), c.dir]), bossX: this.boss?.alive ? Math.round(this.boss.sprite.x) : this.monster?.alive ? Math.round(this.monster.x) : null, depaved: this.depave?.done ?? null, spots: this.depave?.openSpots ?? null, monsterStalled: this.monster?.stalled ?? null,
+        rats: this.rats.filter((r) => r.alive).map((r) => Math.round(r.sprite.x)), carsAt: this.cars.filter((c) => c.alive && !c.tame).map((c) => [Math.round(c.x), c.dir]), bossX: this.boss?.alive ? Math.round(this.boss.sprite.x) : this.monster?.alive ? Math.round(this.monster.x) : null, depaved: this.depave?.done ?? null, spots: this.depave?.openSpots ?? null, monsterStalled: this.monster?.stalled ?? null, tug: this.tug ? { x: Math.round(this.tug.x), hp: this.tug.hp, phase: this.tug.phase, dir: this.tug.dir } : null, cases: this.cases.filter((c) => c.active).length,
         front: this.escort ? Math.round(this.escort.front) : null, scrolling: this.scrolling, peloton: this.peloton?.size ?? null, eater: this.eater ? { x: Math.round(this.eater.x), boss: this.eater.boss, hp: this.eater.totalHp, hot: this.eater.hot, move: this.eater.state, dir: this.eater.facing } : null, haul: this.chase ? Math.round(this.chase.rearX) : null, lock: this.lock?.kind ?? null, wave: this.waveIdx, boss: this.boss ? this.boss.hp : null, escort: this.escort ? { car: Math.round(this.escort.car.x), delay: +this.escort.delay.toFixed(1), done: this.escort.done } : null, chase: this.chase?.state ?? null, built: this.build?.built ?? null, cars: this.cars.filter((c) => c.alive).length, finished: this.finished, camX: Math.round(this.cameras.main.scrollX), song: music.current }) };
   }
 
@@ -344,6 +348,10 @@ export class ActionScene extends Phaser.Scene {
       const w = 140, x = GAME_W / 2 - w / 2;
       g.fillStyle(0x16121f).fillRect(x - 1, 17, w + 2, 7).fillStyle(0x443f54).fillRect(x, 18, w, 5).fillStyle(0xd9646f).fillRect(x, 18, (w * this.digger.hp) / this.digger.maxHp, 5);
       this.hud.label.setText(this.digger.title);
+    } else if (this.tug?.alive) {
+      const w = 140, x = GAME_W / 2 - w / 2;
+      g.fillStyle(0x16121f).fillRect(x - 1, 17, w + 2, 7).fillStyle(0x443f54).fillRect(x, 18, w, 5).fillStyle(0x7cc6f2).fillRect(x, 18, (w * this.tug.hp) / this.tug.maxHp, 5);
+      this.hud.label.setText(this.tug.title);
     } else if (this.monster?.alive) {
       const w = 140, x = GAME_W / 2 - w / 2;
       g.fillStyle(0x16121f).fillRect(x - 1, 17, w + 2, 7).fillStyle(0x443f54).fillRect(x, 18, w, 5).fillStyle(0xd42a24).fillRect(x, 18, (w * this.monster.hp) / this.monster.maxHp, 5);
@@ -421,7 +429,7 @@ export class ActionScene extends Phaser.Scene {
   }
 
   private spawnRat(kind: RatKind, x: number) {
-    const r = new Rat(this, x, this.groundY - 30, kind, (rat) => this.throwCone(rat));
+    const r = new Rat(this, x, this.groundY - 30, kind, (rat) => (rat.kind === 'baggage' ? this.rollCase(rat.sprite.x + rat.facing * 12, rat.facing) : this.throwCone(rat)));
     if (kind === 'lobbyist' && !this.lobbyTip) {
       this.lobbyTip = true;
       this.say('LOBBYIST! HE MAKES EVERY RAT TOUGHER.\nTAKE HIM OUT FIRST!', 0xf5c22e, 2600);
@@ -437,6 +445,16 @@ export class ActionScene extends Phaser.Scene {
     this.cars.push(car);
     lock.suvsLeft--;
     floatText(this, Phaser.Math.Clamp(x, lock.left + 40, lock.left + GAME_W - 40), this.groundY - 64, 'HONK!', 'font_red', 0xffffff, 300);
+  }
+
+  /** M3.4: a suitcase rolled along the ground toward `dir`: jump it (or swat it) */
+  private rollCase(x: number, dir: 1 | -1) {
+    const c = this.physics.add.image(x, this.groundY - 6, 'world', 'suitcase').setOrigin(0.5, 1).setDepth(96).setFlipX(dir === -1);
+    const b = c.body as Phaser.Physics.Arcade.Body;
+    b.setAllowGravity(false); b.setVelocityX(dir * 175); b.setSize(12, 10).setOffset(1, 2);
+    c.setData('born', this.time.now);
+    this.cases.push(c);
+    sfx.throwIt();
   }
 
   private throwCone(r: Rat) {
@@ -483,7 +501,7 @@ export class ActionScene extends Phaser.Scene {
     music.play(SONG_WIN);
     sfx.ding();
     const a = this.mission.action;
-    const head = a.escort ? 'RIGHT ON TIME!' : a.build ? 'SCHOOL ZONE SLOWED!' : a.autoscroll ? 'BLOOR IS SAFE!' : a.depave?.style === 'fence' ? 'THE SHORE IS PUBLIC!' : a.depave ? 'THE LOT IS GREEN!' : 'STREET CLEARED!';
+    const head = a.escort ? 'RIGHT ON TIME!' : a.build ? 'SCHOOL ZONE SLOWED!' : a.autoscroll ? 'BLOOR IS SAFE!' : a.depave?.style === 'fence' ? 'THE SHORE IS PUBLIC!' : a.depave?.style === 'stakes' ? 'THE PARK STAYS!' : a.depave ? 'THE LOT IS GREEN!' : 'STREET CLEARED!';
     const t = text(this, GAME_W / 2, 60, head, 'font_big').setScrollFactor(0).setDepth(3000);
     const ts = fitText(t, GAME_W - 16), th = t.height; t.setScale(0.1);
     this.tweens.add({ targets: t, scale: ts, duration: 300, ease: 'Back.easeOut' });
@@ -563,19 +581,17 @@ export class ActionScene extends Phaser.Scene {
         const l = this.lockArena('depave', a.depave.rats.length);
         this.depave = new DepaveSpots(this, a.depave, l.left, this.groundY);
         this.spawnRats(a.depave.rats, l.left);
-        this.flashGo(this.depave.fence ? 'TEAR IT DOWN!' : 'DEPAVE IT!');
-        this.say(this.depave.fence ? 'PUMP THE FENCES DOWN' : 'PUMP THE CRACKED ASPHALT');
+        this.flashGo(this.depave.fence ? 'TEAR IT DOWN!' : this.depave.stakes ? 'PULL THE STAKES!' : 'DEPAVE IT!');
+        this.say(this.depave.fence ? 'PUMP THE FENCES DOWN' : this.depave.stakes ? 'PUMP THE STAKES OUT OF THE GROUND' : 'PUMP THE CRACKED ASPHALT');
       }
       else if (a.boss?.kind === 'monstersuv' && !this.monster && px > a.boss.at) {
         const l = this.lockArena('boss', 0);
         this.monster = new MonsterSuv(this, l.left + GAME_W - 70, this.groundY, { left: l.left, right: l.left + GAME_W });
-        // M3.1: cart shelters to climb onto (pallets are the step up): the charge passes under you
-        for (const [sx, step] of [[l.left + 120, -1], [l.left + GAME_W - 120, 1]] as const) {
-          this.oneWay(sx, this.groundY - 56, 80, 'cartshelter');
-          this.oneWay(sx + step * 58, this.groundY - 26, 30, 'pallets');
-        }
+        // M3.4 (Ivan: "only leave the pallets"): low pallet stacks, lower than the SUV. Standing on one you're
+        // still in its way; a jump from it clears the roof. No more shelters to hide on
+        for (const sx of [l.left + 90, l.left + GAME_W / 2, l.left + GAME_W - 90]) this.oneWay(sx, this.groundY - 26, 30, 'pallets');
         this.flashGo('BOSS!'); music.play(SONG_BOSS);
-        this.time.delayedCall(1300, () => this.say('CLIMB THE CART SHELTERS: IT CAN\'T REACH YOU.\nSTOMP ITS ROOF. PUMP THE TYRES WHEN IT STALLS!', 0xfff08a, 3200));
+        this.time.delayedCall(1300, () => this.say('JUMP ITS CHARGE FROM THE PALLETS.\nSTOMP ITS ROOF. PUMP THE TYRES WHEN IT STALLS!', 0xfff08a, 3200));
       }
       else if (a.boss?.kind === 'spadigger' && !this.digger && px > a.boss.at) {
         const l = this.lockArena('boss', 2);
@@ -584,7 +600,13 @@ export class ActionScene extends Phaser.Scene {
         this.flashGo('BOSS!'); music.play(SONG_BOSS);
         this.time.delayedCall(1300, () => this.say('THE BUCKET SLAMS WHERE ITS SHADOW FALLS.\nPUMP THE ARM WHILE IT\'S STUCK. STOMP THE CAB!', 0xfff08a, 3400));
       }
-      else if (a.boss && a.boss.kind !== 'laneeater' && a.boss.kind !== 'monstersuv' && a.boss.kind !== 'spadigger' && !this.boss && px > a.boss.at) this.startBoss();
+      else if (a.boss?.kind === 'jettug' && !this.tug && px > a.boss.at) {
+        const l = this.lockArena('boss', 0);
+        this.tug = new JetTug(this, l.left + GAME_W - 120, this.groundY, { left: l.left, right: l.left + GAME_W }, (x, d) => this.rollCase(x, d));
+        this.flashGo('BOSS!'); music.play(SONG_BOSS);
+        this.time.delayedCall(1300, () => this.say('ITS JET BLAST BLOWS YOU BACK: JUMP IT.\nSTOMP THE CABIN. PUMP THE TUG WHEN IT REFUELS!', 0xfff08a, 3400));
+      }
+      else if (a.boss && a.boss.kind !== 'laneeater' && a.boss.kind !== 'monstersuv' && a.boss.kind !== 'spadigger' && a.boss.kind !== 'jettug' && !this.boss && px > a.boss.at) this.startBoss();
       else if (a.build && !this.build && this.chaseDone && px > a.build.at) this.startBuild();
     }
 
@@ -674,6 +696,38 @@ export class ActionScene extends Phaser.Scene {
       }
     }
 
+    // ---- the Jet Tug (mission 11) ----
+    if (this.tug) {
+      const g = this.tug;
+      g.update(dt, px);
+      if (g.alive) {
+        const rr = g.roofRect();
+        if (g.blast(pRect, pb, dt / 1000) && !this.player.frozen && Math.random() < 0.05) floatText(this, px, pRect.y - 12, 'WHOOSH', 'font', 0xc9c5d1, 200);
+        if (this.landingOn(pRect, g.roofY(), rr.x, rr.right, g)) {
+          if (g.hit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 0, id: 7600 + Math.floor(this.time.now / 150) }, 'stomp')) { this.player.bounce(); hitStop(this, 70); }
+        } else {
+          const tr = g.tugRect();
+          for (const h of hits) if (overlap(h, tr) && g.hit(h, 'pump')) { hitStop(this, 70); shake(this, 90, 0.005); }
+          if (g.dangerous && Phaser.Geom.Rectangle.Overlaps(g.rect(), pRect) && pRect.bottom > g.roofY() + 10 && this.player.hurt(g.x)) { shake(this, 150, 0.012); hitStop(this, 80); }
+        }
+      } else if (!this.bossDone) {
+        this.bossDone = true; this.killed++; this.pts('boss', g.x, this.groundY - 90);
+        for (const r of this.rats) if (r.alive) r.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 99, kb: 120, id: 99995 }, px);
+        this.time.delayedCall(1500, () => this.endArena());
+      }
+    }
+    // ---- rolling suitcases ----
+    for (const c of [...this.cases]) {
+      if (!c.active) { this.cases.splice(this.cases.indexOf(c), 1); continue; }
+      const cb = c.body as Phaser.Physics.Arcade.Body, cRect = new Phaser.Geom.Rectangle(cb.x, cb.y, cb.width, cb.height);
+      c.angle += Math.sign(cb.velocity.x) * 540 * (dt / 1000);
+      if (hits.some((h) => overlap(h, cRect))) { sfx.clang(); puff(this, c.x, c.y - 6, 0x7cc6f2, 6, 14, 96); c.destroy(); continue; }
+      if (Phaser.Geom.Rectangle.Overlaps(cRect, pRect) && this.player.hurt(c.x)) { shake(this, 120, 0.008); c.destroy(); continue; }
+      const bl = this.lock ? this.lock.left : cam.scrollX;
+      const old = this.time.now - (c.getData('born') as number) > 3200, out = c.x < bl - 60 || c.x > bl + GAME_W + 60;
+      if (old || out) { puff(this, c.x, c.y - 6, 0xc9c5d1, 4, 10, 96); c.destroy(); }
+    }
+
     // ---- escort ----
     if (this.escort && !this.finished && !this.player.frozen) {
       this.escort.update(dt, px, hits, newHit);
@@ -752,7 +806,10 @@ export class ActionScene extends Phaser.Scene {
       if (!r.alive) continue;
       const rb = r.body, rRect = new Phaser.Geom.Rectangle(rb.x, rb.y, rb.width, rb.height);
       let wasHit = false;
-      for (const h of hits) if (overlap(h, rRect) && r.takeHit(h, px)) {
+      for (const h of hits) if (overlap(h, rRect)) {
+        // M3.4: a Barrier Rat's board takes anything from the front; get behind it, or stomp
+        if (r.blocks(h)) { if (newHit(h.id)) { sfx.clang(); puff(this, r.sprite.x + r.facing * 10, r.sprite.y - 16, 0xff9a2e, 6, 14, 95); floatText(this, r.sprite.x, r.sprite.y - 40, 'BLOCKED!', 'font', 0xff9a2e, 300); } wasHit = true; continue; }
+        if (!r.takeHit(h, px)) continue;
         wasHit = true;
         hitStop(this, h.dmg > 1 ? 90 : 50); shake(this, 90, h.dmg > 1 ? 0.008 : 0.004);
         if (!r.alive) { this.killed++; if (!this.replay) { r.reward = `+${award(ctx.state, 'rat')}`; this.earned += POINTS_OF(r.reward); } }
@@ -790,7 +847,7 @@ export class ActionScene extends Phaser.Scene {
     if (L && !this.finished) {
       const ratsDone = this.killed - L.startKills >= L.total - (L.kind === 'build' ? L.suvsLeft + this.cars.filter((c) => c.alive).length : 0) && L.suvsLeft <= 0 && !this.cars.some((c) => c.alive && !c.tame);
       if (L.kind === 'wave' && ratsDone) this.endArena();
-      else if (L.kind === 'depave' && this.depave?.allDone && this.rats.every((r) => !r.alive)) { this.depaveDone = true; this.depave.finish(); this.endArena(this.depave.fence ? 'OPEN! >>' : 'GREEN! >>'); }
+      else if (L.kind === 'depave' && this.depave?.allDone && this.rats.every((r) => !r.alive)) { this.depaveDone = true; this.depave.finish(); this.endArena(this.depave.fence ? 'OPEN! >>' : this.depave.stakes ? 'PARK! >>' : 'GREEN! >>'); }
       else if (L.kind === 'caught' && this.rats.every((r) => !r.alive)) { floatText(this, px, this.groundY - 60, 'CAMERA RECOVERED!', 'font_outline', 0x9bd35a, 900); this.endArena('TO THE SCHOOL! >>'); }
       else if (L.kind === 'build' && this.build?.allDone && this.rats.every((r) => !r.alive)) {
         // calmed: any car still around now crawls through politely and leaves

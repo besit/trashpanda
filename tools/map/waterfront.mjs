@@ -121,6 +121,17 @@ export function generateWaterfront() {
     D.prop('marinadock', mx, (LAKE_Y + 1) * TS - 2, { depth: (LAKE_Y + 1) * TS - 4 });
     for (let y = LAKE_Y + 2; y < LAKE_Y + deep - 1; y += 3) for (const side of [-1, 1]) if (r.chance(0.8)) D.critters.push({ kind: r.chance(0.75) ? 'yacht' : 'moored', x: mx + side * 18, y: y * TS + 8 });
   };
+  // M3.4: Little Norway Park (the site of the RNoAF's wartime camp; a park since 1986) on the quay across from
+  // the island airport, with its ball diamond and the Norwegian boulder. Dog Fjord's rats have staked it out
+  // for a runway (fiction); mission 11 pulls the stakes
+  quay(29, 37, 6, (x, y) => (x === 29 || x === 37 || y === LAKE_Y + 6 ? `plaza${(x + y) % 2}` : `lawn${(x * 5 + y) % 3}`));
+  D.decals.push({ key: 'diamond', x: 30 * TS, y: LAKE_Y * TS + 10 });
+  D.prop('norwayrock', 36 * TS + 4, (LAKE_Y + 2) * TS + 4, { solidBox: [-10, -8, 20, 8] });
+  for (const [x, y] of [[30, LAKE_Y + 1], [36, LAKE_Y + 5]]) D.tprop('tree_a', x, y, 8, 10, { solid: 4 });
+  for (let i = 0; i < 5; i++) D.prop('stakemap', (30.5 + i * 1.5) * TS, (LAKE_Y + 1.5 + i) * TS, { tag: 'stakes' });
+  D.landmarks.push({ id: 'littlenorway', x: 36 * TS + 4, y: (LAKE_Y + 2) * TS + 10, label: 'LITTLE NORWAY PARK', fact: 'A ROYAL NORWEGIAN AIR FORCE\nCAMP IN WWII. A PARK SINCE\n1986, ACROSS FROM THE AIRPORT.' });
+  D.markers.push({ id: 'island_airport', x: 33 * TS, y: (QQ + 11) * TS + 8, label: 'GROUNDED' });
+  D.labels.push({ text: 'LITTLE NORWAY PK', x: 33 * TS, y: (LAKE_Y + 8) * TS, kind: 'landmark' });
   // HTO Park: an urban beach on the old quays, with the fixed yellow umbrellas
   quay(42, 48, 7, (x, y) => (y >= LAKE_Y + 6 ? `plaza${(x + y) % 2}` : 'sand'));
   for (let i = 0; i < 8; i++) D.prop('yellowumbrella', (42.8 + (i % 4) * 1.7) * TS, (LAKE_Y + 2 + Math.floor(i / 4) * 2.4) * TS);
@@ -206,7 +217,9 @@ export function generateWaterfront() {
   // picnic tables only where there's island all round them (M3.1: one stood in the water)
   for (const [x, y] of [[18, LAKE_Y + 13], [24, LAKE_Y + 15], [8, LAKE_Y + 14]]) if (onIsland(x, y) && onIsland(x + 1, y)) pub.addProps.push({ type: 'prop', key: 'picnic', x: x * TS + 8, y: y * TS + 8, solid: 6 });
   pub.addProps.push({ type: 'prop', key: 'bikering', x: 24 * TS, y: (QQ + 10) * TS }, { type: 'prop', key: 'bench', x: 21 * TS, y: (LAKE_Y + 10) * TS });
-  D.improvements = { public_waterfront: pub };
+  // M3.4, mission 11's payoff: the stakes are gone, the park gets its trees and a bench back
+  const quiet = { tiles: [], addProps: [{ type: 'prop', key: 'tree_c', x: 31 * TS + 8, y: (LAKE_Y + 5) * TS + 12, solid: 4 }, { type: 'prop', key: 'bench', x: 34 * TS, y: (LAKE_Y + 6) * TS + 2 }, { type: 'prop', key: 'picnic', x: 35 * TS + 8, y: (LAKE_Y + 4) * TS + 8, solid: 6 }], removeTag: 'stakes' };
+  D.improvements = { public_waterfront: pub, quiet_airport: quiet };
 
   // ---------- furniture, traffic ----------
   D.furnish(LAKESHORE, 's', 0, W, { trees: false }); D.furnish(QQ, 's', 0, W, { trees: false });
@@ -223,7 +236,7 @@ export function generateWaterfront() {
   D.lanes.push({ id: 'mgt_wb', axis: 'x', dir: -1, pos: (QQ + 7) * TS + 8, bikeOnly: true }, { id: 'mgt_eb', axis: 'x', dir: 1, pos: (QQ + 8) * TS + 8, bikeOnly: true });
   D.walkways.push([[0, (QQ + 10) * TS], [W * TS, (QQ + 10) * TS]], [[0, (QQ + 12) * TS], [W * TS, (QQ + 12) * TS]], [[0, (QQ - 2) * TS + 6], [W * TS, (QQ - 2) * TS + 6]]);
   // walkers out on the quays
-  for (const x of [45, 57, 69, 83, 99, 114]) D.walkways.push([[x * TS, (QQ + 12) * TS], [x * TS, (LAKE_Y + 4) * TS], [(x + 2) * TS, (LAKE_Y + 4) * TS]]);
+  for (const x of [33, 45, 57, 69, 83, 99, 114]) D.walkways.push([[x * TS, (QQ + 12) * TS], [x * TS, (LAKE_Y + 4) * TS], [(x + 2) * TS, (LAKE_Y + 4) * TS]]);
   // the streets come down from the north and end at Queens Quay: everything southbound turns
   for (const [c, name] of STREETS) {
     D.nsLanes(name, c, c === SP ? { streetcar: true } : {}, 0, QQ + 4);

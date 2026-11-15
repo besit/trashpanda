@@ -79,6 +79,13 @@ tools/        asset generators (never shipped): raster + SDF renderers, sprite m
 - **Articulated streetcars:** section spacing along the route is scaled by `hypot(cos h, 0.66 sin h)` of the car's heading (the N/S sprites are foreshortened), and the sections are drawn front over middle over rear.
 - **ABOUT / SOURCES:** `src/data/villain.ts` holds the name, the notice and the credits; every `Upgrade` has a `source` string shown on the results card and under ABOUT.
 
+## M3.4 additions
+- **Rats:** `baggage` (ranged; `onThrow` rolls a suitcase: `ActionScene.rollCase(x, dir)`, a gravity-free physics image that hurts on contact, can be swatted, and expires after 3.2 s or outside the arena) and `barrier` (`shield`: `Rat.blocks(h)` is true for a hit whose centre is on its facing side while it isn't reeling; shielded rats turn only after 0.8 s facing the wrong way, `turnT`).
+- **The Jet Tug** (`src/action/JetTug.ts`): `intro -> taxi -> refuel -> turn -> taxi`; `blast(pRect, body, dt)` adds velocity away from the tail; `tugRect` is pumpable only while refuelling; the cabin roof uses the shared `landingOn`. Left-facing frames (`jettugl_*`) are separate sprites so the jet's lettering never mirrors.
+- **DepaveSpots** gains `style: 'stakes'` (survey stakes that pop out of the ground).
+- **SDF:** `obliqueCam(zScale, far)` and `render({ maxT, steps })`, so a tall object (the CN Tower's full shaft) renders in one pass instead of a raster strip glued to a rendered base.
+- **Debug:** `__TP.killAll()` knocks every rat out *and counts the kills*, so bots can clear arena waves; `__TP.tug()`, `__TP.cases()`, `__TP.ratObjs()`.
+
 ## Data formats
 - **Map JSON** (`gen/<district>.json`, one per district; generators in `tools/map/`, sharing `common.mjs`):
   - `ground[y][x]` tile indices

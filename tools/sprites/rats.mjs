@@ -26,6 +26,9 @@ const M = {
   gold: { ramp: ['o', 'y', 'Y', 'W'], spec: 1 },
   leather: { ramp: ['K', 'w', 'x'] },
   hair: { ramp: ['g', 'h', 'H'] },
+  case: { ramp: ['u', 'U', 'c'] },
+  barrier: { ramp: ['o', 'O', 'O'], fn: (p) => (Math.floor(((p[0] + p[1] * 0.3) / 1.6 + 100) % 2) ? 'W' : null) },
+  airline: { ramp: ['K', 'u', 'U', 'c'] },
 };
 
 /**
@@ -106,6 +109,27 @@ function ratModel(variant, pose) {
     objs.push({ d: sd.box(bc, [2.6, 0.9, 1.9]), m: M.leather });
     objs.push({ d: sd.box([bc[0], bc[1] + 0.95, bc[2] + 0.2], [0.5, 0.1, 0.4]), m: M.gold });
     objs.push({ d: sd.box([bc[0] - 1.2, bc[1], bc[2] + 2.0], [0.6, 0.7, 0.4]), m: { ramp: ['E', 'l', 'L'] } }); // cash poking out
+  } else if (variant === 'baggage') {
+    // M3.4: airline cap with a gold band, a navy ramp vest; a wheeled suitcase at the back hand, thrust
+    // forward low when it rolls it along the ground
+    objs.push({ d: (p) => Math.max(sd.sphere([hc[0] - 0.2, 0, hc[2] + 0.9], 2.9)(p), -(p[2] - (hc[2] + 1.4))), m: M.airline });
+    objs.push({ d: sd.box([hc[0] + 2.6, 0, hc[2] + 1.5], [1.6, 1.8, 0.25]), m: M.eye });
+    objs.push({ d: sd.cylY([hc[0] - 0.2, 0, hc[2] + 1.5], 2.95, 0.3), m: M.gold });
+    objs.push({ d: (p) => Math.max(sd.ellipsoid(P(0, 9), [3.9, 3.5, 3.4])(p), -sd.ellipsoid(P(2.4, 9), [1.6, 1.8, 2.8])(p)), m: M.airline });
+    objs.push({ d: sd.box(P(0, 8.6), [3.95, 3.55, 0.45]), m: M.stripe });
+    const cs = attack === 2 ? [hc[0] + 7.5, 1.2, 2.2] : attack === 1 ? [hc[0] + 1, 1.2, 4.5] : [-4.5 - sw * 0.5, -2.6, 2.4];
+    objs.push({ d: sd.box(cs, [2.4, 1.6, 2.0], 0.3), m: M.case });
+    objs.push({ d: sd.capsule([cs[0] - 2.2, cs[1], cs[2] + 2], [cs[0] - 2.2, cs[1], cs[2] + 4.2], 0.3), m: M.steel }); // the pull handle
+    for (const dx of [-1.6, 1.6]) objs.push({ d: sd.torusY([cs[0] + dx, cs[1] + 1.7, cs[2] - 2.0], 0.5, 0.25), m: M.eye });
+  } else if (variant === 'barrier') {
+    // M3.4: orange vest, holds a striped ROAD CLOSED barrier board in front at waist height; shoves with it
+    objs.push({ d: (p) => Math.max(sd.sphere([hc[0] - 0.2, 0, hc[2] + 1.0], 3.2)(p), -(p[2] - (hc[2] + 1.3))), m: M.hardhat });
+    objs.push({ d: (p) => Math.max(sd.ellipsoid([hc[0] - 0.2, 0, hc[2] + 1.4], [4.2, 3.8, 0.4])(p), 0), m: M.hardhat });
+    objs.push({ d: (p) => Math.max(sd.ellipsoid(P(0, 9), [3.9, 3.5, 3.4])(p), -sd.ellipsoid(P(2.4, 9), [1.6, 1.8, 2.8])(p)), m: M.vest });
+    const bx = attack === 2 ? 8.5 : attack === 1 ? 4.5 : 6.2;
+    objs.push({ d: (p) => sd.box([bx, 0, 7.5], [0.6, 4.6, 1.6])(yawInv(p, 0.7, [bx, 0, 7.5])), m: M.barrier });      // the board, angled so its stripes show
+    objs.push({ d: sd.box([bx - 0.3, 3.9, 4.0], [0.35, 0.35, 4.0]), m: M.steel }); objs.push({ d: sd.box([bx - 0.3, -3.9, 4.0], [0.35, 0.35, 4.0]), m: M.steel }); // legs
+    objs.push({ d: sd.capsule(P(1.2, 12), [bx - 1, 2.0, 8.5], 0.8, 0.7), m: M.fur }); objs.push({ d: sd.sphere([bx - 0.8, 2.0, 8.5], 0.9), m: M.pink });
   } else if (variant === 'traffic') {
     // flagger: white cap, purple vest, STOP paddle
     objs.push({ d: (p) => Math.max(sd.sphere([hc[0] - 0.2, 0, hc[2] + 0.9], 2.9)(p), -(p[2] - (hc[2] + 1.4))), m: M.white });
@@ -139,7 +163,7 @@ export function bureaucratAnims() {
   return { frames, anims };
 }
 
-export const RAT_VARIANTS = ['basic', 'construction', 'traffic', 'lobbyist'];
+export const RAT_VARIANTS = ['basic', 'construction', 'traffic', 'lobbyist', 'baggage', 'barrier'];
 export function ratAnims(variant) {
   const frames = [], anims = {};
   const add = (name, list, rate, loop = true) => { anims[name] = { start: frames.length, count: list.length, rate, loop }; frames.push(...list); };

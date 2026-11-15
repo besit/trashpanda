@@ -22,25 +22,28 @@ const rot = (x, y, a) => [x * Math.cos(a) + y * Math.sin(a), -x * Math.sin(a) + 
  * photo, the plan drawing). The whole thing is turned ~12 degrees so it doesn't sit square to the grid.
  */
 export function cnTowerBuilding(w = 96, d = 48, shaftH = 300) {
-  const Hb = 118, gy = Hb - 24; // ground centre row in the base render
+  const Hb = 118, gy = Hb - 24; // ground centre row
   const turn = 0.21;
   const arms = [0, 1, 2].map((k) => -Math.PI / 2 + turn + (k * 2 * Math.PI) / 3);
-  const ZT = 64; // above this the raster shaft takes over
-  // one foil, in its own frame: u out along the arm, v across it. y is squashed in the plan (oblique map)
+  // M3.4 (Ivan: "the base looks amazing then it changes... the tower should be the exact extension of this
+  // base slowly narrowing down"): the whole thing is one SDF now, base and shaft, rendered in one pass. The
+  // foils spread wide at the ground, merge into the core by z = 66 and carry on up the shaft as three ribs that
+  // slowly thin out; the core itself narrows from 9 to 5; the glass lifts ride up the corners all the way.
+  const ZTOP = shaftH + gy - 6; // the shaft leaves the top of the image
+  const coreR = (z) => 9 - 4 * Math.min(1, z / ZTOP);
   const foil = (a) => (p) => {
-    const [u, v] = rot(p[0], p[1] / 0.62, -a).map((c, i) => (i === 0 ? c : c));
+    const [u, v] = rot(p[0], p[1] / 0.62, -a);
     const z = Math.max(0, p[2]);
-    const L = 10 + 19 * Math.max(0, 1 - z / 66);          // reach of the arm (tapers steadily, like a rib up the shaft)
-    const hw = 6.4 - z * 0.02;                            // half-width across
-    const tip = u + Math.abs(v) * 0.75 - L;               // chamfered hexagonal tip
+    const L = z < 66 ? 10 + 19 * (1 - z / 66) : 10 - 6.5 * Math.min(1, (z - 66) / (ZTOP - 66)); // the arm's reach
+    const hw = 6.4 - 3.6 * Math.min(1, z / ZTOP);                                                 // half-width across
+    const tip = u + Math.abs(v) * 0.75 - L;                                                        // chamfered hexagonal tip
     const dArm = Math.max(Math.abs(v) - hw, tip, -u - 2);
-    return Math.max(dArm * 0.62, -p[2], p[2] - ZT);
+    return Math.max(dArm * 0.62, -p[2], p[2] - ZTOP);
   };
-  const core = (p) => Math.max(Math.hypot(p[0], p[1] / 0.62) - (9 - p[2] * 0.02), -p[2], p[2] - ZT);
-  // glass elevators in the corners between the foils
+  const core = (p) => Math.max(Math.hypot(p[0], p[1] / 0.62) - coreR(p[2]), -p[2], p[2] - ZTOP);
   const lift = (a) => (p) => {
     const [u, v] = rot(p[0], p[1] / 0.62, -a);
-    return Math.max(Math.abs(v) - 2.1, Math.abs(u - 9.6) - 2.0, -p[2] + 1, p[2] - ZT);
+    return Math.max(Math.abs(v) - 2.1, Math.abs(u - (coreR(p[2]) + 0.6)) - 2.0, -p[2] + 1, p[2] - ZTOP);
   };
   const conc = mat(CONC, { fn: (p) => (p[2] < 2.2 ? 'G' : (Math.round(p[2]) % 11 === 0 ? 'g' : null)) });
   const glass = mat(['u', 'U', 'c', 'C'], { fn: (p) => (Math.round(p[2]) % 3 === 0 ? 'C' : null) });
@@ -49,21 +52,8 @@ export function cnTowerBuilding(w = 96, d = 48, shaftH = 300) {
     ...arms.map((a) => ({ d: foil(a), m: conc })),
     ...arms.map((a) => ({ d: lift(a + Math.PI / 3), m: glass })),
   ];
-  const base = render(scene(objs), { w, h: Hb, cx: w / 2, cy: gy, cam: obliqueCam(), ambient: 0.2, light: [-0.7, 0.35, 0.6] });
-  const img = new Img(w, shaftH + Hb);
-  // the shaft above the base: still Y-shaped (two lit faces + the shadowed one), an elevator strip, rings
-  const cx = w / 2, shaftBottom = shaftH + gy - ZT + 2;
-  for (let y = 0; y <= shaftBottom; y++) {
-    const t = y / shaftBottom, half = Math.round(5 + t ** 1.6 * 9);
-    for (let x = -half; x <= half; x++) {
-      const k = (x + half) / (2 * half);
-      img.set(cx + x, y, k < 0.18 ? 'h' : k < 0.47 ? 'H' : k < 0.53 ? 'g' : k < 0.82 ? 'h' : 'G');
-    }
-    img.set(cx + Math.round(half * 0.62), y, (y >> 1) % 2 ? 'c' : 'u'); // the glass elevator strip
-    if (y % 22 === 0) img.hline(cx - half, cx + half, y, 'h');
-  }
-  img.blit(base, 0, shaftH);
-  img.outline('K');
+  const H = shaftH + Hb;
+  const img = render(scene(objs), { w, h: H, cx: w / 2, cy: shaftH + gy, cam: obliqueCam(1, ZTOP + 80), maxT: 2 * ZTOP + 400, steps: 260, ambient: 0.2, light: [-0.7, 0.35, 0.6] });
   return { img, footprint: { w, d }, facadeH: img.h - d };
 }
 

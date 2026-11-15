@@ -30,6 +30,7 @@ import * as WF from './sprites/waterfront.mjs';
 import * as WF2 from './sprites/waterfront2.mjs';
 import * as WF3 from './sprites/waterfront3.mjs';
 import { generateWaterfront } from './map/waterfront.mjs';
+import * as AP from './sprites/airport.mjs';
 
 const OUT = path.resolve(process.env.TP_GEN_OUT || 'public/gen');
 fs.mkdirSync(OUT, { recursive: true });
@@ -164,6 +165,8 @@ manifest.anims.sailboat_bob = { frames: ['sailboat_0', 'sailboat_1'], rate: 1.5,
 // M3.2: HTO Park's umbrellas, motor yachts moored in the slips
 addProp('yellowumbrella', WF3.yellowUmbrella()); addProp('yacht_0', WF3.yacht(0)); addProp('yacht_1', WF3.yacht(1));
 manifest.anims.yacht_bob = { frames: ['yacht_0', 'yacht_1'], rate: 1.2, loop: true, atlas: 'world' };
+// M3.4: the island airport mission
+addProp('jettug_0', AP.jetTug(0)); addProp('jettug_1', AP.jetTug(1)); addProp('jettugl_0', AP.jetTug(0, true)); addProp('jettugl_1', AP.jetTug(1, true)); addProp('surveystake', AP.surveyStake()); addProp('suitcase', AP.suitcase()); addProp('stakemap', AP.surveyStakeMap()); addProp('norwayrock', AP.norwayRock());
 addProp('vanside', SP.vanSide()); addProp('suvrat_0', SP.suvRatSide(0)); addProp('suvrat_1', SP.suvRatSide(1));
 addProp('desk', SP.desk()); addProp('stamp_0', SP.stamp(0)); addProp('stamp_1', SP.stamp(1)); addProp('camcarried', SP.camCarried());
 addProp('buildspot', SP.buildSpot()); addProp('humpside', SP.humpSide()); addProp('raisedside', SP.raisedCrossSide()); addProp('life_0', SP.lifeToken(0)); addProp('life_1', SP.lifeToken(1));
