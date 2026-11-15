@@ -61,7 +61,7 @@ export class Traffic {
   }
 
   setUpgrades(u: string[]) { this.upgrades = new Set(u); }
-  private active(l: Lane) { return !l.requires || this.upgrades.has(l.requires); }
+  private active(l: Lane) { return (!l.requires || this.upgrades.has(l.requires)) && (!l.until || !this.upgrades.has(l.until)); }
   private get protectedLanes() { return this.upgrades.has('queen_protected_lanes'); }
 
   private has(id?: string) { return !!id && this.upgrades.has(id); }
@@ -262,7 +262,7 @@ export class Traffic {
     // despawn
     this.vehicles = this.vehicles.filter((v) => {
       const p = this.posOf(v), [a, b] = this.span(v.lane);
-      if (p < a - v.len * 1.5 || p > b + v.len * 1.5) { v.s.destroy(); v.parts?.forEach((im) => im.destroy()); return false; }
+      if (p < a - v.len * 1.5 || p > b + v.len * 1.5 || !this.active(v.lane)) { v.s.destroy(); v.parts?.forEach((im) => im.destroy()); return false; }
       return true;
     });
   }

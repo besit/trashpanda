@@ -368,6 +368,14 @@ export class ExploreScene extends Phaser.Scene {
     this.player.frozen = false;
     this.busy = false;
     this.shownLiv = after;
+    // M4: every mission done -> Dog Fjord concedes, then the report card and the credits
+    if (Object.keys(MISSIONS).every((id) => ctx.state.completedMissions.includes(id)) && !ctx.state.flags.ended) {
+      this.busy = true; this.player.frozen = true;
+      await this.wait(1200);
+      await iris(this, 'close');
+      this.scene.start('Cutscene', { id: 'ending', next: 'Ending' });
+      return;
+    }
     if (firstTime) this.nextHint(missionId);
   }
 

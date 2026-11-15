@@ -296,7 +296,7 @@ export class PauseScene extends Phaser.Scene {
     sfx.select();
     await iris(this, 'close');
     this.scene.stop(this.from);
-    this.scene.start('Title');
+    this.scene.start('Title', {});
   }
 
   update(_t: number, dt: number) {

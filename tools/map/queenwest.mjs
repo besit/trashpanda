@@ -47,6 +47,8 @@ export function generateQueenWest() {
   // M3.2 (Ivan): south to the Waterfront. Strachan carries on down to Ontario Place; Ossington and Bellwoods
   // land on Strachan too (Strachan first, so coming back up Strachan arrives on Strachan)
   D.exitNS('s', SX, 'waterfront', 'strachan'); D.exitNS('s', OX, 'waterfront', 'strachan'); D.exitNS('s', BX, 'waterfront', 'strachan');
+  // M4: north on Ossington or Bellwoods -> the North district (you come out at the bottom of Leslie St)
+  D.exitNS('n', OX, 'north', 'ossington', 'leslie'); D.exitNS('n', BX, 'north', 'bellwoods', 'leslie');
 
   // ---------- Trinity Bellwoods Park ----------
   for (let y = PARK.y0 - 1; y <= PARK.y1 + 1; y++) for (let x = PARK.x0 - 2; x <= PARK.x1 + 2; x++) set(x, y, `lawn${(x * 5 + y * 11) % 3}`);
@@ -228,6 +230,7 @@ export function generateQueenWest() {
     { text: 'BELLWOODS', x: (BX + 2) * TS, y: 33 * TS, vertical: true },
     { text: 'STRACHAN', x: (SX + 2) * TS, y: 69 * TS, vertical: true },
     { text: 'v WATERFRONT', x: (SX + 2) * TS, y: (H - 2) * TS, kind: 'exit' },
+    { text: '^ NORTH', x: (OX + 2) * TS, y: 2 * TS, kind: 'exit' },
     { text: 'TRINITY BELLWOODS', x: R(0.5, 0.64)[0], y: R(0.5, 0.64)[1], kind: 'landmark' },
     { text: 'DOG BOWL', x: bowl.x + bowl.w / 2, y: bowl.y + bowl.h / 2, kind: 'landmark' },
     { text: 'GATES', x: 52 * TS, y: 49 * TS, kind: 'landmark' },

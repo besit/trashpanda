@@ -72,7 +72,7 @@ describe('save system', () => {
 
 describe('M2: districts, missions, saves', async () => {
   // generate the maps directly (no dependency on `npm run assets` having run, e.g. in CI)
-  const GEN: Record<string, string> = { queenwest: 'generateQueenWest', highpark: 'generateHighPark', downtown: 'generateDowntown', eastend: 'generateEastEnd', waterfront: 'generateWaterfront' };
+  const GEN: Record<string, string> = { queenwest: 'generateQueenWest', highpark: 'generateHighPark', downtown: 'generateDowntown', eastend: 'generateEastEnd', waterfront: 'generateWaterfront', north: 'generateNorth' };
   const maps: Record<string, any> = {};
   for (const id of Object.keys(GEN)) { const path = `../../tools/map/${id}.mjs`; const m = await import(/* @vite-ignore */ path); maps[id] = m[GEN[id]](); }
   const { MISSIONS, missionAvailable } = await import('../../src/data/missions');

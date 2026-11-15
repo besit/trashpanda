@@ -29,6 +29,8 @@ const M = {
   case: { ramp: ['u', 'U', 'c'] },
   barrier: { ramp: ['o', 'O', 'O'], fn: (p) => (Math.floor(((p[0] + p[1] * 0.3) / 1.6 + 100) % 2) ? 'W' : null) },
   airline: { ramp: ['K', 'u', 'U', 'c'] },
+  guard: { ramp: ['K', 'k', 'g', 'G'] },
+  torch: { ramp: ['g', 'G', 'h'] },
 };
 
 /**
@@ -121,6 +123,16 @@ function ratModel(variant, pose) {
     objs.push({ d: sd.box(cs, [2.4, 1.6, 2.0], 0.3), m: M.case });
     objs.push({ d: sd.capsule([cs[0] - 2.2, cs[1], cs[2] + 2], [cs[0] - 2.2, cs[1], cs[2] + 4.2], 0.3), m: M.steel }); // the pull handle
     for (const dx of [-1.6, 1.6]) objs.push({ d: sd.torusY([cs[0] + dx, cs[1] + 1.7, cs[2] - 2.0], 0.5, 0.25), m: M.eye });
+  } else if (variant === 'guard') {
+    // M4: a security guard: dark peaked cap with a badge, dark vest, a flashlight held out in the front hand
+    objs.push({ d: (p) => Math.max(sd.sphere([hc[0] - 0.2, 0, hc[2] + 0.9], 2.9)(p), -(p[2] - (hc[2] + 1.4))), m: M.guard });
+    objs.push({ d: sd.box([hc[0] + 2.6, 0, hc[2] + 1.5], [1.6, 1.8, 0.25]), m: M.eye });
+    objs.push({ d: sd.sphere([hc[0] + 0.6, 2.4, hc[2] + 2.0], 0.5), m: M.gold });
+    objs.push({ d: (p) => Math.max(sd.ellipsoid(P(0, 9), [3.9, 3.5, 3.4])(p), -sd.ellipsoid(P(2.4, 9), [1.6, 1.8, 2.8])(p)), m: M.guard });
+    objs.push({ d: sd.box(P(0, 8.6), [3.95, 3.55, 0.3]), m: M.gold });
+    const tx = attack === 2 ? armA[0] + 2 : armA[0] + 1.5;
+    objs.push({ d: sd.capsule([tx - 1.5, 2.9, armA[2] + 0.4], [tx + 3.5, 2.9, armA[2] + 0.4], 0.7), m: M.torch });
+    objs.push({ d: sd.sphere([tx + 3.9, 2.9, armA[2] + 0.4], 0.75), m: { flat: 'Y' } });
   } else if (variant === 'barrier') {
     // M3.4: orange vest, holds a striped ROAD CLOSED barrier board in front at waist height; shoves with it
     objs.push({ d: (p) => Math.max(sd.sphere([hc[0] - 0.2, 0, hc[2] + 1.0], 3.2)(p), -(p[2] - (hc[2] + 1.3))), m: M.hardhat });
@@ -163,7 +175,7 @@ export function bureaucratAnims() {
   return { frames, anims };
 }
 
-export const RAT_VARIANTS = ['basic', 'construction', 'traffic', 'lobbyist', 'baggage', 'barrier'];
+export const RAT_VARIANTS = ['basic', 'construction', 'traffic', 'lobbyist', 'baggage', 'barrier', 'guard'];
 export function ratAnims(variant) {
   const frames = [], anims = {};
   const add = (name, list, rate, loop = true) => { anims[name] = { start: frames.length, count: list.length, rate, loop }; frames.push(...list); };
@@ -191,3 +203,17 @@ export function foremanAnims() {
   return { frames, anims };
 }
 export function foremanPreview() { return { frames: foremanAnims().frames, cols: 7 }; }
+
+/** The Mega Rat (mission 9 miniboss, M4): the basic rat at 2.6x, 72x72 frames. */
+export const MEGA_FW = 72;
+export function megaRatAnims() {
+  const frames = [], anims = {};
+  const f = (pose) => ratFrame('basic', pose, 2.6, MEGA_FW, MEGA_FW);
+  const add = (name, list, rate, loop = true) => { anims[name] = { start: frames.length, count: list.length, rate, loop }; frames.push(...list); };
+  add('walk', [0, 0.25, 0.5, 0.75].map((w) => f({ walk: w })), 6);
+  add('windup', [f({ attack: 1 })], 1, false);
+  add('attack', [f({ attack: 2 })], 1, false);
+  add('hurt', [f({ hurt: true })], 1, false);
+  return { frames, anims };
+}
+export function megaRatPreview() { return { frames: megaRatAnims().frames, cols: 7 }; }

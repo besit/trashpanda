@@ -30,3 +30,11 @@ export function categories(upgrades: readonly string[]): Record<Category, number
   }
   return out;
 }
+
+import type { EndStats } from '../data/upgrades';
+/** M4: the ending's numbers, summed from each unlocked upgrade's `stat` */
+export function endStats(upgrades: readonly string[]): EndStats {
+  const out: EndStats = { bikeLanes: 0, protectedIntersections: 0, parksCreated: 0, transitUpgrades: 0, treesPlanted: 0, lanesRemoved: 0 };
+  for (const id of upgrades) { const st = UPGRADES[id]?.stat; if (st) out[st.key] += st.amount; }
+  return out;
+}

@@ -8,6 +8,7 @@ import { bigBoxFacade, broadviewFacade, donJailFacade, donJailRoof } from './eas
 import { megaSpaFacade } from './waterfront.mjs';
 import { ferryTerminalBuilding } from './waterfront2.mjs';
 import { cnTowerBuilding, domeBuilding, aquariumBuilding, powerPlantBuilding } from './waterfront3.mjs';
+import { scienceCentreBuilding, slabFacade, slabRoof } from './north.mjs';
 
 export function anyBuilding(gen) {
   // M3.1 Waterfront landmarks: drawn whole (their footprint is the ground they stand on)
@@ -16,6 +17,14 @@ export function anyBuilding(gen) {
   if (gen.kind === 'aquarium') return aquariumBuilding(gen.w, gen.d);
   if (gen.kind === 'ferry') return ferryTerminalBuilding(gen.w, gen.d);
   if (gen.kind === 'powerplant') return powerPlantBuilding(gen.w, gen.d);
+  // M4: the North district
+  if (gen.kind === 'sciencecentre') return scienceCentreBuilding(gen.w, gen.d);
+  if (gen.kind === 'slab') {
+    const fac = slabFacade({ w: gen.w, floors: gen.floors, seed: gen.seed }), rf = slabRoof(gen.w, gen.d);
+    const img = new Img(gen.w, gen.d + fac.h);
+    img.blit(rf, 0, 0); img.blit(fac, 0, gen.d); img.hline(0, gen.w - 1, gen.d, 'K');
+    return { img, footprint: { w: gen.w, d: gen.d }, facadeH: fac.h };
+  }
   if (gen.kind === 'donjail') {
     const fac = donJailFacade(gen.w), rf = donJailRoof(gen.w, gen.d);
     const img = new Img(gen.w, gen.d + fac.h - 12);

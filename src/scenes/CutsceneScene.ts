@@ -93,7 +93,7 @@ export class CutsceneScene extends Phaser.Scene {
     this.skipping = true;
     ctx.state.flags.sawIntro = true;
     await iris(this, 'close');
-    this.scene.start(this.next, this.nextData);
+    this.scene.start(this.next, this.nextData ?? {}); // never undefined: Phaser would reuse the scene's last data
   }
 
   private clearBg() {
@@ -145,6 +145,7 @@ export class CutsceneScene extends Phaser.Scene {
         else if (bg === 'parkside') this.layer('park_hp', FRONT_Y.parkside, 120, 1.0, 100);
         else if (bg === 'bigbox') this.layer('bigbox_ee', STREET_Y - 120, 120, 1.0, 0);
         else if (bg === 'lake') this.layer('lake_wf', STREET_Y - 120, 120, 1.0, 0);
+        else if (bg === 'science') this.layer('science_nd', FRONT_Y.science, 140, 1.0, 0);
         else { this.layer(`backrow_${s.sky}`, BACKROW_Y, 80, 0.3); this.layer('facades_qw', FRONT_Y.queen, 96, 1.0, 300); }
         this.layer(`street_${s.street}`, STREET_Y, 70, 1.0);
         if (s.street === 'protected') this.addDecor(['planter'], STREET_Y + 32, 70, 70, 1.5);
@@ -269,7 +270,7 @@ export class CutsceneScene extends Phaser.Scene {
         const atlas = s.atlas ?? 'chars';
         const a = s.anim ? this.add.sprite(ox + s.x, s.y, atlas, s.frame).play(s.anim) : this.add.image(ox + s.x, s.y, atlas, s.frame);
         const pv = (this.registry.get('manifest') as Manifest).pivots;
-        const pk = s.frame.startsWith('rs_') ? 'rs' : s.frame.startsWith('rat_bureaucrat') ? 'rat_bureaucrat' : s.frame.startsWith('rat_foreman') ? 'rat_foreman' : s.frame.startsWith('rat_') ? 'rat' : s.frame.startsWith('ped_') ? 'ped' : s.frame;
+        const pk = s.frame.startsWith('rs_') ? 'rs' : s.frame.startsWith('rat_bureaucrat') ? 'rat_bureaucrat' : s.frame.startsWith('rat_foreman') ? 'rat_foreman' : s.frame.startsWith('rat_megarat') ? 'rat_megarat' : s.frame.startsWith('rat_') ? 'rat' : s.frame.startsWith('ped_') ? 'ped' : s.frame;
         const p = pv[pk] ?? { x: 0.5, y: 1 };
         a.setOrigin(p.x, p.y).setDepth(s.depth ?? 60).setFlipX(!!s.flip).setScale(s.scale ?? 1);
         this.actors.get(s.id)?.destroy();

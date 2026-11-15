@@ -18,11 +18,11 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
 | 2 | School-zone speed cameras (automated speed enforcement) + traffic calming | *Slow Down, Dog* (**main mission**, Ivan's call at M0 review) | ✅ for the game's claims |
 | 3 | Transit signal priority | Let the Streetcar Through | ✅ |
 | 4 | Transit-priority corridor (King St pilot) | King of the Street | ✅ |
-| 5 | Adaptive reuse (Science Centre) | Save the Science | ⬜ |
+| 5 | The Ontario Science Centre (closure, relocation) | Save the Science (main 6, M4) | ✅ for the game's claims |
 | 6 | Parking → public space (parking minimums) | The Great Parking Lot | ✅ (see §6) |
 | 7 | Waterfront public space (Ontario Place) | The Waterfront Heist | ✅ for the game's claims (see §7) |
-| 8 | Ontario Line / rapid transit | Finish the Line | ⬜ |
-| 9 | Highway transformation (Gardiner) | Death by Highway | ⬜ |
+| 8 | Ontario Line / rapid transit | Finish the Line (main 9, M4) | ✅ for the game's claims |
+| 9 | Highway transformation (Gardiner) | Death by Highway (main 10, M4) | ✅ for the game's claims (evidence partly secondary, flagged) |
 | 10 | Pedestrian streets | Pedestrian Takeover (side) | ⬜ |
 | 11 | Protected intersections | Intersection Repair (side) | ⬜ |
 | 12 | GO electrification | bonus | ⬜ |
@@ -161,7 +161,36 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
 
 ---
 
-*(Entries 5–13 are researched as their missions are built, in M3.)*
+## 5. The Ontario Science Centre ✅ checked 2026-11-15
+
+- **The building:** Raymond Moriyama's brutalist complex on Don Mills Road opened on **September 28, 1969**. Its three main buildings step down the Don ravine, joined by bridges and escalators, placed so mature trees could stay. [Ontario Science Centre (Wikipedia)](https://en.wikipedia.org/wiki/Ontario_Science_Centre).
+- **The closure:** on **June 21, 2024** the Ministry of Infrastructure closed it with a few hours' notice, citing an engineering report (Rimkus) that found water damage on **2–6 %** of the roofs and RAAC roof panels at risk under snow load; repairs were estimated at **at least $22 million** and two years. It was the only Ontario public building closed over RAAC; over 95,000 people petitioned to repair and reopen it. [Wikipedia](https://en.wikipedia.org/wiki/Ontario_Science_Centre); [Global News, a year on](https://globalnews.ca/news/11252077/ont-science-centre/).
+- **The Auditor General:** in December 2023 the relocation decision was found "not fully informed" (incomplete costing, little consultation); a December 2024 report found relocation costs had reached about $400 million, more than the projected savings. The new building at Ontario Place is expected to open in **2029**; the province announced the groundbreaking in May 2026. Sources disagree on its cost ($1 billion at the February 2026 reveal; about $1.4 billion in a later estimate). [CBC: opening 2029](https://www.cbc.ca/news/canada/toronto/science-centre-ontario-place-opening-delayed-1.7414677); [Globe and Mail](https://www.theglobeandmail.com/canada/toronto/article-new-ontario-science-centre-at-ontario-place-to-open-in-2029-auditor/); [NOW Toronto: timeline](https://nowtoronto.com/news/ontario-science-centre-to-open-temporary-waterfront-hub-heres-a-timeline-from-closure-to-new-home/).
+- 🟡 Not confirmed: whether the larger interim site at Harbourfront opened in summer 2026.
+
+**FICTION LABEL:** the guards, the moving truck and the Wrecker are Dog Fjord's; in reality the Don Mills building stays closed. The upgrade blurb says so ("IN THE GAME IT REOPENS. IN REALITY ONTARIO SHUT IT IN JUNE 2024..."), and the after-caption is the game's wish: "THE ROOF GOT FIXED."
+
+**GAME IMPLEMENTATION:** *Save the Science* (main 6, North). Guard rats stand watch with flashlights that swing left and right; caught in the beam (and not crouched behind a crate) and the guard calls for backup. Rats carry the Van de Graaff generator toward a moving truck: catch them. Then **the Wrecker**, a crane with a wrecking ball: jump the ball, pump the engine while it reloads, stomp the cab. **Map payoff:** the boards and the CLOSED sign come down, an OPEN banner goes up.
+
+## 8. The Ontario Line ✅ checked 2026-11-15
+
+- **The line:** **15.6 km**, **15 stations**, from Exhibition to the Science Centre (Don Valley station at Don Mills + Eglinton): Exhibition, King West, Queen-Spadina (Chinatown), Osgoode, Queen, Moss Park, Corktown (Distillery), East Harbour, Leslieville, Gerrard, Pape, Cosburn, Thorncliffe Park, Flemingdon Park, Science Centre. Groundbreaking March 27, 2022; downtown tunnelling started **April 20, 2026** with the boring machines *Libby* and *Corkie*. [Ontario Line (Wikipedia)](https://en.wikipedia.org/wiki/Ontario_Line). *(Station names vary between sources; the game shows entrances, not names.)*
+- **Cost and schedule:** announced in 2019 at **$10.9 billion**, due 2027. In August 2026 Metrolinx's CEO confirmed about **$34 billion** (up from $29.7 billion in June 2026) and said the line "should open by the early 2030s". [The Hub, Aug 12 2026](https://thehub.ca/2026/08/12/ontario-line-cost-climbs-to-34-billion-as-critics-fault-procurement-rules-and-runaway-budgets/).
+
+**FICTION LABEL:** the game opens it today; the blurb gives the real schedule.
+
+**GAME IMPLEMENTATION:** *Finish the Line* (main 9, Downtown). A wave, a locked arena of five rail piles to pump into track while rats defend them, a wave with a lobbyist, then the **Mega Rat**: road chunks, a shove, and a leap that POUNDS the ground and sends shockwaves both ways. **Map payoff:** station entrances on Queen (Downtown), Queen + Carlaw and Gerrard (East End), and beside the Science Centre (North).
+
+## 9. Highway transformation: the Gardiner ✅ for the game's claims (partly secondary, flagged)
+
+- **Toronto's decision:** on **June 11, 2015** City Council voted **24–21** for the "hybrid" option, keeping and rebuilding the elevated Gardiner East between Jarvis and the DVP; the removal-and-boulevard option failed 19–26. In March 2016 council endorsed the Hybrid 3 design. [CP24](https://www.cp24.com/mobile/news/council-votes-in-favour-of-hybrid-option-for-eastern-gardiner-1.2417368); [blogTO](https://blogto.com/city/2015/06/toronto_votes_for_hybrid_option_on_east_gardiner); [CBC](https://amp.cbc.ca/news/canada/toronto/hybrid-gardiner-expressway-imagined-3-ways-by-city-staff-1.3231461). The Gardiner and the DVP were later uploaded to the province under the Toronto–Ontario deal. [CBC](https://www.cbc.ca/news/canada/toronto/costs-dvp-gardiner-ontario-1.7010542).
+- **Seoul, Cheonggyecheon:** Seoul removed **5.8 km** of elevated highway (and surface lanes) to restore the Cheonggyecheon stream. A peer-reviewed study in *Transport Policy* (2012) concluded that, nine years on, "the anxiety about additional traffic problems due to the associated decrease in road capacity was unfounded". An OECD review of the monitoring found most former traffic did not reappear on nearby streets; people shifted departure times and used the Metro more. [Transport Policy abstract (ScienceDirect)](https://www.sciencedirect.com/science/article/abs/pii/S0967070X12000108); [Global Designing Cities Initiative](https://globaldesigningcities.org/publication/global-street-design-guide/streets/special-conditions/elevated-structure-removal/case-study-cheonggyecheon-seoul-korea/). 🟡 The OECD summary is secondary; the study's abstract is the primary claim used.
+- **Elsewhere (not used in game text):** a review of 70+ road-capacity reductions found on average about a quarter of the traffic "disappeared" (secondary summary, unverified). Rochester's Inner Loop East (2014–2017) shows rising population and property values; traffic findings are only suggestive. San Francisco's Embarcadero boulevard carries a share of the old freeway's trips (a secondary figure, unverified). [Rochester (UC eScholarship)](https://escholarship.org/content/qt3v1245pc/qt3v1245pc.pdf); [RPA](https://rpa.org/reports/reimagining-the-bqe).
+- **Induced demand (the intro's joke, §14):** Duranton & Turner (2011).
+
+**FICTION LABEL:** the game takes the whole deck down. The blurb says what Toronto actually chose ("IN 2015 TORONTO VOTED 24-21 TO KEEP ITS EAST END") next to the Seoul evidence.
+
+**GAME IMPLEMENTATION:** *Death by Highway* (main 10, Waterfront, unlocks last). The "...another lane?" scene: Dog Fjord adds lanes to the highway shot twice and it never moves. Three waves under the deck, then **the Highway Mech**, a walking stretch of expressway with a highway sign for a head: it stomps (shockwaves), flings cars from its claw, then overheats with its chest vent glowing (pump it); jump onto its deck from the slabs it drops at 2/3 and 1/3 health ("ANOTHER LANE!"). **Map payoff:** the deck and its piers are gone; Lake Shore gets protected bike lanes and a linear park of trees and benches. Then Dog Fjord concedes, and the report card and the credits roll.
 
 
 ---

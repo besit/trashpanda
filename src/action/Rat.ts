@@ -4,7 +4,7 @@ import { sfx } from '../audio/sfx';
 import { puff, floatText } from '../ui/fx';
 import type { Hitbox } from './SidePlayer';
 
-export type RatKind = 'basic' | 'construction' | 'traffic' | 'lobbyist' | 'baggage' | 'barrier';
+export type RatKind = 'basic' | 'construction' | 'traffic' | 'lobbyist' | 'baggage' | 'barrier' | 'guard';
 
 const DEFS: Record<RatKind, { hp: number; speed: number; reach: number; windup: number; cooldown: number; ranged?: boolean; support?: boolean; /** M3.4: blocks hits that come from the front (the Barrier Rat) */ shield?: boolean }> = {
   basic: { hp: 3, speed: 52, reach: 22, windup: 0.38, cooldown: 0.7 },
@@ -17,6 +17,8 @@ const DEFS: Record<RatKind, { hp: number; speed: number; reach: number; windup: 
   baggage: { hp: 3, speed: 46, reach: 150, windup: 0.5, cooldown: 1.9, ranged: true },
   // M3.4: the Barrier Rat holds a ROAD CLOSED board in front: hits from the front bounce off; get behind it or stomp
   barrier: { hp: 4, speed: 36, reach: 26, windup: 0.5, cooldown: 1.1, shield: true },
+  // M4: the Science Centre's guard: stands watch with a flashlight (see Science.Patrol); once alarmed, a quick chaser
+  guard: { hp: 3, speed: 66, reach: 22, windup: 0.3, cooldown: 0.6 },
 };
 
 type State = 'enter' | 'walk' | 'windup' | 'attack' | 'recover' | 'hurt' | 'dead';
@@ -34,6 +36,8 @@ export class Rat {
   shielded = false;
   /** the points label floated when it goes poof (set by ActionScene when it awards the kill) */
   reward = '';
+  /** M4: standing watch (a Patrol drives its facing); it doesn't chase until the alarm */
+  patrol = false;
   private glintT = 0;
   private turnT = 0;
   private age = 0;
@@ -104,7 +108,7 @@ export class Rat {
     const dx = px - this.sprite.x, dist = Math.abs(dx);
     const ground = b.blocked.down || b.touching.down;
     // M3.4: a Barrier Rat turns slowly (its board is heavy), so a dash past it opens a window behind it
-    if (this.state !== 'hurt' && this.state !== 'attack') {
+    if (this.state !== 'hurt' && this.state !== 'attack' && !this.patrol) {
       const want: 1 | -1 = dx > 0 ? 1 : -1;
       if (!this.def.shield || this.age < 0.5) { this.facing = want; this.turnT = 0; } // (it turns freely while walking in)
       else if (want !== this.facing) { this.turnT += dt; if (this.turnT > 0.8) { this.facing = want; this.turnT = 0; } }
@@ -112,6 +116,12 @@ export class Rat {
     }
     this.sprite.setFlipX(this.facing === -1);
     if (this.shielded && (this.glintT -= dt) <= 0) { this.glintT = 0.3; puff(this.scene, this.sprite.x + Phaser.Math.Between(-6, 6), this.sprite.y - Phaser.Math.Between(8, 26), 0xf5c22e, 1, 6, 95); }
+    if (this.patrol && this.state !== 'hurt') { // on watch: stand still, face where the Patrol says
+      if (ground) b.setVelocityX(0);
+      if (this.sprite.anims.isPlaying) { this.sprite.anims.stop(); this.sprite.setFrame(`rat_${this.kind}_0`); }
+      this.sprite.setFlipX(this.facing === -1);
+      return;
+    }
     // cornered (you got close): he fights back with the briefcase instead of backing off
     if (this.def.support && (this.state === 'enter' || this.state === 'walk') && dist >= 46) {
       // keep 120-170 px away from the raccoon, backing off (and visibly nervous) when approached

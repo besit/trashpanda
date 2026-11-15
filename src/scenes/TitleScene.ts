@@ -20,7 +20,7 @@ import { DIFFICULTY, HighScores, fmtScore, type Difficulty } from '../core/Score
 import { fetchTop, leaderboardEnabled } from '../core/Leaderboard';
 import { fullscreenSupported, isInstalled } from '../core/fullscreen';
 
-export const VERSION_LABEL = 'M3.4 PREVIEW';
+export const VERSION_LABEL = 'M4 PREVIEW';
 
 /** M3.3 (Ivan): after a debug mission or vignette, come back to a REPLAY / BACK TO THE LIST / MAIN MENU menu */
 export interface Replay { kind: 'mission' | 'vignette'; id: string }
@@ -316,7 +316,8 @@ export class TitleScene extends Phaser.Scene {
     this.leaving = true;
     if (cont && ctx.continue()) {
       await iris(this, 'close');
-      this.scene.start('Explore');
+      // an explicit {}: Phaser reuses a scene's last start data when given none (CONTINUE replayed the last payoff)
+      this.scene.start('Explore', {});
     } else {
       ctx.newGame(difficulty, name);
       ctx.save(); // the run (difficulty, initials) exists from the first second: CONTINUE finds it

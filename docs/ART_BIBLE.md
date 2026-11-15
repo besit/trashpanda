@@ -80,6 +80,11 @@ Each district gets landmarks and textures you can't mistake for anywhere else. Q
 - Sugar Beach's pink umbrellas and white chairs, sailboats, the Cinesphere's geodesic dome, the pods on stilts
 - the MEGA SPA (fictional, pink and glass) and its chain-link PRIVATE fences
 
+**Rules added in M4:**
+- A boss is a piece of the thing the mission is about: the Highway Mech is a walking stretch of the Gardiner (pier legs, a deck torso, a highway sign for a head), the Wrecker is a demolition crane.
+- Brutalism reads as ribbed concrete: the Science Centre's walls are vertical ribs every 3 px, lit from the left, with deep slit windows.
+- A real place's text is drawn in the game font on the building itself (ONTARIO SCIENCE CENTRE), never as a floating label.
+
 **Rules added in M3.4:**
 - Lettering on a sprite that faces both ways gets its own left-facing frame; a flipped sprite mirrors its text ("AIR FJORD" read backwards on the first pass).
 - A tall landmark is one model, rendered once. The CN Tower's shaft is the trefoil base continued (the foils merge into the core and carry on as thinning ribs), not a strip glued on top.

@@ -302,6 +302,42 @@ M3 mission 5 boss: the Lane Eater, a road-paving machine that eats bike lanes. T
 
 ![lane_eater v01](lane_eater/v01/preview.png)
 
+## m4_props
+
+### m4_props v02
+
+2026-11-15
+
+M4: the Highway Mech's sign drawn with its border (the first cut filled it white).
+
+![m4_props v02](m4_props/v02/preview.png)
+
+### m4_props v01
+
+2026-11-15
+
+M4: rail segments, the hoarding, a station entrance, the slab platform, the HIGHWAY MECH (closed + vent open), the strip under the Gardiner.
+
+![m4_props v01](m4_props/v01/preview.png)
+
+## north
+
+### north v02
+
+2026-11-15
+
+M4: + the crate, the Van de Graaff exhibit, the Wrecker crane.
+
+![north v02](north/v02/preview.png)
+
+### north v01
+
+2026-11-15
+
+M4: the North district: the Science Centre (Moriyama's ribbed pavilion with the pods behind), Flemingdon Park slabs, the boards + CLOSED sign + OPEN banner, the mission 6 side strip.
+
+![north v01](north/v01/preview.png)
+
 ## park
 
 ### park v04
@@ -519,6 +555,16 @@ M2 boss: the Bureaucrat Rat. Same rat model at 1.75x in 48px frames: grey suit (
 M2.1: the Foreman Rat, mission 1's new boss (Ivan: 'a boss would make it feel accomplished'): the construction rat at boss size.
 
 ![rats_foreman v01](rats_foreman/v01/preview.png)
+
+## rats_megarat
+
+### rats_megarat v01
+
+2026-11-15
+
+M4: the Mega Rat (mission 9 miniboss), the basic rat at 2.6x.
+
+![rats_megarat v01](rats_megarat/v01/preview.png)
 
 ## side_bg
 

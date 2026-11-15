@@ -11,7 +11,7 @@ import { STREET_Y } from '../ui/sideLayout';
 import type { Hitbox } from './SidePlayer';
 import type { SuvRat } from './SuvRat';
 
-export interface ChaseDef { lead: number; speed: number; pondAt: number; cones: number[]; hp?: number }
+export interface ChaseDef { lead: number; speed: number; pondAt: number; cones: number[]; hp?: number; /** M4: the chase starts when you reach this x (default: at once) */ startAt?: number; /** M4: what they're carrying and where to (default: the camera to the pond) */ goal?: 'pond' | 'truck' }
 export interface BuildDef { at: number; spots: number[]; suvs: number }
 
 export class Chase {
@@ -31,11 +31,17 @@ export class Chase {
     this.x = startX + def.lead;
     this.maxHp = def.hp ?? 8; this.hp = this.maxHp;
     for (let i = 0; i < 2; i++) this.rats.push(scene.add.sprite(0, groundY, 'chars', 'rat_basic_0').setOrigin(15 / 32, 31 / 32).setDepth(92).play('rat_basic_walk'));
-    // the real camera, tipped over on its side and carried (same sprite as on the map + in the vignette)
-    this.cam = scene.add.image(0, 0, 'world', 'speedcam').setOrigin(0.5, 0.5).setScale(2).setAngle(90).setDepth(93);
+    // the real camera, tipped over on its side and carried (same sprite as on the map + in the vignette);
+    // M4: or the Science Centre's Van de Graaff generator, upright
+    this.cam = def.goal === 'truck' ? scene.add.image(0, 0, 'world', 'vandegraaff').setOrigin(0.5, 0.5).setScale(1.6).setDepth(93) : scene.add.image(0, 0, 'world', 'speedcam').setOrigin(0.5, 0.5).setScale(2).setAngle(90).setDepth(93);
     this.bar = scene.add.graphics().setDepth(210);
     this.place(); // positioned from the first frame (they used to sit at x = 0 during the title card)
     for (const cx of def.cones) this.cones.push({ img: scene.add.image(cx, groundY + 1, 'world', 'cone').setOrigin(0.5, 1).setScale(2).setDepth(91), x: cx, hit: false });
+    if (def.goal === 'truck') { // the moving truck waits at the end of the street, tailgate open
+      scene.add.image(def.pondAt + 90, groundY + 2, 'world', 'vanside').setOrigin(0.5, 1).setScale(1.3).setDepth(60); // never flipped: its lettering would mirror
+      scene.add.bitmapText(def.pondAt + 90, groundY - 70, 'font_outline', 'THE MOVING TRUCK').setOrigin(0.5).setDepth(61).setTint(0xff6347);
+      return;
+    }
     // the pond is IN THE PARK, behind the sidewalk
     const py = STREET_Y - 10, pcx = def.pondAt + 110;
     const g = scene.add.graphics().setDepth(3);

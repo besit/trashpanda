@@ -8,8 +8,8 @@ import { sfx } from '../audio/sfx';
 import { puff, floatText, shake } from '../ui/fx';
 import type { Hitbox } from './SidePlayer';
 
-type Move = 'intro' | 'volley' | 'walk' | 'shove' | 'summon' | 'special' | 'charge' | 'dizzy' | 'hurt' | 'dead';
-export type BossKind = 'bureaucrat' | 'foreman';
+type Move = 'intro' | 'volley' | 'walk' | 'shove' | 'summon' | 'special' | 'charge' | 'dizzy' | 'hurt' | 'dead' | 'pound';
+export type BossKind = 'bureaucrat' | 'foreman' | 'megarat';
 
 export interface BossHooks {
   summon: (x: number) => void;
@@ -20,6 +20,8 @@ export interface BossHooks {
 const DEFS = {
   bureaucrat: { key: 'rat_bureaucrat', title: 'THE BUREAUCRAT RAT', hp: 32, intro: 'PERMIT DENIED!', outro: 'APPROVED!', proj: 'stamp_0', projScale: 1, summonCall: 'DING!', special: 'tape' as const, specialCall: 'RED TAPE!', prop: 'desk', debris: 0xf6f2e9 },
   foreman: { key: 'rat_foreman', title: 'THE FOREMAN RAT', hp: 20, intro: 'THIS LANE IS CLOSED!', outro: 'LANE OPEN!', proj: 'cone', projScale: 1.4, summonCall: 'TWEET!', special: 'charge' as const, specialCall: 'JACKHAMMER!', prop: null, debris: 0xff9a2e },
+  // M4 (mission 9): the Mega Rat. Hurls chunks of road, leaps and POUNDS the ground (shockwaves both ways: jump them)
+  megarat: { key: 'rat_megarat', title: 'THE MEGA RAT', hp: 36, intro: 'SQUEEEEEAK!', outro: 'SQUASHED!', proj: 'asphaltpatch', projScale: 0.7, summonCall: 'SQUEAK!', special: 'pound' as const, specialCall: 'STOMP!', prop: null, debris: 0xb17b47, frame: 72, cones: false },
 };
 
 export class Boss {
@@ -33,6 +35,7 @@ export class Boss {
   private lastHit = -1;
   private shots: Phaser.Physics.Arcade.Image[] = [];
   private tape?: { g: Phaser.GameObjects.Rectangle; x: number; dir: number };
+  private waves: { g: Phaser.GameObjects.Rectangle; x: number; dir: number }[] = [];
   private warn?: Phaser.GameObjects.BitmapText;
   facing: 1 | -1 = -1;
   readonly props: Phaser.GameObjects.Image[] = [];
@@ -40,10 +43,13 @@ export class Boss {
   constructor(private scene: Phaser.Scene, x: number, private groundY: number, private hooks: BossHooks, readonly kind: BossKind = 'bureaucrat') {
     this.def = DEFS[kind];
     this.maxHp = this.def.hp; this.hp = this.maxHp;
-    if (this.def.prop) this.props.push(scene.add.image(x + 30, groundY + 1, 'world', this.def.prop).setOrigin(0.5, 1).setDepth(88));
-    else for (let i = 0; i < 3; i++) this.props.push(scene.add.image(x + 22 + i * 12, groundY + 1, 'world', 'cone').setOrigin(0.5, 1).setScale(2).setDepth(88));
-    this.sprite = scene.physics.add.sprite(x, groundY - 40, 'chars', `${this.def.key}_0`).setOrigin(0.47, 47 / 48).setDepth(90).setFlipX(true);
-    (this.sprite.body as Phaser.Physics.Arcade.Body).setSize(20, 34).setOffset(12, 13);
+    const d = this.def as typeof DEFS[BossKind] & { frame?: number; cones?: boolean };
+    if (d.prop) this.props.push(scene.add.image(x + 30, groundY + 1, 'world', d.prop).setOrigin(0.5, 1).setDepth(88));
+    else if (d.cones !== false) for (let i = 0; i < 3; i++) this.props.push(scene.add.image(x + 22 + i * 12, groundY + 1, 'world', 'cone').setOrigin(0.5, 1).setScale(2).setDepth(88));
+    const F = d.frame ?? 48;
+    this.sprite = scene.physics.add.sprite(x, groundY - 40, 'chars', `${this.def.key}_0`).setOrigin(0.47, (F - 1) / F).setDepth(90).setFlipX(true);
+    if (F === 72) (this.sprite.body as Phaser.Physics.Arcade.Body).setSize(30, 52).setOffset(20, 18);
+    else (this.sprite.body as Phaser.Physics.Arcade.Body).setSize(20, 34).setOffset(12, 13);
     this.sprite.play(`${this.def.key}_walk`);
     floatText(scene, x, groundY - 70, this.def.intro, 'font_red', 0xffffff, 900);
     sfx.stamp();
@@ -83,6 +89,7 @@ export class Boss {
     this.move = 'dead';
     this.clearWarn();
     this.tape?.g.destroy(); this.tape = undefined;
+    this.waves.forEach((w) => w.g.destroy()); this.waves = [];
     this.shots.forEach((s) => s.destroy()); this.shots = [];
     this.anim('hurt');
     this.body.setVelocity(0, -260);
@@ -97,7 +104,7 @@ export class Boss {
 
   private telegraph(msg: string) {
     this.clearWarn();
-    this.warn = this.scene.add.bitmapText(this.sprite.x, this.sprite.y - 56, 'font_outline', msg).setOrigin(0.5).setTint(0xff6347).setDepth(200);
+    this.warn = this.scene.add.bitmapText(this.sprite.x, this.sprite.y - (this.kind === 'megarat' ? 82 : 56), 'font_outline', msg).setOrigin(0.5).setTint(0xff6347).setDepth(200);
   }
   private clearWarn() { this.warn?.destroy(); this.warn = undefined; }
 
@@ -141,12 +148,18 @@ export class Boss {
       if (Phaser.Geom.Rectangle.Overlaps(tr, playerRect) && onGroundPlayer) this.hooks.hurtPlayer(this.tape.x);
       if (Math.abs(this.tape.x - this.sprite.x) > 460) { this.tape.g.destroy(); this.tape = undefined; }
     }
+    for (const w of [...this.waves]) {
+      w.x += w.dir * 185 * this.rage * dt;
+      w.g.setPosition(w.x, this.groundY - 4);
+      if (onGroundPlayer && Math.abs(playerRect.centerX - w.x) < 14 && playerRect.bottom > this.groundY - 10) this.hooks.hurtPlayer(w.x);
+      if (Math.abs(w.x - this.sprite.x) > 480) { w.g.destroy(); this.waves.splice(this.waves.indexOf(w), 1); }
+    }
     if (!this.alive) return;
     const b = this.body;
     const ground = b.blocked.down || b.touching.down;
-    if (this.move !== 'hurt' && this.move !== 'shove' && this.move !== 'charge' && this.move !== 'dizzy') this.facing = px > this.sprite.x ? 1 : -1;
+    if (this.move !== 'hurt' && this.move !== 'shove' && this.move !== 'charge' && this.move !== 'dizzy' && this.move !== 'pound') this.facing = px > this.sprite.x ? 1 : -1;
     this.sprite.setFlipX(this.facing === -1);
-    if (this.warn) this.warn.setPosition(this.sprite.x, Math.round(this.sprite.y - 56 - Math.sin(this.t * 20)));
+    if (this.warn) this.warn.setPosition(this.sprite.x, Math.round(this.sprite.y - (this.kind === 'megarat' ? 82 : 56) - Math.sin(this.t * 20)));
     this.t -= dt;
     switch (this.move) {
       case 'intro': if (this.t <= 0) this.next(); break;
@@ -174,7 +187,12 @@ export class Boss {
         if (this.t <= 0) {
           this.clearWarn();
           this.anim('attack');
-          if (this.def.special === 'tape') {
+          if (this.def.special === 'pound') {
+            // the Mega Rat leaps at you and POUNDS the ground: two shockwaves run out along the street
+            this.move = 'pound'; this.t = 0.3;
+            b.setVelocity(Math.sign(px - this.sprite.x) * 80 * this.rage, -440);
+            sfx.jump();
+          } else if (this.def.special === 'tape') {
             const g = this.scene.add.rectangle(this.sprite.x, this.groundY - 3, 22, 5, 0xd42a24).setStrokeStyle(1, 0x16121f).setDepth(97);
             this.tape = { g, x: this.sprite.x, dir: this.facing };
             sfx.construction();
@@ -193,6 +211,16 @@ export class Boss {
         if (this.t <= 0 || (bounds && (this.sprite.x < bounds.left + 20 || this.sprite.x > bounds.right - 20))) {
           b.setVelocityX(0); this.move = 'dizzy'; this.t = 1.1; this.anim('hurt');
           floatText(this.scene, this.sprite.x, this.groundY - 60, 'DIZZY!', 'font_outline', 0xfff08a, 500);
+        }
+        break;
+      case 'pound':
+        if (this.t <= 0 && ground) {
+          b.setVelocityX(0); this.anim('hurt');
+          shake(this.scene, 320, 0.016); sfx.stamp(); sfx.rumble();
+          for (const dir of [-1, 1]) { const g = this.scene.add.rectangle(this.sprite.x + dir * 24, this.groundY - 4, 26, 8, 0xa39c8b).setStrokeStyle(1, 0x16121f).setDepth(97); this.waves.push({ g, x: this.sprite.x + dir * 24, dir }); }
+          puff(this.scene, this.sprite.x - 20, this.groundY - 2, 0xa39c8b, 10, 30, 95); puff(this.scene, this.sprite.x + 20, this.groundY - 2, 0xa39c8b, 10, 30, 95);
+          floatText(this.scene, this.sprite.x, this.groundY - 84, 'STOMP!', 'font_outline', 0xfff08a, 500);
+          this.move = 'dizzy'; this.t = 1.0;
         }
         break;
       case 'dizzy':

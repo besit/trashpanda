@@ -24,6 +24,7 @@ export interface Lane {
   /** runs UNDER overpasses (the DVP under the Don bridges): drawn below the bridge-deck overlay */ under?: boolean;
   /** up on an elevated deck (the Gardiner): drawn above everything on the ground, fast, jams that clear */ elevated?: boolean;
   /** no vehicles of its own: it's fed by vehicles turning into it */ noSpawn?: boolean;
+  /** M4: upgrade id that removes this lane (the Gardiner's deck traffic when the deck comes down) */ until?: string;
   /** corners vehicles may take into another lane (first match wins, decided when a vehicle spawns) */
   turns?: { to: string; r: number; p: number; kinds?: ('car' | 'streetcar' | 'bike')[] }[];
   /** [start, end] px along the lane's axis when the street doesn't span the whole map */ range?: [number, number];

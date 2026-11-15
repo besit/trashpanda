@@ -33,6 +33,8 @@ export function generateDowntown() {
   D.exit('w', QUEEN, 'queenwest', 'queen'); D.exit('w', DUNDAS, 'queenwest', 'dundas');
   D.exit('e', QUEEN, 'eastend', 'queen'); D.exit('e', DUNDAS, 'eastend', 'dundas');
   D.exitNS('s', SP, 'waterfront', 'spadina'); D.exitNS('s', UN, 'waterfront', 'university'); D.exitNS('s', BY, 'waterfront', 'bay');
+  // M4: north on Spadina, University or Bay -> the North district (the bottom of Don Mills Rd)
+  for (const [c, n] of [[SP, 'spadina'], [UN, 'university'], [BY, 'bay']]) D.exitNS('n', c, 'north', n, 'donmills');
 
   const bricks = ['red', 'buff', 'darkred', 'red', 'cream', 'grey', 'teal', 'mustard'];
   const glass = ['blue', 'teal', 'dark', 'sky', 'bronze'];
@@ -140,7 +142,10 @@ export function generateDowntown() {
       king.addProps.push({ type: 'prop', key: x % 2 ? 'patio_f' : 'patio_r', x: x * TS + 14, y: (KING + 3) * TS + 14 });
     }
   }
-  D.improvements = { king_transit_corridor: king };
+  // M4, mission 9's payoff: the Ontario Line's downtown stations (Queen-Spadina, Osgoode, Queen)
+  const ol = { tiles: [], addProps: [[SP + 5, QUEEN - 3], [UN + 5, QUEEN - 3], [BY - 3, QUEEN - 3]].map(([x, y]) => ({ type: 'prop', key: 'subway', x: x * TS + 8, y: y * TS + 10, solid: 6 })) };
+  D.improvements = { king_transit_corridor: king, ontario_line: ol };
+  D.markers.push({ id: 'finish_the_line', x: (SP + 9) * TS, y: (QUEEN - 2) * TS + 8, label: 'FINISH THE LINE' });
 
   // ---------- traffic + walkers ----------
   D.ewLanes('dundas', DUNDAS, { streetcar: true, stopsWB: stopsQ.wb, stopsEB: stopsQ.eb });
@@ -165,6 +170,7 @@ export function generateDowntown() {
     { text: '< QUEEN WEST', x: 4 * TS, y: (QUEEN - 4) * TS, kind: 'exit' },
     { text: 'EAST END >', x: (W - 4) * TS, y: (QUEEN - 4) * TS, kind: 'exit' },
     { text: 'v WATERFRONT', x: (UN + 2) * TS, y: (H - 2) * TS, kind: 'exit' },
+    { text: '^ NORTH', x: (UN + 2) * TS, y: 2 * TS, kind: 'exit' },
   );
   // hidden extra lives: at the west end of Graffiti Alley, and tucked behind City Hall
   // M3.3: the second heart hides behind a building near the centre

@@ -4,11 +4,13 @@
 import type { RatKind } from '../action/Rat';
 import type { EscortDef } from '../action/Escort';
 import type { ChaseDef, BuildDef } from '../action/Parkside';
+import type { PatrolDef } from '../action/Science';
 import type { BossKind } from '../action/Boss';
 import type { AutoScrollDef } from '../action/LaneEater';
 import type { DepaveDef } from '../action/ParkingLot';
 
 export type DistrictId = 'queenwest' | 'downtown' | 'north' | 'waterfront' | 'highpark' | 'eastend';
+export type SideBg = 'queen' | 'king' | 'parkside' | 'bigbox' | 'lake' | 'science' | 'gardiner';
 
 export interface Wave { at: number; rats: RatKind[]; suvs?: number }
 export interface MissionDef {
@@ -27,7 +29,7 @@ export interface MissionDef {
   /** pan the payoff camera vertically (N-S streets) instead of along x */
   focusAxis?: 'x' | 'y';
   action: {
-    bg: 'queen' | 'king' | 'parkside' | 'bigbox' | 'lake';
+    bg: SideBg;
     street: 'plain' | 'paint' | 'protected' | 'escort' | 'king' | 'parkside' | 'lot' | 'quay';
     sky: 'day' | 'dusk';
     length: number; // px of street
@@ -36,7 +38,12 @@ export interface MissionDef {
     hint?: [string, string];
     groundY?: number;
     waves: Wave[];
-    boss?: { at: number; kind: BossKind | 'laneeater' | 'monstersuv' | 'spadigger' | 'jettug' };
+    boss?: { at: number; kind: BossKind | 'laneeater' | 'monstersuv' | 'spadigger' | 'jettug' | 'wrecker' | 'highwaymech' };
+    /** M4: street dressing (construction hoardings along the sidewalk) */
+    decor?: 'hoarding';
+    /** M4 (mission 6): guards on watch with flashlights, and crates to hide behind */
+    patrols?: PatrolDef[];
+    crates?: number[];
     /** M3 (The Great Parking Lot): break up asphalt patches in a locked arena */
     depave?: DepaveDef;
     /** M3 (The Lane Eater): the screen scrolls on its own; riders to rally; ambushes */
@@ -212,6 +219,80 @@ MISSIONS.waterfront_heist = {
     ],
     depave: { at: 1250, patches: [70, 150, 230, 310], rats: ['basic', 'lobbyist', 'construction', 'traffic'], style: 'fence' },
     boss: { at: 2150, kind: 'spadigger' },
+  },
+};
+
+// M4: SAVE THE SCIENCE (North). The boarded-up Science Centre: sneak past the guards' flashlights, catch the
+// rats carrying the exhibits to the moving truck, then the Wrecker. The real story is URBAN_RESEARCH section 5.
+MISSIONS.save_the_science = {
+  id: 'save_the_science',
+  title: 'SAVE THE SCIENCE',
+  district: 'north',
+  upgrades: ['science_reopened'],
+  requires: ['king_of_street'],
+  briefing: 'sci_before',
+  debrief: 'sci_after',
+  focusX: 71 * 16,
+  focusY: 38 * 16,
+  action: {
+    bg: 'science', street: 'plain', sky: 'day', length: 2950,
+    intro: 'SNEAK PAST THE GUARDS. GET THE EXHIBITS BACK!',
+    hint: ['HIDE BEHIND THE CRATES WHEN A FLASHLIGHT SWINGS YOUR WAY', 'HIDE BEHIND THE CRATES WHEN A FLASHLIGHT SWINGS YOUR WAY'],
+    waves: [],
+    patrols: [{ at: 470 }, { at: 820 }, { at: 1170 }],
+    crates: [400, 740, 1090],
+    chase: { startAt: 1350, lead: 200, speed: 118, pondAt: 2250, cones: [1650, 1900, 2080], hp: 8, goal: 'truck' },
+    caughtWave: ['guard', 'basic', 'construction'],
+    boss: { at: 2560, kind: 'wrecker' },
+  },
+};
+
+// M4: FINISH THE LINE (Downtown). Lay the Ontario Line's track through the rats' paperwork; the Mega Rat.
+MISSIONS.finish_the_line = {
+  id: 'finish_the_line',
+  title: 'FINISH THE LINE',
+  district: 'downtown',
+  upgrades: ['ontario_line'],
+  requires: ['king_of_street', 'great_parking_lot'],
+  briefing: 'line_before',
+  debrief: 'line_after',
+  focusX: 22 * 16,
+  focusY: 54 * 16,
+  action: {
+    bg: 'king', street: 'plain', sky: 'day', length: 2650, decor: 'hoarding',
+    intro: 'LAY THE TRACK. FINISH THE ONTARIO LINE!',
+    hint: ['PUMP THE RAIL PILES INTO TRACK   JUMP THE MEGA RAT\'S SHOCKWAVES', 'PUMP THE RAILS   JUMP THE SHOCKWAVES'],
+    waves: [
+      { at: 300, rats: ['basic', 'construction', 'basic'] },
+      { at: 1550, rats: ['lobbyist', 'basic', 'construction', 'traffic'] },
+    ],
+    depave: { at: 850, patches: [60, 130, 200, 270, 340], rats: ['traffic', 'basic', 'barrier'], style: 'rail' },
+    boss: { at: 2150, kind: 'megarat' },
+  },
+};
+
+// M4: DEATH BY HIGHWAY (Waterfront), the finale. Under the Gardiner: three waves, then the Highway Mech.
+// Needs every other mission first; the ending follows its payoff.
+MISSIONS.death_by_highway = {
+  id: 'death_by_highway',
+  title: 'DEATH BY HIGHWAY',
+  district: 'waterfront',
+  upgrades: ['gardiner_down'],
+  requires: ['bike_lane_war', 'streetcar_through', 'king_of_street', 'slow_down_dog', 'lane_eater', 'great_parking_lot', 'waterfront_heist', 'island_airport', 'save_the_science', 'finish_the_line'],
+  briefing: 'hw_before',
+  debrief: 'hw_after',
+  focusX: 60 * 16,
+  focusY: 26 * 16,
+  action: {
+    bg: 'gardiner', street: 'plain', sky: 'dusk', length: 2650,
+    intro: 'THE LAST LANE. BRING THE GARDINER DOWN!',
+    hint: ['JUMP THE SHOCKWAVES   PUMP THE VENT WHEN IT OVERHEATS', 'JUMP THE SHOCKWAVES   PUMP THE VENT WHEN IT GLOWS'],
+    waves: [
+      { at: 300, rats: ['traffic', 'construction', 'basic', 'barrier'] },
+      { at: 950, rats: ['baggage', 'lobbyist', 'basic', 'construction'] },
+      { at: 1550, rats: ['guard', 'barrier', 'basic'], suvs: 2 },
+    ],
+    boss: { at: 2150, kind: 'highwaymech' },
   },
 };
 

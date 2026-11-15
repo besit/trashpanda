@@ -7,7 +7,7 @@ export const STREET_Y = 150;
 /** where the raccoon rides in missions (curb lane) */
 export const GROUND_Y = STREET_Y + 26;
 /** front-row layers sit on the sidewalk */
-export const FRONT_Y = { queen: STREET_Y - 96, king: STREET_Y - 140, parkside: STREET_Y - 120 } as const;
+export const FRONT_Y = { queen: STREET_Y - 96, king: STREET_Y - 140, parkside: STREET_Y - 120, science: STREET_Y - 140 } as const;
 export const BACKROW_Y = STREET_Y - 72;
 export const SKYLINE_Y = 12;
 

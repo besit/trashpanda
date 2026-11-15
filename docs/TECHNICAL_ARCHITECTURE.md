@@ -86,6 +86,14 @@ tools/        asset generators (never shipped): raster + SDF renderers, sprite m
 - **SDF:** `obliqueCam(zScale, far)` and `render({ maxT, steps })`, so a tall object (the CN Tower's full shaft) renders in one pass instead of a raster strip glued to a rendered base.
 - **Debug:** `__TP.killAll()` knocks every rat out *and counts the kills*, so bots can clear arena waves; `__TP.tug()`, `__TP.cases()`, `__TP.ratObjs()`.
 
+## M4 additions
+- **North district** (`tools/map/north.mjs`, `tools/sprites/north.mjs`): `sciencecentre` and `slab` building kinds in `anybuilding`; exits use `arrive` (Ossington/Bellwoods -> Leslie, Spadina/University/Bay -> Don Mills).
+- **Mission 6** (`src/action/Science.ts`): `Patrol` (a guard rat with `rat.patrol = true` stands still; its beam is a triangle drawn each frame; `hidden` = on the ground within 16 px of a crate) and `Wrecker` (a pendulum: amplitude 1.25 rad, period 2.4 s; five swings, then `park` -> `reload`). `ChaseDef` gains `startAt` and `goal: 'truck'`.
+- **Mission 9:** `DepaveSpots` style `rail`; `Boss` kind `megarat` (72 px frames, a `pound` move that spawns two ground shockwaves).
+- **Mission 10** (`src/action/Highway.ts`): `HighwayMech` (`wind -> stomp -> fling -> vent`), slabs dropped through `ActionScene.oneWay`. Lanes take `until` (an upgrade that removes them: the Gardiner's deck traffic). `gardiner` side background.
+- **The ending** (`src/scenes/EndingScene.ts`): after the payoff of the last mission, `Explore` starts the `ending` cutscene, which hands over to `Ending` (report card, credits) and then `Title`. `endStats()` sums the upgrades' `stat`s.
+- **Fix: stale scene data.** Phaser keeps a scene's last start data when `start()` gets none, so CONTINUE after a mission win replayed that mission's payoff. Every `scene.start` that can follow a mission now passes data (`{}` at least); a test covers it.
+
 ## Data formats
 - **Map JSON** (`gen/<district>.json`, one per district; generators in `tools/map/`, sharing `common.mjs`):
   - `ground[y][x]` tile indices

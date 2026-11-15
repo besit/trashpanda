@@ -10,5 +10,7 @@ export const DISTRICTS: Record<string, DistrictDef> = {
   downtown: { id: 'downtown', name: 'DOWNTOWN', short: 'DOWNTOWN', sub: 'KING ST - CITY HALL - CHINATOWN', order: 2, music: { bpm: 162, transpose: 2 } },
   eastend: { id: 'eastend', name: 'EAST END', short: 'EAST END', sub: 'THE DON - RIVERSIDE - LESLIEVILLE', order: 3, music: { bpm: 146, transpose: -4 } },
   waterfront: { id: 'waterfront', name: 'WATERFRONT', short: 'LAKE', sub: 'QUEENS QUAY - HARBOURFRONT - SUGAR BEACH', order: 4, music: { bpm: 140, transpose: 3 } },
+  // M4: above Queen West and Downtown in the folded city
+  north: { id: 'north', name: 'NORTH', short: 'NORTH', sub: 'DON MILLS - THE SCIENCE CENTRE - THE RAVINE', order: 5, music: { bpm: 128, transpose: -5 } },
 };
 export const DISTRICT_ORDER = Object.values(DISTRICTS).sort((a, b) => a.order - b.order).map((d) => d.id);

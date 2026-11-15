@@ -142,7 +142,10 @@ The cost is a 0.3 s wipe at the seam. The design target of "one city" is kept: s
 | **Barrier Rat** (M3.4) | hard hat, orange vest, a striped ROAD CLOSED board held in front | hits from the front bounce off the board (BLOCKED!); it turns slowly, so dash past and hit it from behind, or stomp it |
 | **The Jet Tug** (M3.4, M11 boss) | a yellow baggage tug, a rat at the wheel, towing Dog Fjord's white private jet (AIR FJORD) | taxis across the park; its jet blast blows you back (no damage); hurts on contact while moving; stops to REFUEL at the edge, when the tug can be pumped; stomp the cabin any time; below half health it taxis faster and rolls a suitcase at you at every stop |
 | **The Pink Digger** (M3.1, M8 boss) | the fictional MEGA SPA's pink excavator, a rat in a bathrobe + sunglasses at the controls | raises the bucket over a red ground mark, slams, gets STUCK (pump the arm), flings sand clods every third cycle; stomp the cab roof; faster below half health |
-| Mega Rat (miniboss) | | planned for M4 |
+| **Guard Rat** (M4) | dark peaked cap with a badge, a flashlight | stands watch; the beam swings left and right. Caught in it (and not behind a crate) and it calls two rats, then chases |
+| **The Wrecker** (M4, M6 boss) | a yellow crane truck on tracks, a rat in the cab, a wrecking ball on a chain | the ball swings across the arena (jump it, or keep clear); after five swings it hauls the ball up to RELOAD: pump the engine then; stomp the cab any time |
+| **The Mega Rat** (M4, M9 boss) | the basic rat at 2.6× | hurls road chunks, shoves, and leaps to POUND the ground: shockwaves run both ways along the street (jump them) |
+| **The Highway Mech** (M4, M10 final boss) | a walking stretch of the Gardiner: pier legs, a deck torso, a green ANOTHER LANE sign for a head, a claw holding a car | stomps (shockwaves both ways), flings cars, then VENTS (the chest grille glows: pump it); at 2/3 and 1/3 health it drops a slab; from a slab you can jump onto its deck and stomp it |
 
 ## Missions
 
@@ -153,11 +156,11 @@ The cost is a 0.3 s wipe at the seam. The design target of "one city" is kept: s
 | 3 | King of the Street ✅ M2 | Downtown | King St transit corridor | combat + SUV Rats + Bureaucrat boss |
 | 4 | **Slow Down, Dog** ✅ M2 *(added by Ivan, made a main mission at the M0 review)* | High Park (Parkside school zone) | School zone, slowed by design | chase the camera haulers, then build humps / a raised crossing / a curb extension under traffic |
 | 5 | **The Lane Eater** ✅ M3 *(Bloor; Ivan's call at the M1 review)* | High Park (Bloor West) | Keeping protected lanes (community pressure) | auto-scrolling chase + rally-a-peloton + 3-part machine boss |
-| 6 | Save the Science | North | Adaptive reuse | stealth + combat |
+| 6 | **Save the Science** ✅ M4 | North (Don Mills) | The Science Centre reopens | sneak past flashlights, catch the exhibit haulers, the Wrecker |
 | 7 | The Great Parking Lot ✅ M3 | East End | Parking → park | combat + depave arena + Monster SUV boss |
 | 8 | The Waterfront Heist ✅ M3 | Waterfront | Public waterfront | lobbyist waves + fence-tearing arena |
-| 9 | Finish the Line | Downtown → East End | Ontario Line | Mega Rat miniboss |
-| 10 | Death by Highway | Waterfront | Highway → boulevard + park | "...another lane?" scene, then Highway Mech final boss |
+| 9 | **Finish the Line** ✅ M4 | Downtown | The Ontario Line opens | lay track under attack, the Mega Rat |
+| 10 | **Death by Highway** ✅ M4 | Waterfront (under the Gardiner) | The Gardiner comes down | "...another lane?" scene, three waves, the Highway Mech; then the ending |
 | 11 | **Grounded** ✅ M3.4 *(Ivan: "a mission about the airport war")* | Waterfront (Little Norway Park) | The park stays a park; no jets | Baggage + Barrier Rats, a stakes arena, the Jet Tug boss |
 | side | Pedestrian Takeover | Queen West (Kensington-style) | Pedestrian street | crowd-gathering |
 | side | Intersection Repair | High Park | Protected intersection | puzzle |
@@ -233,3 +236,10 @@ Plus an improvement sting and about 25 synthesized SFX: bike bell, streetcar bel
 
 ## Monetization
 None. No ads, purchases, energy or login.
+
+## M4: the North, the last three missions, the ending
+- **The North district** (above Queen West + Downtown): Don Mills + Eglinton, the boarded-up Science Centre with its pods toward the ravine, the Don's East Branch ravine with its trail, Flemingdon Park's slabs, Line 5's Science Centre station. North on Ossington or Bellwoods leads to the bottom of Leslie; north on Spadina, University or Bay to the bottom of Don Mills; and back.
+- **Mission 6, Save the Science:** a stealth beat (flashlights, crates), a chase (the exhibits to the truck), the Wrecker.
+- **Mission 9, Finish the Line:** lay the track (five rail piles) while rats defend it; the Mega Rat.
+- **Mission 10, Death by Highway:** unlocks only when every other mission is done. The intro's highway shot comes back with Dog Fjord adding lanes that never move; the Highway Mech; the Gardiner comes down.
+- **The ending:** Dog Fjord concedes ("I'LL TAKE THE STREETCAR... IS THERE A FIRST-CLASS STREETCAR?"), the raccoon rides on, *TORONTO. A PRETTY GOOD CITY. STILL WITH A FEW PROBLEMS. BUT FEWER.*, then THE RACCOON'S REPORT CARD (missions, Livability, lanes, parks, transit, highway lanes removed, safer school zones, riders, rats, score) and the credits with the satire notice. The run is saved and sent to the leaderboard.

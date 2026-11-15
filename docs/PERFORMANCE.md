@@ -153,3 +153,18 @@ Measured on `dist/` with PNG bytes as served and JS/JSON gzipped (GitHub Pages s
 | Other districts on entry | High Park 146 KB, Downtown 159 KB, East End 116 KB, Waterfront 83 KB |
 
 The North district (M4) now has plenty of room. Frame rate was not re-measured this pass: nothing changed on the per-frame paths (the streetcar sections, the stomp helper and the captions are a few arithmetic ops), and the M3.2 numbers stand.
+
+### 2026-11-15 (M4)
+Same harness (`tools/perf.mjs`, production build, CPU-throttled headless Chromium), on the new scenes.
+
+| Scene | 1x | 4x | 6x | Heap (6x) |
+|---|---|---|---|---|
+| Explore, North | 60.1 | 60.2 | 60.2 | 40 MB |
+| Action, M6 (guards, the Wrecker) | 60.1 | 60.1 | 60.2 | 14 MB |
+| Action, M9 (rails, the Mega Rat) | 60.1 | 60.1 | 60.1 | 15 MB |
+| Action, M10 (the Highway Mech) | 60.2 | 60.1 | 60.2 | 14 MB |
+| Action, M11 (Grounded, M3.4) | 60.1 | 60.1 | 60.1 | 15 MB |
+
+p95 is 16.7–16.8 ms everywhere.
+
+**Downloads (M4):** JS 356 KB gzipped; boot assets 181 KB; Queen West on entry 93 KB. **First load: 0.62 MB** (budget 2.5 MB). The North district loads on entry: 77 KB. The chars atlas grew to 1024x1024 (the Mega Rat's 72 px frames and two more rat types), still an indexed PNG.

@@ -64,8 +64,8 @@ export function generateWaterfront() {
   D.exit('e', QQ, 'eastend', 'queensquay', 'leslie'); D.exit('e', LAKESHORE, 'eastend', 'lakeshore', 'leslie');
 
   // ---------- the Gardiner: a deck above Lake Shore, piers on the north sidewalk between the streets ----------
-  for (let x = 0; x < W * TS; x += 32) D.prop('gardinerdeck', x, DECK_Y, { depth: 10000 });
-  for (let x = 2; x < W; x += 5) if (!streetCols.includes(x) && !streetCols.includes(x + 1)) D.tprop('gardinerpier', x, LAKESHORE - 3, 16, 8, { solidBox: [-12, -3, 24, 3] });
+  for (let x = 0; x < W * TS; x += 32) D.prop('gardinerdeck', x, DECK_Y, { depth: 10000, tag: 'gardiner' });
+  for (let x = 2; x < W; x += 5) if (!streetCols.includes(x) && !streetCols.includes(x + 1)) D.tprop('gardinerpier', x, LAKESHORE - 3, 16, 8, { solidBox: [-12, -3, 24, 3], tag: 'gardiner' });
 
   // ---------- north of the Gardiner ----------
   // the Union Station rail corridor along the top (the streets pass under it)
@@ -219,13 +219,24 @@ export function generateWaterfront() {
   pub.addProps.push({ type: 'prop', key: 'bikering', x: 24 * TS, y: (QQ + 10) * TS }, { type: 'prop', key: 'bench', x: 21 * TS, y: (LAKE_Y + 10) * TS });
   // M3.4, mission 11's payoff: the stakes are gone, the park gets its trees and a bench back
   const quiet = { tiles: [], addProps: [{ type: 'prop', key: 'tree_c', x: 31 * TS + 8, y: (LAKE_Y + 5) * TS + 12, solid: 4 }, { type: 'prop', key: 'bench', x: 34 * TS, y: (LAKE_Y + 6) * TS + 2 }, { type: 'prop', key: 'picnic', x: 35 * TS + 8, y: (LAKE_Y + 4) * TS + 8, solid: 6 }], removeTag: 'stakes' };
-  D.improvements = { public_waterfront: pub, quiet_airport: quiet };
+  // M4, the finale's payoff: the Gardiner comes down. Lake Shore gets protected bike lanes, its north sidewalk
+  // becomes a linear park, and the deck's traffic is gone
+  const down = { tiles: [], addProps: [], removeTag: 'gardiner' };
+  for (let x = 0; x < W; x++) {
+    if (streetCols.includes(x)) continue;
+    down.tiles.push([x, LAKESHORE, x % 7 === 3 ? 'bikelane_protected_n_stencil' : 'bikelane_protected_n'], [x, LAKESHORE + 3, x % 7 === 3 ? 'bikelane_protected_stencil' : 'bikelane_protected']);
+    for (const y of [LAKESHORE - 3, LAKESHORE - 2]) down.tiles.push([x, y, `lawn${(x * 5 + y) % 3}`]);
+    if (x % 4 === 1) down.addProps.push({ type: 'prop', key: x % 8 === 1 ? 'tree_a' : 'tree_c', x: x * TS + 8, y: (LAKESHORE - 2) * TS + 12, solid: 4 });
+    if (x % 9 === 5) down.addProps.push({ type: 'prop', key: 'bench', x: x * TS + 8, y: (LAKESHORE - 3) * TS + 12 });
+  }
+  D.improvements = { public_waterfront: pub, quiet_airport: quiet, gardiner_down: down };
+  D.markers.push({ id: 'death_by_highway', x: 92 * TS, y: (LAKESHORE + 6) * TS + 6, label: 'DEATH BY HIGHWAY' });
 
   // ---------- furniture, traffic ----------
   D.furnish(LAKESHORE, 's', 0, W, { trees: false }); D.furnish(QQ, 's', 0, W, { trees: false });
   D.ewLanes('lakeshore', LAKESHORE, {});
   // the Gardiner: one lane each way up on the deck (fast, with a jam that builds and clears)
-  D.lanes.push({ id: 'gardiner_wb', axis: 'x', dir: -1, pos: DECK_Y - 34, elevated: true }, { id: 'gardiner_eb', axis: 'x', dir: 1, pos: DECK_Y - 15, elevated: true });
+  D.lanes.push({ id: 'gardiner_wb', axis: 'x', dir: -1, pos: DECK_Y - 34, elevated: true, until: 'gardiner_down' }, { id: 'gardiner_eb', axis: 'x', dir: 1, pos: DECK_Y - 15, elevated: true, until: 'gardiner_down' });
   // Queens Quay: the streetcar in its own grassy median, one car lane each side; cars turn up the streets
   D.lanes.push(
     { id: 'qqt_wb', axis: 'x', dir: -1, pos: (QQ + 1) * TS + 8, streetcar: true, transitOnly: true, turns: [{ to: 'spadina_nb', r: 16, p: 0.5, kinds: ['streetcar'] }] },

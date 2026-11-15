@@ -10,7 +10,7 @@ import type { Hitbox } from './SidePlayer';
 import type { RatKind } from './Rat';
 
 /** a locked arena of spots to break: asphalt patches to depave (M7), or MEGA SPA fences to tear down (M8) */
-export interface DepaveDef { at: number; patches: number[]; rats: RatKind[]; style?: 'asphalt' | 'fence' | 'stakes' }
+export interface DepaveDef { at: number; patches: number[]; rats: RatKind[]; style?: 'asphalt' | 'fence' | 'stakes' | 'rail' }
 
 export class DepaveSpots {
   private spots: { x: number; img: Phaser.GameObjects.Image; bar: Phaser.GameObjects.Graphics; hits: number; done: boolean; lastHit: number }[] = [];
@@ -19,15 +19,17 @@ export class DepaveSpots {
   readonly fence: boolean;
   /** M3.4: survey stakes staking out a runway through the park: pump them out of the ground */
   readonly stakes: boolean;
+  /** M4: piles of rail to lay into track (the Ontario Line) */
+  readonly rail: boolean;
   constructor(private scene: Phaser.Scene, def: DepaveDef, left: number, private groundY: number) {
-    this.fence = def.style === 'fence'; this.stakes = def.style === 'stakes';
+    this.fence = def.style === 'fence'; this.stakes = def.style === 'stakes'; this.rail = def.style === 'rail';
     for (const dx of def.patches) {
       const x = left + dx;
-      const img = this.fence ? scene.add.image(x, groundY - 8, 'world', 'spafence_side').setOrigin(0.5, 1).setDepth(38) : this.stakes ? scene.add.image(x, groundY + 2, 'world', 'surveystake').setOrigin(0.5, 39 / 40).setDepth(42) : scene.add.image(x, groundY + 2, 'world', 'asphaltpatch').setDepth(40);
+      const img = this.fence ? scene.add.image(x, groundY - 8, 'world', 'spafence_side').setOrigin(0.5, 1).setDepth(38) : this.stakes ? scene.add.image(x, groundY + 2, 'world', 'surveystake').setOrigin(0.5, 39 / 40).setDepth(42) : this.rail ? scene.add.image(x, groundY + 2, 'world', 'railseg_0').setOrigin(0.5, 1).setDepth(40) : scene.add.image(x, groundY + 2, 'world', 'asphaltpatch').setDepth(40);
       this.spots.push({ x, img, bar: scene.add.graphics().setDepth(210), hits: 0, done: false, lastHit: -1 });
     }
   }
-  get verb() { return this.fence ? 'FENCES DOWN' : this.stakes ? 'STAKES PULLED' : 'DEPAVED'; }
+  get verb() { return this.fence ? 'FENCES DOWN' : this.stakes ? 'STAKES PULLED' : this.rail ? 'TRACK LAID' : 'DEPAVED'; }
   get total() { return this.spots.length; }
   /** x of every spot still to break (debug/bot) */
   get openSpots() { return this.spots.filter((s) => !s.done).map((s) => Math.round(s.x)); }
@@ -57,6 +59,12 @@ export class DepaveSpots {
           this.scene.tweens.add({ targets: s.img, angle: px < s.x ? 80 : -80, alpha: 0, y: s.img.y + 6, duration: 520, ease: 'Quad.easeIn', onComplete: () => s.img.destroy() });
           shake(this.scene, 120, 0.006); sfx.ding(); puff(this.scene, s.x, this.groundY - 16, 0xf5c22e, 8, 20, 90);
           floatText(this.scene, s.x, this.groundY - 70, this.done === this.total ? 'PUBLIC!' : 'TORN DOWN!', 'font_outline', 0x9bd35a, 600);
+        } else if (s.hits >= this.need && this.rail) {
+          s.done = true; this.done++; s.bar.clear();
+          s.img.setTexture('world', 'railseg_1').setOrigin(0.5, 1).setScale(0, 1);
+          this.scene.tweens.add({ targets: s.img, scaleX: 1, duration: 350, ease: 'Back.easeOut' });
+          sfx.ding(); sfx.hammer(); puff(this.scene, s.x, this.groundY - 6, 0xc9c5d1, 8, 18, 90);
+          floatText(this.scene, s.x, this.groundY - 40, this.done === this.total ? 'LINE COMPLETE!' : 'LAID!', 'font_outline', 0x9bd35a, 600);
         } else if (s.hits >= this.need) {
           s.done = true; this.done++; s.bar.clear();
           s.img.setTexture('world', 'soilsapling').setOrigin(0.5, 30 / 34).setScale(1, 0);

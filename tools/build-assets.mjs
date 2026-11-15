@@ -5,7 +5,8 @@ import { Img, save } from './lib/raster.mjs';
 import { packAtlas, packTileset } from './lib/pack.mjs';
 import { raccoonSideFrames, appIcon, PIVOT_Y as RS_PIVOT_Y } from './sprites/raccoon_side.mjs';
 import { raccoonTopFrame, DIRS } from './sprites/raccoon_top.mjs';
-import { ratAnims, RAT_VARIANTS, bureaucratAnims, foremanAnims, BOSS_FH } from './sprites/rats.mjs';
+import { ratAnims, RAT_VARIANTS, bureaucratAnims, foremanAnims, megaRatAnims, BOSS_FH, MEGA_FW } from './sprites/rats.mjs';
+import * as M4 from './sprites/m4.mjs';
 import { dogFjordPortrait, dogFjordStanding } from './sprites/dogfjord.mjs';
 import { PED_VARIANTS, CYC_VARIANTS, PED_DIRS, pedFrame, cycFrame, cycSideFrame, PED_FW, PED_FH, PED_OX, PED_OY } from './sprites/people.mjs';
 import { buildTiles } from './sprites/tiles.mjs';
@@ -30,6 +31,8 @@ import * as WF from './sprites/waterfront.mjs';
 import * as WF2 from './sprites/waterfront2.mjs';
 import * as WF3 from './sprites/waterfront3.mjs';
 import { generateWaterfront } from './map/waterfront.mjs';
+import { generateNorth } from './map/north.mjs';
+import * as ND from './sprites/north.mjs';
 import * as AP from './sprites/airport.mjs';
 
 const OUT = path.resolve(process.env.TP_GEN_OUT || 'public/gen');
@@ -64,6 +67,11 @@ const chars = [];
   fa.frames.forEach((f, i) => chars.push({ name: `rat_foreman_${i}`, img: f }));
   for (const [k, a] of Object.entries(fa.anims)) manifest.anims[`rat_foreman_${k}`] = { frames: Array.from({ length: a.count }, (_, i) => `rat_foreman_${a.start + i}`), rate: a.rate, loop: a.loop };
   manifest.pivots.rat_foreman = { x: 0.47, y: (BOSS_FH - 1) / BOSS_FH };
+  // M4: the Mega Rat (mission 9)
+  const ma = megaRatAnims();
+  ma.frames.forEach((f, i) => chars.push({ name: `rat_megarat_${i}`, img: f }));
+  for (const [k, a] of Object.entries(ma.anims)) manifest.anims[`rat_megarat_${k}`] = { frames: Array.from({ length: a.count }, (_, i) => `rat_megarat_${a.start + i}`), rate: a.rate, loop: a.loop };
+  manifest.pivots.rat_megarat = { x: 0.47, y: (MEGA_FW - 1) / MEGA_FW };
   for (const e of ['grin', 'laugh', 'shock']) chars.push({ name: `df_${e}`, img: dogFjordPortrait(e) });
   // in-world Dog Fjord (side vignettes)
   for (const [n, e, pod] of [['dfs_grin', 'grin', false], ['dfs_laugh', 'laugh', false], ['dfs_pod', 'grin', true], ['dfs_podlaugh', 'laugh', true]]) {
@@ -90,7 +98,7 @@ const chars = [];
 manifest.atlases.chars = { ...packAtlas(chars, path.join(OUT, 'chars')), png: 'gen/chars.png', json: 'gen/chars.json' };
 
 // ---------- maps ----------
-const maps = { queenwest: generateQueenWest(), highpark: generateHighPark(), downtown: generateDowntown(), eastend: generateEastEnd(), waterfront: generateWaterfront() };
+const maps = { queenwest: generateQueenWest(), highpark: generateHighPark(), downtown: generateDowntown(), eastend: generateEastEnd(), waterfront: generateWaterfront(), north: generateNorth() };
 
 // ---------- shared world atlas: props, vehicles, side-view mission props ----------
 const world = [];
@@ -165,6 +173,12 @@ manifest.anims.sailboat_bob = { frames: ['sailboat_0', 'sailboat_1'], rate: 1.5,
 // M3.2: HTO Park's umbrellas, motor yachts moored in the slips
 addProp('yellowumbrella', WF3.yellowUmbrella()); addProp('yacht_0', WF3.yacht(0)); addProp('yacht_1', WF3.yacht(1));
 manifest.anims.yacht_bob = { frames: ['yacht_0', 'yacht_1'], rate: 1.2, loop: true, atlas: 'world' };
+// M4: the North district's boards, sign and banner
+addProp('plywood', ND.plywood()); addProp('closedsign', ND.closedSign()); addProp('openbanner', ND.openBanner());
+addProp('crate', ND.crate()); addProp('vandegraaff', ND.vandegraaff()); addProp('wrecker', ND.wrecker());
+// M4: missions 9 + 10
+addProp('railseg_0', M4.railSeg(0)); addProp('railseg_1', M4.railSeg(1)); addProp('hoarding', M4.hoarding()); addProp('subwayside', M4.subwaySide()); addProp('slabplat', M4.slabPlatform());
+addProp('highwaymech_0', M4.highwayMech(0)); addProp('highwaymech_1', M4.highwayMech(1));
 // M3.4: the island airport mission
 addProp('jettug_0', AP.jetTug(0)); addProp('jettug_1', AP.jetTug(1)); addProp('jettugl_0', AP.jetTug(0, true)); addProp('jettugl_1', AP.jetTug(1, true)); addProp('surveystake', AP.surveyStake()); addProp('suitcase', AP.suitcase()); addProp('stakemap', AP.surveyStakeMap()); addProp('norwayrock', AP.norwayRock());
 addProp('vanside', SP.vanSide()); addProp('suvrat_0', SP.suvRatSide(0)); addProp('suvrat_1', SP.suvRatSide(1));
@@ -242,6 +256,7 @@ img('skyline_day', skyline('day')); img('skyline_dusk', skyline('dusk'));
 img('backrow_day', backRow('day')); img('backrow_dusk', backRow('dusk'));
 img('facades_qw', facadeStrip(11));
 img('facades_dt', facadeStripDT()); img('park_hp', parkStripHP()); img('school_side', schoolSide()); img('bigbox_ee', EE.bigBoxStrip()); img('lake_wf', WF.lakeStrip()); img('islands_wf', WF2.islandsStrip());
+img('science_nd', ND.scienceStrip()); img('gardiner_side', M4.gardinerStrip());
 img('street_paint', streetStrip(false)); img('street_protected', streetStrip(true)); img('street_plain', streetStrip('plain'));
 for (const k of ['escort', 'king', 'parkside', 'lot', 'quay']) img(`street_${k}`, streetStrip(k));
 img('dvp_bg', dvpBackdrop());

@@ -130,7 +130,9 @@ export function generateEastEnd() {
   park.addProps.push({ type: 'prop', key: 'playground', x: (LOT.x0 + 4) * TS, y: (LOT.y0 + 11) * TS });
   park.addProps.push({ type: 'prop', key: 'picnic', x: (LOT.x1 - 4) * TS, y: (LOT.y0 + 3) * TS, solid: 6 }, { type: 'prop', key: 'picnic_l', x: (LOT.x1 - 2) * TS, y: (LOT.y0 + 4) * TS, solid: 6 });
   for (let x = LOT.x0 + 2; x < LOT.x1; x += 5) park.addProps.push({ type: 'prop', key: 'parklamp', x: x * TS + 8, y: (LOT.y0 + 6) * TS - 2 });
-  D.improvements = { parking_to_park: park };
+  // M4, mission 9's payoff: the Ontario Line's East End stations (Leslieville on Queen, Gerrard)
+  const ol = { tiles: [], addProps: [[CW + 5, QUEEN - 3], [BV + 5, GERRARD - 3]].map(([x, y]) => ({ type: 'prop', key: 'subway', x: x * TS + 8, y: y * TS + 10, solid: 6 })) };
+  D.improvements = { parking_to_park: park, ontario_line: ol };
 
   // ---------- furniture, stops, traffic ----------
   for (const row of BRIDGES) { D.furnish(row, 'n', BV + 4, W); D.furnish(row, 's', BV + 4, W); }

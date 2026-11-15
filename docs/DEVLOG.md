@@ -612,3 +612,30 @@ The map's tower was an SDF-rendered trefoil base with a raster strip glued on to
 
 ### Also
 The Monster SUV arena keeps only low pallet stacks (Ivan: "only leave the pallets"); on one you're in the way, a jump from one clears the roof.
+
+## 2026-11-15 (later): M4, the North, missions 6, 9 and 10, the ending
+
+Ivan asked for M4 after M3.3 and M3.4 if the budget allowed. It's in: the sixth district, the last three main missions and an ending. The review doc is [docs/reviews/M4.md](reviews/M4.md).
+
+### What was built
+- **The North district:** Don Mills + Eglinton. The boarded-up Science Centre (Moriyama's ribbed pavilion with its pods toward the ravine), the Don's East Branch ravine with its trail, Flemingdon Park's slabs, Line 5's station. Queen West's Ossington/Bellwoods and Downtown's Spadina/University/Bay lead north into it.
+- **Mission 6, Save the Science:** the game's first stealth beat. Guard rats stand watch with flashlights that swing; crouch behind a crate or be spotted. Then the exhibits are carried to a moving truck (the Parkside chase, reused with a new goal), then the Wrecker: a crane whose ball swings as a pendulum and then hauls up to reload.
+- **Mission 9, Finish the Line:** lay five rail piles into track under attack (the depave arena, a fourth style), then the Mega Rat, a boss-size basic rat whose leap POUNDS shockwaves along the street.
+- **Mission 10, Death by Highway:** unlocks last. The intro's highway shot returns ("...ANOTHER LANE?"), and the Highway Mech is a walking stretch of the Gardiner: it stomps, flings cars, vents, and drops slabs at 2/3 and 1/3 health. The payoff takes the deck and piers off the Waterfront map and gives Lake Shore protected lanes and a linear park.
+- **The ending:** Dog Fjord concedes, the raccoon rides on, THE RACCOON'S REPORT CARD, the credits with the satire notice. The run is saved and posted first.
+
+### Research that changed the text
+Each mission's blurb says where the game departs from reality ([URBAN_RESEARCH §5, §8, §9](URBAN_RESEARCH.md)):
+- The Science Centre stays closed in reality; its replacement at Ontario Place is due in 2029.
+- The Ontario Line costs about $34 billion and opens "in the early 2030s".
+- Toronto voted 24–21 in **June 2015** (not 2016, as my first draft of the blurb said) to keep the east Gardiner, set beside Seoul's Cheonggyecheon.
+
+### Failures along the way
+- **The Highway Mech's stomp target was out of reach.** A jump from the slab tops out about 50 px below its sign, so "stomp the sign" was impossible. The deck torso is the target now, and a real-input test (stand on the slab, run, jump) confirms it lands.
+- **The Mech's sign rendered as a white box.** `Img.rect` has no outline mode; the "border" filled the sign.
+- **A real bug found by the ending test:** after a mission win, Save + Quit then CONTINUE replayed that mission's map payoff. Phaser reuses a scene's last start data when `start()` gets none. Every hand-off now passes data.
+- **The camera chase's "caught" wave ended on the frame it locked,** before its rats had spawned. It counts kills now.
+- **A flaky stealth test:** it teleported the raccoon into the air in front of the guard, so the beam caught it before it landed behind the crate. It now places the raccoon while the guard faces away.
+
+### Numbers
+44 browser tests and 16 unit tests pass; 60 fps at 6x CPU throttle on every new scene; first load 0.62 MB.
