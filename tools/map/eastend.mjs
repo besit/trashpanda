@@ -17,6 +17,7 @@ export const LS = 94;    // Leslie St cols 94..97
 const RIVER = { x0: 4, x1: 8 }, DVP = { x0: 11, x1: 16 };
 const FB = 12;           // the Riverdale Park footbridge deck (row 12; M3.3, Ivan: narrower, it was two deck rows + two rails)
 const BRIDGES = [GERRARD, DUNDAS, QUEEN];
+const SCHOOL = { x0: LS - 13, x1: LS };   // M4.1: the Bike Bus's school, on Dundas west of Leslie (fictional)
 
 export function generateEastEnd() {
   const D = new District('eastend', W, H, 1996);
@@ -95,10 +96,14 @@ export function generateEastEnd() {
   }
   for (const [a, b] of [[BV + 4, CW], [CW + 4, LS], [LS + 4, W]]) {
     D.row(a, b, { top: (GERRARD + 7) * TS }, houses, [1, 2], bricks, 40);
-    D.row(a, b, { base: (DUNDAS - 3) * TS }, 'shop', [1, 2], bricks);
+    D.row(a, a === CW + 4 ? SCHOOL.x0 : b, { base: (DUNDAS - 3) * TS }, 'shop', [1, 2], bricks);
     D.row(a, b, { top: (DUNDAS + 7) * TS }, houses, [1, 2], bricks, 40);
     D.row(a, b, { base: (QUEEN - 3) * TS }, 'shop', [1, 2, 2, 3], bricks);
   }
+  // M4.1: the school at the end of the Bike Bus's route (a fictional school; red brick, two storeys)
+  D.addBuilding(SCHOOL.x0 * TS, (SCHOOL.x1 - SCHOOL.x0) * TS, { w: (SCHOOL.x1 - SCHOOL.x0) * TS, d: 48, floors: 2, brick: 'red', seed: 1912, kind: 'school' }, { base: (DUNDAS - 3) * TS }, { graffiti: null });
+  D.labels.push({ text: 'SCHOOL', x: ((SCHOOL.x0 + SCHOOL.x1) / 2) * TS, y: (DUNDAS - 9) * TS, kind: 'landmark' });
+  D.markers.push({ id: 'bike_bus', x: (BV + 6) * TS + 8, y: (DUNDAS - 1) * TS + 8, label: 'THE BIKE BUS' });
   // Gerrard: East Chinatown at Broadview
   for (const x of [BV + 5, BV + 8, BV + 11, BV + 14]) D.tprop('lanterns', x, GERRARD - 3, 8, 2, { depth: (GERRARD - 3) * TS + 1 });
   D.labels.push({ text: 'EAST CHINATOWN', x: (BV + 10) * TS, y: (GERRARD - 5) * TS, kind: 'landmark' });
@@ -132,7 +137,29 @@ export function generateEastEnd() {
   for (let x = LOT.x0 + 2; x < LOT.x1; x += 5) park.addProps.push({ type: 'prop', key: 'parklamp', x: x * TS + 8, y: (LOT.y0 + 6) * TS - 2 });
   // M4, mission 9's payoff: the Ontario Line's East End stations (Leslieville on Queen, Gerrard)
   const ol = { tiles: [], addProps: [[CW + 5, QUEEN - 3], [BV + 5, GERRARD - 3]].map(([x, y]) => ({ type: 'prop', key: 'subway', x: x * TS + 8, y: y * TS + 10, solid: 6 })) };
-  D.improvements = { parking_to_park: park, ontario_line: ol };
+  // M4.1, the Bike Bus's payoff: a School Street: barriers close Dundas outside the school at the bell, the bike racks fill
+  const sx0 = SCHOOL.x0 * TS, sx1 = SCHOOL.x1 * TS;
+  const schoolStreet = { tiles: [], addProps: [
+    ...[sx0 - 8, sx1 + 8].flatMap((x) => [DUNDAS, DUNDAS + 2].map((row) => ({ type: 'prop', key: 'schoolstreet', x, y: row * TS + 14 }))),
+    ...[0, 1, 2, 3, 4].map((i) => ({ type: 'prop', key: 'kidbikes', x: sx0 + 24 + i * 34, y: (DUNDAS - 1) * TS + 10 })),
+  ] };
+  D.improvements = { parking_to_park: park, ontario_line: ol, school_street: schoolStreet };
+  // the Bike Bus's route (M4.1): from Broadview + Dundas, up Carlaw, along Gerrard, down Leslie, to the school.
+  // Steps in order: stops (kids waiting), blocks (an SUV parked in the bike lane), the school
+  const px = (t) => t * TS + 8;
+  const bikebus = {
+    start: [px(BV + 6), px(DUNDAS - 1)],
+    steps: [
+      { kind: 'stop', x: px(BV + 16), y: px(DUNDAS - 1), kids: 2 },
+      { kind: 'block', x: px(CW - 6), y: px(DUNDAS) + 4, key: 'suv_E' },
+      { kind: 'stop', x: px(CW + 5), y: px(DUNDAS - 10), kids: 3 },
+      { kind: 'block', x: px(CW + 1), y: px(GERRARD + 9), key: 'suv_N' },
+      { kind: 'stop', x: px(CW + 18), y: px(GERRARD + 5), kids: 2 },
+      { kind: 'block', x: px(LS - 10), y: px(GERRARD + 3), key: 'suv_W' },
+      { kind: 'stop', x: px(LS - 2), y: px(GERRARD + 12), kids: 2 },
+      { kind: 'school', x: px((SCHOOL.x0 + SCHOOL.x1) / 2), y: px(DUNDAS - 1) },
+    ],
+  };
 
   // ---------- furniture, stops, traffic ----------
   for (const row of BRIDGES) { D.furnish(row, 'n', BV + 4, W); D.furnish(row, 's', BV + 4, W); }
@@ -171,5 +198,5 @@ export function generateEastEnd() {
   const overpasses = [...BRIDGES.map((row) => [0, row - 3, DVP.x1 + 2, row + 6]), [0, FB - 1, DVP.x1 + 2, FB + 1]];
   // easter egg: the benches at the top of Riverdale hill
   const eggs = [{ id: 'riverdale_view', x: (RP.x0 + 6) * TS, y: (RP.y0 + 4) * TS, w: 5 * TS, h: 3 * TS, label: 'THE VIEW FROM THE HILL', fact: 'THE WHOLE SKYLINE AT ONCE.\nPEOPLE COME UP HERE\nFOR THE SUNSET.' }];
-  return D.out({ spawn: { x: 40 * TS, y: (QUEEN - 2) * TS + 8 }, lifeTokens, eggs, overpasses, underWalks: [trailIdx] });
+  return D.out({ spawn: { x: 40 * TS, y: (QUEEN - 2) * TS + 8 }, lifeTokens, eggs, overpasses, underWalks: [trailIdx], bikebus });
 }

@@ -31,8 +31,7 @@ import * as WF from './sprites/waterfront.mjs';
 import * as WF2 from './sprites/waterfront2.mjs';
 import * as WF3 from './sprites/waterfront3.mjs';
 import { generateWaterfront } from './map/waterfront.mjs';
-import { generateNorth } from './map/north.mjs';
-import * as ND from './sprites/north.mjs';
+import * as ND from './sprites/science.mjs';
 import * as AP from './sprites/airport.mjs';
 
 const OUT = path.resolve(process.env.TP_GEN_OUT || 'public/gen');
@@ -98,7 +97,7 @@ const chars = [];
 manifest.atlases.chars = { ...packAtlas(chars, path.join(OUT, 'chars')), png: 'gen/chars.png', json: 'gen/chars.json' };
 
 // ---------- maps ----------
-const maps = { queenwest: generateQueenWest(), highpark: generateHighPark(), downtown: generateDowntown(), eastend: generateEastEnd(), waterfront: generateWaterfront(), north: generateNorth() };
+const maps = { queenwest: generateQueenWest(), highpark: generateHighPark(), downtown: generateDowntown(), eastend: generateEastEnd(), waterfront: generateWaterfront() };
 
 // ---------- shared world atlas: props, vehicles, side-view mission props ----------
 const world = [];
@@ -146,7 +145,7 @@ addProp('adventure', HP.adventurePlayground());
 addProp('fence_h', HP.fence('h')); addProp('fence_v', HP.fence('v')); addProp('hpsign', HP.highParkSign()); addProp('subway', HP.subwayEntrance());
 addProp('speedcam', HP.speedCam()); addProp('speedcam_cut', HP.speedCam(true)); addProp('schoolsign', HP.schoolSign()); addProp('tspsignal', HP.tspSignal());
 addProp('patio_r', HP.patioSet('R')); addProp('patio_f', HP.patioSet('F')); addProp('playground', HP.playground()); addProp('marquee', HP.revueMarquee());
-addProp('cityhall', DT.cityHall()); addProp('torontosign', DT.torontoSign()); addProp('arch', DT.freedomArch(66, 36)); addProp('newsvan', DT.newsVan()); addProp('lanterns', DT.lanterns());
+addProp('cityhall', DT.cityHallMap()); addProp('torontosign', DT.torontoSign()); addProp('arch', DT.freedomArchMap(92, 55, 0.7)); addProp('newsvan', DT.newsVan()); addProp('lanterns', DT.lanterns());
 for (const st of ['red', 'green', 'tsp']) addProp(`sigpole_${st}`, SP.signalPole(st));
 // the Lane Eater: 2 frames x every combination of smashed weak points (v = conveyor, b = cab, g = grinder)
 { const Z = [['conveyor', 'v'], ['cab', 'b'], ['grinder', 'g']];
@@ -156,7 +155,7 @@ for (const st of ['red', 'green', 'tsp']) addProp(`sigpole_${st}`, SP.signalPole
     addProp(suffix ? `laneeater_${f}_${suffix}` : `laneeater_${f}`, laneEater(f, broken.map(([k]) => k)));
   }
   addProp('paintgob_0', paintGob(0)); addProp('paintgob_1', paintGob(1)); }
-addProp('lotlight', EE.lotLight()); addProp('asphaltpatch', EE.asphaltPatch()); addProp('soilsapling', EE.soilSapling());
+addProp('lotlight', EE.lotLight()); addProp('schoolstreet', EE.schoolStreetBarrier()); addProp('kidbikes', EE.kidBikes()); addProp('asphaltpatch', EE.asphaltPatch()); addProp('soilsapling', EE.soilSapling());
 addProp('cartshelter', EE.cartShelter()); addProp('pallets', EE.palletStack());
 addProp('monstersuv_0', EE.monsterSuv(0)); addProp('monstersuv_1', EE.monsterSuv(1));
 // M3: the Waterfront
@@ -170,14 +169,14 @@ manifest.anims.plane_cs = { frames: ['plane_cs_0', 'plane_cs_1'], rate: 14, loop
 addProp('gardinerdeck', WF2.gardinerDeck()); addProp('gardinerpier', WF2.gardinerPier()); addProp('trackcurves', WF2.trackCurves()); addProp('marinadock', WF2.marinaDock());
 addProp('sailboat_0', WF.sailboat(0)); addProp('sailboat_1', WF.sailboat(1));
 manifest.anims.sailboat_bob = { frames: ['sailboat_0', 'sailboat_1'], rate: 1.5, loop: true, atlas: 'world' };
-// M3.2: HTO Park's umbrellas, motor yachts moored in the slips
-addProp('yellowumbrella', WF3.yellowUmbrella()); addProp('yacht_0', WF3.yacht(0)); addProp('yacht_1', WF3.yacht(1));
-manifest.anims.yacht_bob = { frames: ['yacht_0', 'yacht_1'], rate: 1.2, loop: true, atlas: 'world' };
+for (const c of Object.keys(WF.SAIL_COLOURS)) { addProp(`sailboat_${c}_0`, WF.sailboat(0, c)); addProp(`sailboat_${c}_1`, WF.sailboat(1, c)); manifest.anims[`sailboat_${c}_bob`] = { frames: [`sailboat_${c}_0`, `sailboat_${c}_1`], rate: 1.5, loop: true, atlas: 'world' }; }
+// M3.2: HTO Park's umbrellas (the slips' boats are sailboats since M4.1)
+addProp('yellowumbrella', WF3.yellowUmbrella());
 // M4: the North district's boards, sign and banner
 addProp('plywood', ND.plywood()); addProp('closedsign', ND.closedSign()); addProp('openbanner', ND.openBanner());
 addProp('crate', ND.crate()); addProp('vandegraaff', ND.vandegraaff()); addProp('wrecker', ND.wrecker());
 // M4: missions 9 + 10
-addProp('railseg_0', M4.railSeg(0)); addProp('railseg_1', M4.railSeg(1)); addProp('hoarding', M4.hoarding()); addProp('subwayside', M4.subwaySide()); addProp('slabplat', M4.slabPlatform());
+addProp('railseg_0', M4.railSeg(0)); addProp('railseg_1', M4.railSeg(1)); addProp('hoarding', M4.hoarding()); addProp('subwayside', M4.subwaySide()); addProp('slabplat', M4.slabPlatform()); addProp('barrel', M4.barrel());
 addProp('highwaymech_0', M4.highwayMech(0)); addProp('highwaymech_1', M4.highwayMech(1));
 // M3.4: the island airport mission
 addProp('jettug_0', AP.jetTug(0)); addProp('jettug_1', AP.jetTug(1)); addProp('jettugl_0', AP.jetTug(0, true)); addProp('jettugl_1', AP.jetTug(1, true)); addProp('surveystake', AP.surveyStake()); addProp('suitcase', AP.suitcase()); addProp('stakemap', AP.surveyStakeMap()); addProp('norwayrock', AP.norwayRock());
@@ -234,7 +233,7 @@ for (const [id, map] of Object.entries(maps)) {
     ground: map.ground.map((row) => row.map((n) => idx[n])),
     objects: map.objects,
     improvements: Object.fromEntries(Object.entries(map.improvements).map(([k, v]) => [k, { ...v, tiles: v.tiles.map(([x, y, n]) => [x, y, idx[n]]) }])),
-    spawn: map.spawn, markers: map.markers, lanes: map.lanes, exits: map.exits, lifeTokens: map.lifeTokens, eggs: map.eggs, overpasses: map.overpasses, underWalks: map.underWalks,
+    spawn: map.spawn, markers: map.markers, lanes: map.lanes, exits: map.exits, lifeTokens: map.lifeTokens, eggs: map.eggs, overpasses: map.overpasses, underWalks: map.underWalks, bikebus: map.bikebus,
     intersections: map.intersections, walkways: map.walkways, labels: map.labels, critters: map.critters, landmarks: map.landmarks,
     decals: map.decals.map(({ gen, ...d }) => d),
     tileColors,

@@ -87,7 +87,7 @@ tools/        asset generators (never shipped): raster + SDF renderers, sprite m
 - **Debug:** `__TP.killAll()` knocks every rat out *and counts the kills*, so bots can clear arena waves; `__TP.tug()`, `__TP.cases()`, `__TP.ratObjs()`.
 
 ## M4 additions
-- **North district** (`tools/map/north.mjs`, `tools/sprites/north.mjs`): `sciencecentre` and `slab` building kinds in `anybuilding`; exits use `arrive` (Ossington/Bellwoods -> Leslie, Spadina/University/Bay -> Don Mills).
+- **North district** (removed in M4.1; see below).
 - **Mission 6** (`src/action/Science.ts`): `Patrol` (a guard rat with `rat.patrol = true` stands still; its beam is a triangle drawn each frame; `hidden` = on the ground within 16 px of a crate) and `Wrecker` (a pendulum: amplitude 1.25 rad, period 2.4 s; five swings, then `park` -> `reload`). `ChaseDef` gains `startAt` and `goal: 'truck'`.
 - **Mission 9:** `DepaveSpots` style `rail`; `Boss` kind `megarat` (72 px frames, a `pound` move that spawns two ground shockwaves).
 - **Mission 10** (`src/action/Highway.ts`): `HighwayMech` (`wind -> stomp -> fling -> vent`), slabs dropped through `ActionScene.oneWay`. Lanes take `until` (an upgrade that removes them: the Gardiner's deck traffic). `gardiner` side background.
@@ -138,3 +138,13 @@ Snapshots go to `art/history/<asset>/vNN/` (`tools/snapshot.mjs`).
   9–11. **missions 2–4:** marker → briefing → a real taste of the mechanic (the streetcar moves / a wave locks / boosting closes the chase gap) → win → debrief → payoff → saved
 - `tools/scratch/bot.mjs` (local only) is a playtest bot that plays missions 2–4 with real key input; it was used to tune the chase and the boss and found two rat-AI bugs.
 - `tools/shots.mjs` captures scene screenshots; `tools/perf.mjs` samples FPS with CPU throttling.
+
+## M4.1 additions
+- **North removed:** `tools/map/north.mjs` deleted; `tools/sprites/north.mjs` renamed `science.mjs` (props + the warehouse strip only). `migrate()` sends a save standing in `north` to the Queen West spawn. A unit test checks every map exit leads to a known district.
+- **Explore missions:** `MissionDef.action` is optional; `explore: { kind: 'bikebus', time }` marks a mission played on the map. `ExploreScene.startMission` (and the debug list) start such a mission as `Explore { district, bikebus: id }` after its briefing. `src/explore/BikeBus.ts` owns the route (`map.bikebus`: `start` + ordered `steps` of `stop` / `block` / `school`, generated in `tools/map/eastend.mjs` and written by `build-assets`): riders follow a 2-px resampled trail of the player; blocks are static zones in their own group, removed by the bell; `finishBus()` mirrors `ActionScene.win()` (award, save, debrief + Dog Fjord beat, then the payoff). `__TP.bus()` for bots.
+- **Share** (`src/scenes/ShareScene.ts`): composes a poster in a `RenderTexture` at 384×216 or 216×384 from loaded textures (backgrounds, `chars`/`world` frames, bitmap text), `snapshot()`s it, upscales ×5 on a canvas with smoothing off and keeps a `File` ready, so the share or popup starts inside the tap. `navigator.share({ files })` when the browser can share files; otherwise save + the X intent / Facebook sharer URL. Launched from `infoBox` (S or tap) and the pause menu; it pauses its caller and resumes it on close. `__TP.share()` for bots.
+- **Title:** ABOUT pages flip with keydown LEFT/RIGHT (and the stick); link rows are tappable rects (`window.open`, `noopener`). `showDisclaimer()` runs between the initials and the intro.
+- **Camera:** the side-view follow runs in `postupdate` (after Arcade copies bodies to sprites) with integer scroll and a hysteresis on the lag, so the raccoon stays on the same screen pixel at a steady speed.
+- **Moving platforms:** the Jet Tug's fuselage is a dynamic, immovable, one-way `Zone` whose velocity drives the rig; the image follows the body, so a rider is carried by Arcade's friction.
+- **SDF in the map's projection:** `freedomArchMap` and `cityHallMap` render with `obliqueCam(1, far)`, so they sit on the ground the way the tiles do. A squashed SDF has to be scaled by its squash factor or rays overstep thin parts (the first arch drew as a stub).
+

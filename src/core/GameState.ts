@@ -64,7 +64,8 @@ export function migrate(raw: unknown): GameState | null {
     name: typeof s.name === 'string' && /^[A-Z]{1,3}$/.test(s.name) ? s.name : 'RAC',
     runId: typeof s.runId === 'string' && s.runId ? s.runId : base.runId,
     // v1 saves had no district: they were always in Queen West
-    player: { ...base.player, ...(s.player ?? {}), district: typeof s.player?.district === 'string' ? s.player.district : 'queenwest' },
+    // M4.1 dropped the North district: a save standing there starts again at the Queen West spawn
+    player: s.player?.district === 'north' ? { ...base.player } : { ...base.player, ...(s.player ?? {}), district: typeof s.player?.district === 'string' ? s.player.district : 'queenwest' },
     version: SAVE_VERSION,
   };
 }

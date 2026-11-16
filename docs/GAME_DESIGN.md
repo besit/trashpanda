@@ -44,12 +44,11 @@ The controls appear in a first-run toast on the map and on every mission title c
 ## Map
 One continuous city:
 ```
-              NORTH
-           /         \
 HIGH PARK — QUEEN WEST — DOWNTOWN — EAST END
            \         /
             WATERFRONT
 ```
+M4 added a NORTH district above Queen West and Downtown; M4.1 dropped it (Ivan's call) and moved its mission, Save the Science, to the Waterfront.
 16px tiles. A district is about 160×90 tiles. Adjacent districts take 15–20 s to cross, end-to-end about 50 s with boost. Vertical links only through Queen West and Downtown.
 
 **M1 slice: Queen West (104×76 tiles)**, rebuilt after Ivan's review to be recognisably Toronto:
@@ -156,12 +155,13 @@ The cost is a 0.3 s wipe at the seam. The design target of "one city" is kept: s
 | 3 | King of the Street ✅ M2 | Downtown | King St transit corridor | combat + SUV Rats + Bureaucrat boss |
 | 4 | **Slow Down, Dog** ✅ M2 *(added by Ivan, made a main mission at the M0 review)* | High Park (Parkside school zone) | School zone, slowed by design | chase the camera haulers, then build humps / a raised crossing / a curb extension under traffic |
 | 5 | **The Lane Eater** ✅ M3 *(Bloor; Ivan's call at the M1 review)* | High Park (Bloor West) | Keeping protected lanes (community pressure) | auto-scrolling chase + rally-a-peloton + 3-part machine boss |
-| 6 | **Save the Science** ✅ M4 | North (Don Mills) | The Science Centre reopens | sneak past flashlights, catch the exhibit haulers, the Wrecker |
+| 6 | **Save the Science** ✅ M4, moved in M4.1 | Waterfront (a Queens Quay warehouse) | Science by the lake: the exhibits come out of storage | sneak past flashlights, catch the exhibit haulers, the Wrecker |
 | 7 | The Great Parking Lot ✅ M3 | East End | Parking → park | combat + depave arena + Monster SUV boss |
 | 8 | The Waterfront Heist ✅ M3 | Waterfront | Public waterfront | lobbyist waves + fence-tearing arena |
 | 9 | **Finish the Line** ✅ M4 | Downtown | The Ontario Line opens | lay track under attack, the Mega Rat |
 | 10 | **Death by Highway** ✅ M4 | Waterfront (under the Gardiner) | The Gardiner comes down | "...another lane?" scene, three waves, the Highway Mech; then the ending |
 | 11 | **Grounded** ✅ M3.4 *(Ivan: "a mission about the airport war")* | Waterfront (Little Norway Park) | The park stays a park; no jets | Baggage + Barrier Rats, a stakes arena, the Jet Tug boss |
+| 12 | **The Bike Bus** ✅ M4.1 *(Ivan's idea)* | East End (Dundas, Carlaw, Gerrard, Leslie) | A School Street | **on the map** (top-down): lead the bus, stop for nine kids at four stops, ring three SUVs out of the bike lane, beat the bell |
 | side | Pedestrian Takeover | Queen West (Kensington-style) | Pedestrian street | crowd-gathering |
 | side | Intersection Repair | High Park | Protected intersection | puzzle |
 | side | Public Consultation | citywide | support | signature hunt (exploration) |
@@ -243,3 +243,11 @@ None. No ads, purchases, energy or login.
 - **Mission 9, Finish the Line:** lay the track (five rail piles) while rats defend it; the Mega Rat.
 - **Mission 10, Death by Highway:** unlocks only when every other mission is done. The intro's highway shot comes back with Dog Fjord adding lanes that never move; the Highway Mech; the Gardiner comes down.
 - **The ending:** Dog Fjord concedes ("I'LL TAKE THE STREETCAR... IS THERE A FIRST-CLASS STREETCAR?"), the raccoon rides on, *TORONTO. A PRETTY GOOD CITY. STILL WITH A FEW PROBLEMS. BUT FEWER.*, then THE RACCOON'S REPORT CARD (missions, Livability, lanes, parks, transit, highway lanes removed, safer school zones, riders, rats, score) and the credits with the satire notice. The run is saved and sent to the leaderboard.
+
+## M4.1: Ivan's M3.3–M3.4 notes
+- **The North is gone** (Ivan's call: "drop North, move the mission"). Save the Science now happens in a Queens Quay warehouse that holds the closed Science Centre's exhibits; its payoff is SCIENCE BY THE LAKE. Saves standing in the North start again in Queen West.
+- **The Bike Bus**, the first mission played on the map itself. A bike bus works like a school bus on bikes: a set route, stops along the way, grown-ups leading. Stop beside the kids at each stop (they join and ride in a line behind you), ring your bell at the SUVs parked in the bike lane, and reach the school before the bell. Late: back to the first stop. Payoff: a School Street. It now has to be done before Death by Highway, so the finale stays last.
+- **Share posters:** after every mission the evidence box has a small SHARE button (S, or tap), and the pause menu has SHARE YOUR CITY. Four poster designs (Queen St, the face-off with Dog Fjord, the bike bus, the lake), wide (1920×1080) and tall (1080×1920), with your Livability, score and missions stamped on. X, Facebook, Instagram (the phone's share sheet when there is one), or save.
+- **Credits:** the satire + AI notice shows once, before the intro on NEW GAME. ABOUT opens on the credits (the alias SEXWITHAWHALEINC, Instagram and X links you can click); pages flip with LEFT/RIGHT.
+- **Bosses:** the Jet Tug drives off screen before it turns and comes back from the side it left; only the tug hurts; the jet is a platform you can ride. The Highway Mech walks between attacks; its slabs stand on piers at the height you land on. Stomps send visible dust shockwaves, and the Mega Rat throws barrels.
+

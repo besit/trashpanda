@@ -196,6 +196,14 @@ M2: Dog Fjord in the world (side vignettes). The portrait's SDF head re-rendered
 
 ## downtown
 
+### downtown v03
+
+2026-11-16
+
+M4.1 (Ivan): City Hall modelled in 3D and drawn from above (crescent roofs, the saucer, the podium roof garden); the Freedom Arches' feet on the concrete either side of the pool.
+
+![downtown v03](downtown/v03/preview.png)
+
 ### downtown v02
 
 2026-11-12
@@ -240,6 +248,14 @@ v01: intro highway backdrop (DVP-style ravine, river, lake, sunset, skyline) + b
 
 ## eastend
 
+### eastend v04
+
+2026-11-16
+
+M4.1 (Ivan's photo): the Don Jail redrawn: the tall rusticated centre block with its pediment and porch, khaki wings, two brick ventilation towers.
+
+![eastend v04](eastend/v04/preview.png)
+
 ### eastend v03
 
 2026-11-12
@@ -276,6 +292,14 @@ Original 5x7 uppercase font: plain, outline, shadow, 2x outline (titles).
 
 ## highpark
 
+### highpark v03
+
+2026-11-16
+
+M4.1 (Ivan's photo): Colborne Lodge as the Regency cottage: verandah, low hip, small upper storey, three white chimney pots.
+
+![highpark v03](highpark/v03/preview.png)
+
 ### highpark v02
 
 2026-11-12
@@ -303,6 +327,14 @@ M3 mission 5 boss: the Lane Eater, a road-paving machine that eats bike lanes. T
 ![lane_eater v01](lane_eater/v01/preview.png)
 
 ## m4_props
+
+### m4_props v03
+
+2026-11-16
+
+M4.1: laid rail 72 px wide so the pieces join; ONTARIO LINE / OPENING SOON hoarding on two lines; the Mega Rat's barrel; the Gardiner strip without the floating towers.
+
+![m4_props v03](m4_props/v03/preview.png)
 
 ### m4_props v02
 
@@ -566,6 +598,16 @@ M4: the Mega Rat (mission 9 miniboss), the basic rat at 2.6x.
 
 ![rats_megarat v01](rats_megarat/v01/preview.png)
 
+## science
+
+### science v01
+
+2026-11-16
+
+M4.1: Save the Science moved to the Waterfront (North dropped): a red-brick Harbourfront warehouse strip replaces the Don Mills pavilion.
+
+![science v01](science/v01/preview.png)
+
 ## side_bg
 
 ### side_bg v04
@@ -678,6 +720,14 @@ First tile set: asphalt variants, lane markings, embedded streetcar tracks (E-W,
 
 ## vehicles
 
+### vehicles v06
+
+2026-11-16
+
+M4.1 (Ivan): the streetcar's white side swoosh runs over the nose (it turned yellow at the front).
+
+![vehicles v06](vehicles/v06/preview.png)
+
 ### vehicles v05
 
 2026-11-13
@@ -719,6 +769,22 @@ First pass vehicles: car (4 dirs/colours), SUV, 3-section TTC-style streetcar.
 ![vehicles v01](vehicles/v01/preview.png)
 
 ## waterfront
+
+### waterfront v06
+
+2026-11-16
+
+M4.1 (Ivan): the SkyDome cleaned up: no lift, seams stop short of the rim, flat corner ramps, no ribs.
+
+![waterfront v06](waterfront/v06/preview.png)
+
+### waterfront v05
+
+2026-11-16
+
+M4.1 (Ivan): sailboats in colours (white, red, blue, yellow) replace the top-down yachts on the map.
+
+![waterfront v05](waterfront/v05/preview.png)
 
 ### waterfront v04
 

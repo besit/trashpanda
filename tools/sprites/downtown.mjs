@@ -3,7 +3,7 @@
 // the Freedom Arches over the pool), Old City Hall's clock tower, and the news van bursting
 // out of the wall at Queen + John. All drawn for the 3/4 map (roof on top, facade below).
 import { Img, sheet } from '../lib/raster.mjs';
-import { scene, render, orthoCam } from '../lib/sdf.mjs';
+import { scene, render, orthoCam, obliqueCam, sd } from '../lib/sdf.mjs';
 import { rng } from '../lib/rng.mjs';
 import { BRICKS, brickWall, sashWindow, storefront, roof } from './buildings.mjs';
 
@@ -121,68 +121,55 @@ export function downtownBuilding({ w = 64, d = 48, floors = 8, brick = 'red', gl
 
 // ---------------------------------------------------------------- landmarks
 
-/** Toronto City Hall (Viljo Revell, 1965). */
-export function cityHall() {
-  // v02 (Ivan's ref: city-hall.jpg). Two curved towers of unequal height facing each other: each shows its
-  // smooth white convex back on the outside and its dark, finely ribbed concave face on the inside; the
-  // roofs read as crescents. The white council saucer sits between them on the podium, with the
-  // elevated walkway ring sweeping across the front.
-  const W = 240, H = 214, img = new Img(W, H);
-  const base = H - 4, podTop = base - 30;
-  const tower = (x0, w, top, west) => {
-    const crown = 9; // the crescent roof band
-    for (let i = 0; i < w; i++) {
-      const t = i / (w - 1), u = west ? t : 1 - t; // u: 0 = outer edge -> 1 = inner (concave) edge
-      const outer = u < 0.5;
-      // the convex back curves away: brightest facing the light (west-ish), darkening toward the inner edge
-      for (let y = top + crown; y < podTop; y++) {
-        let c;
-        if (outer) {
-          const shade = west ? u : 0.5 - u + 0.2; // the west tower's back faces the sun
-          c = shade < 0.18 ? 'W' : shade < 0.36 ? 'H' : 'h';
-          if ((i + (west ? 0 : 1)) % 4 === 0) c = c === 'W' ? 'H' : c === 'H' ? 'h' : 'G'; // thin vertical ribs
-        } else {
-          // the concave face: dark glass between closely spaced pale fins, floor bands every 5px
-          const k = (u - 0.5) / 0.5;
-          c = i % 2 === 0 ? (k < 0.5 ? 'G' : 'g') : (k < 0.4 ? 'g' : 'k');
-          if ((y - top) % 5 === 0) c = k < 0.5 ? 'h' : 'G';
-          if (bay(i, y) < 0.06) c = 'U';
-        }
-        img.set(x0 + i, y, c);
-      }
-      // the crescent roof: a curved band whose height follows the plan's curve
-      const curve = Math.sin(u * Math.PI) * 0.8 + 0.2;
-      const ry = Math.round(top + crown - curve * crown);
-      for (let y = ry; y < top + crown; y++) img.set(x0 + i, y, y === ry ? 'W' : outer ? 'H' : 'h');
-      img.set(x0 + i, top + crown, 'G');
-    }
-    // outer silhouette edge + the concave lip
-    img.vline(west ? x0 : x0 + w - 1, top + 2, podTop, 'h');
+/**
+ * Toronto City Hall (Viljo Revell, 1965), M4.1 (Ivan: "looks front-drawn, get closer to the reference, from the
+ * top"): modelled in 3D and drawn in the map's own projection, so the two curved towers show their crescent
+ * roofs from above. The towers stand like "( )" around the white council saucer on its podium: concave faces of
+ * dark ribbed glass turned toward each other, smooth white convex backs outside; the east tower is the taller
+ * (27 storeys to 20) and sits a little further north. Pivot = the podium's front edge.
+ */
+export function cityHallMap() {
+  const towers = [
+    { c: [14, -46], R: 66, th: 14, ang: Math.PI, half: 0.72, H: 96 },     // west, "("
+    { c: [-14, -56], R: 66, th: 14, ang: 0, half: 0.72, H: 128 },         // east, ")"
+  ];
+  const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+  const towerD = (t) => (p) => {
+    const qx = p[0] - t.c[0], qy = p[1] - t.c[1], r = Math.hypot(qx, qy);
+    const a = Math.abs(wrap(Math.atan2(qy, qx) - t.ang));
+    const dr = Math.abs(r - t.R) - t.th / 2, da = (a - t.half) * r;
+    const plan = Math.max(dr, da), dz = Math.max(-p[2], p[2] - t.H);
+    return Math.min(Math.max(plan, dz), 0) + Math.hypot(Math.max(plan, 0), Math.max(dz, 0));
   };
-  tower(22, 66, 52, true);    // west tower (20 storeys)
-  tower(150, 70, 14, false);  // east tower (27 storeys)
-  // podium: a long low block with a dark glazed band and columns
-  img.rect(8, podTop, W - 16, base - podTop, 'H'); img.hline(8, W - 9, podTop, 'W');
-  img.rect(12, podTop + 8, W - 24, 12, 'k');
-  for (let x = 14; x < W - 14; x += 7) img.rect(x, podTop + 8, 2, 12, 'h');
-  img.hline(8, W - 9, base - 1, 'S');
-  // the saucer: a flattened white dome on a dark drum, between the towers
-  const cx = 118, cy = podTop - 2;
-  img.rect(cx - 30, cy - 4, 60, 6, 'g');
-  img.ellipse(cx, cy - 6, 50, 9, 'h');
-  img.ellipse(cx, cy - 9, 47, 8, 'H');
-  img.ellipse(cx, cy - 12, 38, 7, 'W');
-  img.ellipse(cx - 8, cy - 14, 18, 3, 'W');
-  for (let x = cx - 50; x <= cx + 50; x++) if (bay(x, cy - 3) < 0.5) img.set(x, cy - 3, 'G');
-  // the elevated walkway ring across the front (a pale band on thin legs)
-  for (let x = 4; x < W - 4; x++) {
-    const t = (x - 4) / (W - 8), y = Math.round(base - 22 + Math.sin(t * Math.PI) * 9);
-    img.rect(x, y, 1, 3, 'T'); img.set(x, y - 1, 'W'); if (x % 14 === 0) img.vline(x, y + 3, base - 1, 'h');
-  }
-  img.outline('K');
-  img.pivot = { x: 0.5, y: base / H };
+  const towerM = (t) => ({ ramp: ['h', 'H', 'W'], fn: (p, n) => {
+    if (n[2] > 0.7) return ['G', 'h', 'H'];                                       // the crescent roof
+    const qx = p[0] - t.c[0], qy = p[1] - t.c[1], r = Math.hypot(qx, qy);
+    const inward = (n[0] * qx + n[1] * qy) / (r || 1) < -0.3;                    // facing the curvature centre
+    const arc = Math.atan2(qy, qx) * t.R;
+    if (inward) {                                                                 // dark ribbed glass, floor bands
+      if (Math.floor(p[2]) % 5 === 0) return 'G';
+      return ((Math.floor(arc / 2) % 2) + 2) % 2 ? 'k' : 'g';
+    }
+    if (Math.abs(n[2]) < 0.5 && ((Math.floor(arc / 3) % 3) + 3) % 3 === 0) return ['G', 'h', 'H'];   // the back's fine ribs
+    return null;
+  } });
+  const cylZ = (cx, cy, r, z0, z1) => (p) => { const dr = Math.hypot(p[0] - cx, p[1] - cy) - r, dz = Math.max(z0 - p[2], p[2] - z1); return Math.min(Math.max(dr, dz), 0) + Math.hypot(Math.max(dr, 0), Math.max(dz, 0)); };
+  const objs = [
+    ...towers.map((t) => ({ d: towerD(t), m: towerM(t) })),
+    { d: sd.box([0, -24, 6], [114, 30, 6]), m: { ramp: ['G', 'h', 'H'], fn: (p, n) => {
+      if (n[1] > 0.7 && p[2] > 2.5 && p[2] < 9.5) return (((Math.floor(p[0]) % 7) + 7) % 7 < 2 ? 'h' : 'k'); // the glazed band
+      if (n[2] > 0.7 && Math.abs(p[0]) > 64 && Math.abs(p[0]) < 106 && p[1] > -46 && p[1] < -4) { const k = Math.abs(Math.sin(Math.floor(p[0] / 3) * 12.9898 + Math.floor(p[1] / 3) * 78.233) * 43758.5) % 1; return k < 0.35 ? 'E' : k < 0.85 ? 'l' : 'L'; } // the podium roof garden (2010)
+      return null;
+    } } }, // the podium
+    { d: cylZ(0, -36, 22, 0, 20), m: { ramp: ['g', 'G', 'h'] } },                                   // the saucer's drum
+    { d: sd.ellipsoid([0, -36, 22], [38, 32, 8]), m: { ramp: ['G', 'h', 'H', 'W'], fn: (p, n) => (n[2] > 0.985 ? 'W' : n[2] > 0.9 ? 'H' : n[2] > 0.7 ? 'h' : 'G') } }, // shaded in rings, so it reads as a dome              // the council saucer
+  ];
+  const up = 226, down = 12, w = 240, h = up + down;
+  const img = render(scene(objs), { w, h, cx: w / 2, cy: up, cam: obliqueCam(1, 160), maxT: 420, steps: 320, ambient: 0.22 });
+  img.pivot = { x: 0.5, y: (up + 6) / h };
   return img;
 }
+
 
 /** The 3D TORONTO sign, letters lit in a colour sweep. */
 export function torontoSign() {
@@ -319,28 +306,27 @@ bBn.....KKKK...............KKKK.....
   return img;
 }
 
+
 /**
- * One Freedom Arch (M2.1, Ivan: the arches span the pool top to bottom). A concrete half-ring standing
- * in the north-south plane, rendered with the 3/4 props camera so the far leg rises behind the near one.
- * Pivot = the arch's centre on the water.
+ * M4.1 (Ivan: "make the arches go from the bottom of the pool to the top edge. They start and end on the
+ * concrete"): an arch drawn in the MAP's projection (screen = x, y - z), so its feet land on the ground exactly
+ * `span` apart north-south. Turned `yaw` off north so the curve reads instead of being seen edge-on.
+ * Pivot = the midpoint between its feet.
  */
-export function freedomArch(span = 60, rise = 34) {
-  const R = span / 2, tube = 2.4;
-  const ELEV = (32 * Math.PI) / 180;
-  // seen slightly from the west (like the reference photo) so the curve of each arch reads
-  const YAW = (28 * Math.PI) / 180;
-  const cam = orthoCam([Math.sin(YAW) * Math.cos(ELEV), -Math.cos(YAW) * Math.cos(ELEV), -Math.sin(ELEV)]);
-  // a half torus: ring in the y-z plane (axis x), only above the water; squashed vertically to `rise`
-  const sq = rise / R;
+export function freedomArchMap(span = 92, rise = 30, yaw = 0.42) {
+  const R = span / 2 / Math.cos(yaw), tube = 2.2, sq = rise / R;
   const d = (p) => {
-    const y = p[1], z = p[2] / sq;
-    const q = Math.hypot(Math.hypot(y, z) - R, p[0]) - tube;
-    return p[2] < 0 ? Math.max(q, -p[2]) : q;
+    // into the arch's own frame: its ring lies in the y-z plane, turned by yaw
+    const c = Math.cos(yaw), s = Math.sin(yaw);
+    const x = p[0] * c - p[1] * s, y = p[0] * s + p[1] * c, z = p[2] / sq;
+    const q = Math.hypot(Math.hypot(y, z) - R, x) - tube;
+    // scaled by sq: squashing z stretches distances, and an unscaled bound oversteps the thin tube
+    return (p[2] < 0 ? Math.max(q, -p[2]) : q) * Math.min(1, sq);
   };
-  const w = Math.ceil(R * 2 * Math.sin(YAW)) + 12, h = Math.ceil(rise * Math.cos(ELEV) + R * Math.sin(ELEV) * 2 + 12);
-  const oy = Math.round(h - 4 - R * Math.sin(ELEV));
-  const img = render(scene([{ d, m: { ramp: ['h', 'H', 'W', 'W'] } }]), { w, h, cx: w / 2, cy: oy, cam, ambient: 0.35 });
-  img.pivot = { x: 0.5, y: oy / h };
+  const halfW = Math.ceil(R * Math.sin(yaw)) + 6, up = Math.ceil(R * Math.hypot(Math.cos(yaw), sq)) + 6, down = Math.ceil(span / 2) + 6;
+  const w = halfW * 2, h = up + down;
+  const img = render(scene([{ d, m: { ramp: ['h', 'H', 'W', 'W'] } }]), { w, h, cx: w / 2, cy: up, cam: obliqueCam(), ambient: 0.35 });
+  img.pivot = { x: 0.5, y: up / h };
   return img;
 }
 
@@ -356,6 +342,10 @@ export function lanterns() {
   return img;
 }
 
+/** M4.1: City Hall from above and the Freedom Arches, both in the map's projection */
+export function landmarksM41Preview() {
+  return { frames: [cityHallMap(), freedomArchMap(92, 55, 0.7)], cols: 2 };
+}
 export function downtownPreview() {
   const frames = [
     downtownBuilding({ w: 64, floors: 10, glass: 'blue', seed: 1 }).img,
@@ -363,7 +353,7 @@ export function downtownPreview() {
     downtownBuilding({ w: 80, floors: 8, glass: 'dark', seed: 3 }).img,
     downtownBuilding({ w: 64, floors: 4, brick: 'red', seed: 4, kind: 'warehouse' }).img,
     downtownBuilding({ w: 48, floors: 5, brick: 'buff', seed: 5, kind: 'warehouse' }).img,
-    oldCityHall().img, cityHall(), torontoSign(), freedomArch(), newsVan(),
+    oldCityHall().img, cityHallMap(), torontoSign(), freedomArchMap(92, 55, 0.7), newsVan(),
   ];
   return { frames, cols: 5 };
 }

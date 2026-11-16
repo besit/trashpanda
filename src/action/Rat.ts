@@ -62,8 +62,9 @@ export class Rat {
     return { x: this.facing === 1 ? this.sprite.x : this.sprite.x - w, y: this.sprite.y - 24, w, h: 20, dmg: 1, kb: 0, id: 0 };
   }
 
-  /** M3.4: a shielded rat blocks a hit whose centre is on the side it faces (not while it's reeling) */
-  blocks(h: Hitbox) { return !!this.def.shield && this.alive && this.state !== 'hurt' && (h.x + h.w / 2 - this.sprite.x) * this.facing > 0; }
+  /** M3.4: a shielded rat blocks hits from the side it faces (not while it's reeling). M4.1 (Ivan: "I can still
+   *  kick it from the front, probably because I'm reaching its back"): decided by where the attacker STANDS */
+  blocks(fromX: number) { return !!this.def.shield && this.alive && this.state !== 'hurt' && (fromX - this.sprite.x) * this.facing > 0; }
 
   takeHit(h: Hitbox, fromX: number): boolean {
     if (!this.alive || h.id === this.lastHit) return false;

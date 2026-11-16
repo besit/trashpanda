@@ -13,7 +13,7 @@ import { submitRun } from '../core/Leaderboard';
 import { music } from '../audio/Sequencer';
 import { SONG_MAIN } from '../audio/songs';
 import { sfx } from '../audio/sfx';
-import { CREDITS_LINES, DISCLAIMER_LINES } from '../data/villain';
+import { CREDITS_LINES, CREDIT_LINKS } from '../data/villain';
 import { wantsTouch } from '../input/TouchControls';
 import { MISSIONS } from '../data/missions';
 
@@ -39,7 +39,7 @@ export class EndingScene extends Phaser.Scene {
       new ScrollLayer(this, 'sky_dusk', 0, 0),
       new ScrollLayer(this, 'skyline_dusk', SKYLINE_Y + 22, 0.08, 60),
       new ScrollLayer(this, 'backrow_dusk', BACKROW_Y + 8, 0.25),
-      new ScrollLayer(this, 'facades_qw', FRONT_Y.queen, 0.6, 0, 0, 0xc8a8d8),
+      new ScrollLayer(this, 'facades_qw', FRONT_Y.queen, 1, 0, 0, 0xc8a8d8), // M4.1 (Ivan): the front row moves with the sidewalk
       new ScrollLayer(this, 'street_protected', STREET_Y, 1, 0, 0, 0xd0b8d8),
     ];
     const rider = this.add.sprite(GAME_W / 2, GROUND_Y + 4, 'chars', 'rs_2').setOrigin(0.5, 42 / 44).play('rs_ride');
@@ -83,7 +83,7 @@ export class EndingScene extends Phaser.Scene {
 
   private showCredits() {
     this.roll?.destroy();
-    const lines = ['TRASH PANDA: RIGHT OF WAY', '', ...CREDITS_LINES, '', '', ...DISCLAIMER_LINES, '', '', 'THANK YOU FOR RIDING.', '', 'TORONTO IS A PRETTY GOOD CITY.', 'KEEP FIXING IT.'];
+    const lines = ['TRASH PANDA: RIGHT OF WAY', '', ...CREDITS_LINES, '', ...CREDIT_LINKS.map((l) => l.label), '', 'A WORK OF SATIRE. MADE WITH THE HELP OF AI.', 'THE FULL NOTICE AND EVERY SOURCE: TITLE > ABOUT.', '', '', 'THANK YOU FOR RIDING.', '', 'TORONTO IS A PRETTY GOOD CITY.', 'KEEP FIXING IT.'];
     const c = this.add.container(0, GAME_H).setDepth(10);
     let y = 0;
     for (const l of lines) {

@@ -72,7 +72,7 @@ describe('save system', () => {
 
 describe('M2: districts, missions, saves', async () => {
   // generate the maps directly (no dependency on `npm run assets` having run, e.g. in CI)
-  const GEN: Record<string, string> = { queenwest: 'generateQueenWest', highpark: 'generateHighPark', downtown: 'generateDowntown', eastend: 'generateEastEnd', waterfront: 'generateWaterfront', north: 'generateNorth' };
+  const GEN: Record<string, string> = { queenwest: 'generateQueenWest', highpark: 'generateHighPark', downtown: 'generateDowntown', eastend: 'generateEastEnd', waterfront: 'generateWaterfront' };
   const maps: Record<string, any> = {};
   for (const id of Object.keys(GEN)) { const path = `../../tools/map/${id}.mjs`; const m = await import(/* @vite-ignore */ path); maps[id] = m[GEN[id]](); }
   const { MISSIONS, missionAvailable } = await import('../../src/data/missions');
@@ -80,6 +80,17 @@ describe('M2: districts, missions, saves', async () => {
   const { DISTRICTS } = await import('../../src/data/districts');
   const load = (id: string) => maps[id];
 
+  it('M4.1: a save standing in the dropped North district starts again in Queen West', () => {
+    const m = migrate({ version: 3, player: { scene: 'explore', district: 'north', x: 900, y: 500 } });
+    expect(m?.player).toEqual({ scene: 'explore', district: 'queenwest', x: -1, y: -1 });
+  });
+  it('M4.1: Save the Science sits on the Waterfront; no district leads north', () => {
+    expect(MISSIONS.save_the_science.district).toBe('waterfront');
+    expect(DISTRICTS.north).toBeUndefined();
+    expect(load('waterfront').markers.some((m: any) => m.id === 'save_the_science')).toBe(true);
+    expect(load('waterfront').improvements.science_reopened.removeTag).toBe('boards');
+    for (const id of Object.keys(maps)) expect(maps[id].exits.every((e: any) => e.to in DISTRICTS)).toBe(true);
+  });
   it('v1 saves migrate into Queen West', () => {
     const m = migrate({ version: 1, player: { scene: 'explore', x: 100, y: 200 } });
     expect(m?.player.district).toBe('queenwest');

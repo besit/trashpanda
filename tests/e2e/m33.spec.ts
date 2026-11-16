@@ -78,12 +78,24 @@ test('ABOUT shows the satire notice, the credits and one SOURCES page per claim'
   await page.evaluate(() => { const t = (window as unknown as W).__TP_GAME!.scene.getScene('Title'); t.sel = t.items.findIndex((i: any) => i.label === 'ABOUT'); t.refresh(); });
   await page.keyboard.press('Enter'); await page.waitForTimeout(500);
   const texts = async () => page.evaluate(() => (window as unknown as W).__TP_GAME!.scene.getScene('Title').pageObjs.filter((o: any) => o.text).map((o: any) => o.text as string));
+  // M4.1: credits first (alias + clickable socials), LEFT/RIGHT flip the pages, ENTER goes back
+  expect((await texts()).join(' ')).toContain('CREDITS');
+  expect((await texts()).join(' ')).toContain('SEXWITHAWHALEINC');
+  expect((await texts()).join(' ')).not.toContain('IVAN');
+  const links: string[] = await page.evaluate(() => (window as unknown as W).__TP_GAME!.scene.getScene('Title').pageLinks.map((l: any) => l.url));
+  expect(links).toContain('https://x.com/sexwithawhale');
+  expect(links.some((u) => u.includes('instagram.com/sexwithawhaleinc'))).toBe(true);
+  await page.keyboard.press('ArrowRight'); await page.waitForTimeout(450);
   expect((await texts()).join(' ')).toContain('SATIRE AND PARODY');
   expect((await texts()).join(' ')).toContain('AI CAN MAKE MISTAKES');
-  await page.keyboard.press('Enter'); await page.waitForTimeout(450);
-  expect((await texts()).join(' ')).toContain('CREDITS');
-  await page.keyboard.press('Enter'); await page.waitForTimeout(450);
+  await page.keyboard.press('ArrowRight'); await page.waitForTimeout(450);
   expect((await texts()).join(' ')).toContain('TESCHKE');
+  await page.keyboard.press('ArrowLeft'); await page.waitForTimeout(450);
+  expect((await texts()).join(' ')).toContain('SATIRE AND PARODY');
+  await page.keyboard.press('ArrowLeft'); await page.waitForTimeout(450); await page.keyboard.press('ArrowLeft'); await page.waitForTimeout(450); // wraps to the last page
+  expect((await texts()).join(' ')).toContain('SOURCES');
+  await page.keyboard.press('Enter'); await page.waitForTimeout(450);
+  expect(await page.evaluate(() => (window as unknown as W).__TP_GAME!.scene.getScene('Title').menu.visible)).toBe(true);
   expect(errors).toEqual([]);
 });
 

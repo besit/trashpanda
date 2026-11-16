@@ -23,6 +23,12 @@ export class DepaveSpots {
   readonly rail: boolean;
   constructor(private scene: Phaser.Scene, def: DepaveDef, left: number, private groundY: number) {
     this.fence = def.style === 'fence'; this.stakes = def.style === 'stakes'; this.rail = def.style === 'rail';
+    if (this.stakes) { // M4.1: the runway they mark: a painted centreline between the stakes and a sign
+      const g = scene.add.graphics().setDepth(39);
+      const xs = def.patches.map((d) => left + d);
+      for (let x = xs[0] - 30; x < xs[xs.length - 1] + 30; x += 18) g.fillStyle(0xf6f2e9, 0.9).fillRect(x, groundY - 1, 10, 2);
+      scene.add.bitmapText(left + (def.patches[0] + def.patches[def.patches.length - 1]) / 2, groundY - 74, 'font_outline', 'FUTURE RUNWAY (FICTION): PULL THE SURVEY STAKES').setOrigin(0.5).setDepth(211).setTint(0xff9a2e);
+    }
     for (const dx of def.patches) {
       const x = left + dx;
       const img = this.fence ? scene.add.image(x, groundY - 8, 'world', 'spafence_side').setOrigin(0.5, 1).setDepth(38) : this.stakes ? scene.add.image(x, groundY + 2, 'world', 'surveystake').setOrigin(0.5, 39 / 40).setDepth(42) : this.rail ? scene.add.image(x, groundY + 2, 'world', 'railseg_0').setOrigin(0.5, 1).setDepth(40) : scene.add.image(x, groundY + 2, 'world', 'asphaltpatch').setDepth(40);

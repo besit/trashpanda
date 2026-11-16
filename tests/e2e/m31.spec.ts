@@ -18,6 +18,7 @@ test('new game: pick HARD, enter initials -> a hard run (3 hits a life) with tho
   await page.keyboard.press('Enter'); await page.waitForTimeout(400);      // -> initials
   await page.keyboard.press('ArrowDown'); await page.waitForTimeout(100);  // R -> Q
   for (let i = 0; i < 3; i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(150); }
+  await page.waitForTimeout(400); await page.keyboard.press('Enter'); // M4.1: the disclaimer
   await page.waitForFunction(() => (window as unknown as W).__TP_GAME?.scene.isActive('Cutscene'), null, { timeout: 10_000 });
   await page.keyboard.press('Escape');
   await sceneIs(page, 'Explore');

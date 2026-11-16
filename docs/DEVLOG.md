@@ -639,3 +639,33 @@ Each mission's blurb says where the game departs from reality ([URBAN_RESEARCH �
 
 ### Numbers
 44 browser tests and 16 unit tests pass; 60 fps at 6x CPU throttle on every new scene; first load 0.62 MB.
+
+## 2026-11-16: M4.1, Ivan's M3.3–M3.4 notes
+
+Ivan reviewed M3.3 and M3.4 (M4 he'll look at next) and sent a long list. Two of its items needed his decision, so I asked. **Drop the North district, move its mission.** **Share buttons after each mission**, with 3–5 poster designs in portrait and landscape carrying the player's numbers. The review doc is [docs/reviews/M4.1.md](reviews/M4.1.md).
+
+### What changed
+- **The Bike Bus**, a new mission and the first played on the map itself: lead a bike bus through the East End, stop for nine kids at four stops, ring three SUVs out of the bike lane, beat the school bell. The payoff is a School Street. ![](reviews/m41/12_bikebus_kids_following.png)
+- **Share posters**: four designs × wide/tall, composed from the game's own art in a render texture and upscaled ×5. They go to X, Facebook, Instagram, or the phone's share sheet. ![](reviews/m41/20_share_faceoff_wide.png)
+- **The North is gone.** Save the Science moved to a Queens Quay warehouse of the closed Science Centre's exhibits. Checking the facts turned up the real interim Science Centre at Harbourfront Centre, opened June 29, 2026, which also settled an open 🟡 in URBAN_RESEARCH §5.
+- **Credits:** the notice once at NEW GAME; ABOUT pages flip with LEFT/RIGHT; links you can click; Ivan's alias and socials instead of his name.
+- **Bosses:** the Jet Tug leaves the screen before it turns, hurts only with the tug, and lets you ride its jet; the Highway Mech walks, and its slabs stand on piers; stomps make dust shockwaves; the Mega Rat throws barrels.
+- **Art:** the Don Jail and Colborne Lodge redrawn from Ivan's photos; City Hall and the Freedom Arches modelled in 3D in the map's projection; coloured sailboats instead of the top-down yachts; the SkyDome cleaned up; the streetcar's swoosh white to the nose. ![](reviews/m41/53_city_hall_sprite.png)
+- **Fixes:** the side-view raccoon jitter, the title sidewalk outrunning the buildings, the debug list over the logo, the tennis courts on the path, vignette walkers walking in place.
+
+### Failures along the way
+- **The raccoon still jittered after the first camera fix.** I had rounded the scroll in `update()`, but Arcade copies body positions to sprites in POST_UPDATE, after `update()`, so the camera chased last frame's position. Following in a `postupdate` handler, plus a hysteresis on the lag, put the raccoon on one screen pixel at a steady speed (checked by a bot that records its screen x every frame).
+- **The first Freedom Arch rendered as a stub** (gallery 50a). Squashing an SDF's height stretches its distances, so the ray marcher overstepped the thin tube. Scaling the distance by the squash factor fixed it. Then the geometry was right but unreadable: an arch spanning north–south in a 45° view folds its far half into a hook. Turning it off-axis (yaw 0.7) and raising it makes both feet land on the concrete and the curve read. Ivan's aerial of City Hall shows the real arches leaning the same way.
+- **The Bike Bus never started in the first bot run.** The route was in the map generator's output but `build-assets` writes a whitelist of map fields, so `bikebus` was dropped. Added to the list.
+- **Adding a twelfth mission would have hidden the ending:** it fires when *every* mission is done, and the Bike Bus wasn't in Death by Highway's prerequisites. A player could beat the finale and get no ending. The Bike Bus is now required before the finale.
+- **Two old tests failed for the right reasons:** the M3.4 test waited for the Jet Tug's removed `taxi` phase, and the ending test expected 11 / 11 missions.
+- **Text on text, again:** the "THE BELL RANG!" card landed on the bus HUD, and two boss hints wrapped onto a third line and ran into callouts. The HUD hides on the result card, and a scan of every hint line keeps them within two lines.
+
+### Decisions
+- **Explore missions** reuse the side-view win path (award, save, debrief, Dog Fjord's beat, the map payoff), so the Bike Bus feels like every other mission at the end.
+- **The share image is ready before you tap:** browsers only allow a share sheet or a popup inside the tap itself, so the PNG is rendered whenever the poster changes.
+- **Desktop sharing saves the poster.** X and Facebook can't take an image from a web page; the poster is saved for the player to attach.
+
+### Numbers
+48 browser tests and 18 unit tests pass.
+

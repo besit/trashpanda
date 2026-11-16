@@ -5,9 +5,10 @@ import { Img } from '../lib/raster.mjs';
 import { rng } from '../lib/rng.mjs';
 import { drawText } from './font.mjs';
 
-/** a pile of rails + ties waiting (0) and the laid track (1); 44x18, pivot at the bottom */
+/** a pile of rails + ties waiting (0) and the laid track (1); the laid track is 70 px, the piles' spacing, so
+ *  the segments join into one line (M4.1, Ivan: "the tracks I lay do not connect") */
 export function railSeg(frame = 0) {
-  const W = 44, H = 18, img = new Img(W, H);
+  const W = frame === 0 ? 44 : 72, H = 18, img = new Img(W, H);
   if (frame === 0) {
     for (let i = 0; i < 4; i++) img.rect(4 + i * 2, H - 4 - i * 3, 36 - i * 4, 2, i % 2 ? 'h' : 'G'); // rails stacked
     img.rect(2, H - 3, 40, 3, 'x'); img.rect(8, H - 7, 6, 4, 'X'); img.rect(30, H - 7, 6, 4, 'X');   // ties
@@ -18,13 +19,13 @@ export function railSeg(frame = 0) {
   img.outline('K'); img.pivot = { x: 0.5, y: 1 };
   return img;
 }
-/** a construction hoarding panel: blue with the project name; 64x40 */
-export function hoarding(text = 'ONTARIO LINE') {
-  const W = 64, H = 40, img = new Img(W, H);
+/** a construction hoarding panel: blue with the project name on two lines; 64x50 (M4.1: the name didn't fit) */
+export function hoarding() {
+  const W = 64, H = 50, img = new Img(W, H);
   img.rect(0, 0, W, H - 2, 'U'); img.rect(0, 0, W, 2, 'C'); img.rect(0, H - 4, W, 2, 'u');
   for (const x of [2, W - 4]) img.rect(x, 0, 2, H, 'g');
-  img.rect(6, 6, W - 12, 12, 'W'); drawText(img, text, W / 2, 9, 'u');
-  drawText(img, 'OPENING', W / 2, 22, 'W'); drawText(img, 'SOON', W / 2, 30, 'Y');
+  img.rect(6, 5, W - 12, 21, 'W'); drawText(img, 'ONTARIO', W / 2, 7, 'u'); drawText(img, 'LINE', W / 2, 16, 'R');
+  drawText(img, 'OPENING', W / 2, 29, 'W'); drawText(img, 'SOON', W / 2, 38, 'Y');
   img.outline('K'); img.pivot = { x: 0.5, y: 1 };
   return img;
 }
@@ -89,8 +90,8 @@ export function highwayMech(frame = 0) {
 /** the side-view strip under the Gardiner: the deck overhead on its piers, the lake's towers beyond (768x140) */
 export function gardinerStrip(W = 768) {
   const H = 140, img = new Img(W, H), r = rng(1955);
-  // the far side: Southcore towers through the gaps
-  for (let x = 0; x < W; x += 56) { const h = r.int(40, 70), w = r.int(34, 50); img.rect(x, 110 - h, w, h, 'u'); for (let y = 112 - h; y < 108; y += 6) for (let xx = x + 3; xx < x + w - 3; xx += 6) img.rect(xx, y, 3, 3, r.chance(0.3) ? 'D' : 'U'); }
+  // M4.1 (Ivan: "the weird buildings under the Gardiner that are floating"): no towers; through the gaps you see sky
+  void r;
   // the deck overhead: its underside is dark, a thick edge beam, a guardrail along the top
   img.rect(0, 0, W, 4, 'h'); for (let x = 0; x < W; x += 10) img.rect(x, 0, 2, 6, 'H');
   img.rect(0, 6, W, 26, 'S'); img.rect(0, 6, W, 3, 'T'); img.rect(0, 28, W, 4, 's'); img.rect(0, 32, W, 6, 'g');
@@ -103,6 +104,15 @@ export function gardinerStrip(W = 768) {
   return img;
 }
 
+/** an orange-and-white construction barrel (the Mega Rat throws them; M4.1) 14x16 */
+export function barrel() {
+  const W = 14, H = 16, img = new Img(W, H);
+  img.rect(1, 1, 12, 14, 'o'); for (const y of [3, 8]) { img.rect(1, y, 12, 3, 'W'); }
+  img.vline(2, 1, 14, 'O'); img.vline(11, 1, 14, 'r'); img.rect(0, 14, 14, 2, 'k'); img.rect(3, 0, 8, 1, 'O');
+  img.outline('K'); img.pivot = { x: 0.5, y: 0.5 };
+  return img;
+}
+
 export function m4Preview() {
-  return { frames: [railSeg(0), railSeg(1), hoarding(), subwaySide(), slabPlatform(), highwayMech(0), highwayMech(1), gardinerStrip().crop(0, 0, 384, 140)], cols: 4 };
+  return { frames: [railSeg(0), railSeg(1), hoarding(), subwaySide(), slabPlatform(), barrel(), highwayMech(0), highwayMech(1), gardinerStrip().crop(0, 0, 384, 140)], cols: 4 };
 }

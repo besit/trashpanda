@@ -144,16 +144,30 @@ export const UPGRADES: Record<string, Upgrade> = {
   },
   science_reopened: {
     id: 'science_reopened',
-    name: 'THE SCIENCE CENTRE REOPENS',
+    name: 'SCIENCE BY THE LAKE',
     tree: 'publicSpace',
     livability: 3,
     categories: { greenPublic: 6, walking: 3, transit: 3 },
     mapPatches: ['science_reopened'],
-    // game fiction: in reality the Don Mills building stays closed and a new one is planned at Ontario Place (URBAN_RESEARCH section 5)
-    headline: 'THE BOARDS COME DOWN. THE SCIENCE CENTRE REOPENS.',
-    blurb: 'IN THE GAME IT REOPENS. IN REALITY ONTARIO SHUT IT IN JUNE 2024 OVER ITS ROOF PANELS (REPAIRS: AT LEAST $22 MILLION), THE AUDITOR GENERAL CALLED THE DECISION TO MOVE IT "NOT FULLY INFORMED", AND THE NEW ONE AT ONTARIO PLACE IS DUE IN 2029.',
-    source: 'ONTARIO MINISTRY OF INFRASTRUCTURE (JUNE 21, 2024); AUDITOR GENERAL OF ONTARIO (DEC 2023, DEC 2024)',
+    // M4.1: the warehouse, the rats and the pop-up are game fiction; the closure, the storage, the interim site and
+    // the 2029 date are real (URBAN_RESEARCH section 5)
+    headline: 'THE BOARDS COME DOWN. THE EXHIBITS COME BACK OUT.',
+    blurb: 'ONTARIO SHUT THE DON MILLS SCIENCE CENTRE IN JUNE 2024 OVER ITS ROOF PANELS AND PUT THE EXHIBITS IN STORAGE. A SMALLER INTERIM CENTRE OPENED AT HARBOURFRONT IN JUNE 2026; THE NEW ONE AT ONTARIO PLACE IS DUE IN 2029. THE RATS AND THE WAREHOUSE ARE FICTION.',
+    source: 'ONTARIO MINISTRY OF INFRASTRUCTURE (JUNE 21, 2024); AUDITOR GENERAL OF ONTARIO (DEC 2024); GLOBAL NEWS (JUNE 29, 2026)',
     stat: { key: 'parksCreated', amount: 1 },
+  },
+  school_street: {
+    id: 'school_street',
+    name: 'A SCHOOL STREET',
+    tree: 'walking',
+    livability: 2,
+    categories: { safety: 5, cycling: 3, walking: 3, carDependence: 2 },
+    mapPatches: ['school_street'],
+    // M4.1: the route, the school and its School Street are the game's; bike buses and School Streets are real (URBAN_RESEARCH section 24)
+    headline: 'THE BIKE BUS RUNS. THE STREET OUTSIDE THE SCHOOL CLOSES TO CARS AT THE BELL.',
+    blurb: 'A BIKE BUS IS A GROUP RIDE TO SCHOOL: A SET ROUTE, GROWN-UPS LEADING, KIDS JOINING AT STOPS ALONG THE WAY. TORONTO PARENTS RUN THEM. A "SCHOOL STREET" CLOSES THE ROAD OUTSIDE A SCHOOL TO CARS AT DROP-OFF; TORONTO TRIED ONE ON MOUNTVIEW AVE IN 2019.',
+    source: 'GREEN COMMUNITIES CANADA (ONTARIO BIKE BUSES); TORONTO STAR (APRIL 28, 2024); 8 80 CITIES (MOUNTVIEW AVE SCHOOL STREET, 2019)',
+    stat: { key: 'protectedIntersections', amount: 1 },
   },
   quiet_airport: {
     id: 'quiet_airport',

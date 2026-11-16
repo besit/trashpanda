@@ -12,6 +12,7 @@
 //   slips of moored yachts between them (Ivan's M3.1 note + aerial reference): HTO Park (yellow umbrellas),
 //   the Power Plant gallery, a quay of trees, Harbour Square Park West with the Sundial Folly at the foot
 //   of University, the Jack Layton Ferry Terminal at the foot of Bay with a ferry, Sugar Beach
+// - on Queens Quay across from the Power Plant (M4.1): a warehouse of the closed Science Centre's exhibits
 // - out west at the foot of Strachan: Ontario Place, the pods and the Cinesphere, and Dog Fjord's fictional
 //   MEGA SPA on the island (mission 8 opens it up and the spa goes)
 // Exits (matched by street name): north on Strachan to Queen West (Ossington, Strachan and Bellwoods all
@@ -23,6 +24,7 @@ export const LAKESHORE = 28, QQ = 52;
 // M3.2 (Ivan): Strachan in the west, heading for Ontario Place; Spadina moved east; University-Bay tighter
 export const ST = 19, SP = 40, UN = 84, BY = 104;
 const LAKE_Y = 65;
+const SCI = { x0: 53, x1: 62 };   // M4.1: the Science Centre's exhibits, in a Queens Quay warehouse
 const DECK_Y = (LAKESHORE - 4) * TS + 6;   // the Gardiner deck's bottom edge (screen px)
 
 export function generateWaterfront() {
@@ -95,7 +97,15 @@ export function generateWaterfront() {
 
   // ---------- between Lake Shore and Queens Quay: Harbourfront ----------
   for (const [a, b] of [[UN + 4, BY], [BY + 4, W]]) towers(a, b, { base: (QQ - 3) * TS });
-  for (const [a, b] of [[0, ST], [ST + 4, SP], [SP + 4, UN]]) D.row(a, b, { base: (QQ - 3) * TS }, 'shop', [1, 2], ['cream', 'grey', 'buff']);
+  for (const [a, b] of [[0, ST], [ST + 4, SP], [SP + 4, SCI.x0], [SCI.x1, UN]]) D.row(a, b, { base: (QQ - 3) * TS }, 'shop', [1, 2], ['cream', 'grey', 'buff']);
+  // M4.1 (Ivan: drop the North, move Save the Science near Ontario Place): a red-brick warehouse on Queens Quay,
+  // across from the Power Plant, holding the closed Science Centre's exhibits (the warehouse is fiction; the
+  // storage is real). Boarded up until mission 6 brings the exhibits back out
+  const sci = D.addBuilding(SCI.x0 * TS, (SCI.x1 - SCI.x0) * TS, { w: (SCI.x1 - SCI.x0) * TS, d: 40, floors: 2, brick: 'red', seed: 2024, kind: 'warehouse' }, { base: (QQ - 3) * TS }, { graffiti: null });
+  for (let i = 0; i < 3; i++) D.prop('plywood', (SCI.x0 + 1.4) * TS + i * 30, sci.base + 1, { tag: 'boards', depth: sci.base + 1 });
+  D.prop('closedsign', ((SCI.x0 + SCI.x1) / 2) * TS, sci.base - 26, { tag: 'boards', depth: sci.base + 2 });
+  D.landmarks.push({ id: 'sciencestore', x: ((SCI.x0 + SCI.x1) / 2) * TS, y: sci.base + 10, label: 'THE SCIENCE CENTRE\'S EXHIBITS', fact: 'THE SCIENCE CENTRE CLOSED\nIN JUNE 2024. ITS EXHIBITS\nWENT INTO STORAGE.' });
+  D.markers.push({ id: 'save_the_science', x: (SCI.x1 - 1) * TS, y: (QQ - 2) * TS + 8, label: 'SAVE THE SCIENCE' });
   for (const [a, b] of [[0, ST], [ST + 4, SP], [SP + 4, UN], [UN + 4, BY], [BY + 4, W]]) {
     let x = a;
     while (x < b) { let w = r.pick([3, 4]); if (x + w > b) w = b - x; if (w < 3) break; D.addBuilding(x * TS, w * TS, { w: w * TS, d: 40, floors: r.int(2, 3), brick: r.pick(['red', 'buff', 'darkred']), seed: 700 + D.bid, kind: 'warehouse' }, { top: (LAKESHORE + 7) * TS }, { graffiti: null }); x += w; }
@@ -116,10 +126,10 @@ export function generateWaterfront() {
   // between them that have yachts") ----------
   const quay = (x0, x1, deep, tile) => { for (let y = LAKE_Y; y <= LAKE_Y + deep; y++) for (let x = x0; x <= x1; x++) D.set(x, y, typeof tile === 'function' ? tile(x, y) : tile); };
   const slip = (x0, x1, deep) => {
-    // a finger dock down the middle; yachts (and the odd sailboat) moored either side of it
+    // a finger dock down the middle; sailboats moored either side of it (M4.1: no more top-down yachts)
     const mx = ((x0 + x1 + 1) / 2) * TS;
     D.prop('marinadock', mx, (LAKE_Y + 1) * TS - 2, { depth: (LAKE_Y + 1) * TS - 4 });
-    for (let y = LAKE_Y + 2; y < LAKE_Y + deep - 1; y += 3) for (const side of [-1, 1]) if (r.chance(0.8)) D.critters.push({ kind: r.chance(0.75) ? 'yacht' : 'moored', x: mx + side * 18, y: y * TS + 8 });
+    for (let y = LAKE_Y + 2; y < LAKE_Y + deep - 1; y += 3) for (const side of [-1, 1]) if (r.chance(0.8)) D.critters.push({ kind: 'moored', x: mx + side * 18, y: y * TS + 8 });
   };
   // M3.4: Little Norway Park (the site of the RNoAF's wartime camp; a park since 1986) on the quay across from
   // the island airport, with its ball diamond and the Norwegian boulder. Dog Fjord's rats have staked it out
@@ -229,7 +239,10 @@ export function generateWaterfront() {
     if (x % 4 === 1) down.addProps.push({ type: 'prop', key: x % 8 === 1 ? 'tree_a' : 'tree_c', x: x * TS + 8, y: (LAKESHORE - 2) * TS + 12, solid: 4 });
     if (x % 9 === 5) down.addProps.push({ type: 'prop', key: 'bench', x: x * TS + 8, y: (LAKESHORE - 3) * TS + 12 });
   }
-  D.improvements = { public_waterfront: pub, quiet_airport: quiet, gardiner_down: down };
+  // mission 6's payoff: the boards come down, the exhibits come back out (a pop-up by the lake: game fiction)
+  const sciBase = (QQ - 3) * TS, sciMid = ((SCI.x0 + SCI.x1) / 2) * TS;
+  const science = { tiles: [], removeTag: 'boards', addProps: [{ type: 'prop', key: 'openbanner', x: sciMid, y: sciBase - 26, depth: sciBase + 2 }, { type: 'prop', key: 'vandegraaff', x: sciMid - 40, y: sciBase + 14, depth: sciBase + 14 }, { type: 'prop', key: 'bikering', x: SCI.x0 * TS + 8, y: (QQ - 1) * TS }, { type: 'prop', key: 'bikering', x: SCI.x1 * TS - 8, y: (QQ - 1) * TS }] };
+  D.improvements = { public_waterfront: pub, quiet_airport: quiet, gardiner_down: down, science_reopened: science };
   D.markers.push({ id: 'death_by_highway', x: 92 * TS, y: (LAKESHORE + 6) * TS + 6, label: 'DEATH BY HIGHWAY' });
 
   // ---------- furniture, traffic ----------

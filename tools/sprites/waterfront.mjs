@@ -60,11 +60,14 @@ export function pinkUmbrella() {
   return img;
 }
 /** a sailboat (2 frames: a little bob) */
-export function sailboat(frame = 0) {
+/** M4.1 (Ivan): sailboats in colours: mostly white sails, some red, blue or yellow */
+export const SAIL_COLOURS = { w: ['W', 'H', 'R'], r: ['R', 'r', 'W'], b: ['c', 'U', 'W'], y: ['y', 'o', 'U'] };
+export function sailboat(frame = 0, colour = 'w') {
+  const [s1, s2, hull] = SAIL_COLOURS[colour];
   const img = new Img(26, 30);
-  img.poly([[13, 2], [13, 22], [24, 22]], 'W'); img.poly([[12, 6], [12, 22], [4, 22]], 'H');
+  img.poly([[13, 2], [13, 22], [24, 22]], s1); img.poly([[12, 6], [12, 22], [4, 22]], s2);
   img.vline(12, 2, 23, 'x');
-  img.poly([[2, 23 + frame], [24, 23 + frame], [21, 27 + frame], [5, 27 + frame]], 'R');
+  img.poly([[2, 23 + frame], [24, 23 + frame], [21, 27 + frame], [5, 27 + frame]], hull);
   img.hline(0, 25, 28, 'C');
   img.outline('K'); img.pivot = { x: 0.5, y: 28 / 30 };
   return img;
@@ -134,5 +137,5 @@ export function lakeStrip(W = 768) {
 }
 
 export function waterfrontPreview() {
-  return { frames: [cnTowerMap(), stadium(), cinesphere(), pod(), pinkUmbrella(), sailboat(0), gardinerSeg(), spaFence(), megaSpaFacade()], cols: 9 };
+  return { frames: [cnTowerMap(), stadium(), cinesphere(), pod(), pinkUmbrella(), sailboat(0), sailboat(0, 'r'), sailboat(0, 'b'), sailboat(0, 'y'), gardinerSeg(), spaFence(), megaSpaFacade()], cols: 9 };
 }

@@ -61,6 +61,8 @@ export interface MapData {
   eggs?: { id: string; x: number; y: number; w: number; h: number; label: string; fact: string }[];
   /** hidden extra lives (M2.1) */
   lifeTokens?: { x: number; y: number }[];
+  /** M4.1: the Bike Bus's route (East End) */
+  bikebus?: import('./BikeBus').BikeBusDef;
 }
 
 /** depth band for things under an overpass: above the ground (-10) and decals (-9), below the deck overlay */

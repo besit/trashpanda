@@ -37,7 +37,7 @@ type Lock = { kind: 'wave' | 'boss' | 'build' | 'caught' | 'depave'; left: numbe
 export class ActionScene extends Phaser.Scene {
   private input2!: InputManager;
   private touch?: TouchControls;
-  private mission!: MissionDef;
+  private mission!: MissionDef & { action: NonNullable<MissionDef['action']> };
   private player!: SidePlayer;
   private rats: Rat[] = [];
   private cars: SuvRat[] = [];
@@ -84,6 +84,13 @@ export class ActionScene extends Phaser.Scene {
   private finished = false;
   private killed = 0;
   private usedHits = new Set<number>();
+  /**
+   * M4.1 (Ivan: "the raccoon pixels jump between 2 positions" when riding right at a steady speed): our own
+   * camera follow. Phaser floors the camera scroll and rounds the sprite separately, so their fractions beat
+   * against each other and the raccoon jittered by a pixel. Here the scroll is derived from the raccoon's
+   * ROUNDED x plus a rounded lag, so at a steady speed the raccoon sits on one screen pixel.
+   */
+  private follow = { on: false, lerp: 0.15, x: 0, lag: 0 };
 
   constructor() { super('Action'); }
 
@@ -94,7 +101,8 @@ export class ActionScene extends Phaser.Scene {
   private replay = false;
 
   create(data: { mission?: string; debug?: boolean; replay?: boolean }) {
-    this.mission = MISSIONS[data?.mission ?? 'bike_lane_war'] ?? MISSIONS.bike_lane_war;
+    const want = MISSIONS[data?.mission ?? 'bike_lane_war'];
+    this.mission = (want?.action ? want : MISSIONS.bike_lane_war) as MissionDef & { action: NonNullable<MissionDef['action']> }; // explore missions never come here
     this.debugRun = !!data?.debug; this.replay = !!data?.replay;
     this.rats = []; this.cars = []; this.boss = undefined; this.escort = undefined; this.chase = undefined; this.build = undefined;
     this.waveIdx = 0; this.lock = null; this.finished = false; this.killed = 0; this.layers = []; this.usedHits.clear();
@@ -114,7 +122,7 @@ export class ActionScene extends Phaser.Scene {
     this.platforms = this.physics.add.staticGroup();
     if (a.bg === 'queen' && a.street === 'plain') this.queenDecor();
     // M4 (mission 9): construction hoardings along the sidewalk
-    if (a.decor === 'hoarding') for (let x = 160; x < a.length; x += 230) this.add.image(x, STREET_Y + 12, 'world', 'hoarding').setOrigin(0.5, 1).setDepth(20).setScale(1.4);
+    if (a.decor === 'hoarding') for (let x = 160; x < a.length; x += 230) this.add.image(x, STREET_Y + 12, 'world', 'hoarding').setOrigin(0.5, 1).setDepth(20).setScale(1.2);
 
     // the Lane Eater mission starts the raccoon clear of the machine creeping in from the left
     this.player = new SidePlayer(this, a.autoscroll ? 150 : 60, this.groundY - 10);
@@ -152,13 +160,14 @@ export class ActionScene extends Phaser.Scene {
     const cam = this.cameras.main;
     cam.setBounds(0, 0, this.worldW, GAME_H).setRoundPixels(true);
     if (a.autoscroll) this.player.shield = () => !!this.peloton?.absorb();
-    else cam.startFollow(this.player.sprite, true, 0.15, 0.1, -40, 0);
+    else { this.follow = { on: true, lerp: 0.15, x: Phaser.Math.Clamp(this.player.sprite.x + 40 - GAME_W / 2, 0, this.worldW - GAME_W), lag: 0 }; this.follow.lag = Math.round(this.follow.x - this.player.sprite.x); cam.setScroll(Math.round(this.follow.x), 0); }
 
     this.buildHud();
     if (wantsTouch()) { this.touch = new TouchControls(this); this.touch.setLabel('act', 'PUMP'); }
     this.scale.on('resize', this.layoutHud, this);
     this.events.on('resume', () => this.input2.swallow());
-    this.events.once('shutdown', () => this.scale.off('resize', this.layoutHud, this));
+    this.events.on('postupdate', this.followCamera, this);
+    this.events.once('shutdown', () => { this.scale.off('resize', this.layoutHud, this); this.events.off('postupdate', this.followCamera, this); });
     music.play(SONG_ACTION);
     void this.intro();
     if (DEBUG) this.input.keyboard?.on('keydown-V', () => void this.win());
@@ -174,6 +183,22 @@ export class ActionScene extends Phaser.Scene {
       state: () => (!this.sys.isActive() ? { finished: true } : { x: this.player.sprite.x, frozen: this.player.frozen, hp: this.player.hp,
         rats: this.rats.filter((r) => r.alive).map((r) => Math.round(r.sprite.x)), carsAt: this.cars.filter((c) => c.alive && !c.tame).map((c) => [Math.round(c.x), c.dir]), bossX: this.boss?.alive ? Math.round(this.boss.sprite.x) : this.monster?.alive ? Math.round(this.monster.x) : null, depaved: this.depave?.done ?? null, spots: this.depave?.openSpots ?? null, monsterStalled: this.monster?.stalled ?? null, tug: this.tug ? { x: Math.round(this.tug.x), hp: this.tug.hp, phase: this.tug.phase, dir: this.tug.dir } : null, wrecker: this.wrecker ? { x: Math.round(this.wrecker.x), hp: this.wrecker.hp, phase: this.wrecker.phaseName, ball: this.wrecker.ballPos() } : null, mech: this.mech ? { x: Math.round(this.mech.x), hp: this.mech.hp, phase: this.mech.phase } : null, bossMove: this.boss?.move ?? null, alarms: this.patrols.filter((p) => p.alarmed).length, cases: this.cases.filter((c) => c.active).length,
         front: this.escort ? Math.round(this.escort.front) : null, scrolling: this.scrolling, peloton: this.peloton?.size ?? null, eater: this.eater ? { x: Math.round(this.eater.x), boss: this.eater.boss, hp: this.eater.totalHp, hot: this.eater.hot, move: this.eater.state, dir: this.eater.facing } : null, haul: this.chase ? Math.round(this.chase.rearX) : null, lock: this.lock?.kind ?? null, wave: this.waveIdx, boss: this.boss ? this.boss.hp : null, escort: this.escort ? { car: Math.round(this.escort.car.x), delay: +this.escort.delay.toFixed(1), done: this.escort.done } : null, chase: this.chase?.state ?? null, built: this.build?.built ?? null, cars: this.cars.filter((c) => c.alive).length, finished: this.finished, camX: Math.round(this.cameras.main.scrollX), song: music.current }) };
+  }
+
+  /** the pixel-stable follow; runs on POST_UPDATE, after Arcade has copied the body onto the sprite */
+  private followCamera(_t: number, dt: number) {
+    if (!this.follow.on || this.scrolling) return;
+    const cam = this.cameras.main;
+    const lo = this.lock ? this.lock.left : 0, hi = this.lock ? this.lock.left : this.worldW - GAME_W;
+    const x = this.player.sprite.x;
+    const target = Phaser.Math.Clamp(x + 40 - GAME_W / 2, lo, hi);
+    this.follow.x += (target - this.follow.x) * Math.min(1, this.follow.lerp * (dt / 16.67));
+    // the camera's lag behind the raccoon in whole pixels, with hysteresis: frame times wobble, so the true lag
+    // hovers around a half pixel; it changes only when it has really moved
+    const raw = this.follow.x - x;
+    if (Math.abs(raw - this.follow.lag) > 0.75) this.follow.lag = Math.round(raw);
+    cam.setScroll(Phaser.Math.Clamp(Math.round(x) + this.follow.lag, lo, hi), cam.scrollY);
+    for (const l of this.layers) l.update(cam.scrollX);
   }
 
   private buildBackground() {
@@ -242,9 +267,14 @@ export class ActionScene extends Phaser.Scene {
     return true;
   }
 
-  /** a prop you can stand on (one-way from below), its top at `top` */
-  private oneWay(x: number, top: number, w: number, key: string) {
-    this.add.image(x, this.groundY + 2, 'world', key).setOrigin(0.5, 1).setDepth(48);
+  /** a prop you can stand on (one-way from below), its top at `top`. `float`: drawn at that height on a
+   *  concrete pier, not standing on the ground (M4.1, Ivan: the slabs showed on the ground) */
+  private oneWay(x: number, top: number, w: number, key: string, float = false) {
+    if (float) {
+      const pier = this.add.graphics().setDepth(47);
+      pier.fillStyle(0x16121f).fillRect(x - 8, top + 10, 16, this.groundY - top - 8).fillStyle(0x7b7889).fillRect(x - 7, top + 10, 14, this.groundY - top - 9).fillStyle(0xa39c8b).fillRect(x - 7, top + 10, 3, this.groundY - top - 9);
+      this.add.image(x, top + 10, 'world', key).setOrigin(0.5, 1).setDepth(48);
+    } else this.add.image(x, this.groundY + 2, 'world', key).setOrigin(0.5, 1).setDepth(48);
     const z = this.add.zone(x, top + 3, w, 6);
     this.physics.add.existing(z, true);
     const b = z.body as Phaser.Physics.Arcade.StaticBody;
@@ -406,7 +436,7 @@ export class ActionScene extends Phaser.Scene {
   // ---------------- arena lock ----------------
   private lockArena(kind: Lock['kind'], total: number, suvs = 0): Lock {
     const cam = this.cameras.main;
-    cam.stopFollow();
+    cam.stopFollow(); this.follow.on = false;
     // lock exactly where the camera already is: no jump
     const left = Phaser.Math.Clamp(Math.round(cam.scrollX), 0, this.worldW - GAME_W);
     cam.setScroll(left, cam.scrollY);
@@ -432,9 +462,9 @@ export class ActionScene extends Phaser.Scene {
     // Phaser's startFollow snaps the camera onto the target immediately (the M1.1 "jump on unlock"),
     // so keep the current scroll and ease the lerp in from near-zero.
     const sx = cam.scrollX, sy = cam.scrollY;
-    cam.startFollow(this.player.sprite, true, 0.01, 0.1, -40, 0);
+    this.follow = { on: true, lerp: 0.01, x: cam.scrollX, lag: Math.round(cam.scrollX - this.player.sprite.x) };
     cam.setScroll(sx, sy);
-    this.tweens.add({ targets: cam.lerp, x: 0.15, duration: 1400, ease: 'Sine.easeIn' });
+    this.tweens.add({ targets: this.follow, lerp: 0.15, duration: 1400, ease: 'Sine.easeIn' });
     this.flashGo(msg);
     sfx.ding();
   }
@@ -618,33 +648,34 @@ export class ActionScene extends Phaser.Scene {
         // still in its way; a jump from it clears the roof. No more shelters to hide on
         for (const sx of [l.left + 90, l.left + GAME_W / 2, l.left + GAME_W - 90]) this.oneWay(sx, this.groundY - 26, 30, 'pallets');
         this.flashGo('BOSS!'); music.play(SONG_BOSS);
-        this.time.delayedCall(1300, () => this.say('JUMP ITS CHARGE FROM THE PALLETS.\nSTOMP ITS ROOF. PUMP THE TYRES WHEN IT STALLS!', 0xfff08a, 3200));
+        this.time.delayedCall(1300, () => this.say('JUMP ITS CHARGE FROM THE PALLETS.\nSTOMP ITS ROOF. PUMP IT WHEN IT STALLS!', 0xfff08a, 3200));
       }
       else if (a.boss?.kind === 'spadigger' && !this.digger && px > a.boss.at) {
         const l = this.lockArena('boss', 2);
         this.digger = new SpaDigger(this, l.left + GAME_W - 100, this.groundY, { left: l.left, right: l.left + GAME_W }, (fx) => { if (this.player.hurt(fx)) { shake(this, 150, 0.01); hitStop(this, 70); } });
         this.time.delayedCall(1500, () => { const L2 = this.lock; if (L2) ['basic', 'lobbyist'].forEach((k, i) => this.time.delayedCall(i * 600, () => this.spawnRat(k as RatKind, L2.left + 14))); });
         this.flashGo('BOSS!'); music.play(SONG_BOSS);
-        this.time.delayedCall(1300, () => this.say('THE BUCKET SLAMS WHERE ITS SHADOW FALLS.\nPUMP THE ARM WHILE IT\'S STUCK. STOMP THE CAB!', 0xfff08a, 3400));
+        this.time.delayedCall(1300, () => this.say('THE BUCKET SLAMS WHERE ITS SHADOW FALLS.\nPUMP THE STUCK ARM. STOMP THE CAB!', 0xfff08a, 3400));
       }
       else if (a.boss?.kind === 'jettug' && !this.tug && px > a.boss.at) {
         const l = this.lockArena('boss', 0);
         this.tug = new JetTug(this, l.left + GAME_W - 120, this.groundY, { left: l.left, right: l.left + GAME_W }, (x, d) => this.rollCase(x, d));
+        this.physics.add.collider(this.player.sprite, this.tug.platform); // ride the jet's fuselage
         this.flashGo('BOSS!'); music.play(SONG_BOSS);
-        this.time.delayedCall(1300, () => this.say('ITS JET BLAST BLOWS YOU BACK: JUMP IT.\nSTOMP THE CABIN. PUMP THE TUG WHEN IT REFUELS!', 0xfff08a, 3400));
+        this.time.delayedCall(1300, () => this.say('ONLY THE TUG HURTS. RIDE THE JET!\nSTOMP ITS ROOF. PUMP IT WHEN IT REFUELS!', 0xfff08a, 3600));
       }
       else if (a.boss && a.boss.kind !== 'laneeater' && a.boss.kind !== 'monstersuv' && a.boss.kind !== 'spadigger' && a.boss.kind !== 'jettug' && a.boss.kind !== 'wrecker' && a.boss.kind !== 'highwaymech' && !this.boss && px > a.boss.at) this.startBoss();
       else if (a.boss?.kind === 'highwaymech' && !this.mech && px > a.boss.at) {
         const l = this.lockArena('boss', 0);
         this.mech = new HighwayMech(this, l.left + GAME_W - 88, this.groundY, { left: l.left, right: l.left + GAME_W }, {
           hurt: (fx) => { if (this.player.hurt(fx)) { shake(this, 150, 0.012); hitStop(this, 80); } },
-          lane: (x) => { this.oneWay(x, this.groundY - 52, 66, 'slabplat'); puff(this, x, this.groundY - 52, 0xa39c8b, 12, 30, 105); shake(this, 200, 0.01); },
+          lane: (x) => { this.oneWay(x, this.groundY - 52, 66, 'slabplat', true); puff(this, x, this.groundY - 52, 0xa39c8b, 12, 30, 105); shake(this, 200, 0.01); this.say('A SLAB FELL! JUMP ON ITS DECK FROM THERE!', 0x9bd35a, 2200); },
         });
         this.flashGo('FINAL BOSS!'); music.play(SONG_BOSS);
-        this.time.delayedCall(1500, () => this.say('JUMP THE SHOCKWAVES AND THE CARS.\nWHEN THE VENT GLOWS, PUMP IT. JUMP ON ITS DECK FROM A SLAB!', 0xfff08a, 3600));
+        this.time.delayedCall(1500, () => this.say('JUMP THE SHOCKWAVES AND THE CARS!\nPUMP THE GLOWING VENT. STOMP ITS DECK!', 0xfff08a, 3600));
       }
       else if (a.build && !this.build && this.chaseDone && px > a.build.at) this.startBuild();
-      else if (a.chase?.startAt && !this.chase && px > a.chase.startAt) { this.chase = new Chase(this, a.chase, px, this.groundY); this.flashGo('AFTER THEM!'); this.say('THEY\'VE GOT THE EXHIBITS! CATCH THEM BEFORE THE TRUCK!', 0xfff08a, 2400); }
+      else if (a.chase?.startAt && !this.chase && px > a.chase.startAt) { this.chase = new Chase(this, a.chase, px, this.groundY); this.flashGo('AFTER THEM!'); this.say('THEY\'VE GOT THE EXHIBITS!\nCATCH THEM BEFORE THE TRUCK!', 0xfff08a, 2400); }
       else if (a.boss?.kind === 'wrecker' && !this.wrecker && px > a.boss.at) {
         const l = this.lockArena('boss', 0);
         this.wrecker = new Wrecker(this, l.left + GAME_W - 70, this.groundY, { left: l.left, right: l.left + GAME_W });
@@ -680,7 +711,7 @@ export class ActionScene extends Phaser.Scene {
           const l = this.lockArena('boss', 0);
           this.eater.startBoss(l.left, l.left + GAME_W);
           this.peloton.parkAt = l.left + GAME_W - 20; this.peloton.dismissWaiting();
-          this.time.delayedCall(900, () => this.say('IT CHARGES: JUMP THE GRINDER!\nPUMP THE CAB + CONVEYOR ANY TIME. THE GRINDER WHEN IT OVERHEATS!', 0xfff08a, 3400));
+          this.time.delayedCall(900, () => this.say('IT CHARGES: JUMP THE GRINDER!\nPUMP THE CAB + CONVEYOR ANY TIME.\nPUMP THE GRINDER WHEN IT OVERHEATS!', 0xfff08a, 3400));
           this.flashGo('BOSS!'); music.play(SONG_BOSS);
         }
       }
@@ -805,7 +836,6 @@ export class ActionScene extends Phaser.Scene {
     for (const c of [...this.cases]) {
       if (!c.active) { this.cases.splice(this.cases.indexOf(c), 1); continue; }
       const cb = c.body as Phaser.Physics.Arcade.Body, cRect = new Phaser.Geom.Rectangle(cb.x, cb.y, cb.width, cb.height);
-      c.angle += Math.sign(cb.velocity.x) * 540 * (dt / 1000);
       if (hits.some((h) => overlap(h, cRect))) { sfx.clang(); puff(this, c.x, c.y - 6, 0x7cc6f2, 6, 14, 96); c.destroy(); continue; }
       if (Phaser.Geom.Rectangle.Overlaps(cRect, pRect) && this.player.hurt(c.x)) { shake(this, 120, 0.008); c.destroy(); continue; }
       const bl = this.lock ? this.lock.left : cam.scrollX;
@@ -893,7 +923,7 @@ export class ActionScene extends Phaser.Scene {
       let wasHit = false;
       for (const h of hits) if (overlap(h, rRect)) {
         // M3.4: a Barrier Rat's board takes anything from the front; get behind it, or stomp
-        if (r.blocks(h)) { if (newHit(h.id)) { sfx.clang(); puff(this, r.sprite.x + r.facing * 10, r.sprite.y - 16, 0xff9a2e, 6, 14, 95); floatText(this, r.sprite.x, r.sprite.y - 40, 'BLOCKED!', 'font', 0xff9a2e, 300); } wasHit = true; continue; }
+        if (r.blocks(px)) { if (newHit(h.id)) { sfx.clang(); puff(this, r.sprite.x + r.facing * 10, r.sprite.y - 16, 0xff9a2e, 6, 14, 95); floatText(this, r.sprite.x, r.sprite.y - 40, 'BLOCKED!', 'font', 0xff9a2e, 300); } wasHit = true; continue; }
         if (!r.takeHit(h, px)) continue;
         wasHit = true;
         hitStop(this, h.dmg > 1 ? 90 : 50); shake(this, 90, h.dmg > 1 ? 0.008 : 0.004);

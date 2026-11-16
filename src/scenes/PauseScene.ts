@@ -100,7 +100,7 @@ export class PauseScene extends Phaser.Scene {
     const vol = (k: 'music' | 'sfx', d: number) => () => { ctx.settings[k] = Phaser.Math.Clamp(Math.round((ctx.settings[k] + d) * 10) / 10, 0, 1); ctx.applySettings(); sfx.blip(); this.refresh(); };
     this.items = [
       { label: () => 'RESUME', act: () => this.resume() },
-      ...(this.from === 'Explore' ? [{ label: () => 'CITY MAP', act: () => this.show('map') }] : []),
+      ...(this.from === 'Explore' ? [{ label: () => 'CITY MAP', act: () => this.show('map') }, { label: () => 'SHARE YOUR CITY', act: () => { sfx.select(); this.scene.launch('Share', { from: 'Pause' }); this.scene.pause(); } }] : []),
       { label: () => 'CONTROLS', act: () => this.show('controls') },
       { label: () => `MUSIC  < ${bar(ctx.settings.music)} > ${pct(ctx.settings.music)}`, left: vol('music', -0.1), right: vol('music', 0.1), act: vol('music', 0.1) },
       { label: () => `SOUND  < ${bar(ctx.settings.sfx)} > ${pct(ctx.settings.sfx)}`, left: vol('sfx', -0.1), right: vol('sfx', 0.1), act: vol('sfx', 0.1) },

@@ -4,7 +4,7 @@ import Phaser from 'phaser';
 import { GAME_W, GAME_H } from '../config';
 import { InputManager } from '../input/InputManager';
 import { CUTSCENES, type Step } from '../data/cutscenes';
-import { text, iris, shake, blinds, fitText } from '../ui/fx';
+import { text, iris, shake, blinds, fitText, wrapLines } from '../ui/fx';
 import { music } from '../audio/Sequencer';
 import { SONG_MAIN, SONG_DOGFJORD, SONG_ACTION, SONG_IMPROVE } from '../audio/songs';
 import { sfx } from '../audio/sfx';
@@ -214,15 +214,18 @@ export class CutsceneScene extends Phaser.Scene {
       case 'say': {
         if (s.expr) this.portrait?.setFrame(`df_${s.expr}`);
         const villain = s.who === VILLAIN || s.who === 'RAT';
-        const by = this.boxTop && !this.portrait ? 8 : GAME_H - 52;
+        // M4.1 (Ivan: the text had a third line the box didn't fit): the box grows to fit its lines
+        const nLines = Math.max(2, wrapLines(this, 'font_outline', this.sub(s.text), GAME_W - 34).length);
+        const bh = 20 + nLines * 12;
+        const by = this.boxTop && !this.portrait ? 8 : GAME_H - bh - 8;
         const box = this.add.graphics().setDepth(300);
-        box.fillStyle(0x16121f, 0.92).fillRect(8, by, GAME_W - 16, 44).lineStyle(1, villain ? 0xd9646f : 0x9bd35a).strokeRect(8, by, GAME_W - 16, 44);
+        box.fillStyle(0x16121f, 0.92).fillRect(8, by, GAME_W - 16, bh).lineStyle(1, villain ? 0xd9646f : 0x9bd35a).strokeRect(8, by, GAME_W - 16, bh);
         const name = text(this, 16, by + 4, s.who, 'font', 0).setDepth(301).setTint(villain ? 0xff6347 : 0x9bd35a);
         const t = text(this, 16, by + 16, '', 'font_outline', 0).setDepth(301).setMaxWidth(GAME_W - 34);
         const bob = this.portrait && s.who === VILLAIN ? this.tweens.add({ targets: this.portrait, scaleY: 2.04, duration: 90, yoyo: true, repeat: -1 }) : null;
         await this.typewrite(t, this.sub(s.text), true);
         bob?.stop(); this.portrait?.setScale(2);
-        const arrow = text(this, GAME_W - 18, by + 36, '>', 'font_outline').setDepth(301);
+        const arrow = text(this, GAME_W - 18, by + bh - 8, '>', 'font_outline').setDepth(301);
         this.tweens.add({ targets: arrow, x: GAME_W - 15, duration: 300, yoyo: true, repeat: -1 });
         await this.waitForConfirm(5000);
         box.destroy(); name.destroy(); t.destroy(); arrow.destroy();
@@ -305,6 +308,7 @@ export class CutsceneScene extends Phaser.Scene {
           ? this.tweens.add({ targets: w, wx: s.x + this.panX, duration: s.ms, ease: s.ease ?? 'Linear', onComplete: done(r) })
           : this.tweens.add({ targets: a, x: ox + s.x, duration: s.ms, ease: s.ease ?? 'Linear', onComplete: done(r) }));
         if (s.y !== undefined) this.tweens.add({ targets: a, y: s.y, duration: s.ms, ease: s.ease ?? 'Linear' });
+        if (s.then === 'enter') p.then(() => { if (a.active) this.tweens.add({ targets: a, alpha: 0, scaleX: a.scaleX * 0.8, duration: 350, onComplete: () => a.setVisible(false) }); });
         // whoever walks stops walking when they arrive (M2.1: rats kept shuffling in place)
         if (!s.anim && a instanceof Phaser.GameObjects.Sprite && !s.keepAnim) p.then(() => { if (a.active && a.anims.currentAnim && !a.anims.currentAnim.key.startsWith('cy') && !a.anims.currentAnim.key.startsWith('rs_')) { a.anims.stop(); a.setFrame(a.anims.currentAnim.frames[0].textureFrame); } });
         if (s.wait) await p;

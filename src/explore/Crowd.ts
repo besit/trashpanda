@@ -43,13 +43,16 @@ export class Crowd {
       const s = scene.add.sprite(c.x, c.y, 'world', `${c.kind}_0`).setOrigin(0.5, 0.85).play(`${c.kind}_swim`);
       this.swimmers.push({ s, home: { x: c.x, y: c.y }, vx: 0, vy: 0, t: Math.random() * 3, r: c.kind === 'swan' ? 22 : 14 });
     }
-    for (const c of critters) if (c.kind === 'moored' || c.kind === 'yacht') { // tied up in a slip: just bobbing
-      const k = c.kind === 'yacht' ? 'yacht' : 'sailboat';
-      const s = scene.add.sprite(c.x, c.y, 'world', `${k}_0`).setOrigin(0.5, c.kind === 'yacht' ? 0.6 : 0.93).setDepth(c.y).play({ key: `${k}_bob`, startFrame: Math.floor(Math.random() * 2) });
+    // M4.1 (Ivan: no top-down yachts; sailboats in colours, mostly white): every boat is a sailboat
+    const sailKey = () => { const r = Math.random(); return `sailboat_${r < 0.55 ? 'w' : r < 0.7 ? 'r' : r < 0.85 ? 'b' : 'y'}`; };
+    for (const c of critters) if (c.kind === 'moored') { // tied up in a slip: just bobbing
+      const k = sailKey();
+      const s = scene.add.sprite(c.x, c.y, 'world', `${k}_0`).setOrigin(0.5, 0.93).setDepth(c.y).play({ key: `${k}_bob`, startFrame: Math.floor(Math.random() * 2) });
       void s;
     }
     for (const c of critters) if (c.kind === 'sailboat') { // drift lazily about their mooring
-      const s = scene.add.sprite(c.x, c.y, 'world', 'sailboat_0').setOrigin(0.5, 0.93).play('sailboat_bob');
+      const k = sailKey();
+      const s = scene.add.sprite(c.x, c.y, 'world', `${k}_0`).setOrigin(0.5, 0.93).play(`${k}_bob`);
       this.swimmers.push({ s, home: { x: c.x, y: c.y }, vx: 0, vy: 0, t: Math.random() * 3, r: 60 });
     }
     for (const c of critters) if (c.kind === 'capybara') {

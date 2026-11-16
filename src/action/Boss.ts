@@ -7,6 +7,7 @@ import Phaser from 'phaser';
 import { sfx } from '../audio/sfx';
 import { puff, floatText, shake } from '../ui/fx';
 import type { Hitbox } from './SidePlayer';
+import { Shockwave } from './Shockwave';
 
 type Move = 'intro' | 'volley' | 'walk' | 'shove' | 'summon' | 'special' | 'charge' | 'dizzy' | 'hurt' | 'dead' | 'pound';
 export type BossKind = 'bureaucrat' | 'foreman' | 'megarat';
@@ -21,7 +22,7 @@ const DEFS = {
   bureaucrat: { key: 'rat_bureaucrat', title: 'THE BUREAUCRAT RAT', hp: 32, intro: 'PERMIT DENIED!', outro: 'APPROVED!', proj: 'stamp_0', projScale: 1, summonCall: 'DING!', special: 'tape' as const, specialCall: 'RED TAPE!', prop: 'desk', debris: 0xf6f2e9 },
   foreman: { key: 'rat_foreman', title: 'THE FOREMAN RAT', hp: 20, intro: 'THIS LANE IS CLOSED!', outro: 'LANE OPEN!', proj: 'cone', projScale: 1.4, summonCall: 'TWEET!', special: 'charge' as const, specialCall: 'JACKHAMMER!', prop: null, debris: 0xff9a2e },
   // M4 (mission 9): the Mega Rat. Hurls chunks of road, leaps and POUNDS the ground (shockwaves both ways: jump them)
-  megarat: { key: 'rat_megarat', title: 'THE MEGA RAT', hp: 36, intro: 'SQUEEEEEAK!', outro: 'SQUASHED!', proj: 'asphaltpatch', projScale: 0.7, summonCall: 'SQUEAK!', special: 'pound' as const, specialCall: 'STOMP!', prop: null, debris: 0xb17b47, frame: 72, cones: false },
+  megarat: { key: 'rat_megarat', title: 'THE MEGA RAT', hp: 36, intro: 'SQUEEEEEAK!', outro: 'SQUASHED!', proj: 'barrel', projScale: 1, summonCall: 'SQUEAK!', special: 'pound' as const, specialCall: 'STOMP!', prop: null, debris: 0xb17b47, frame: 72, cones: false },
 };
 
 export class Boss {
@@ -35,7 +36,7 @@ export class Boss {
   private lastHit = -1;
   private shots: Phaser.Physics.Arcade.Image[] = [];
   private tape?: { g: Phaser.GameObjects.Rectangle; x: number; dir: number };
-  private waves: { g: Phaser.GameObjects.Rectangle; x: number; dir: number }[] = [];
+  private waves: Shockwave[] = [];
   private warn?: Phaser.GameObjects.BitmapText;
   facing: 1 | -1 = -1;
   readonly props: Phaser.GameObjects.Image[] = [];
@@ -89,7 +90,7 @@ export class Boss {
     this.move = 'dead';
     this.clearWarn();
     this.tape?.g.destroy(); this.tape = undefined;
-    this.waves.forEach((w) => w.g.destroy()); this.waves = [];
+    this.waves.forEach((w) => w.destroy()); this.waves = [];
     this.shots.forEach((s) => s.destroy()); this.shots = [];
     this.anim('hurt');
     this.body.setVelocity(0, -260);
@@ -149,10 +150,9 @@ export class Boss {
       if (Math.abs(this.tape.x - this.sprite.x) > 460) { this.tape.g.destroy(); this.tape = undefined; }
     }
     for (const w of [...this.waves]) {
-      w.x += w.dir * 185 * this.rage * dt;
-      w.g.setPosition(w.x, this.groundY - 4);
-      if (onGroundPlayer && Math.abs(playerRect.centerX - w.x) < 14 && playerRect.bottom > this.groundY - 10) this.hooks.hurtPlayer(w.x);
-      if (Math.abs(w.x - this.sprite.x) > 480) { w.g.destroy(); this.waves.splice(this.waves.indexOf(w), 1); }
+      w.update(dt);
+      if (w.hits(playerRect, onGroundPlayer)) this.hooks.hurtPlayer(w.x);
+      if (Math.abs(w.x - this.sprite.x) > 480) { w.destroy(); this.waves.splice(this.waves.indexOf(w), 1); }
     }
     if (!this.alive) return;
     const b = this.body;
@@ -217,7 +217,7 @@ export class Boss {
         if (this.t <= 0 && ground) {
           b.setVelocityX(0); this.anim('hurt');
           shake(this.scene, 320, 0.016); sfx.stamp(); sfx.rumble();
-          for (const dir of [-1, 1]) { const g = this.scene.add.rectangle(this.sprite.x + dir * 24, this.groundY - 4, 26, 8, 0xa39c8b).setStrokeStyle(1, 0x16121f).setDepth(97); this.waves.push({ g, x: this.sprite.x + dir * 24, dir }); }
+          for (const dir of [-1, 1] as const) this.waves.push(new Shockwave(this.scene, this.sprite.x + dir * 24, dir, this.groundY, 185 * this.rage));
           puff(this.scene, this.sprite.x - 20, this.groundY - 2, 0xa39c8b, 10, 30, 95); puff(this.scene, this.sprite.x + 20, this.groundY - 2, 0xa39c8b, 10, 30, 95);
           floatText(this.scene, this.sprite.x, this.groundY - 84, 'STOMP!', 'font_outline', 0xfff08a, 500);
           this.move = 'dizzy'; this.t = 1.0;

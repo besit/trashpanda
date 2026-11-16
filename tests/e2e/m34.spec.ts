@@ -40,7 +40,8 @@ test('Grounded: suitcases roll along the ground and can be jumped; the stakes ar
   await page.evaluate(() => (window as unknown as W).__TP!.killAll());
   await page.waitForFunction(() => (window as unknown as W).__TP!.state().lock === null, null, { timeout: 10_000 });
   await ride(page, 2100);
-  await page.waitForFunction(() => (window as unknown as W).__TP!.state().tug?.phase === 'taxi', null, { timeout: 15_000 });
+  // M4.1: it drives in from off screen (no taxi phase); catch it on screen, before its refuel stop
+  await page.waitForFunction(() => { const s = (window as unknown as W).__TP!.state(); return s.tug?.phase === 'drive' && s.tug.x < s.camX + 225 && s.tug.x > s.camX + 160; }, null, { timeout: 15_000 });
   // the jet blast pushes you away from the tail
   const t0 = (await tp(page)).tug;
   await page.evaluate((t) => { const g = (window as unknown as W).__TP_GAME!.scene.getScene('Action'); g.player.body.reset(t.x - t.dir * 150, (window as unknown as W).__TP!.gy() - 10); g.player.body.setVelocityX(0); }, t0);

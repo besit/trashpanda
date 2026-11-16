@@ -8,8 +8,9 @@ import Phaser from 'phaser';
 import { sfx } from '../audio/sfx';
 import { puff, floatText, shake } from '../ui/fx';
 import type { Hitbox } from './SidePlayer';
+import { Shockwave } from './Shockwave';
 
-type State = 'intro' | 'wind' | 'stomp' | 'fling' | 'vent' | 'dead';
+type State = 'intro' | 'walk' | 'wind' | 'stomp' | 'fling' | 'vent' | 'dead';
 
 export class HighwayMech {
   readonly img: Phaser.GameObjects.Image;
@@ -19,7 +20,7 @@ export class HighwayMech {
   private t = 1.6;
   private lastHit = -1;
   private lanes = 0;
-  private waves: { g: Phaser.GameObjects.Rectangle; x: number; dir: 1 | -1 }[] = [];
+  private waves: Shockwave[] = [];
   private cars: Phaser.Physics.Arcade.Image[] = [];
   private warn?: Phaser.GameObjects.BitmapText;
   private cycle = 0;
@@ -60,7 +61,7 @@ export class HighwayMech {
   }
   private die() {
     this.state = 'dead';
-    this.clearWarn(); this.waves.forEach((w) => w.g.destroy()); this.waves = [];
+    this.clearWarn(); this.waves.forEach((w) => w.destroy()); this.waves = [];
     sfx.rumble(); shake(this.scene, 600, 0.016);
     floatText(this.scene, this.img.x - 40, this.groundY - 176, 'NO MORE LANES.', 'font_big', 0xffffff, 1600);
     this.scene.tweens.add({ targets: this.img, angle: -8, y: this.groundY + 60, alpha: 0, duration: 1800, delay: 400, ease: 'Quad.easeIn' });
@@ -81,9 +82,9 @@ export class HighwayMech {
   update(dtMs: number, px: number, pRect: Phaser.Geom.Rectangle, onGround: boolean) {
     const dt = dtMs / 1000;
     for (const w of [...this.waves]) {
-      w.x += w.dir * 175 * this.rage * dt; w.g.setPosition(w.x, this.groundY - 4);
-      if (onGround && Math.abs(pRect.centerX - w.x) < 14 && pRect.bottom > this.groundY - 10) { this.hooks.hurt(w.x); }
-      if (w.x < this.bounds.left - 20 || w.x > this.bounds.right + 20) { w.g.destroy(); this.waves.splice(this.waves.indexOf(w), 1); }
+      w.update(dt);
+      if (w.hits(pRect, onGround)) this.hooks.hurt(w.x);
+      if (w.x < this.bounds.left - 20 || w.x > this.bounds.right + 20) { w.destroy(); this.waves.splice(this.waves.indexOf(w), 1); }
     }
     for (const c of [...this.cars]) {
       const b = c.body as Phaser.Physics.Arcade.Body, r = new Phaser.Geom.Rectangle(b.x, b.y, b.width, b.height);
@@ -96,12 +97,21 @@ export class HighwayMech {
     if (this.warn) this.warn.setPosition(this.img.x, Math.round(this.groundY - 176 - Math.sin(this.t * 20)));
     switch (this.state) {
       case 'intro': if (this.t <= 0) { this.state = 'wind'; this.t = 0.9 / this.rage; this.telegraph('!'); } break;
+      case 'walk': { // M4.1: it lumbers toward you between attacks, so both slabs matter
+        const want = Phaser.Math.Clamp(px, this.bounds.left + 90, this.bounds.right - 90);
+        const step = Math.sign(want - this.img.x) * 46 * this.rage * dt;
+        if (Math.abs(want - this.img.x) > 4) this.img.x += step;
+        this.img.y = this.groundY + 2 - Math.abs(Math.sin(this.scene.time.now / 160)) * 3;
+        if (Math.random() < 0.12) { shake(this.scene, 60, 0.004); puff(this.scene, this.img.x + (Math.random() < 0.5 ? -44 : 28), this.groundY - 2, 0xa39c8b, 3, 12, 105); }
+        if (this.t <= 0) { this.img.y = this.groundY + 2; this.state = 'wind'; this.t = 0.9 / this.rage; this.telegraph('!'); }
+        break;
+      }
       case 'wind': { // the body lifts before it slams down
         this.img.y = this.groundY + 2 - 16 * Math.min(1, 1 - this.t / (0.9 / this.rage));
         if (this.t <= 0) {
           this.clearWarn(); this.state = 'stomp'; this.t = 0.35; this.img.y = this.groundY + 2;
           shake(this.scene, 300, 0.016); sfx.stamp(); sfx.rumble();
-          for (const dir of [-1, 1] as const) { const g = this.scene.add.rectangle(this.img.x + dir * 50, this.groundY - 4, 26, 8, 0xa39c8b).setStrokeStyle(1, 0x16121f).setDepth(97); this.waves.push({ g, x: this.img.x + dir * 50, dir }); }
+          for (const dir of [-1, 1] as const) this.waves.push(new Shockwave(this.scene, this.img.x + dir * 50, dir, this.groundY, 175 * this.rage));
           for (const lr of this.legRects()) if (Phaser.Geom.Rectangle.Overlaps(lr, pRect)) this.hooks.hurt(this.img.x);
           puff(this.scene, this.img.x - 44, this.groundY - 2, 0xa39c8b, 10, 30, 105); puff(this.scene, this.img.x + 28, this.groundY - 2, 0xa39c8b, 10, 30, 105);
         }
@@ -122,7 +132,7 @@ export class HighwayMech {
         break;
       case 'vent':
         if (Math.random() < 0.4) puff(this.scene, this.img.x + (Math.random() - 0.5) * 30, this.groundY - 96, 0xff9a2e, 1, 8, 105);
-        if (this.t <= 0) { this.img.setFrame('highwaymech_0'); this.state = 'wind'; this.t = 0.9 / this.rage; this.telegraph('!'); }
+        if (this.t <= 0) { this.img.setFrame('highwaymech_0'); this.state = 'walk'; this.t = 1.6; }
         break;
     }
   }

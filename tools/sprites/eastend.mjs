@@ -37,53 +37,121 @@ export function broadviewFacade(w = 64) {
 }
 
 /**
- * The Don Jail (1864, William Thomas; now Bridgepoint's administration building), Gerrard St E: a long
- * pale-stone Italianate block. Rows of small barred windows, a projecting centre pavilion with a heavy
- * rusticated arched doorway, and a lantern on the hipped roof (3/4 facade). M3.1.
+ * The Don Jail (1864, William Thomas; now Bridgepoint's administration building), Gerrard St E. M4.1 redraw from
+ * Ivan's photo: a tall pale-limestone centre block, five bays, heavy rusticated quoins and banded columns, tall
+ * arched windows upstairs, a dentilled cornice under a pediment, a rusticated porch over the arched door with a
+ * wide flight of steps; lower wings of khaki stone with three rows of small arched windows under a grey slate
+ * hip; and two square brick ventilation towers rising behind the wings beside the centre block.
+ * Returns the whole building (roof + facades) for the map: { img, footprint, facadeH }.
  */
-export function donJailFacade(w = 192) {
-  const h = 58, img = new Img(w, h + 12), r = rng(1864), top = 12;
-  img.rect(0, top, w, h, 't');
-  for (let y = top + 3; y < top + h; y += 4) img.hline(0, w - 1, y, 'S');           // stone courses
-  for (let y = top; y < top + h; y += 4) for (let x = ((y / 4) % 2) * 6; x < w; x += 12) img.vline(x, y, y + 3, 'S');
-  img.rect(0, top, w, 3, 'H'); img.hline(0, w - 1, top + 3, 'S');                  // cornice
-  img.rect(0, top + h - 6, w, 6, 'S'); img.hline(0, w - 1, top + h - 6, 'h');       // plinth
-  const cx = Math.round(w / 2), pw = 44;
-  // wings: three storeys of small barred windows
-  for (let f = 0; f < 3; f++) for (let x = 8; x < w - 8; x += 12) {
-    if (Math.abs(x + 2 - cx) < pw / 2 + 4) continue;
-    const y = top + 8 + f * 15;
-    img.rect(x - 1, y - 1, 7, 10, 'S'); img.rect(x, y, 5, 8, 'k');
-    for (let bx = x + 1; bx < x + 5; bx += 2) img.vline(bx, y, y + 7, 'G');
-    if (r.chance(0.1)) img.rect(x + 1, y + 1, 1, 2, 'y');
+export function donJailBuilding(w = 224, d = 64) {
+  const HF = 50, RISE = 30, PED = 12, TOP = 2;          // wing facade, centre rise above it, pediment, headroom
+  const H = TOP + d + HF, front = TOP + d;              // front = the wings' cornice line on the image
+  const img = new Img(w, H), r = rng(1864);
+  const cx = Math.round(w / 2), pw = 86, px0 = cx - pw / 2, px1 = cx + pw / 2;
+  // ---- the wings' slate hip roof (the whole footprint; the centre block stands in front of it) ----
+  img.rect(0, TOP + 6, w, d - 6, 'G');
+  for (let y = TOP + 8; y < front; y += 3) img.hline(0, w - 1, y, 'g');
+  img.poly([[0, front - 1], [0, TOP + 6], [16, TOP + 6], [16, front - 1]], 'h');            // hip ends, lit + shaded
+  for (let y = TOP + 8; y < front; y += 3) img.hline(0, 15, y, 'G');
+  img.poly([[w - 16, TOP + 6], [w - 1, TOP + 6], [w - 1, front - 1], [w - 16, front - 1]], 'g');
+  img.hline(0, w - 1, TOP + 6, 'H'); img.hline(0, w - 1, front - 1, 'k');
+  // ---- two square brick ventilation towers behind the wings, beside the centre block ----
+  for (const tx of [px0 - 26, px1 + 8]) {
+    const tw = 18, ty1 = front - 18, ty0 = ty1 - 34;
+    img.rect(tx, ty0 - 5, tw, 5, 'g');                                    // top face
+    img.rect(tx - 1, ty0 - 1, tw + 2, 3, 'T');                            // cap cornice
+    img.rect(tx, ty0 + 2, tw, ty1 - ty0 - 2, 'X');
+    for (let y = ty0 + 4; y < ty1; y += 3) img.hline(tx, tx + tw - 1, y, 'x');
+    img.vline(tx + tw - 1, ty0 + 2, ty1 - 1, 'x');
+    for (const ox of [3, 10]) { img.rect(tx + ox, ty0 + 6, 4, 9, 'k'); img.set(tx + ox, ty0 + 6, 'X'); img.set(tx + ox + 3, ty0 + 6, 'X'); }
+    img.hline(tx, tx + tw - 1, ty0 + 17, 'T');
   }
-  // the centre pavilion: rusticated stone, a pediment, the big arched door
-  img.rect(cx - pw / 2, top - 6, pw, h + 6, 'T');
-  for (let y = top - 3; y < top + h; y += 4) img.hline(cx - pw / 2, cx + pw / 2 - 1, y, 't');
-  img.vline(cx - pw / 2, top - 6, top + h - 1, 'S'); img.vline(cx + pw / 2 - 1, top - 6, top + h - 1, 'S');
-  img.poly([[cx - pw / 2 - 2, top - 6], [cx, top - 12], [cx + pw / 2 + 1, top - 6]], 'H');
-  img.hline(cx - pw / 2 - 2, cx + pw / 2 + 1, top - 6, 'S');
-  for (const dx of [-14, 9]) for (let f = 0; f < 2; f++) { const y = top + 6 + f * 14; img.rect(cx + dx, y, 5, 9, 'k'); img.ellipse(cx + dx + 2, y, 2, 2, 'k'); img.vline(cx + dx + 2, y, y + 8, 'G'); }
-  // the doorway: heavy voussoirs (the carved "Father Time" keystone is a dot of detail)
-  img.ellipse(cx, top + h - 16, 10, 10, 't'); img.rect(cx - 10, top + h - 16, 21, 10, 't');
-  img.ellipse(cx, top + h - 16, 7, 7, 'k'); img.rect(cx - 7, top + h - 16, 15, 10, 'k');
-  img.rect(cx - 5, top + h - 14, 11, 8, 'w'); img.vline(cx, top + h - 14, top + h - 7, 'x');
-  img.rect(cx - 1, top + h - 27, 3, 3, 'S');
-  for (const dx of [-12, 11]) img.rect(cx + dx, top + h - 18, 2, 12, 'S');
-  img.rect(cx - 12, top + h - 6, 25, 2, 'h'); img.rect(cx - 14, top + h - 4, 29, 2, 'H'); // steps
-  return img;
+  // ---- the wings: khaki stone, three rows of small arched windows, basement lights ----
+  const wingY = front;
+  img.rect(0, wingY, w, HF, 't');
+  for (let y = wingY + 2; y < H; y += 3) for (let x = (y % 2) * 3; x < w; x += 6) if (r.chance(0.5)) img.set(x, y, r.chance(0.5) ? 'S' : 'T');
+  img.rect(0, wingY, w, 2, 'T'); img.hline(0, w - 1, wingY + 2, 'S');                         // eaves cornice
+  img.rect(0, H - 6, w, 6, 'S'); img.hline(0, w - 1, H - 6, 'h');                            // plinth
+  for (let x = 6; x < w - 6; x += 12) {
+    if (x + 6 > px0 - 2 && x < px1 + 2) continue;
+    for (let f = 0; f < 3; f++) {
+      const y = wingY + 6 + f * 13;
+      img.rect(x - 1, y - 1, 7, 10, 'T'); img.rect(x, y + 1, 5, 7, 'k'); img.hline(x + 1, x + 3, y, 'k');
+      img.vline(x + 2, y + 1, y + 7, 'G'); img.hline(x, x + 4, y + 4, 'G');
+      if (r.chance(0.08)) img.rect(x + 3, y + 5, 1, 2, 'y');
+    }
+    img.rect(x + 1, H - 4, 3, 2, 'k');
+  }
+  // ---- the centre block ----
+  const cTop = front - RISE;
+  img.rect(px0 - 2, cTop - 6, pw + 4, 6, 'G'); img.hline(px0 - 2, px1 + 1, cTop - 6, 'h');   // its own roof, seen over the cornice
+  img.rect(px0, cTop, pw, H - cTop, 'T');
+  for (let y = cTop + 3; y < H; y += 5) img.hline(px0, px1 - 1, y, 'H');                     // ashlar courses
+  img.vline(px1 - 1, cTop, H - 1, 't');
+  // rusticated quoins + banded pilasters: alternating long/short blocks
+  const rustic = (x, wv, y0, y1) => {
+    for (let y = y0, k = 0; y < y1; y += 4, k++) { const ww = k % 2 ? wv : wv - 2; img.rect(x + (k % 2 ? 0 : 1), y, ww, 3, 'h'); img.hline(x + (k % 2 ? 0 : 1), x + (k % 2 ? 0 : 1) + ww - 1, y + 3, 'S'); }
+  };
+  const bays = [6, 12, 6, 10, 4, 10, 4, 10, 6, 12, 6];   // quoin bay pilaster bay col bay col bay pilaster bay quoin
+  let bx = px0; const slots = [];
+  bays.forEach((bw, k) => { slots.push([bx, bw, k]); bx += bw; });
+  const midY = cTop + 34;                                                                     // string course
+  for (const [x, bw, k] of slots) {
+    if (k === 0 || k === 10) rustic(x, bw, cTop + 2, H - 6);
+    else if (k === 2 || k === 8) rustic(x, bw, cTop + 2, H - 6);
+    else if (k === 4 || k === 6) { // banded columns between the upper windows
+      for (let y = cTop + 8; y < midY - 2; y += 3) { img.rect(x, y, bw, 2, 'h'); img.hline(x, x + bw - 1, y + 2, 'S'); }
+    }
+  }
+  // entablature: a dentilled cornice, then the pediment
+  img.rect(px0 - 2, cTop, pw + 4, 4, 'H'); img.hline(px0 - 2, px1 + 1, cTop + 4, 'S');
+  for (let x = px0; x < px1; x += 3) img.set(x, cTop + 5, 'S');
+  img.poly([[px0 + 8, cTop], [cx, cTop - PED], [px1 - 9, cTop]], 'T');
+  img.line(px0 + 8, cTop, cx, cTop - PED, 'H'); img.line(cx, cTop - PED, px1 - 9, cTop, 'S');
+  img.rect(cx - 6, cTop - 4, 12, 2, 'h');                                                    // the carved tympanum
+  // upper storey: five tall arched windows
+  for (const [x, bw, k] of slots) if (k % 2 === 1) {
+    const ww = 6, wx = x + Math.round((bw - ww) / 2), wy = cTop + 10;
+    img.rect(wx - 1, wy - 1, ww + 2, 21, 'h'); img.rect(wx, wy + 2, ww, 17, 'k'); img.hline(wx + 1, wx + ww - 2, wy + 1, 'k');
+    img.vline(wx + 3, wy + 2, wy + 18, 'G'); img.hline(wx, wx + ww - 1, wy + 10, 'G');
+    img.rect(wx - 1, wy + 20, ww + 2, 1, 'S');
+  }
+  img.rect(px0, midY, pw, 2, 'H'); img.hline(px0, px1 - 1, midY + 2, 'S');
+  // ground storey: arched windows in the outer bays, the porch in the middle
+  for (const [x, bw, k] of slots) if (k === 1 || k === 9 || k === 3 || k === 7) {
+    const ww = 5, wx = x + Math.round((bw - ww) / 2), wy = midY + 7;
+    img.rect(wx - 1, wy - 1, ww + 2, 12, 'h'); img.rect(wx, wy + 1, ww, 9, 'k'); img.hline(wx + 1, wx + ww - 2, wy, 'k'); img.vline(wx + 2, wy + 1, wy + 9, 'G');
+  }
+  const doorY = H - 7;
+  img.rect(cx - 13, midY + 3, 26, 3, 'H'); img.hline(cx - 13, cx + 12, midY + 6, 'S');        // porch entablature
+  for (const dx of [-12, 8]) for (let y = midY + 7; y < doorY; y += 3) { img.rect(cx + dx, y, 4, 2, 'h'); img.hline(cx + dx, cx + dx + 3, y + 2, 'S'); }
+  img.ellipse(cx, midY + 13, 5, 4, 'S'); img.rect(cx - 5, midY + 13, 11, doorY - midY - 13, 'S');
+  img.ellipse(cx, midY + 13, 4, 3, 'k'); img.rect(cx - 4, midY + 13, 9, doorY - midY - 13, 'k');
+  img.rect(cx - 3, midY + 15, 7, doorY - midY - 15, 'w'); img.vline(cx, midY + 15, doorY - 1, 'x');
+  // the wide flight of steps
+  for (let k = 0; k < 4; k++) { const sw = 14 + k * 5; img.rect(cx - sw, doorY + k * 2 - 1, sw * 2, 2, k % 2 ? 'H' : 'h'); }
+  img.outline('K');
+  return { img, footprint: { w, d }, facadeH: HF };
 }
-/** its roof: grey slate hip with a little lantern over the centre */
-export function donJailRoof(w, d) {
-  const img = new Img(w, d);
-  img.rect(0, 0, w, d, 'G');
-  for (let y = 1; y < d; y += 3) img.hline(0, w - 1, y, 'g');
-  img.rect(0, 0, w, 2, 'h'); img.rect(0, 0, 2, d, 'h'); img.rect(w - 2, 0, 2, d, 'g');
-  const cx = Math.round(w / 2);
-  img.rect(cx - 8, Math.round(d / 2) - 6, 16, 12, 'H'); img.rect(cx - 6, Math.round(d / 2) - 4, 12, 8, 'S');
-  for (let x = cx - 5; x < cx + 6; x += 3) img.vline(x, Math.round(d / 2) - 4, Math.round(d / 2) + 3, 'k');
-  img.rect(cx - 2, Math.round(d / 2) - 9, 4, 4, 'g');
-  return img;
+
+/** M4.1: a School Street barrier: a white-and-red sawhorse with the sign (map prop) */
+export function schoolStreetBarrier() {
+  const im = new Img(30, 22);
+  im.rect(1, 10, 28, 5, 'W'); for (let x = 2; x < 28; x += 6) im.rect(x, 10, 3, 5, 'R');
+  im.rect(3, 15, 2, 6, 'g'); im.rect(25, 15, 2, 6, 'g');
+  im.rect(6, 0, 18, 9, 'y'); im.rect(7, 1, 16, 7, 'Y'); im.rect(14, 8, 2, 2, 'g');
+  for (const [x, y] of [[9, 3], [12, 2], [15, 3], [18, 2], [21, 3]]) im.rect(x, y, 2, 3, 'K'); // two kids walking (the school-zone figures)
+  im.outline('K'); im.pivot = { x: 0.5, y: 21 / 22 };
+  return im;
+}
+/** M4.1: kids' bikes in a rack, seen from above (map prop) */
+export function kidBikes() {
+  const im = new Img(30, 14), cols = ['R', 'c', 'y', 'L', 'P'];
+  im.rect(0, 9, 30, 1, 'h');
+  for (let i = 0; i < 5; i++) { const x = 2 + i * 6; im.rect(x, 2, 2, 10, 'k'); im.rect(x, 5, 2, 3, cols[i]); im.set(x, 1, 'g'); }
+  im.outline('K'); im.pivot = { x: 0.5, y: 0.9 };
+  return im;
 }
 
 /** a parking-lot light pole (map prop) */
@@ -186,5 +254,5 @@ export function palletStack() {
 }
 
 export function eastEndPreview() {
-  return { frames: [bigBoxFacade(), broadviewFacade(), donJailFacade(), cartShelter(), palletStack(), lotLight(), asphaltPatch(), soilSapling(), monsterSuv(0), monsterSuv(1)], cols: 4 };
+  return { frames: [bigBoxFacade(), broadviewFacade(), donJailBuilding().img, cartShelter(), palletStack(), lotLight(), asphaltPatch(), soilSapling(), monsterSuv(0), monsterSuv(1)], cols: 4 };
 }

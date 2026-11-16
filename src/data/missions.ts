@@ -9,7 +9,7 @@ import type { BossKind } from '../action/Boss';
 import type { AutoScrollDef } from '../action/LaneEater';
 import type { DepaveDef } from '../action/ParkingLot';
 
-export type DistrictId = 'queenwest' | 'downtown' | 'north' | 'waterfront' | 'highpark' | 'eastend';
+export type DistrictId = 'queenwest' | 'downtown' | 'waterfront' | 'highpark' | 'eastend';
 export type SideBg = 'queen' | 'king' | 'parkside' | 'bigbox' | 'lake' | 'science' | 'gardiner';
 
 export interface Wave { at: number; rats: RatKind[]; suvs?: number }
@@ -28,7 +28,10 @@ export interface MissionDef {
   focusX?: number;
   /** pan the payoff camera vertically (N-S streets) instead of along x */
   focusAxis?: 'x' | 'y';
-  action: {
+  /** M4.1: a top-down mission played on the map itself (the Bike Bus); its route is in the district's map data */
+  explore?: { kind: 'bikebus'; time: number };
+  /** the side-view mission (every mission but the explore ones) */
+  action?: {
     bg: SideBg;
     street: 'plain' | 'paint' | 'protected' | 'escort' | 'king' | 'parkside' | 'lot' | 'quay';
     sky: 'day' | 'dusk';
@@ -222,18 +225,19 @@ MISSIONS.waterfront_heist = {
   },
 };
 
-// M4: SAVE THE SCIENCE (North). The boarded-up Science Centre: sneak past the guards' flashlights, catch the
-// rats carrying the exhibits to the moving truck, then the Wrecker. The real story is URBAN_RESEARCH section 5.
+// M4: SAVE THE SCIENCE. M4.1 moved it from the dropped North district to the Waterfront: a Queens Quay warehouse
+// of the closed Science Centre's exhibits. Sneak past the guards' flashlights, catch the rats carrying the
+// exhibits to the moving truck, then the Wrecker. The real story is URBAN_RESEARCH section 5.
 MISSIONS.save_the_science = {
   id: 'save_the_science',
   title: 'SAVE THE SCIENCE',
-  district: 'north',
+  district: 'waterfront',
   upgrades: ['science_reopened'],
   requires: ['king_of_street'],
   briefing: 'sci_before',
   debrief: 'sci_after',
-  focusX: 71 * 16,
-  focusY: 38 * 16,
+  focusX: 57 * 16,
+  focusY: 47 * 16,
   action: {
     bg: 'science', street: 'plain', sky: 'day', length: 2950,
     intro: 'SNEAK PAST THE GUARDS. GET THE EXHIBITS BACK!',
@@ -278,7 +282,7 @@ MISSIONS.death_by_highway = {
   title: 'DEATH BY HIGHWAY',
   district: 'waterfront',
   upgrades: ['gardiner_down'],
-  requires: ['bike_lane_war', 'streetcar_through', 'king_of_street', 'slow_down_dog', 'lane_eater', 'great_parking_lot', 'waterfront_heist', 'island_airport', 'save_the_science', 'finish_the_line'],
+  requires: ['bike_lane_war', 'streetcar_through', 'king_of_street', 'slow_down_dog', 'lane_eater', 'great_parking_lot', 'waterfront_heist', 'island_airport', 'save_the_science', 'finish_the_line', 'bike_bus'],
   briefing: 'hw_before',
   debrief: 'hw_after',
   focusX: 60 * 16,
@@ -326,3 +330,19 @@ export function missionAvailable(id: string, completed: string[]) {
   const m = MISSIONS[id];
   return !!m && (m.requires ?? []).every((r) => completed.includes(r));
 }
+
+// M4.1 (Ivan): THE BIKE BUS (East End), the first mission played on the map: lead a bike bus along its route,
+// stop for the kids at each stop, ring the SUVs out of the bike lane, reach the school before the bell.
+// What a bike bus is, and the School Street it earns: URBAN_RESEARCH section 24.
+MISSIONS.bike_bus = {
+  id: 'bike_bus',
+  title: 'THE BIKE BUS',
+  district: 'eastend',
+  upgrades: ['school_street'],
+  requires: ['great_parking_lot'],
+  briefing: 'bus_before',
+  debrief: 'bus_after',
+  focusX: 86 * 16,
+  focusY: 49 * 16,
+  explore: { kind: 'bikebus', time: 75 },
+};

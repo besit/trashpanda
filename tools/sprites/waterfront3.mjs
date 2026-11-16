@@ -6,7 +6,7 @@
 // - Ripley's Aquarium from its photos: a white angular hall, grey/white checker panels on the jutting
 //   top band, a tall glass front under a raked canopy, and the two dark sharks laid into the white roof
 // - the Power Plant gallery (a 1920s power station, a gallery since 1987) with its smokestack
-// - HTO Park's yellow umbrellas, motor yachts moored in the slips
+// - HTO Park's yellow umbrellas (M4.1: the motor yachts became coloured sailboats, see waterfront.mjs)
 import { Img } from '../lib/raster.mjs';
 import { scene, render, obliqueCam, sd } from '../lib/sdf.mjs';
 import { drawText } from './font.mjs';
@@ -69,7 +69,7 @@ export function domeBuilding(w = 208, d = 120) {
     const a = Math.atan2(p[1] / ry, p[0] / rx), z = p[2];
     // the four corner ramp towers: diagonal bracing
     const corner = [Math.PI / 4, (3 * Math.PI) / 4, -Math.PI / 4, (-3 * Math.PI) / 4].some((c) => Math.abs(Math.atan2(Math.sin(a - c), Math.cos(a - c))) < 0.13);
-    if (corner) return Math.abs(((z + a * 30) % 6 + 6) % 6 - 3) < 0.8 ? 'G' : ['g', 'G', 'h', 'H'];
+    if (corner) return ['G', 'h', 'H', 'H'];
     if (z < 2) return 'G';
     if (z > 5 && z < 10) return Math.abs(((a * 40 / Math.PI) % 1 + 1) % 1 - 0.5) < 0.12 ? 'H' : ['u', 'U', 'c', 'C']; // lower glass band
     if (z > 14 && z < 19) return Math.abs(((a * 60 / Math.PI) % 1 + 1) % 1 - 0.5) < 0.1 ? 'H' : ['u', 'U', 'c']; // upper glass band
@@ -79,7 +79,9 @@ export function domeBuilding(w = 208, d = 120) {
   // the roof: four panels, front (south, +y) to back; each panel is an arched shell a little higher than
   // the one in front, so there's a step (a dark seam) where one rides over the next
   const cuts = [ry * 0.55, ry * 0.05, -ry * 0.5];             // panel boundaries along y (front -> back)
-  const lift = [0, 3, 6, 4];                                    // height added per panel
+  // M4.1 (Ivan: "clean up the SkyDome... it looks like there are glitches"): one smooth shell; the panel steps made
+  // dark wedges at every seam. The seams are thin lines now, and the panels differ only slightly in tone
+  const lift = [0, 0, 0, 0];
   const panelOf = (y) => (y > cuts[0] ? 0 : y > cuts[1] ? 1 : y > cuts[2] ? 2 : 3);
   const roofZ = (x, y) => {
     const k = panelOf(y), e = 1 - (x / (rx - 2)) ** 2 - (y / (ry - 2)) ** 2;
@@ -92,9 +94,7 @@ export function domeBuilding(w = 208, d = 120) {
   }, m: mat(['G', 'h', 'H', 'W', 'W'], { fn: (p) => {
     const y = p[1], k = panelOf(y);
     // the seams: the front edge of each panel, where it rides over the one in front (an arc on screen)
-    if (cuts.some((c) => Math.abs(y - c) < 1.4)) return 'g';
-    // ribs across each panel, parallel to its edges
-    if ((((y + k * 3) % 6) + 6) % 6 < 0.8) return ['G', 'h', 'H', 'H'];
+    if (inEll(p) < -0.06 && cuts.some((c) => Math.abs(y - c) < 0.7)) return 'G'; // seams stop short of the rim
     return k % 2 ? ['G', 'h', 'H', 'H', 'W'] : null;
   } }) };
   const H = d + wallH + rise + 10;
@@ -208,21 +208,9 @@ export function yellowUmbrella() {
   return img;
 }
 
-/** a white motor yacht moored in a slip (seen from above at 3/4, bow north); 2 frames bob */
-export function yacht(frame = 0) {
-  const W = 22, H = 46, img = new Img(W, H), b = frame;
-  img.poly([[11, 1 + b], [19, 12 + b], [19, 38 + b], [16, 42 + b], [6, 42 + b], [3, 38 + b], [3, 12 + b]], 'W'); // hull, deck
-  img.poly([[11, 3 + b], [17, 13 + b], [5, 13 + b]], 'H');                                                      // foredeck
-  img.rect(6, 16 + b, 10, 14, 'H'); img.rect(7, 17 + b, 8, 4, 'u'); img.rect(7, 22 + b, 8, 6, 'h');            // the cabin, windscreen
-  img.rect(5, 32 + b, 12, 8, 'w'); img.hline(5, 16, 36 + b, 'x');                                               // teak aft deck
-  img.vline(3, 14 + b, 38 + b, 'U'); img.vline(19, 14 + b, 38 + b, 'G');
-  img.hline(2, 20, 43 + b, 'C'); img.hline(4, 18, 44 + b, 'i');
-  img.outline('K'); img.pivot = { x: 0.5, y: 0.6 };
-  return img;
-}
 
 export function waterfront3Preview() {
-  const items = [cnTowerBuilding(96, 48, 60).img, domeBuilding().img, aquariumBuilding().img, powerPlantBuilding().img, yellowUmbrella(), yacht(0)];
+  const items = [cnTowerBuilding(96, 48, 60).img, domeBuilding().img, aquariumBuilding().img, powerPlantBuilding().img, yellowUmbrella()];
   const fw = Math.max(...items.map((i) => i.w)), fh = Math.max(...items.map((i) => i.h));
   const frames = items.map((it) => { const f = new Img(fw, fh); f.blit(it, Math.round((fw - it.w) / 2), fh - it.h); return f; });
   return { frames, cols: 3 };

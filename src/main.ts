@@ -7,6 +7,7 @@ import { ActionScene } from './scenes/ActionScene';
 import { CutsceneScene } from './scenes/CutsceneScene';
 import { PauseScene } from './scenes/PauseScene';
 import { EndingScene } from './scenes/EndingScene';
+import { ShareScene } from './scenes/ShareScene';
 import { ctx } from './core/ctx';
 import { autoFullscreenOnFirstTap } from './core/fullscreen';
 import { wantsTouch } from './input/TouchControls';
@@ -25,7 +26,7 @@ const game = new Phaser.Game({
   input: { gamepad: true, activePointers: 4 },
   scale: { mode: Phaser.Scale.NONE },
   fps: { target: 60, smoothStep: true },
-  scene: [BootScene, TitleScene, ExploreScene, ActionScene, CutsceneScene, PauseScene, EndingScene],
+  scene: [BootScene, TitleScene, ExploreScene, ActionScene, CutsceneScene, PauseScene, EndingScene, ShareScene],
 });
 
 /**

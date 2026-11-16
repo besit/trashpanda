@@ -34,7 +34,6 @@ export function generateDowntown() {
   D.exit('e', QUEEN, 'eastend', 'queen'); D.exit('e', DUNDAS, 'eastend', 'dundas');
   D.exitNS('s', SP, 'waterfront', 'spadina'); D.exitNS('s', UN, 'waterfront', 'university'); D.exitNS('s', BY, 'waterfront', 'bay');
   // M4: north on Spadina, University or Bay -> the North district (the bottom of Don Mills Rd)
-  for (const [c, n] of [[SP, 'spadina'], [UN, 'university'], [BY, 'bay']]) D.exitNS('n', c, 'north', n, 'donmills');
 
   const bricks = ['red', 'buff', 'darkred', 'red', 'cream', 'grey', 'teal', 'mustard'];
   const glass = ['blue', 'teal', 'dark', 'sky', 'bronze'];
@@ -79,7 +78,8 @@ export function generateDowntown() {
   for (let y = PY0; y <= PY1; y++) for (let x = PX0; x <= PX1; x++) D.set(x, y, y === PY0 ? 'shore_n' : y === PY1 ? 'shore_s' : `water${(x + y) % 3}`);
   D.prop('blank', cx, (PY1 + 1) * TS, { solidBox: [-(PX1 - PX0 + 1) * TS / 2 + 4, -(PY1 - PY0 + 1) * TS + 6, (PX1 - PX0 + 1) * TS - 8, (PY1 - PY0 + 1) * TS - 8], invisible: true });
   const poolW = (PX1 - PX0 + 1) * TS;
-  for (let k = 1; k <= 3; k++) D.prop('arch', PX0 * TS + (poolW * k) / 4 + poolW / 8, ((PY0 + PY1 + 1) / 2) * TS + 6, { depth: (PY1 + 1) * TS });
+  // the arches stand on the concrete either side of the pool (their pivot is the midpoint of their feet)
+  for (let k = 1; k <= 3; k++) D.prop('arch', PX0 * TS + (poolW * k) / 4, ((PY0 + PY1 + 1) / 2) * TS, { depth: (PY1 + 1) * TS + 6 });
   const signX = PX0 * TS + poolW / 4 + 8;
   D.prop('torontosign', signX, PY0 * TS - 3, { solidBox: [-46, -6, 92, 6] });
   D.landmarks.push({ id: 'npsquare', x: signX, y: PY0 * TS + 8, label: 'NATHAN PHILLIPS SQUARE', fact: 'CITY HALL OPENED 1965.\nTHE POOL BECOMES A\nSKATING RINK IN WINTER.' });

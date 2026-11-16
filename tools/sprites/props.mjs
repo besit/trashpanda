@@ -178,7 +178,10 @@ export function streetcarModel(length = 96, mods = [0, 1, 2, 3, 4], shift = 0) {
       if (fwd > -1.0) {
         if (z > 15.2) return ['r', 'R', 'R', 'q'];
         if (z > 7.2) return ['K', 'u', 'U', 'c'];
-        if (z > 3 && z < 4.6 && Math.abs(p[1]) > 3.6) return 'Y';
+        // M4.1 (Ivan: "the white line becomes yellow at the front"): the white swoosh carries on up the nose,
+        // and the headlights sit only on the face itself, not on the side
+        { const along = (p[0] - (cx + nose * (segL / 2))) * -nose; if (along < 14 && Math.abs(z - (2.4 + along * 0.32)) < 0.9) return ['h', 'H', 'W']; }
+        if (fwd > 0.6 && z > 3 && z < 4.6 && Math.abs(p[1]) > 3.6 && Math.abs(p[1]) < 5.4) return 'Y';
         if (z < 2.6 && z > 1.6) return ['h', 'H', 'W'];
         return ['r', 'R', 'R', 'q'];
       }

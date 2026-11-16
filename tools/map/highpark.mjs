@@ -180,7 +180,7 @@ export function generateHighPark() {
   D.landmarks.push({ id: 'jamiebell', x: jb.cx, y: jb.y + jb.h + 6, label: 'JAMIE BELL', fact: 'ADVENTURE PLAYGROUND.\nREBUILT BY THE COMMUNITY\nAFTER A 2012 FIRE.' });
   // Colborne Lodge (the Howards' house)
   const cl = place(0.62, 0.89, 64, 56, null, 'colborne lodge');
-  D.addBuilding(cl.x + 8, 48, { w: 48, d: 32, floors: 2, brick: 'cream', seed: 1837, kind: 'baygable' }, { base: cl.y + 50 }, { graffiti: null });
+  D.addBuilding(cl.x, 64, { w: 64, d: 40, floors: 1, seed: 1837, kind: 'colborne' }, { base: cl.y + 52 }, { graffiti: null }); // M4.1: the Regency cottage
   D.landmarks.push({ id: 'colborne', x: cl.cx, y: cl.y + 58, label: 'COLBORNE LODGE', fact: 'JOHN + JEMIMA HOWARD\nAGREED IN 1873 TO PASS\nTHEIR LAND TO THE CITY' });
   // the HIGH PARK sign at the Bloor gate
   const [sgx] = P(0.58, 0);

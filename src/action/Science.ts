@@ -78,7 +78,7 @@ export class Wrecker {
   get phaseName() { return this.state; }
   private get rage() { return this.hp <= this.maxHp / 2 ? 1.3 : 1; }
   /** the boom tip the chain hangs from */
-  private pivot() { return { x: this.img.x - 51, y: this.groundY - 100 }; } // the sheave at the boom's tip (see wrecker() in north.mjs)
+  private pivot() { return { x: this.img.x - 51, y: this.groundY - 100 }; } // the sheave at the boom's tip (see wrecker() in science.mjs)
   private chainLen() { return 84; }
   ballPos() { const p = this.pivot(), L = this.chainLen(); return { x: p.x - Math.sin(this.ang) * L, y: p.y + Math.cos(this.ang) * L }; }
   ballRect() { const b = this.ballPos(); return new Phaser.Geom.Rectangle(b.x - 10, b.y - 10, 20, 20); }

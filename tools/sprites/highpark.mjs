@@ -318,7 +318,56 @@ export function greenhouseFacade(w = 80) {
 
 /** a flower bed tile pattern for Hillside Gardens is in tiles.mjs ('flowerbed') */
 
+/**
+ * Colborne Lodge (1837, John Howard's Regency cottage in High Park). M4.1 redraw from Ivan's photo: a low,
+ * wide, single-storey house of stuccoed walls ringed by a verandah of thin white posts under a broad, low
+ * slate hip with chamfered corners; a small upper storey with shuttered windows sits in the middle of it under
+ * its own low hip, crowned by the three tall white chimney pots on one stack.
+ * Returns { img, footprint, facadeH } for the map.
+ */
+export function colborneLodge(w = 64, d = 40) {
+  const FH = 20, TOP = 34;                                 // verandah facade height; headroom for the upper storey + chimneys
+  const H = TOP + d + FH, eave = TOP + d;                  // eave = the verandah roof's front edge
+  const img = new Img(w, H);
+  // ---- the broad verandah roof: a low hip with chamfered corners, lit from the left ----
+  const ch = 7;
+  img.poly([[ch, TOP + 4], [w - 1 - ch, TOP + 4], [w - 1, TOP + 4 + ch], [w - 1, eave], [0, eave], [0, TOP + 4 + ch]], 'G');
+  for (let y = TOP + 6; y < eave; y += 3) img.hline(1, w - 2, y, 'g');
+  img.poly([[ch, TOP + 4], [Math.round(w * 0.3), TOP + 12], [Math.round(w * 0.3), eave - 1], [0, eave - 1], [0, TOP + 4 + ch]], 'h'); // the lit west slope
+  for (let y = TOP + 6; y < eave; y += 3) img.hline(1, Math.round(w * 0.3) - 1, y, 'G');
+  img.hline(0, w - 1, eave - 1, 'S'); img.hline(0, w - 1, eave, 'k');                           // eave + its shadow
+  // ---- the upper storey in the middle of the roof ----
+  const uw = 30, ux = Math.round(w / 2 - uw / 2), uBase = TOP + 4 + Math.round(d * 0.55), uh = 13;
+  img.poly([[ux + 4, uBase - uh - 9], [ux + uw - 5, uBase - uh - 9], [ux + uw + 2, uBase - uh - 1], [ux - 3, uBase - uh - 1]], 'G'); // its low hip
+  for (let y = uBase - uh - 7; y < uBase - uh; y += 3) img.hline(ux - 1, ux + uw, y, 'g');
+  img.poly([[ux + 4, uBase - uh - 9], [ux + 8, uBase - uh - 9], [ux + 4, uBase - uh - 1], [ux - 3, uBase - uh - 1]], 'h');
+  img.hline(ux - 3, ux + uw + 2, uBase - uh, 'S');
+  img.rect(ux, uBase - uh + 1, uw, uh - 1, 'T'); img.vline(ux + uw - 1, uBase - uh + 1, uBase - 1, 't');
+  for (const wx of [ux + 5, ux + uw - 10]) { img.rect(wx - 2, uBase - uh + 3, 2, 7, 'h'); img.rect(wx, uBase - uh + 3, 5, 7, 'k'); img.vline(wx + 2, uBase - uh + 3, uBase - uh + 9, 'H'); img.rect(wx + 5, uBase - uh + 3, 2, 7, 'h'); }
+  // ---- the chimney stack with its three tall white pots ----
+  const sx = Math.round(w / 2) + 2, sy = uBase - uh - 7;
+  img.rect(sx - 9, sy - 5, 18, 6, 'W'); img.vline(sx + 8, sy - 5, sy, 'H');
+  for (let k = 0; k < 3; k++) {
+    const px = sx - 8 + k * 6, top = sy - 20 - (k === 1 ? 1 : 0);
+    img.rect(px, top + 3, 4, sy - 5 - top - 3, 'W'); img.vline(px + 3, top + 3, sy - 6, 'H');
+    img.rect(px - 0, top, 5, 3, 'W'); img.hline(px, px + 4, top + 2, 'H');                  // the flared crowns
+    img.rect(px + 1, top, 2, 1, 'k');
+  }
+  // ---- the verandah: walls set back in shade, French windows with shutters, thin white posts ----
+  img.rect(0, eave + 1, w, FH - 3, 't');
+  img.rect(0, eave + 1, w, 2, 'S');                                                              // the shade under the eave
+  for (const dx of [6, 22, 38, 54]) if (dx + 8 < w) {
+    img.rect(dx - 2, eave + 5, 2, 10, 'h'); img.rect(dx + 6, eave + 5, 2, 10, 'h');               // shutters
+    img.rect(dx, eave + 4, 6, 12, 'k'); img.vline(dx + 3, eave + 4, eave + 15, 'H'); for (let y = eave + 7; y < eave + 15; y += 3) img.hline(dx, dx + 5, y, 'H');
+  }
+  for (let x = 1; x < w; x += 9) img.rect(x, eave + 1, 2, FH - 3, 'W');                          // posts
+  img.rect(w - 2, eave + 1, 2, FH - 3, 'W');
+  img.rect(0, H - 2, w, 2, 'H'); img.hline(0, w - 1, H - 2, 'S');                                // the verandah floor
+  img.outline('K');
+  return { img, footprint: { w, d }, facadeH: FH };
+}
+
 export function hpPreview() {
-  const frames = [...swanFrames(), ...woodDuckFrames(), adventurePlayground(), cafeFacade(), greenhouseFacade(), cherryTree(), oakTree(), ...capybaraFrames(), fence('h'), fence('v'), highParkSign(), subwayEntrance(), speedCam(), speedCam(true), schoolSign(), tspSignal(), patioSet('R'), patioSet('F'), playground(), revueMarquee(), schoolFacade()];
+  const frames = [colborneLodge().img, ...swanFrames(), ...woodDuckFrames(), adventurePlayground(), cafeFacade(), greenhouseFacade(), cherryTree(), oakTree(), ...capybaraFrames(), fence('h'), fence('v'), highParkSign(), subwayEntrance(), speedCam(), speedCam(true), schoolSign(), tspSignal(), patioSet('R'), patioSet('F'), playground(), revueMarquee(), schoolFacade()];
   return { frames, cols: 9 };
 }

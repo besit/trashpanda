@@ -136,6 +136,9 @@ Every version is kept in `art/history/<asset>/vNN/` (preview, 1× sheet, frozen 
 | File (gitignored) | Used for | How |
 |---|---|---|
 | `reference/DogFjord.jpg` | Dog Fjord | shape language and tone only (see above) |
+| `reference/don-jail.jpg` | the Don Jail (M4.1 redraw) | the tall rusticated centre block, pediment, banded columns, porch + steps; khaki wings with small arched windows; the two brick ventilation towers |
+| `reference/colborne-lodge.jpg` | Colborne Lodge (M4.1 redraw) | Regency cottage: verandah of thin white posts, low hip, small upper storey, three white chimney pots |
+| `reference/city-hall.jpg` | City Hall from above (M4.1) + the Freedom Arches | crescent tower roofs, concave glass faces, the saucer on its podium; the arches seen from above as tall curves |
 | `reference/trinity-bellwoods_gates.png` | Trinity Bellwoods gates (v02) | proportions + details: smooth white stone, domed inner piers, gabled outer piers, inscribed lintels, arched carriage gate |
 | `reference/TrinityBelwwods.jpg` | park layout | positions of paths, diamonds, courts, picnic areas, squirrel (squeezed into our wider park) |
 | `reference/CN-tower.jpg` | CN Tower profile | pod bands, SkyPod, antenna proportions |

@@ -48,7 +48,6 @@ export function generateQueenWest() {
   // land on Strachan too (Strachan first, so coming back up Strachan arrives on Strachan)
   D.exitNS('s', SX, 'waterfront', 'strachan'); D.exitNS('s', OX, 'waterfront', 'strachan'); D.exitNS('s', BX, 'waterfront', 'strachan');
   // M4: north on Ossington or Bellwoods -> the North district (you come out at the bottom of Leslie St)
-  D.exitNS('n', OX, 'north', 'ossington', 'leslie'); D.exitNS('n', BX, 'north', 'bellwoods', 'leslie');
 
   // ---------- Trinity Bellwoods Park ----------
   for (let y = PARK.y0 - 1; y <= PARK.y1 + 1; y++) for (let x = PARK.x0 - 2; x <= PARK.x1 + 2; x++) set(x, y, `lawn${(x * 5 + y * 11) % 3}`);
@@ -76,7 +75,7 @@ export function generateQueenWest() {
   const diamond = at(0.64, 0.13, 96, 96);          // Baseball Diamond #1, "Skydome"
   const diamond2 = at(0.87, 0.56, 96, 96);         // Baseball Diamond #2
   decals.push({ key: 'diamond', x: diamond.x, y: diamond.y }, { key: 'diamond', x: diamond2.x, y: diamond2.y });
-  const courts = at(0.84, 0.83, 86, 93);           // North + South tennis courts
+  const courts = at(0.84, 0.79, 86, 93);           // North + South tennis courts (M4.1, Ivan: up a little, clear of the road)
   decals.push({ key: 'tennis', x: courts.x, y: courts.y });
   // picnic areas, numbered as on the park map
   const picnicSpots = [[0.11, 0.10], [0.60, 0.76], [0.44, 0.835], [0.18, 0.92], [0.37, 0.93], [0.60, 0.955], [0.93, 0.93]].map(([u, v]) => R(u, v));
