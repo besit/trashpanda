@@ -690,7 +690,7 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'side', sky: 'day', street: 'plain', bg: 'science' },
     { t: 'music', song: 'improve' },
     { t: 'actor', id: 'banner', frame: 'openbanner', atlas: 'world', x: 150, y: GROUND - 44, depth: 31, world: true, scale: 1.5 },
-    { t: 'actor', id: 'vdg', frame: 'vandegraaff', atlas: 'world', x: 60, y: GROUND - 2, depth: 32, world: true, scale: 1.5 },
+    { t: 'actor', id: 'vdg', frame: 'vandegraaff', atlas: 'world', x: 60, y: GROUND - 2, depth: 45, world: true, scale: 1.5 }, // M4.2: in front of the passers-by (it stands nearer the street)
     { t: 'actor', id: 'k1', frame: 'ped_kid_E_0', anim: 'ped_kid_E', x: -20, y: SIDEWALK, depth: 40, scale: 2 },
     { t: 'actor', id: 'k2', frame: 'ped_kid_E_0', anim: 'ped_kid_E', x: -70, y: SIDEWALK, depth: 40, scale: 2 },
     { t: 'actor', id: 'p1', frame: 'ped_a_E_0', anim: 'ped_a_E', x: -120, y: SIDEWALK, depth: 40, scale: 2 },

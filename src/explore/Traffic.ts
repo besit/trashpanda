@@ -169,16 +169,19 @@ export class Traffic {
     // and they are drawn front over middle over rear so a rear section's joint never covers the one ahead
     const [ca, cb] = [this.routeAt(T, dc - 9), this.routeAt(T, dc + 9)];
     const hc = Math.atan2(cb[1] - ca[1], cb[0] - ca[0]);
-    const k = Math.hypot(Math.cos(hc), 0.66 * Math.sin(hc));
+    const k = Math.hypot(Math.cos(hc), 0.62 * Math.sin(hc)); // M4.2: a touch tighter when vertical (Ivan: a gap)
     const yc = this.routeAt(T, dc)[1];
     parts.forEach((im, i) => {
       const d = dc + SC_OFF[i] * k, [x, y] = this.routeAt(T, d), a = this.routeAt(T, d - 9), b = this.routeAt(T, d + 9);
       const key = `scsec_${'rmf'[i]}_${faceOf(Math.atan2(b[1] - a[1], b[0] - a[0]), true)}`;
       if (im.frame.name !== key) { im.setFrame(key); const pv = this.manifest.pivots[key]; if (pv) im.setOrigin(pv.x, pv.y); }
-      im.setPosition(Math.round(x), Math.round(y)).setDepth(yc + 2 + i * 0.01);
+      // M4.2 (Ivan: "front, then middle, then back" for the car turning up Spadina): the section lower on the
+      // screen is nearer the camera and drawn over the others; level sections keep front over middle over rear
+      im.setPosition(Math.round(x), Math.round(y)).setDepth(Math.round(y) + 2 + i * 0.01);
     });
-    // the whole car is out of the corner: back to the one-piece sprite
-    if (v.after && dc + SC_OFF[0] > arc + 12) { parts.forEach((im) => im.destroy()); v.parts = undefined; v.after = undefined; v.s.setVisible(true); }
+    void yc;
+    // M4.2 (Ivan: "it snaps to a different position at the end, dropping a little too low"): a car that turned keeps
+    // its sections for good (the one-piece sprite's pivot sat lower), so nothing jumps when it leaves the corner
   }
 
   update(dtMs: number, px: number, py: number) {

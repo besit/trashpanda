@@ -177,8 +177,14 @@ export class LaneEater {
   private draw(f: number) { this.img.setX(Math.round(this.x)).setFlipX(this.dir === -1).setFrame(this.frameKey(f)); }
 
   /** the lane it has eaten: bike-lane green is paved over with car-lane paint */
-  private drawLane(fromX: number) {
-    const g = this.lane.clear(), y0 = STREET_Y + 16, h = 12, x1 = this.x - 40;
+  // M4.2 (Ivan: "the flowerbeds flicker... draw them once"): the paved strip is anchored in the world from a fixed
+  // start and redrawn only when its end moves a whole pixel (it used to be redrawn every frame from the camera's edge)
+  private laneEnd = NaN;
+  private drawLane(_fromX: number) {
+    const fromX = -200, x1 = Math.round(this.x - 40);
+    if (x1 === this.laneEnd) return;
+    this.laneEnd = x1;
+    const g = this.lane.clear(), y0 = STREET_Y + 16, h = 12;
     if (x1 <= fromX) return;
     g.fillStyle(0x363644).fillRect(fromX, y0, x1 - fromX, h + 3);
     g.fillStyle(0x262631).fillRect(fromX, y0 + h + 3, x1 - fromX, 1);

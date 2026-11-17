@@ -7,7 +7,7 @@ import { chromium } from '@playwright/test';
 import fs from 'node:fs';
 
 const [base = 'http://localhost:5180/', out = 'docs/maps', only = '', imp = ''] = process.argv.slice(2);
-const DISTRICTS = (only || 'queenwest,highpark,downtown,eastend,waterfront,north').split(',');
+const DISTRICTS = (only || 'queenwest,highpark,downtown,eastend,waterfront').split(',');
 fs.mkdirSync(out, { recursive: true });
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 768, height: 432 } });

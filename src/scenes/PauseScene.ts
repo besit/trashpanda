@@ -2,7 +2,7 @@
 // Launched on top of Explore or Action, which are paused underneath.
 import Phaser from 'phaser';
 import { DIFFICULTY, fmtScore } from '../core/Score';
-import { DISTRICTS, DISTRICT_ORDER } from '../data/districts';
+import { DISTRICTS } from '../data/districts';
 import { MISSIONS, missionAvailable } from '../data/missions';
 import { GAME_W, GAME_H } from '../config';
 import { InputManager, CONTROLS_KEYS, CONTROLS_ALT, CONTROLS_PAD, touchState } from '../input/InputManager';
@@ -11,13 +11,13 @@ import { text, iris } from '../ui/fx';
 import { ctx } from '../core/ctx';
 import { music } from '../audio/Sequencer';
 import { sfx } from '../audio/sfx';
-import type { CityMap, MapData } from '../explore/CityMap';
+import { exitSpan, type CityMap, type MapData } from '../explore/CityMap';
 import type { Manifest } from './BootScene';
 import { UPGRADES } from '../data/upgrades';
 import { fullscreenSupported, isFullscreen, isInstalled, toggleFullscreen } from '../core/fullscreen';
 
 export interface PauseData { from: string; mode?: 'menu' | 'map' | 'controls' }
-export interface MapInfo { map: CityMap; district?: string; player: { x: number; y: number }; markers: { x: number; y: number; label: string; done: boolean }[] }
+export interface MapInfo { map: CityMap; district?: string; player: { x: number; y: number }; markers: { x: number; y: number; label: string; done: boolean }[]; /** M4.1: the Bike Bus's stops still to come */ route?: { x: number; y: number; kind: string; next: boolean }[] }
 
 type Item = { label: () => string; act?: () => void; left?: () => void; right?: () => void; t?: Phaser.GameObjects.BitmapText; /** fires on pointerUP (browsers only allow fullscreen from a touch's pointerup) */ onUp?: boolean };
 
@@ -150,20 +150,9 @@ export class PauseScene extends Phaser.Scene {
     const view = this.viewDistrict;
     const live = view === here && this.info ? this.info.map : null;
     const md = (live?.data ?? this.cache.json.get(`map_${view}`)) as MapData | undefined;
-    this.root.add(text(this, cx, 10, DISTRICTS[view]?.name ?? 'TORONTO', 'font_big'));
-    // the city west to east: the district on screen is marked, "YOU" where the raccoon is, open missions counted
-    // M3: five districts: > < = on screen, N! = open missions; where you are moved to the footer
-    const makeStrip = (short: boolean) => DISTRICT_ORDER.map((d) => {
-      const open = Object.values(MISSIONS).filter((m) => m.district === d && !ctx.state.completedMissions.includes(m.id) && missionAvailable(m.id, ctx.state.completedMissions)).length;
-      return `${d === view ? '>' : ''}${short ? DISTRICTS[d].short : DISTRICTS[d].name}${open ? ` ${open}!` : ''}${d === view ? '<' : ''}`;
-    }).join('  ');
-    let strip = makeStrip(false);
-    if (strip.length * 6 > GAME_W - 64) strip = makeStrip(true); // clear of the close button
-    this.root.add(text(this, cx, 24, strip, 'font').setTint(0xc9c5d1));
-    // paging arrows (also tappable)
-    const vi = DISTRICT_ORDER.indexOf(view);
-    if (vi > 0) this.root.add(text(this, 14, 12, '<', 'font_big').setTint(0xfff08a));
-    if (vi < DISTRICT_ORDER.length - 1) this.root.add(text(this, GAME_W - 40, 12, '>', 'font_big').setTint(0xfff08a));
+    // M4.2 (Ivan): the district's name; its neighbours are marked outside the map's edges, where they connect
+    this.root.add(text(this, 8, 7, DISTRICTS[view]?.name ?? 'TORONTO', 'font_outline', 0).setOrigin(0, 0.5).setTint(0xfff08a));
+    this.root.add(text(this, GAME_W - 34, 7, `YOU: ${DISTRICTS[here]?.name ?? ''}`, 'font', 1).setOrigin(1, 0.5).setTint(0x9793a6));
     if (!md) {
       // M3.3: another district's map data arrives on demand (it used to load every map at boot)
       const d = (this.registry.get('manifest') as Manifest).districts?.[view];
@@ -205,19 +194,54 @@ export class PauseScene extends Phaser.Scene {
       c.fillStyle = b.mapColor ?? '#8a7f94'; c.fillRect(b.x / ts + 0.15, b.y / ts + 0.15, b.w / ts - 0.3, b.d / ts - 0.3);
     }
     tex.refresh();
-    const availW = GAME_W - 24, availH = GAME_H - 64;
-    const s = Math.max(1, Math.floor(Math.min(availW / md.width, availH / md.height) * 2) / 2);
-    const w = md.width * s, h = md.height * s;
-    const x0 = Math.round(cx - w / 2), y0 = Math.round(34 + (availH - h) / 2);
-    this.mapRect = { x: x0, y: y0, s: s / md.tileSize };
+    // M4.2 (Ivan: "all maps large"): scaled to fill the space between the title and the footer, whatever its size
+    const M = 10, top = 14 + M, bottom = GAME_H - 12 - M;
+    const availW = GAME_W - 2 * M - 8, availH = bottom - top;
+    const s = Math.min(availW / md.width, availH / md.height);
+    const w = Math.round(md.width * s), h = Math.round(md.height * s);
+    const x0 = Math.round(cx - w / 2), y0 = Math.round(top + (availH - h) / 2);
+    this.mapRect = { x: x0, y: y0, s: w / md.width / md.tileSize };
     const frame = this.add.graphics();
     frame.fillStyle(0x16121f).fillRect(x0 - 3, y0 - 3, w + 6, h + 6).lineStyle(1, 0xf6f2e9).strokeRect(x0 - 2.5, y0 - 2.5, w + 5, h + 5);
     this.root.add(frame);
-    this.root.add(this.add.image(x0, y0, key).setOrigin(0).setScale(s));
-    for (const l of md.labels ?? []) {
-      const t = text(this, x0 + l.x * this.mapRect.s, y0 + l.y * this.mapRect.s, l.text, 'font').setTint(l.kind === 'landmark' ? 0xfff08a : l.kind === 'exit' ? 0x9bd35a : 0xf6f2e9);
+    this.root.add(this.add.image(x0, y0, key).setOrigin(0).setDisplaySize(w, h));
+    // M4.2 (Ivan: "too crowded with text"): street names and park names only
+    // streets first, then parks; a label that would cover another, or stick out of the frame, is left out
+    const placed: Phaser.Geom.Rectangle[] = [];
+    const inFrame = new Phaser.Geom.Rectangle(x0 + 1, y0 + 1, w - 2, h - 2);
+    for (const l of [...(md.labels ?? []).filter((l) => !l.kind), ...(md.labels ?? []).filter((l) => l.kind === 'park')]) {
+      const t = text(this, x0 + l.x * this.mapRect.s, y0 + l.y * this.mapRect.s, l.text, 'font').setTint(l.kind === 'park' ? 0xfff08a : 0xf6f2e9);
       if (l.vertical) t.setAngle(-90);
+      // nudged inside the frame if it hangs over an edge
+      let r = t.getBounds();
+      t.x += Math.max(0, inFrame.x - r.x) - Math.max(0, r.right - inFrame.right); t.y += Math.max(0, inFrame.y - r.y) - Math.max(0, r.bottom - inFrame.bottom);
+      r = t.getBounds();
+      const pad = new Phaser.Geom.Rectangle(r.x - 2, r.y - 1, r.width + 4, r.height + 2);
+      const fits = Phaser.Geom.Rectangle.ContainsRect(inFrame, r) && !placed.some((q) => Phaser.Geom.Intersects.RectangleToRectangle(q, pad));
+      if (!fits) { t.destroy(); continue; }
+      placed.push(pad);
       this.root.add(t);
+    }
+    // the neighbours, outside the frame where their streets leave it (tap one, or press that direction)
+    this.mapLinks = [];
+    const groups = new Map<string, { side: string; to: string; sum: number; n: number }>();
+    for (const e of md.exits ?? []) {
+      if (!DISTRICTS[e.to]) continue;
+      const k = `${e.side}${e.to}`, [lo, hi] = exitSpan(e), mid = (lo + hi) / 2;
+      const g = groups.get(k) ?? { side: e.side, to: e.to, sum: 0, n: 0 };
+      g.sum += mid; g.n++; groups.set(k, g);
+    }
+    for (const g of groups.values()) {
+      const along = (g.sum / g.n) * this.mapRect.s, open = Object.values(MISSIONS).filter((m) => m.district === g.to && !ctx.state.completedMissions.includes(m.id) && missionAvailable(m.id, ctx.state.completedMissions)).length;
+      const name = `${DISTRICTS[g.to].name}${open ? ` ${open}!` : ''}`;
+      let t: Phaser.GameObjects.BitmapText;
+      if (g.side === 'n') t = text(this, Phaser.Math.Clamp(x0 + along, x0 + 30, x0 + w - 30), y0 - 9, `^ ${name}`, 'font');
+      else if (g.side === 's') t = text(this, Phaser.Math.Clamp(x0 + along, x0 + 30, x0 + w - 30), y0 + h + 8, `v ${name}`, 'font');
+      else if (g.side === 'w') t = text(this, x0 - 9, Phaser.Math.Clamp(y0 + along, y0 + 30, y0 + h - 30), `< ${name}`, 'font').setAngle(-90);
+      else t = text(this, x0 + w + 9, Phaser.Math.Clamp(y0 + along, y0 + 30, y0 + h - 30), `${name} >`, 'font').setAngle(90);
+      t.setTint(open ? 0xfff08a : 0x9bd35a);
+      this.root.add(t);
+      this.mapLinks.push({ side: g.side, to: g.to, n: g.n, t });
     }
     // markers for the district on screen; the raccoon only where it is
     this.viewMarkers = live && this.info ? this.info.markers : md.markers.filter((m) => ctx.state.completedMissions.includes(m.id) || missionAvailable(m.id, ctx.state.completedMissions)).map((m) => ({ x: m.x, y: m.y, label: m.label, done: ctx.state.completedMissions.includes(m.id) }));
@@ -227,17 +251,23 @@ export class PauseScene extends Phaser.Scene {
     // M3.3: what there is to find here, and what you've found (plaques, hidden hearts, easter eggs)
     const fl = ctx.state.flags, plq = md.landmarks ?? [], hearts = md.lifeTokens ?? [], eggs = md.eggs ?? [];
     const tally = [`PLAQUES ${plq.filter((l) => fl[`score_plaque_${view}_${l.id}`]).length}/${plq.length}`, `HEARTS ${hearts.filter((_, i) => fl[`life_${view}_${i}`]).length}/${hearts.length}`, ...(eggs.length ? [`EGGS ${eggs.filter((e) => fl[`score_egg_${e.id}`]).length}/${eggs.length}`] : [])];
-    this.root.add(text(this, cx, GAME_H - 19, tally.join('   '), 'font').setTint(0xfff08a));
-    this.root.add(text(this, cx, GAME_H - 9, wantsTouch() ? `< > TAP THE ARROWS   YOU: ${DISTRICTS[here]?.short ?? ''}   X: CLOSE` : `A/D: DISTRICTS   YOU: ${DISTRICTS[here]?.name ?? ''}   M / ESC: CLOSE`, 'font').setTint(0x9793a6));
+    this.root.add(text(this, 8, GAME_H - 6, tally.join('  '), 'font', 0).setOrigin(0, 0.5).setTint(0xfff08a));
+    this.root.add(text(this, GAME_W - 8, GAME_H - 6, wantsTouch() ? 'TAP A NEIGHBOUR' : 'ARROWS: MOVE  M: CLOSE', 'font', 1).setOrigin(1, 0.5).setTint(0x9793a6));
     this.drawBlink();
   }
   private viewMarkers: { x: number; y: number; label: string; done: boolean }[] = [];
   private viewHasPlayer = true;
 
-  private pageMap(dir: number) {
-    const i = DISTRICT_ORDER.indexOf(this.viewDistrict) + dir;
-    if (i < 0 || i >= DISTRICT_ORDER.length) return;
-    this.viewDistrict = DISTRICT_ORDER[i];
+  private mapLinks: { side: string; to: string; n: number; t: Phaser.GameObjects.BitmapText }[] = [];
+  /** M4.2 (Ivan): move between the maps the way they connect: DOWN from High Park, Downtown or the East End is the Waterfront */
+  private goMap(side: 'n' | 's' | 'w' | 'e') {
+    const links = this.mapLinks.filter((l) => l.side === side).sort((a, b) => b.n - a.n);
+    if (!links.length) return;
+    this.goDistrict(links[0].to);
+  }
+  private goDistrict(to: string) {
+    if (!DISTRICTS[to] || to === this.viewDistrict) return;
+    this.viewDistrict = to;
     sfx.move();
     this.show('map');
   }
@@ -253,6 +283,12 @@ export class PauseScene extends Phaser.Scene {
       g.fillStyle(m.done ? 0x9bd35a : on ? 0xff6347 : 0xd42a24).fillRect(mx - 2, my - 2, 4, 4);
     }
     if (!this.viewHasPlayer) return;
+    for (const r of this.info.route ?? []) {
+      const rx = x + r.x * s, ry = y + r.y * s;
+      g.fillStyle(0x16121f).fillRect(rx - 3, ry - 3, 7, 7);
+      g.fillStyle(r.kind === 'block' ? 0xff9a2e : r.kind === 'school' ? 0x7cc6f2 : 0xf5c22e).fillRect(rx - 2, ry - 2, 5, 5);
+      if (r.next && on) g.lineStyle(1, 0xfff08a).strokeRect(rx - 5, ry - 5, 11, 11);
+    }
     const px = x + this.info.player.x * s, py = y + this.info.player.y * s;
     g.fillStyle(0x16121f).fillCircle(px, py, 3.5);
     g.fillStyle(on ? 0xfff08a : 0xf6f2e9).fillCircle(px, py, 2.5);
@@ -267,7 +303,7 @@ export class PauseScene extends Phaser.Scene {
       return;
     }
     if (Phaser.Math.Distance.Between(p.x, p.y, this.closeBtn.x, this.closeBtn.y) < 16) { this.viewDistrict = ''; this.back(); return; }
-    if (this.mode === 'map' && p.y < 34) { if (p.x < 60) this.pageMap(-1); else if (p.x > GAME_W - 70) this.pageMap(1); return; }
+    if (this.mode === 'map') { const l = this.mapLinks.find((l) => { const r = l.t.getBounds(); return p.x > r.x - 6 && p.x < r.right + 6 && p.y > r.y - 6 && p.y < r.bottom + 6; }); if (l) this.goDistrict(l.to); return; }
     if (this.mode !== 'menu') return; // map + controls stay open until closed
     const it = this.itemAt(p);
     if (!it) return;
@@ -305,11 +341,11 @@ export class PauseScene extends Phaser.Scene {
     if (this.mode === 'map') {
       this.drawBlink();
       if (this.input2.justPressed('map') || this.input2.justPressed('back') || this.input2.justPressed('pause')) { this.viewDistrict = ''; this.resume(); return; }
-      const nx = this.input2.moveX < -0.5 ? -1 : this.input2.moveX > 0.5 ? 1 : 0;
-      const tx = this.input2.tapX();
-      if (tx) this.pageMap(tx);
-      else if (nx && !this.lastNX) this.pageMap(nx);
-      this.lastNX = nx || tx;
+      const nx = this.input2.moveX < -0.5 ? -1 : this.input2.moveX > 0.5 ? 1 : 0, ny = this.input2.moveY < -0.5 ? -1 : this.input2.moveY > 0.5 ? 1 : 0;
+      const tx = this.input2.tapX(), ty = this.input2.tapY();
+      const dx = tx || (nx && !this.lastNX ? nx : 0), dy = ty || (ny && !this.lastNY ? ny : 0);
+      if (dx) this.goMap(dx < 0 ? 'w' : 'e'); else if (dy) this.goMap(dy < 0 ? 'n' : 's');
+      this.lastNX = nx || tx; this.lastNY = ny || ty;
       return;
     }
     if (this.mode === 'controls') {

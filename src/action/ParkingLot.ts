@@ -103,8 +103,12 @@ export class MonsterSuv {
   get stalled() { return this.state === 'stall'; }
   get title() { return 'THE MONSTER SUV'; }
   private get rage() { return this.hp <= this.maxHp / 2 ? 1.4 : 1; }
-  rect() { return new Phaser.Geom.Rectangle(this.img.x - 52, this.groundY - 62, 104, 58); }
-  roofY() { return this.groundY - 64; }
+  // M4.2 (Ivan: "I bounce way before I land on the roof"; "it hits me when I jump off near its back"): the roof line is
+  // the sprite's actual cabin roof (it was 18 px above it), the body box stops at the roof, and only the FRONT hurts
+  rect() { return new Phaser.Geom.Rectangle(this.img.x - 56, this.groundY - 46, 112, 46); }
+  /** the part that hurts while it charges: the front two thirds, in the direction it's driving */
+  frontRect() { return this.dir === 1 ? new Phaser.Geom.Rectangle(this.img.x - 18, this.groundY - 46, 74, 46) : new Phaser.Geom.Rectangle(this.img.x - 56, this.groundY - 46, 74, 46); }
+  roofY() { return this.groundY - 47; }
   /** the tyres: only hittable while it's stalled */
   tyreRect() { return new Phaser.Geom.Rectangle(this.img.x - 56, this.groundY - 26, 112, 26); }
   get dangerous() { return this.state === 'charge'; }

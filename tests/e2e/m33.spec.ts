@@ -104,7 +104,7 @@ test('a debug mission ends at the REPLAY / BACK / MAIN MENU menu', async ({ page
   await page.waitForFunction(() => (window as unknown as W).__TP_GAME?.scene.getScene('Title')?.scene.isActive(), null, { timeout: 15_000 });
   await page.waitForTimeout(600); await page.keyboard.press('Enter'); await page.waitForTimeout(400);
   // pick by label (arrow presses wrap around the list, which made the test order-dependent)
-  const pick = (label: string) => page.evaluate((l) => { const t = (window as unknown as W).__TP_GAME!.scene.getScene('Title'); t.sel = t.items.findIndex((i: any) => i.label.startsWith(l)); t.refresh(); }, label);
+  const pick = (label: string) => page.evaluate((l) => { const t = (window as unknown as W).__TP_GAME!.scene.getScene('Title'); t.sel = t.items.findIndex((i: any) => i.label.replace(/^\d+\. /, '').startsWith(l)); t.refresh(); }, label);
   await pick('SELECT MISSION'); await page.keyboard.press('Enter'); await page.waitForTimeout(300);
   await pick('LET THE STREETCAR THROUGH'); await page.keyboard.press('Enter');
   await page.waitForFunction(() => (window as unknown as W).__TP_GAME?.scene.getScene('Cutscene')?.scene.isActive(), null, { timeout: 15_000 });

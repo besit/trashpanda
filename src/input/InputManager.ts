@@ -66,6 +66,8 @@ export class InputManager {
   private tapNames = new Set<string>();
   /** a left/right key tapped this frame (menus that page: quick taps are never lost) */
   tapX(): -1 | 0 | 1 { return this.tapNames.has('A') || this.tapNames.has('LEFT') ? -1 : this.tapNames.has('D') || this.tapNames.has('RIGHT') ? 1 : 0; }
+  /** an up/down key tapped this frame */
+  tapY(): -1 | 0 | 1 { return this.tapNames.has('W') || this.tapNames.has('UP') ? -1 : this.tapNames.has('S') || this.tapNames.has('DOWN') ? 1 : 0; }
   private k(n: string) { return !this.ctrl && (this.keys.get(n)?.isDown ?? false); }
 
   /** Call once per frame before reading. */

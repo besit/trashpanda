@@ -53,11 +53,15 @@ export function generateWaterfront() {
   // M3.2 (Ivan: "solve the train tracks issue on Spadina"): Spadina's rails run all the way into the
   // intersection's north row, where the curves pick them up (they used to stop short and the curves floated)
   for (const y of [QQ - 3, QQ - 1]) { D.set(SP + 1, y, 'tracks_ns_w'); D.set(SP + 2, y, 'tracks_ns_e'); }
-  D.set(SP + 1, QQ, 'tracks_ns'); D.set(SP + 2, QQ, 'tracks_ns'); // inside the junction: rails, no centre line
+  // M4.2 (Ivan: "the tracks double going straight and turning"): Spadina's straight rails stop at the junction's
+  // edge; inside it there are only the curves (they start exactly where the straight rails end)
   // the 510's rails: Spadina's southbound track curves east onto Queens Quay, the westbound one north
   // (concentric arcs, radii 32 and 16 px; their centre is the decal's top-right corner)
   const xSB = (SP + 1) * TS + 8, yEB = (QQ + 2) * TS + 8;
-  D.prop('trackcurves', xSB + 32, yEB - 32, { depth: -8.5 });
+  // M4.2: both curves share a centre on the junction's tile corner, radii 40 (SB -> EB) and 24 (WB -> NB); the
+  // tight 16 px turn broke the streetcar's sections apart
+  void xSB; void yEB;
+  D.prop('trackcurves', (SP + 4) * TS, QQ * TS, { depth: -8.5 });
   D.exitNS('n', ST, 'queenwest', 'strachan');
   D.exitNS('n', SP, 'downtown', 'spadina'); D.exitNS('n', UN, 'downtown', 'university'); D.exitNS('n', BY, 'downtown', 'bay');
   // M3.2 (Ivan): from High Park you come down onto the trail at the west end; ride west along it to go back
@@ -91,7 +95,7 @@ export function generateWaterfront() {
   D.landmarks.push({ id: 'aquarium', x: 70 * TS + 8, y: (LAKESHORE - 6) * TS + 4, label: 'RIPLEY\'S AQUARIUM', fact: 'OPENED IN 2013, AT THE\nFOOT OF THE CN TOWER.' });
   parkTree(77, UN - 2, 7, LAKESHORE - 6, 9);
   for (const x of [78, 81]) D.tprop('bench', x, LAKESHORE - 6, 8, 12);
-  D.labels.push({ text: 'ROGERS CENTRE', x: (SP + 11) * TS, y: 4 * TS, kind: 'landmark' }, { text: 'CN TOWER', x: 62 * TS, y: 11 * TS, kind: 'landmark' }, { text: 'AQUARIUM', x: 70 * TS, y: 15 * TS, kind: 'landmark' }, { text: 'ROUNDHOUSE PARK', x: 80 * TS, y: 9 * TS, kind: 'landmark' });
+  D.labels.push({ text: 'ROGERS CENTRE', x: (SP + 11) * TS, y: 4 * TS, kind: 'landmark' }, { text: 'CN TOWER', x: 62 * TS, y: 11 * TS, kind: 'landmark' }, { text: 'AQUARIUM', x: 70 * TS, y: 15 * TS, kind: 'landmark' }, { text: 'ROUNDHOUSE PARK', x: 80 * TS, y: 9 * TS, kind: 'park' });
   towers(UN + 4, BY, { base: (LAKESHORE - 5) * TS }, [14, 18]);
   towers(BY + 4, W, { base: (LAKESHORE - 5) * TS }, [14, 18]);
 
@@ -141,13 +145,13 @@ export function generateWaterfront() {
   for (let i = 0; i < 5; i++) D.prop('stakemap', (30.5 + i * 1.5) * TS, (LAKE_Y + 1.5 + i) * TS, { tag: 'stakes' });
   D.landmarks.push({ id: 'littlenorway', x: 36 * TS + 4, y: (LAKE_Y + 2) * TS + 10, label: 'LITTLE NORWAY PARK', fact: 'A ROYAL NORWEGIAN AIR FORCE\nCAMP IN WWII. A PARK SINCE\n1986, ACROSS FROM THE AIRPORT.' });
   D.markers.push({ id: 'island_airport', x: 33 * TS, y: (QQ + 11) * TS + 8, label: 'GROUNDED' });
-  D.labels.push({ text: 'LITTLE NORWAY PK', x: 33 * TS, y: (LAKE_Y + 8) * TS, kind: 'landmark' });
+  D.labels.push({ text: 'LITTLE NORWAY PK', x: 33 * TS, y: (LAKE_Y + 8) * TS, kind: 'park' });
   // HTO Park: an urban beach on the old quays, with the fixed yellow umbrellas
   quay(42, 48, 7, (x, y) => (y >= LAKE_Y + 6 ? `plaza${(x + y) % 2}` : 'sand'));
   for (let i = 0; i < 8; i++) D.prop('yellowumbrella', (42.8 + (i % 4) * 1.7) * TS, (LAKE_Y + 2 + Math.floor(i / 4) * 2.4) * TS);
   for (const [x, y] of [[48, LAKE_Y + 1], [42, LAKE_Y + 6], [48, LAKE_Y + 6]]) D.tprop('tree_a', x, y, 8, 10, { solid: 4 });
   D.landmarks.push({ id: 'hto', x: 45 * TS + 8, y: (LAKE_Y + 6) * TS, label: 'HTO PARK', fact: 'AN URBAN BEACH (2007).\nTHE YELLOW UMBRELLAS NOD\nTO SEURAT\'S GRANDE JATTE.' });
-  D.labels.push({ text: 'HTO PARK', x: 45 * TS + 8, y: (LAKE_Y + 8) * TS, kind: 'landmark' });
+  D.labels.push({ text: 'HTO PARK', x: 45 * TS + 8, y: (LAKE_Y + 8) * TS, kind: 'park' });
   // the Power Plant (Harbourfront Centre)
   quay(53, 61, 8, (x, y) => `plaza${(x + y) % 2}`);
   D.addBuilding(54 * TS, 7 * TS, { w: 7 * TS, d: 48, floors: 1, seed: 1987, kind: 'powerplant' }, { base: (LAKE_Y + 6) * TS }, { graffiti: null });
@@ -162,7 +166,7 @@ export function generateWaterfront() {
   D.prop('sundial', (UN + 1) * TS + 8, (LAKE_Y + 5) * TS + 8, { solidBox: [-26, -20, 52, 18] });
   for (const [x, y] of [[78, LAKE_Y + 1], [89, LAKE_Y + 1], [78, LAKE_Y + 6], [89, LAKE_Y + 6], [81, LAKE_Y + 3]]) D.tprop('tree_a', x, y, 8, 10, { solid: 4 });
   D.landmarks.push({ id: 'sundial', x: (UN + 1) * TS + 8, y: (LAKE_Y + 1) * TS, label: 'THE SUNDIAL FOLLY', fact: 'HARBOUR SQUARE PARK WEST.\nA CONCRETE SPHERE IN A POOL\n(J. FUNG + P. FIGUEIREDO, 1995)' });
-  D.labels.push({ text: 'HARBOUR SQUARE PARK', x: (UN + 1) * TS, y: (LAKE_Y + 8) * TS, kind: 'landmark' });
+  D.labels.push({ text: 'HARBOUR SQUARE PARK', x: (UN + 1) * TS, y: (LAKE_Y + 8) * TS, kind: 'park' });
   // the Jack Layton Ferry Terminal at the foot of Bay, a ferry docked off the end of its quay
   quay(94, 105, 5, (x, y) => `plaza${(x + y) % 2}`);
   D.addBuilding(96 * TS, 7 * TS, { w: 7 * TS, d: 40, floors: 1, seed: 2013, kind: 'ferry' }, { base: (LAKE_Y + 5) * TS }, { graffiti: null });
@@ -172,7 +176,7 @@ export function generateWaterfront() {
   quay(109, 119, 7, (x, y) => (y >= LAKE_Y + 7 ? `plaza${(x + y) % 2}` : 'sand'));
   for (let i = 0; i < 10; i++) D.prop('pinkumbrella', (110 + (i % 5) * 2) * TS, (LAKE_Y + 2 + Math.floor(i / 5) * 2.4) * TS);
   D.landmarks.push({ id: 'sugarbeach', x: 114 * TS, y: (LAKE_Y + 7) * TS, label: 'SUGAR BEACH', fact: 'PINK UMBRELLAS NEXT TO\nA WORKING SUGAR REFINERY.' });
-  D.labels.push({ text: 'SUGAR BEACH', x: 114 * TS, y: (LAKE_Y + 9) * TS, kind: 'landmark' });
+  D.labels.push({ text: 'SUGAR BEACH', x: 114 * TS, y: (LAKE_Y + 9) * TS, kind: 'park' });
   // the slips
   for (const [a, b, deep] of [[38, 41, 8], [49, 52, 8], [62, 65, 8], [74, 77, 7], [90, 93, 7], [106, 108, 7]]) slip(a, b, deep);
   D.labels.push({ text: 'MARINA', x: 64 * TS, y: (LAKE_Y + 10) * TS, kind: 'landmark' });
@@ -195,7 +199,7 @@ export function generateWaterfront() {
   for (let x = 0; x < 34; x++) if (x < 20 || x > 22) D.tprop('spafence', x, LAKE_Y, 0, 2, { tag: 'spafence' });
   D.landmarks.push({ id: 'megaspa', x: 24 * TS, y: (QQ + 11) * TS, label: 'THE MEGA SPA (FICTIONAL)', fact: 'PRIVATE. PAID ENTRY.\nYOUR SHORELINE,\nTHEIR CHECKOUT.' });
   D.markers.push({ id: 'waterfront_heist', x: 27 * TS, y: (QQ + 11) * TS + 8, label: 'THE WATERFRONT HEIST' });
-  D.labels.push({ text: 'ONTARIO PLACE', x: 17 * TS, y: (LAKE_Y + 20) * TS, kind: 'landmark' }, { text: 'THE PODS', x: 9 * TS, y: (LAKE_Y + 3) * TS, kind: 'landmark' }, { text: 'CINESPHERE', x: 35 * TS, y: (LAKE_Y + 16) * TS, kind: 'landmark' });
+  D.labels.push({ text: 'ONTARIO PLACE', x: 17 * TS, y: (LAKE_Y + 20) * TS, kind: 'park' }, { text: 'THE PODS', x: 9 * TS, y: (LAKE_Y + 3) * TS, kind: 'landmark' }, { text: 'CINESPHERE', x: 35 * TS, y: (LAKE_Y + 16) * TS, kind: 'landmark' });
 
   // ---------- shorelines: water next to land gets an edge (the island, every quay) ----------
   const land = (x, y) => { const t = D.get(x, y); return !!t && !t.startsWith('water') && !t.startsWith('shore'); };
@@ -252,7 +256,7 @@ export function generateWaterfront() {
   D.lanes.push({ id: 'gardiner_wb', axis: 'x', dir: -1, pos: DECK_Y - 34, elevated: true, until: 'gardiner_down' }, { id: 'gardiner_eb', axis: 'x', dir: 1, pos: DECK_Y - 15, elevated: true, until: 'gardiner_down' });
   // Queens Quay: the streetcar in its own grassy median, one car lane each side; cars turn up the streets
   D.lanes.push(
-    { id: 'qqt_wb', axis: 'x', dir: -1, pos: (QQ + 1) * TS + 8, streetcar: true, transitOnly: true, turns: [{ to: 'spadina_nb', r: 16, p: 0.5, kinds: ['streetcar'] }] },
+    { id: 'qqt_wb', axis: 'x', dir: -1, pos: (QQ + 1) * TS + 8, streetcar: true, transitOnly: true, turns: [{ to: 'spadina_nb', r: 24, p: 0.5, kinds: ['streetcar'] }] },
     { id: 'qqt_eb', axis: 'x', dir: 1, pos: (QQ + 2) * TS + 8, streetcar: true, transitOnly: true },
     { id: 'qq_wb', axis: 'x', dir: -1, pos: QQ * TS + 8, light: true, turns: [{ to: 'bay_nb', r: 8, p: 0.25, kinds: ['car'] }, { to: 'university_nb', r: 8, p: 0.3, kinds: ['car'] }, { to: 'spadina_nb', r: 8, p: 0.3, kinds: ['car'] }, { to: 'strachan_nb', r: 8, p: 0.5, kinds: ['car'] }] },
     { id: 'qq_eb', axis: 'x', dir: 1, pos: (QQ + 3) * TS + 8, light: true, turns: [{ to: 'strachan_nb', r: 24, p: 0.2, kinds: ['car'] }, { to: 'spadina_nb', r: 24, p: 0.25, kinds: ['car'] }, { to: 'university_nb', r: 24, p: 0.3, kinds: ['car'] }, { to: 'bay_nb', r: 24, p: 0.35, kinds: ['car'] }] },
@@ -265,7 +269,7 @@ export function generateWaterfront() {
   for (const [c, name] of STREETS) {
     D.nsLanes(name, c, c === SP ? { streetcar: true } : {}, 0, QQ + 4);
     const sb = D.lanes.find((l) => l.id === `${name}_sb`), nb = D.lanes.find((l) => l.id === `${name}_nb`);
-    sb.turns = [...(c === SP ? [{ to: 'qqt_eb', r: 32, p: 1, kinds: ['streetcar'] }] : []), { to: 'qq_wb', r: 8, p: 0.45, kinds: ['car', 'bike'] }, { to: 'qq_eb', r: 40, p: 1, kinds: ['car', 'bike'] }];
+    sb.turns = [...(c === SP ? [{ to: 'qqt_eb', r: 40, p: 1, kinds: ['streetcar'] }] : []), { to: 'qq_wb', r: 8, p: 0.45, kinds: ['car', 'bike'] }, { to: 'qq_eb', r: 40, p: 1, kinds: ['car', 'bike'] }];
     nb.noSpawn = true; // fed by Queens Quay's turning traffic
   }
   D.labels.push(

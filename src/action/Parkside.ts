@@ -26,6 +26,18 @@ export class Chase {
   private staggerT = 0;
   private lastHit = -1;
   private cones: { img: Phaser.GameObjects.Image; x: number; hit: boolean }[] = [];
+  private truck?: Phaser.GameObjects.Image;
+  private truckLabel?: Phaser.GameObjects.BitmapText;
+  /** the truck pulls away (with the exhibit, or empty) */
+  private truckLeaves(full: boolean) {
+    if (!this.truck) return;
+    const t = this.truck; this.truckLabel?.destroy();
+    this.scene.time.delayedCall(full ? 900 : 700, () => {
+      sfx.carHonk();
+      floatText(this.scene, t.x, this.groundY - 74, full ? 'VROOM! GONE.' : 'EMPTY-HANDED!', 'font_outline', full ? 0xff6347 : 0x9bd35a, 900);
+      this.scene.tweens.add({ targets: t, x: t.x + 420, duration: 2200, ease: 'Quad.easeIn' });
+    });
+  }
 
   constructor(private scene: Phaser.Scene, private def: ChaseDef, startX: number, private groundY: number) {
     this.x = startX + def.lead;
@@ -33,13 +45,16 @@ export class Chase {
     for (let i = 0; i < 2; i++) this.rats.push(scene.add.sprite(0, groundY, 'chars', 'rat_basic_0').setOrigin(15 / 32, 31 / 32).setDepth(92).play('rat_basic_walk'));
     // the real camera, tipped over on its side and carried (same sprite as on the map + in the vignette);
     // M4: or the Science Centre's Van de Graaff generator, upright
-    this.cam = def.goal === 'truck' ? scene.add.image(0, 0, 'world', 'vandegraaff').setOrigin(0.5, 0.5).setScale(1.6).setDepth(93) : scene.add.image(0, 0, 'world', 'speedcam').setOrigin(0.5, 0.5).setScale(2).setAngle(90).setDepth(93);
+    // M4.2 (Ivan: the ball is drawn over things it shouldn't be): carried at the rats' depth, behind the raccoon
+    this.cam = def.goal === 'truck' ? scene.add.image(0, 0, 'world', 'vandegraaff').setOrigin(0.5, 0.5).setScale(1.6).setDepth(92.5) : scene.add.image(0, 0, 'world', 'speedcam').setOrigin(0.5, 0.5).setScale(2).setAngle(90).setDepth(93);
     this.bar = scene.add.graphics().setDepth(210);
     this.place(); // positioned from the first frame (they used to sit at x = 0 during the title card)
     for (const cx of def.cones) this.cones.push({ img: scene.add.image(cx, groundY + 1, 'world', 'cone').setOrigin(0.5, 1).setScale(2).setDepth(91), x: cx, hit: false });
     if (def.goal === 'truck') { // the moving truck waits at the end of the street, tailgate open
-      scene.add.image(def.pondAt + 90, groundY + 2, 'world', 'vanside').setOrigin(0.5, 1).setScale(1.3).setDepth(60); // never flipped: its lettering would mirror
-      scene.add.bitmapText(def.pondAt + 90, groundY - 70, 'font_outline', 'THE MOVING TRUCK').setOrigin(0.5).setDepth(61).setTint(0xff6347);
+      // M4.2 (Ivan: "I tried to fight the truck, nothing happened, why is it there?"): it's where the rats are running TO.
+      // They load the exhibit and it drives off with it, or you catch them and it leaves empty. It isn't a target.
+      this.truck = scene.add.image(def.pondAt + 90, groundY + 2, 'world', 'vanside').setOrigin(0.5, 1).setScale(1.3).setDepth(60); // never flipped: its lettering would mirror
+      this.truckLabel = scene.add.bitmapText(def.pondAt + 90, groundY - 78, 'font_outline', 'THEIR GETAWAY TRUCK\nCATCH THEM BEFORE IT!').setOrigin(0.5).setDepth(61).setTint(0xff6347).setCenterAlign();
       return;
     }
     // the pond is IN THE PARK, behind the sidewalk
@@ -94,6 +109,17 @@ export class Chase {
       floatText(this.scene, this.x, this.groundY - 56, 'THEY DROPPED IT!', 'font_big', 0xffffff, 700);
       this.scene.tweens.add({ targets: this.cam, y: this.groundY - 8, angle: 96, duration: 300, ease: 'Bounce.easeOut' });
       this.rats.forEach((r) => r.destroy());
+      this.truckLeaves(false);
+    } else if (this.x + 30 > this.def.pondAt && this.truck) {
+      // into the truck's open back, and it drives off with them
+      this.state = 'splash'; this.bar.clear();
+      const tx = this.truck.x - 30;
+      for (const o of [this.cam, ...this.rats]) {
+        this.scene.tweens.add({ targets: o, x: tx + (o === this.cam ? 0 : o === this.rats[0] ? -16 : 16), duration: 500, ease: 'Linear' });
+        this.scene.tweens.add({ targets: o, y: this.groundY - 30, alpha: 0, duration: 600, delay: 300, ease: 'Quad.easeIn' });
+        o.setDepth(59);
+      }
+      this.truckLeaves(true);
     } else if (this.x + 30 > this.def.pondAt) {
       // they leap from the street, over the sidewalk, into the pond in the park
       this.state = 'splash'; this.bar.clear();

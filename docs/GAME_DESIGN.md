@@ -251,3 +251,11 @@ None. No ads, purchases, energy or login.
 - **Credits:** the satire + AI notice shows once, before the intro on NEW GAME. ABOUT opens on the credits (the alias SEXWITHAWHALEINC, Instagram and X links you can click); pages flip with LEFT/RIGHT.
 - **Bosses:** the Jet Tug drives off screen before it turns and comes back from the side it left; only the tug hurts; the jet is a platform you can ride. The Highway Mech walks between attacks; its slabs stand on piers at the height you land on. Stomps send visible dust shockwaves, and the Mega Rat throws barrels.
 
+
+## M4.2: Ivan's M4.1 notes
+- **City map:** street and park names only; neighbours marked outside the frame where they connect; arrows move by direction; every map fills the screen.
+- **Nothing pops in:** bosses slide in from off screen, mid-fight rats come from the screen edge, arena spots are already on the street, slabs fall from above.
+- **The Wrecker:** it drives its boom over you, then swings the ball (one-sided) or drops it where you stand (shadow, shockwaves). Only the ball hurts; pump the engine or stomp the cab any time, double damage while it lets off steam.
+- **Save the Science:** crates stand in front of the raccoon; HIDDEN / HIDE HERE; the getaway truck drives off with the exhibit if the rats reach it.
+- **The Jet Tug** revs at the edge (nothing to climb yet), then crosses fast. **The Monster SUV** bounces you off its drawn roof, and only its front hurts.
+- **The mission list** (debug) is numbered in unlock order.

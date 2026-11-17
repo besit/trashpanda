@@ -525,7 +525,8 @@ export class ExploreScene extends Phaser.Scene {
   }
 
   minimapInfo(): MapInfo {
-    return { map: this.map, district: this.district, player: { x: this.player.x, y: this.player.y }, markers: this.markers.map((m) => ({ x: m.x, y: m.y, label: MISSIONS[m.id]?.title ?? m.id, done: m.done })) };
+    const route = this.bus ? this.bus.def.steps.slice(this.bus.step).map((s, i) => ({ x: s.x, y: s.y, kind: s.kind, next: i === 0 })) : undefined;
+    return { map: this.map, district: this.district, player: { x: this.player.x, y: this.player.y }, markers: this.bus ? [] : this.markers.map((m) => ({ x: m.x, y: m.y, label: MISSIONS[m.id]?.title ?? m.id, done: m.done })), route };
   }
 
   update(_t: number, dt: number) {

@@ -148,3 +148,11 @@ Snapshots go to `art/history/<asset>/vNN/` (`tools/snapshot.mjs`).
 - **Moving platforms:** the Jet Tug's fuselage is a dynamic, immovable, one-way `Zone` whose velocity drives the rig; the image follows the body, so a rider is carried by Arcade's friction.
 - **SDF in the map's projection:** `freedomArchMap` and `cityHallMap` render with `obliqueCam(1, far)`, so they sit on the ground the way the tiles do. A squashed SDF has to be scaled by its squash factor or rays overstep thin parts (the first arch drew as a stub).
 
+
+## M4.2 additions
+- **`missionOrder()`** (`src/data/missions.ts`): missions sorted by the depth of their prerequisite chain, then definition order.
+- **City map** (`PauseScene.buildMap`): labels without a `kind` (streets) and `kind: 'park'` only, placed streets first and skipped if they'd overlap or leave the frame; neighbours from `md.exits` grouped by side + district, drawn outside the frame; `goMap(side)` picks the neighbour with the most exits on that side. Continuous scale. `MapInfo.route` carries the Bike Bus's remaining steps.
+- **`ActionScene.enterFromRight(objs)`** slides objects created on screen in from beyond the right edge (physics bodies reset along the tween); `arenaLeftAt(at)` predicts where an arena will lock, so `DepaveSpots` / `BuildSpots` are created at mission start; `edgeX(x)` spawns mid-fight rats at the nearer screen edge; `clearSay()` on boss defeats, wins and losses.
+- **`landingOn`** is a crossing test (previous-frame bottom above the roof line, current at or below it minus 3 px).
+- **`ScrollLayer`**: layers slower than the camera move in 2-px steps (dither stability).
+- **Streetcars:** turning cars keep their sections; section depth = its own screen y; the Spadina curves share the centre ((SP+4)·16, QQ·16), radii 40 and 24.

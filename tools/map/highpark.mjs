@@ -343,12 +343,11 @@ export function generateHighPark() {
 
   D.labels.push(
     { text: 'BLOOR ST W', x: 28 * TS, y: (BLOOR + 2) * TS },
-    { text: 'DUNDAS ST W', x: 101 * TS, y: (BLOOR + 2) * TS },
     { text: 'THE QUEENSWAY', x: 30 * TS, y: (QUEEN + 2) * TS },
     { text: 'QUEEN ST W', x: 101 * TS, y: (QUEEN + 2) * TS },
     { text: 'PARKSIDE DR', x: (PS + 2) * TS, y: 50 * TS, vertical: true },
     { text: 'RONCESVALLES', x: (RX + 2) * TS, y: 50 * TS, vertical: true },
-    { text: 'HIGH PARK', x: U(0.62) * TS, y: V(0.14) * TS, kind: 'landmark' },
+    { text: 'HIGH PARK', x: U(0.62) * TS, y: V(0.14) * TS, kind: 'park' },
     { text: 'GRENADIER POND', x: U(0.24) * TS, y: V(0.85) * TS, kind: 'landmark' },
     { text: 'SCHOOL', x: (SCHOOL.x0 + 6) * TS, y: (SCHOOL.base - 4) * TS, kind: 'landmark' },
     { text: 'QUEEN WEST >', x: (W - 4) * TS, y: (QUEEN - 4) * TS, kind: 'exit' },

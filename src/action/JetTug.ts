@@ -14,7 +14,7 @@ import { sfx } from '../audio/sfx';
 import { puff, floatText, shake } from '../ui/fx';
 import type { Hitbox } from './SidePlayer';
 
-type State = 'intro' | 'drive' | 'refuel' | 'away' | 'dead';
+type State = 'intro' | 'rev' | 'drive' | 'refuel' | 'away' | 'dead';
 const JET = { x0: -120, x1: 58 };   // the jet's span in the right-facing image, from the image centre
 const TUG = { x0: 64, x1: 118 };    // the tug's span
 
@@ -30,9 +30,10 @@ export class JetTug {
   private lastHit = -1;
   private honkCd = 0;
   private refuelled = false;
+  private revX = 0;
 
   constructor(private scene: Phaser.Scene, _x: number, private groundY: number, private bounds: { left: number; right: number }, private onCase: (x: number, dir: 1 | -1) => void) {
-    // it starts off screen to the right, facing left
+    // it starts off screen to the right, facing left; M4.2: it revs at the edge, only its tug showing
     const x0 = bounds.right + 130;
     this.img = scene.add.image(x0, groundY + 4, 'world', 'jettugl_0').setOrigin(0.5, 70 / 74).setDepth(105);
     this.platform = scene.add.zone(x0 + this.jetMid(), groundY - 37, JET.x1 - JET.x0 - 16, 6);
@@ -49,6 +50,22 @@ export class JetTug {
   get refuelling() { return this.state === 'refuel'; }
   get phase() { return this.state; }
   private get rage() { return this.hp <= this.maxHp / 2 ? 1.3 : 1; }
+  /**
+   * M4.2 (Ivan: "too easy. Let's make him rev up a little, then go across the screen faster, and so we can't jump on
+   * top before it goes across"): it waits at the screen's edge with only the tug poking in (the jet is still off
+   * screen, so there's nothing to climb), revs, then crosses at 170 px/s (was 100).
+   */
+  private revAt() {
+    const pb = this.platform.body as Phaser.Physics.Arcade.Body;
+    // the tug's nose 46 px inside the edge it comes from
+    this.img.x = this.dir === -1 ? this.bounds.right - 46 + TUG.x1 : this.bounds.left + 46 - TUG.x1;
+    this.revX = this.img.x;
+    this.platform.x = this.img.x + this.jetMid(); pb.reset(this.platform.x, this.platform.y);
+    pb.checkCollision.up = false; // no riding until it rolls
+    this.state = 'rev'; this.t = 1.1 / this.rage;
+    sfx.boost();
+    floatText(this.scene, Phaser.Math.Clamp(this.rect().centerX, this.bounds.left + 50, this.bounds.right - 50), this.groundY - 56, 'VRRROOOM!', 'font_red', 0xffffff, 700);
+  }
   private jetMid() { return (this.dir === 1 ? (JET.x0 + JET.x1) / 2 : -(JET.x0 + JET.x1) / 2); }
   private span(s: { x0: number; x1: number }) { return this.dir === 1 ? [this.img.x + s.x0, this.img.x + s.x1] : [this.img.x - s.x1, this.img.x - s.x0]; }
   /** the tug at the front: the only part that hurts (while it drives) */
@@ -96,9 +113,15 @@ export class JetTug {
     this.t -= dt;
     let vx = 0;
     switch (this.state) {
-      case 'intro': if (this.t <= 0) { this.state = 'drive'; this.refuelled = false; sfx.boost(); } break;
+      case 'intro': if (this.t <= 0) { this.refuelled = false; this.revAt(); } break;
+      case 'rev': { // shaking on the spot, smoke and blast; then off it goes
+        this.img.x = this.revX + (Math.random() < 0.5 ? -1 : 1);
+        if (Math.random() < 0.7) puff(this.scene, this.rect().centerX - this.dir * 30, this.groundY - 8, 0x69657a, 1, 10, 106);
+        if (this.t <= 0) { this.state = 'drive'; (this.platform.body as Phaser.Physics.Arcade.Body).checkCollision.up = true; sfx.carHonk(); }
+        break;
+      }
       case 'drive': {
-        vx = this.dir * 100 * this.rage;
+        vx = this.dir * 170 * this.rage;
         const br = this.blastRect();
         if (Math.random() < 0.6) puff(this.scene, br.x + Math.random() * br.width, br.y + 8 + Math.random() * 30, Math.random() < 0.5 ? 0xc9c5d1 : 0xffd3c4, 1, 10, 104);
         this.honkCd -= dt; if (this.honkCd <= 0 && Math.abs(px - this.img.x) < 180) { sfx.carHonk(); this.honkCd = 1.5; }
@@ -120,15 +143,14 @@ export class JetTug {
       case 'away': // off screen: it turns round out of sight and comes back from the side it left
         if (this.t <= 0) {
           this.dir = this.dir === 1 ? -1 : 1;
-          this.img.x = this.dir === 1 ? this.bounds.left - 130 : this.bounds.right + 130;
-          this.platform.x = this.img.x + this.jetMid(); pb.reset(this.platform.x, this.platform.y);
-          this.state = 'drive'; this.refuelled = false; sfx.boost();
+          this.refuelled = false;
+          this.revAt();
         }
         break;
     }
     pb.setVelocityX(vx);
     // the image follows the platform's body, so a rider is carried exactly with the jet
-    this.img.x = this.platform.x - this.jetMid();
+    if (this.state !== 'rev') this.img.x = this.platform.x - this.jetMid();
     this.img.setFrame(`${this.dir === 1 ? 'jettug' : 'jettugl'}_${Math.floor(this.scene.time.now / 130) % 2}`);
   }
 }

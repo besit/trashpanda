@@ -62,7 +62,7 @@ export function generateEastEnd() {
   // ---------- the Riverdale Park footbridge: Riverdale Park West -> East over the river + the DVP ----------
   for (let x = 0; x <= DVP.x1 + 2; x++) { D.set(x, FB - 1, 'bridge_rail_n'); D.set(x, FB, `sidewalk${x % 2}`); D.set(x, FB + 1, 'bridge_rail_s'); }
   D.landmarks.push({ id: 'footbridge', x: 13 * TS, y: FB * TS + 4, label: 'RIVERDALE PARK BRIDGE', fact: 'WALK + BIKE ONLY. IT JOINS\nRIVERDALE PARK WEST + EAST\nHIGH OVER THE DON + THE DVP.' });
-  D.labels.push({ text: 'RIVERDALE PK WEST', x: 3 * TS, y: (FB - 3) * TS, kind: 'landmark' });
+  // (M4.2: no map label for Riverdale Park West: the strip is too narrow, and the name crowded out Riverdale Park East)
 
   const bricks = ['red', 'buff', 'darkred', 'red', 'cream', 'grey', 'teal', 'mustard', 'lilac'];
   const houses = ['baygable', 'baygable', 'house', 'queenanne', 'secondempire'];
@@ -81,7 +81,7 @@ export function generateEastEnd() {
   // benches at the top of the hill, facing the skyline
   for (const dx of [0, 1.5, 3]) D.prop('bench', (RP.x0 + 7 + dx) * TS, (RP.y0 + 5) * TS);
   D.landmarks.push({ id: 'riverdale', x: (RP.x0 + 8) * TS, y: (RP.y0 + 5) * TS + 8, label: 'RIVERDALE PARK EAST', fact: 'THE HILL WITH THE BEST\nVIEW OF THE SKYLINE.\nSUNSET STARTS HERE.' });
-  D.labels.push({ text: 'RIVERDALE PARK EAST', x: ((RP.x0 + RP.x1) / 2 + 1) * TS, y: (RP.y0 + 9) * TS, kind: 'landmark' });
+  D.labels.push({ text: 'RIVERDALE PARK EAST', x: ((RP.x0 + RP.x1) / 2 + 1) * TS, y: (RP.y0 + 9) * TS, kind: 'park' });
   // the Don Jail, on Gerrard just south of the park
   D.addBuilding((DVP.x1 + 3) * TS, 14 * TS, { w: 14 * TS, d: 64, floors: 3, seed: 1864, kind: 'donjail' }, { base: (GERRARD - 3) * TS }, { graffiti: null });
   D.landmarks.push({ id: 'donjail', x: (DVP.x1 + 10) * TS, y: (GERRARD - 3) * TS + 10, label: 'THE DON JAIL', fact: 'OPENED IN 1864 WITH 184\nCELLS. CLOSED IN 1977. NOW\nTHE HOSPITAL NEXT DOOR\'S\nOFFICES.' });

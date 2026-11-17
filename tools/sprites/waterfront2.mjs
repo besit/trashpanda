@@ -217,7 +217,7 @@ export function gardinerPier() {
  * the outer one (r1) southbound -> eastbound, the inner one (r2) westbound -> northbound. Origin = the
  * arcs' centre at the decal's top-right corner.
  */
-export function trackCurves(r1 = 32, r2 = 16) {
+export function trackCurves(r1 = 40, r2 = 24) { // M4.2: radii 40 + 24 around the junction's tile corner (were 32 + 16)
   const S = r1 + 6, img = new Img(S, S);
   for (const r of [r1, r2]) for (const g of [-3, 3]) {
     for (let a = 0; a <= 90; a += 0.5) {
@@ -352,3 +352,6 @@ export function waterfrontSidePreview() {
 export function waterfront2Preview() {
   return { frames: [cnTowerBuilding().img, domeBuilding().img, aquariumBuilding().img, ferryTerminalBuilding().img, ferryBoat(), sundialFolly(), podOP(), cinesphereOP(), gardinerDeck(), gardinerPier(), trackCurves(), marinaDock()], cols: 4 };
 }
+
+/** M4.2: the 510's junction curves on their own (art history preview) */
+export function trackCurvesPreview() { return { frames: [trackCurves()], cols: 1 }; }

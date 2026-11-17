@@ -58,8 +58,23 @@ export class SpaDigger {
     this.marker?.destroy();
     sfx.squeak(); shake(this.scene, 400, 0.012);
     floatText(this.scene, this.img.x, this.groundY - 110, 'SPA CANCELLED!', 'font_big', 0xffffff, 1400);
-    this.img.setFrame('digger_0');
-    this.scene.tweens.add({ targets: this.img, x: this.img.x + 260, alpha: 0, duration: 1600, ease: 'Quad.easeIn' });
+    // M4.2 (Ivan: "some way of knowing it broke down, not just getting it off the screen"): it breaks down where it
+    // stands: pops and sparks, the arm crashes down, it sags and goes dark, and it smokes as a wreck from then on
+    const sc = this.scene, x = this.img.x, top = this.groundY - 90;
+    for (let i = 0; i < 6; i++) sc.time.delayedCall(i * 190, () => {
+      const px = x + (Math.random() - 0.5) * 120, py = top + Math.random() * 60;
+      puff(sc, px, py, i % 2 ? 0xff9a2e : 0xfff08a, 8, 20, 110); puff(sc, px, py, 0x53515f, 5, 16, 109);
+      sfx.clang(); shake(sc, 120, 0.008);
+    });
+    sc.time.delayedCall(1150, () => {
+      this.img.setFrame('digger_2'); // the arm drops and stays down
+      sfx.hammer(); shake(sc, 260, 0.014); puff(sc, x - 80, this.groundY - 4, 0xc9b88f, 12, 26, 110);
+      floatText(sc, x, this.groundY - 70, 'BROKEN DOWN!', 'font_outline', 0xff9a2e, 1200);
+      this.img.setTint(0x8a8597);
+      sc.tweens.add({ targets: this.img, y: this.img.y + 4, angle: -3, duration: 380, ease: 'Bounce.easeOut' });
+    });
+    // the wreck keeps smoking
+    sc.time.addEvent({ delay: 260, startAt: 0, loop: true, callback: () => { if (this.img.active) puff(sc, x + 20 + (Math.random() - 0.5) * 30, top + 10, 0x69657a, 1, 14, 103); } });
   }
 
   update(dtMs: number, px: number, pRect: Phaser.Geom.Rectangle) {

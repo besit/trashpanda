@@ -27,6 +27,7 @@ export class BikeBus {
   private dwell = 0;
   private hud: Phaser.GameObjects.BitmapText;
   private arrow: Phaser.GameObjects.Graphics;
+  private edgeLabel: Phaser.GameObjects.BitmapText;
   private signs: Phaser.GameObjects.Graphics;
   readonly solids: Phaser.Physics.Arcade.StaticGroup;
 
@@ -52,6 +53,7 @@ export class BikeBus {
     this.signs.setDepth(5);
     this.hud = text(scene, GAME_W / 2, 44, '', 'font_outline').setOrigin(0.5, 0).setScrollFactor(0).setDepth(20010);
     this.arrow = scene.add.graphics().setDepth(20005);
+    this.edgeLabel = text(scene, 0, 0, '', 'font_outline').setScrollFactor(0).setDepth(20006).setVisible(false);
   }
 
   get target() { return this.def.steps[this.step]; }
@@ -134,31 +136,42 @@ export class BikeBus {
     const s = this.target;
     const what = !s ? '' : s.kind === 'stop' ? 'NEXT STOP: STOP BESIDE THE KIDS' : s.kind === 'block' ? 'AN SUV IN THE BIKE LANE: RING YOUR BELL (E)' : 'TO THE SCHOOL!';
     this.hud.setText(`BIKE BUS  KIDS ${this.kids}/${this.total}  BELL IN ${mm}:${ss}\n${what}`).setTint(this.t < 15 ? 0xff9a2e : 0xffffff).setCenterAlign();
-    // an arrow to the next stop: over it when it's on screen, at the screen's edge when it isn't
+    // M4.2 (Ivan: "it wasn't obvious where to go; make the arrow more apparent"): a big bouncing arrow and a pulsing
+    // ring over the next stop when it's on screen; at the screen's edge a big arrow with what's there when it isn't
     const g = this.arrow.clear();
-    if (!s) return;
+    if (!s) { this.edgeLabel.setVisible(false); return; }
     const cam = this.scene.cameras.main, v = cam.worldView;
-    const bob = Math.sin(this.scene.time.now / 160) * 2;
+    const now = this.scene.time.now, bob = Math.sin(now / 140) * 3, pulse = (now % 900) / 900;
+    const col = s.kind === 'block' ? 0xff9a2e : s.kind === 'school' ? 0x7cc6f2 : 0xfff08a;
+    const word = s.kind === 'stop' ? 'KIDS' : s.kind === 'block' ? 'SUV' : 'SCHOOL';
     if (Phaser.Geom.Rectangle.Contains(v, s.x, s.y - 20)) {
       g.setScrollFactor(1);
-      g.fillStyle(0x16121f).fillTriangle(s.x - 6, s.y - 46 + bob, s.x + 6, s.y - 46 + bob, s.x, s.y - 37 + bob);
-      g.fillStyle(0xfff08a).fillTriangle(s.x - 4, s.y - 45 + bob, s.x + 4, s.y - 45 + bob, s.x, s.y - 39 + bob);
+      g.lineStyle(2, col, 1 - pulse).strokeCircle(s.x, s.y - 4, 10 + pulse * 18);
+      // above the target, unless that's under the HUD lines at the top: then below it, pointing up
+      const up = s.y - 58 - v.y < 70, ty = up ? s.y + 26 - bob : s.y - 58 + bob, d = up ? -1 : 1;
+      g.fillStyle(0x16121f).fillTriangle(s.x - 11, ty - d, s.x + 11, ty - d, s.x, ty + 14 * d);
+      g.fillStyle(col).fillTriangle(s.x - 8, ty + d, s.x + 8, ty + d, s.x, ty + 11 * d);
+      g.fillStyle(0x16121f).fillRect(s.x - 4, up ? ty : ty - 10, 8, 10); g.fillStyle(col).fillRect(s.x - 2, up ? ty + 1 : ty - 9, 4, 9);
+      this.edgeLabel.setVisible(false);
     } else {
       g.setScrollFactor(0);
       const cx = v.width / 2, cy = v.height / 2 + 10, a = Math.atan2(s.y - (v.y + cy), s.x - (v.x + cx));
-      const ex = Phaser.Math.Clamp(cx + Math.cos(a) * 400, 14, v.width - 14), ey = Phaser.Math.Clamp(cy + Math.sin(a) * 400, 60, v.height - 14);
-      const tip = (r: number, da: number) => [ex + Math.cos(a + da) * r, ey + Math.sin(a + da) * r] as const;
-      const [x1, y1] = tip(8, 0), [x2, y2] = tip(6, 2.4), [x3, y3] = tip(6, -2.4);
-      g.fillStyle(0xfff08a).fillTriangle(x1, y1, x2, y2, x3, y3);
+      const ex = Phaser.Math.Clamp(cx + Math.cos(a) * 400, 22, v.width - 22), ey = Phaser.Math.Clamp(cy + Math.sin(a) * 400, 70, v.height - 22);
+      const k = 1 + 0.15 * Math.sin(now / 120);
+      const tip = (r: number, da: number) => [ex + Math.cos(a + da) * r * k, ey + Math.sin(a + da) * r * k] as const;
+      const [x1, y1] = tip(16, 0), [x2, y2] = tip(12, 2.5), [x3, y3] = tip(12, -2.5);
+      g.fillStyle(0x16121f).fillTriangle(x1 + Math.cos(a) * 2, y1 + Math.sin(a) * 2, x2 - Math.cos(a) * 2, y2 - Math.sin(a) * 2, x3 - Math.cos(a) * 2, y3 - Math.sin(a) * 2);
+      g.fillStyle(col).fillTriangle(x1, y1, x2, y2, x3, y3);
+      this.edgeLabel.setVisible(true).setText(word).setTint(col).setPosition(ex - Math.cos(a) * 22, ey - Math.sin(a) * 18);
     }
     void px; void py;
   }
 
   /** the run is over: clear the HUD so the result card stands alone */
-  hideHud() { this.hud.setVisible(false); this.arrow.clear(); }
+  hideHud() { this.hud.setVisible(false); this.arrow.clear(); this.edgeLabel.setVisible(false); }
 
   destroy() {
-    this.hud.destroy(); this.arrow.destroy(); this.signs.destroy();
+    this.hud.destroy(); this.arrow.destroy(); this.edgeLabel.destroy(); this.signs.destroy();
     for (const r of this.riders) r.s.destroy();
     for (const ks of this.waiting.values()) ks.forEach((k) => k.destroy());
     for (const b of this.blocks.values()) { b.img.destroy(); if (b.zone.active) b.zone.destroy(); }

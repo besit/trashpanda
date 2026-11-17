@@ -79,7 +79,8 @@ export function generateDowntown() {
   D.prop('blank', cx, (PY1 + 1) * TS, { solidBox: [-(PX1 - PX0 + 1) * TS / 2 + 4, -(PY1 - PY0 + 1) * TS + 6, (PX1 - PX0 + 1) * TS - 8, (PY1 - PY0 + 1) * TS - 8], invisible: true });
   const poolW = (PX1 - PX0 + 1) * TS;
   // the arches stand on the concrete either side of the pool (their pivot is the midpoint of their feet)
-  for (let k = 1; k <= 3; k++) D.prop('arch', PX0 * TS + (poolW * k) / 4, ((PY0 + PY1 + 1) / 2) * TS, { depth: (PY1 + 1) * TS + 6 });
+  // M4.2 (Ivan): closer together, across the pool's right half, clear of the TORONTO sign (which is over the left half)
+  for (let k = 0; k < 3; k++) D.prop('arch', Math.round(PX0 * TS + poolW * (0.62 + 0.13 * k)), ((PY0 + PY1 + 1) / 2) * TS, { depth: (PY1 + 1) * TS + 6 + k });
   const signX = PX0 * TS + poolW / 4 + 8;
   D.prop('torontosign', signX, PY0 * TS - 3, { solidBox: [-46, -6, 92, 6] });
   D.landmarks.push({ id: 'npsquare', x: signX, y: PY0 * TS + 8, label: 'NATHAN PHILLIPS SQUARE', fact: 'CITY HALL OPENED 1965.\nTHE POOL BECOMES A\nSKATING RINK IN WINTER.' });
@@ -170,7 +171,6 @@ export function generateDowntown() {
     { text: '< QUEEN WEST', x: 4 * TS, y: (QUEEN - 4) * TS, kind: 'exit' },
     { text: 'EAST END >', x: (W - 4) * TS, y: (QUEEN - 4) * TS, kind: 'exit' },
     { text: 'v WATERFRONT', x: (UN + 2) * TS, y: (H - 2) * TS, kind: 'exit' },
-    { text: '^ NORTH', x: (UN + 2) * TS, y: 2 * TS, kind: 'exit' },
   );
   // hidden extra lives: at the west end of Graffiti Alley, and tucked behind City Hall
   // M3.3: the second heart hides behind a building near the centre

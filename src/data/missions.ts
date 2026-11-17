@@ -241,7 +241,7 @@ MISSIONS.save_the_science = {
   action: {
     bg: 'science', street: 'plain', sky: 'day', length: 2950,
     intro: 'SNEAK PAST THE GUARDS. GET THE EXHIBITS BACK!',
-    hint: ['HIDE BEHIND THE CRATES WHEN A FLASHLIGHT SWINGS YOUR WAY', 'HIDE BEHIND THE CRATES WHEN A FLASHLIGHT SWINGS YOUR WAY'],
+    hint: ['STAY OUT OF THE BEAMS: PASS WHILE A GUARD LOOKS AWAY, OR STAND BEHIND A CRATE', 'STAY OUT OF THE BEAMS: PASS WHILE A GUARD LOOKS AWAY, OR STAND BEHIND A CRATE'],
     waves: [],
     patrols: [{ at: 470 }, { at: 820 }, { at: 1170 }],
     crates: [400, 740, 1090],
@@ -326,6 +326,19 @@ MISSIONS.island_airport = {
 };
 
 /** Missions whose markers should show: not done, prerequisites met. */
+/** M4.2 (Ivan): the missions in the order they open up: by the length of their chain of prerequisites, then as defined */
+export function missionOrder(): string[] {
+  const memo = new Map<string, number>();
+  const depth = (id: string, guard = 0): number => {
+    if (memo.has(id)) return memo.get(id)!;
+    const d = guard > 20 ? 0 : Math.max(0, ...(MISSIONS[id]?.requires ?? []).map((r) => depth(r, guard + 1) + 1));
+    memo.set(id, d);
+    return d;
+  };
+  const ids = Object.keys(MISSIONS);
+  return ids.map((id, i) => ({ id, i, d: depth(id) })).sort((a, b) => a.d - b.d || a.i - b.i).map((x) => x.id);
+}
+
 export function missionAvailable(id: string, completed: string[]) {
   const m = MISSIONS[id];
   return !!m && (m.requires ?? []).every((r) => completed.includes(r));

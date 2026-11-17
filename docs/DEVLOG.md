@@ -669,3 +669,30 @@ Ivan reviewed M3.3 and M3.4 (M4 he'll look at next) and sent a long list. Two of
 ### Numbers
 48 browser tests and 18 unit tests pass.
 
+## 2026-11-16 (later): M4.2, Ivan's M4.1 notes
+
+Ivan's notes on M4.1: the map screen, a pass for things that pop into view, and fixes across six missions and two districts. The review doc is [docs/reviews/M4.2.md](reviews/M4.2.md).
+
+### What changed
+- **The city map** shows only street and park names, marks each neighbouring district outside the frame where it connects, moves between maps by direction (DOWN from High Park is the Waterfront), and scales every map to fill the screen. ![](reviews/m42/02_map_queenwest.png)
+- **No pop-ins:** bosses slide in from off screen; rats called mid-fight come from the screen edge; arena spots are placed before you arrive; the Mech's slabs fall in from above.
+- **The Wrecker** was redesigned around dodging: it drives over you, swings or drops the ball, and only the ball hurts. ![](reviews/m42/10_wrecker_hoist.png)
+- **Smaller fixes:** the Pink Digger breaks down on screen instead of driving off; hiding behind crates is readable; the movers' truck takes the exhibit away if the rats reach it; the Jet Tug revs, then crosses fast; the Bike Bus's arrow is big and its stops are on the map; the mission list is numbered in unlock order; the 510's junction and turning streetcars are fixed; the arches moved.
+
+### Causes worth remembering
+- **The Monster SUV's roof line was 18 px above its drawn roof.** Rendering the sprite and measuring it showed the bounce happening in mid-air. The stomp check is now a crossing test against the previous frame's position, so a tighter window can't be skipped at a low frame rate.
+- **The Lane Eater's "flickering flowerbeds"** were the paved lane, redrawn every frame from the camera edge at fractional coordinates.
+- **The Gardiner's flicker** was a dither: a slow parallax layer moving one pixel at a time inverts a checkerboard. Moving slow layers in 2-px steps keeps it still.
+- **"Hide behind the crate" didn't read** because the crate was drawn *behind* the raccoon (depth 99 vs 100).
+- **The tight 16 px streetcar turn** was the real reason the car turning up Spadina broke apart. Re-centring both curves on the junction's tile corner gives radii 40 and 24, keeps them concentric, and makes Spadina's straight rails end exactly where the curves begin. That also removed the doubled rails.
+- **The map scale snapped to half steps,** so a 110×104 map landed on 1× while a 120×96 one got 1.5×.
+
+### Failures along the way
+- **Park names vanished** on the first redraw of the map: green text on green grass. They're yellow now.
+- **The footer's two lines overlapped** (text on text) on the first layout; "YOU:" moved up to the title row.
+- **A new test found a real bug:** the redesigned Wrecker's symmetric pendulum swung its ball back through its own cab and hurt a raccoon standing by the truck. The swing is one-sided now.
+- **The first boss-entrance test was flaky:** by the time it looked, the boss had already slid partly in. It now records the position on the first frame the boss exists.
+
+### Numbers
+53 browser tests and 18 unit tests pass.
+

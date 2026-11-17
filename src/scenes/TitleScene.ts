@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { GAME_W, GAME_H, DEBUG } from '../config';
 import { ScrollLayer, STREET_Y, GROUND_Y, FRONT_Y, BACKROW_Y, SKYLINE_Y } from '../ui/sideLayout';
 import { openPause } from './PauseScene';
-import { MISSIONS } from '../data/missions';
+import { MISSIONS, missionOrder } from '../data/missions';
 import { DISTRICTS } from '../data/districts';
 import { CUTSCENES } from '../data/cutscenes';
 import { UPGRADES } from '../data/upgrades';
@@ -20,7 +20,7 @@ import { DIFFICULTY, HighScores, fmtScore, type Difficulty } from '../core/Score
 import { fetchTop, leaderboardEnabled } from '../core/Leaderboard';
 import { fullscreenSupported, isInstalled } from '../core/fullscreen';
 
-export const VERSION_LABEL = 'M4.1 PREVIEW';
+export const VERSION_LABEL = 'M4.2 PREVIEW';
 
 /** M3.3 (Ivan): after a debug mission or vignette, come back to a REPLAY / BACK TO THE LIST / MAIN MENU menu */
 export interface Replay { kind: 'mission' | 'vignette'; id: string }
@@ -330,7 +330,8 @@ export class TitleScene extends Phaser.Scene {
 
   private missionItems() {
     const back = { label: '< BACK', action: () => this.setItems(this.mainItems) };
-    return [back, ...Object.values(MISSIONS).map((m) => ({ label: `${m.title} (${DISTRICTS[m.district]?.name ?? m.district})`, action: () => this.playMission(m.id) }))];
+    // M4.2 (Ivan): numbered in the order they open up, to check the difficulty rises
+    return [back, ...missionOrder().map((id, i) => { const m = MISSIONS[id]; return { label: `${i + 1}. ${m.title} (${DISTRICTS[m.district]?.name ?? m.district})`, action: () => this.playMission(m.id) }; })];
   }
   private vignetteItems() {
     const back = { label: '< BACK', action: () => this.setItems(this.mainItems) };

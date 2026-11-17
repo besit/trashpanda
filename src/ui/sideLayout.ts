@@ -37,7 +37,10 @@ export class ScrollLayer {
   /** scroll = world px scrolled; the layer moves by scroll * factor (+ base offset) */
   update(scroll: number) {
     const off = (((scroll * this.factor + this.base) % this.texW) + this.texW) % this.texW;
-    const x0 = -Math.round(off);
+    // M4.2 (Ivan: "flickering pixels in the background" on the Gardiner): a slow layer jumps a pixel every few frames,
+    // and a one-pixel shift inverts a checkerboard dither (the dusk haze). Slow layers move in 2-px steps instead.
+    const step = this.factor < 1 ? 2 : 1;
+    const x0 = -Math.round(off / step) * step;
     this.imgs.forEach((im, k) => im.setX(x0 + k * this.texW));
   }
   setDepth(d: number) { this.imgs.forEach((i) => i.setDepth(d)); return this; }

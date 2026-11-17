@@ -166,7 +166,7 @@ addProp('podop', WF2.podOP()); addProp('cinesphereop', WF2.cinesphereOP()); addP
 manifest.anims.plane_tp = { frames: ['plane_tp_0', 'plane_tp_1'], rate: 14, loop: true, atlas: 'world' };
 manifest.anims.plane_cs = { frames: ['plane_cs_0', 'plane_cs_1'], rate: 14, loop: true, atlas: 'world' };
 [0, 1, 2].forEach((f) => addProp(`digger_${f}`, WF2.pinkDigger(f))); addProp('sandclod', WF2.sandClod());
-addProp('gardinerdeck', WF2.gardinerDeck()); addProp('gardinerpier', WF2.gardinerPier()); addProp('trackcurves', WF2.trackCurves()); addProp('marinadock', WF2.marinaDock());
+addProp('gardinerdeck', WF2.gardinerDeck()); addProp('gardinerpier', WF2.gardinerPier()); addProp('trackcurves', WF2.trackCurves(40, 24)); addProp('marinadock', WF2.marinaDock());
 addProp('sailboat_0', WF.sailboat(0)); addProp('sailboat_1', WF.sailboat(1));
 manifest.anims.sailboat_bob = { frames: ['sailboat_0', 'sailboat_1'], rate: 1.5, loop: true, atlas: 'world' };
 for (const c of Object.keys(WF.SAIL_COLOURS)) { addProp(`sailboat_${c}_0`, WF.sailboat(0, c)); addProp(`sailboat_${c}_1`, WF.sailboat(1, c)); manifest.anims[`sailboat_${c}_bob`] = { frames: [`sailboat_${c}_0`, `sailboat_${c}_1`], rate: 1.5, loop: true, atlas: 'world' }; }
