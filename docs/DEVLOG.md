@@ -696,3 +696,37 @@ Ivan's notes on M4.1: the map screen, a pass for things that pop into view, and 
 ### Numbers
 53 browser tests and 18 unit tests pass.
 
+## 2026-11-17: M4.3, bike share, a bike network that grows, and a code + game review
+
+Ivan asked for bike share (unbranded), Strachan's real bike lanes, a Livability that doesn't compare Toronto to Amsterdam and Copenhagen, and a code review and game review. Asked about the major changes first; he chose all three recommendations (grow the network + X/100, a top-down Dock Drop, and the checkpoint, ranks and hit feedback). The review doc is [docs/reviews/M4.3.md](reviews/M4.3.md).
+
+### What changed
+- **The bike network:** 28 streets on five maps, each made PROTECTED or SLOW by a mission (`src/data/network.ts`). The map generators got `netEW` / `netNS` / `paintNS`: tile patches, planters, bike lanes in traffic, calmed lanes. The HUD and the report card count streets instead of naming a tier. ![](reviews/m43/04_map_done_downtown.png)
+- **Dock Drop:** the second map mission. Tow docks to six gaps, ring the clutter crew off the new stations; afterwards stations on every map and share bikes in traffic. ![](reviews/m43/12_dock_crew_hauling.png)
+- **From the reviews:** ten code-review fixes, the boss checkpoint, mission ranks, impact stars and a swing swoosh, a three-bay Megamart wall, and dark bands under every message that sat on busy art.
+
+### Causes worth remembering
+- **N-S streets have no parking lane,** so their bike lanes had to fit in the curb column: a narrower sidewalk, the curb, a 5-6 px lane and a separator. The E-W streets swap their parking lanes like Queen did.
+- **Bridge decks are a second tile layer** copied from the ground at load, so an improvement on a bridge was hidden under the old deck. `CityMap.putTile` now writes both.
+- **"Combat feels floaty" was wrong:** the code already had hit-stop, a flash and shake on every landed hit. The honest gap was a crisp impact at the contact point and a visible swing, and that's what I added (the review doc says so).
+- **An impact star has to run on real time:** the hit-stop freezes the scene clock, so a tween would freeze with it.
+
+### Failures along the way
+- **The raccoon turned into a rat.** I named the top-down rat's frames `rt_*`, the raccoon's own prefix, and the atlas overwrote the raccoon's four straight facings. I spotted it in the network screenshots (an orange figure where the raccoon should be); the rat frames are `ratop_*` now.
+- **Text on text, four times:**
+  - The map missions' status lines ran into the lives box.
+  - The off-screen arrow's word landed on the bottom hint, then on the TORONTO sign.
+  - The win and lose cards sat on the new Megamart signs.
+  - The report card's rows ran over the vignette's raccoon (already true before M4.3).
+
+  Each one got a dark band or box.
+- **Art that didn't read:**
+  - The sideways bike stencil in a sharrow was illegible at 16 px; it's an upright two-wheel mark now.
+  - The docked bikes turned into a black clump under the automatic outline; they're outlined by hand now.
+- **The first rank said "0 HITS" after a lost life,** because the hit count reset with the restart. Hits now carry across restarts.
+- **The colour on "RANK A"** used a fill tint and blotted out the letters.
+- **Shell quoting ate several edits** (heredocs with apostrophes); I moved those edits into script files.
+
+### Numbers
+57 browser tests (4 new) and 21 unit tests pass. JS is 384 KB gzipped.
+

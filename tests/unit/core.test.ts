@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { livability, tierName, categories, START_LIVABILITY } from '../../src/core/Livability';
+import { livability, categories, START_LIVABILITY } from '../../src/core/Livability';
+import { MISSIONS } from '../../src/data/missions';
+import { NETWORK, NETWORK_TOTAL, networkDone, missionNetwork } from '../../src/data/network';
 import { newGame, migrate, unlockUpgrade, completeMission, SAVE_VERSION } from '../../src/core/GameState';
 import { SaveSystem } from '../../src/core/SaveSystem';
 import { BASE_CATEGORIES } from '../../src/data/upgrades';
@@ -7,17 +9,14 @@ import { BASE_CATEGORIES } from '../../src/data/upgrades';
 describe('livability', () => {
   it('starts at 60 (Toronto)', () => {
     expect(livability([])).toBe(START_LIVABILITY);
-    expect(tierName(60)).toBe('TORONTO');
   });
   it('adds upgrade points and ignores unknown ids', () => {
     expect(livability(['queen_protected_lanes'])).toBe(64);
     expect(livability(['nope'])).toBe(60);
   });
-  it('maps tiers at boundaries', () => {
-    expect(tierName(64)).toBe('TORONTO');
-    expect(tierName(65)).toBe('BETTER TORONTO');
-    expect(tierName(90)).toBe('AMSTERDAM/COPENHAGEN TERRITORY');
-    expect(tierName(100)).toBe('RACCOON UTOPIA');
+  it('reaches exactly 100 with every mission done (M4.3: rebalanced for the Dock Drop)', () => {
+    const all = Object.values(MISSIONS).flatMap((m) => m.upgrades);
+    expect(START_LIVABILITY + all.reduce((t, u) => t + (livability([u]) - START_LIVABILITY), 0)).toBe(100);
   });
   it('applies category deltas capped at 100', () => {
     const c = categories(['queen_protected_lanes']);
@@ -150,4 +149,33 @@ describe('M3.1: difficulty + score', () => {
     expect(s.runId).toBeTruthy();
     expect(migrate({ version: 3, difficulty: 'impossible', score: -5, name: 'toolong' })!.difficulty).toBe('normal');
   });
+});
+
+describe('the bike network (M4.3)', () => {
+  it('starts with the Martin Goodman Trail and ends with every street', () => {
+    expect(networkDone([]).map((s) => s.id)).toEqual(['wf_queensquay']);
+    expect(networkDone(Object.keys(MISSIONS)).length).toBe(NETWORK_TOTAL);
+  });
+  it('every mission adds streets to it, and every street belongs to a real mission', () => {
+    for (const id of Object.keys(MISSIONS)) expect(missionNetwork(id).length).toBeGreaterThan(0);
+    for (const s of NETWORK) if (s.by) expect(MISSIONS[s.by]).toBeDefined();
+    expect(new Set(NETWORK.map((s) => s.id)).size).toBe(NETWORK.length);
+  });
+  it("every street is on its districts map, with a patch that changes it", async () => {
+    type Gen = () => { network: { id: string; patch?: string }[]; improvements: Record<string, { tiles: unknown[]; addProps: unknown[] }> };
+    const mod = (n: string): Promise<Record<string, Gen>> => import(`../../tools/map/${n}.mjs`);
+    const gens: Record<string, Gen> = {
+      queenwest: (await mod('queenwest')).generateQueenWest, highpark: (await mod('highpark')).generateHighPark,
+      downtown: (await mod('downtown')).generateDowntown, eastend: (await mod('eastend')).generateEastEnd, waterfront: (await mod('waterfront')).generateWaterfront,
+    };
+    const maps = Object.fromEntries(Object.entries(gens).map(([k, g]) => [k, g()]));
+    for (const s of NETWORK) {
+      const seg = maps[s.district].network.find((n) => n.id === s.id);
+      expect(seg, s.id).toBeDefined();
+      if (s.by === null) continue;
+      const imp = maps[s.district].improvements[seg!.patch ?? `net_${s.id}`];
+      expect(imp, s.id).toBeDefined();
+      expect(imp.tiles.length + imp.addProps.length, s.id).toBeGreaterThan(0);
+    }
+  }, 60_000);
 });

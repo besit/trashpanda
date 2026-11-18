@@ -14,9 +14,11 @@ import { sfx } from '../audio/sfx';
 import { exitSpan, type CityMap, type MapData } from '../explore/CityMap';
 import type { Manifest } from './BootScene';
 import { UPGRADES } from '../data/upgrades';
+import { networkDone, networkPatches, networkLabel } from '../data/network';
 import { fullscreenSupported, isFullscreen, isInstalled, toggleFullscreen } from '../core/fullscreen';
 
 export interface PauseData { from: string; mode?: 'menu' | 'map' | 'controls' }
+const NET_GREEN = 0x55e05a, NET_YELLOW = 0xf5c22e;
 export interface MapInfo { map: CityMap; district?: string; player: { x: number; y: number }; markers: { x: number; y: number; label: string; done: boolean }[]; /** M4.1: the Bike Bus's stops still to come */ route?: { x: number; y: number; kind: string; next: boolean }[] }
 
 type Item = { label: () => string; act?: () => void; left?: () => void; right?: () => void; t?: Phaser.GameObjects.BitmapText; /** fires on pointerUP (browsers only allow fullscreen from a touch's pointerup) */ onUp?: boolean };
@@ -153,6 +155,7 @@ export class PauseScene extends Phaser.Scene {
     // M4.2 (Ivan): the district's name; its neighbours are marked outside the map's edges, where they connect
     this.root.add(text(this, 8, 7, DISTRICTS[view]?.name ?? 'TORONTO', 'font_outline', 0).setOrigin(0, 0.5).setTint(0xfff08a));
     this.root.add(text(this, GAME_W - 34, 7, `YOU: ${DISTRICTS[here]?.name ?? ''}`, 'font', 1).setOrigin(1, 0.5).setTint(0x9793a6));
+    this.mapLinks = []; // M4.3 (review): the old district's links died with its root container
     if (!md) {
       // M3.3: another district's map data arrives on demand (it used to load every map at boot)
       const d = (this.registry.get('manifest') as Manifest).districts?.[view];
@@ -170,7 +173,7 @@ export class PauseScene extends Phaser.Scene {
     let ground: number[][] = md.ground;
     if (!live) {
       ground = md.ground.map((r) => r.slice());
-      for (const u of ctx.state.upgrades) for (const p of UPGRADES[u]?.mapPatches ?? []) for (const [x, y, t] of md.improvements[p]?.tiles ?? []) if (ground[y]) ground[y][x] = t;
+      for (const p of [...ctx.state.upgrades.flatMap((u) => UPGRADES[u]?.mapPatches ?? []), ...networkPatches(ctx.state.completedMissions)]) for (const [x, y, t] of md.improvements[p]?.tiles ?? []) if (ground[y]) ground[y][x] = t;
     }
     for (let y = 0; y < md.height; y++) for (let x = 0; x < md.width; x++) {
       const t = live ? live.tilemap.getTileAt(x, y, true, live.layer)?.index ?? 0 : ground[y][x];
@@ -195,7 +198,7 @@ export class PauseScene extends Phaser.Scene {
     }
     tex.refresh();
     // M4.2 (Ivan: "all maps large"): scaled to fill the space between the title and the footer, whatever its size
-    const M = 10, top = 14 + M, bottom = GAME_H - 12 - M;
+    const M = 10, top = 14 + M, bottom = GAME_H - 21 - M; // M4.3: two footer rows (the network's legend + the tally)
     const availW = GAME_W - 2 * M - 8, availH = bottom - top;
     const s = Math.min(availW / md.width, availH / md.height);
     const w = Math.round(md.width * s), h = Math.round(md.height * s);
@@ -205,6 +208,20 @@ export class PauseScene extends Phaser.Scene {
     frame.fillStyle(0x16121f).fillRect(x0 - 3, y0 - 3, w + 6, h + 6).lineStyle(1, 0xf6f2e9).strokeRect(x0 - 2.5, y0 - 2.5, w + 5, h + 5);
     this.root.add(frame);
     this.root.add(this.add.image(x0, y0, key).setOrigin(0).setDisplaySize(w, h));
+    // M4.3: the bike network over the streets: protected green, slow yellow, today's painted lanes thin grey
+    const done = new Set(networkDone(ctx.state.completedMissions).map((n) => n.id));
+    const net = this.add.graphics();
+    for (const n of md.network ?? []) {
+      const on = done.has(n.id);
+      if (!on && !n.painted) continue;
+      const col = !on ? 0xc9c5d1 : n.kind === 'protected' ? NET_GREEN : NET_YELLOW, lw = on ? 3 : 1;
+      for (const [ax, ay, bx, by] of n.segs) {
+        const p = (vx: number, vy: number) => [x0 + vx * this.mapRect.s, y0 + vy * this.mapRect.s] as const;
+        const [sx, sy] = p(ax, ay), [ex, ey] = p(bx, by);
+        net.lineStyle(lw + 2, 0x16121f, 0.85).lineBetween(sx, sy, ex, ey).lineStyle(lw, col).lineBetween(sx, sy, ex, ey);
+      }
+    }
+    this.root.add(net);
     // M4.2 (Ivan: "too crowded with text"): street names and park names only
     // streets first, then parks; a label that would cover another, or stick out of the frame, is left out
     const placed: Phaser.Geom.Rectangle[] = [];
@@ -234,11 +251,16 @@ export class PauseScene extends Phaser.Scene {
     for (const g of groups.values()) {
       const along = (g.sum / g.n) * this.mapRect.s, open = Object.values(MISSIONS).filter((m) => m.district === g.to && !ctx.state.completedMissions.includes(m.id) && missionAvailable(m.id, ctx.state.completedMissions)).length;
       const name = `${DISTRICTS[g.to].name}${open ? ` ${open}!` : ''}`;
-      let t: Phaser.GameObjects.BitmapText;
-      if (g.side === 'n') t = text(this, Phaser.Math.Clamp(x0 + along, x0 + 30, x0 + w - 30), y0 - 9, `^ ${name}`, 'font');
-      else if (g.side === 's') t = text(this, Phaser.Math.Clamp(x0 + along, x0 + 30, x0 + w - 30), y0 + h + 8, `v ${name}`, 'font');
-      else if (g.side === 'w') t = text(this, x0 - 9, Phaser.Math.Clamp(y0 + along, y0 + 30, y0 + h - 30), `< ${name}`, 'font').setAngle(-90);
-      else t = text(this, x0 + w + 9, Phaser.Math.Clamp(y0 + along, y0 + 30, y0 + h - 30), `${name} >`, 'font').setAngle(90);
+      // M4.3 (review): kept inside the frame's span by half the label's own length (long names used to stick out
+      // into the title row or under the close button)
+      const label = g.side === 'n' ? `^ ${name}` : g.side === 's' ? `v ${name}` : g.side === 'w' ? `< ${name}` : `${name} >`;
+      const t = text(this, 0, 0, label, 'font');
+      const half = t.width / 2 + 3, ns = g.side === 'n' || g.side === 's';
+      const pos = ns ? Phaser.Math.Clamp(x0 + along, x0 + half, Math.min(x0 + w, GAME_W - 30) - half) : Phaser.Math.Clamp(y0 + along, y0 + half, y0 + h - half);
+      if (g.side === 'n') t.setPosition(pos, y0 - 9);
+      else if (g.side === 's') t.setPosition(pos, y0 + h + 8);
+      else if (g.side === 'w') t.setPosition(x0 - 9, pos).setAngle(-90);
+      else t.setPosition(x0 + w + 9, pos).setAngle(90);
       t.setTint(open ? 0xfff08a : 0x9bd35a);
       this.root.add(t);
       this.mapLinks.push({ side: g.side, to: g.to, n: g.n, t });
@@ -252,6 +274,15 @@ export class PauseScene extends Phaser.Scene {
     const fl = ctx.state.flags, plq = md.landmarks ?? [], hearts = md.lifeTokens ?? [], eggs = md.eggs ?? [];
     const tally = [`PLAQUES ${plq.filter((l) => fl[`score_plaque_${view}_${l.id}`]).length}/${plq.length}`, `HEARTS ${hearts.filter((_, i) => fl[`life_${view}_${i}`]).length}/${hearts.length}`, ...(eggs.length ? [`EGGS ${eggs.filter((e) => fl[`score_egg_${e.id}`]).length}/${eggs.length}`] : [])];
     this.root.add(text(this, 8, GAME_H - 6, tally.join('  '), 'font', 0).setOrigin(0, 0.5).setTint(0xfff08a));
+    // M4.3: the network's legend, a row above
+    const lg = this.add.graphics(); this.root.add(lg);
+    let lx = 8;
+    const item = (label: string, col?: number, tint = 0x9793a6) => {
+      if (col !== undefined) { lg.fillStyle(0x16121f).fillRect(lx, GAME_H - 18, 12, 5).fillStyle(col).fillRect(lx + 1, GAME_H - 17, 10, 3); lx += 15; }
+      const t = text(this, lx, GAME_H - 15, label, 'font', 0).setOrigin(0, 0.5).setTint(tint); this.root.add(t); lx += t.width + 10;
+    };
+    item(networkLabel(ctx.state.completedMissions), undefined, 0x9bd35a);
+    item('PROTECTED', NET_GREEN); item('SLOW STREET', NET_YELLOW); item('PAINTED', 0xc9c5d1);
     this.root.add(text(this, GAME_W - 8, GAME_H - 6, wantsTouch() ? 'TAP A NEIGHBOUR' : 'ARROWS: MOVE  M: CLOSE', 'font', 1).setOrigin(1, 0.5).setTint(0x9793a6));
     this.drawBlink();
   }

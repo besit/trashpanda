@@ -110,6 +110,14 @@ M3.4 (Ivan): the shaft is the trefoil base continued, one SDF render: the foils 
 
 ## cyclists
 
+### cyclists v02
+
+2026-11-18
+
+M4.3: two bike share riders (unbranded green step-throughs with fenders and a basket)
+
+![cyclists v02](cyclists/v02/preview.png)
+
 ### cyclists v01
 
 2026-11-10
@@ -248,6 +256,14 @@ v01: intro highway backdrop (DVP-style ravine, river, lake, sunset, skyline) + b
 
 ## eastend
 
+### eastend v05
+
+2026-11-18
+
+M4.3: the Megamart wall in three bays (store front, garden centre, pickup bay), rooftop units, lamp posts
+
+![eastend v05](eastend/v05/preview.png)
+
 ### eastend v04
 
 2026-11-16
@@ -325,6 +341,32 @@ M2 High Park / Roncesvalles: cherry + black oak trees, capybaras (v02: added hea
 M3 mission 5 boss: the Lane Eater, a road-paving machine that eats bike lanes. Three weak points (conveyor, cab, grinder) shown intact and smashed.
 
 ![lane_eater v01](lane_eater/v01/preview.png)
+
+## m43_props
+
+### m43_props v03
+
+2026-11-18
+
+M4.3: three bikes, spaced, no global outline (it clumped them)
+
+![m43_props v03](m43_props/v03/preview.png)
+
+### m43_props v02
+
+2026-11-18
+
+M4.3: docked bikes in side profile (the end-on ones read as dark blobs)
+
+![m43_props v02](m43_props/v02/preview.png)
+
+### m43_props v01
+
+2026-11-18
+
+M4.3 first pass: the bike share dock (kiosk + 4 step-throughs), part-empty docks, the dock trailer (E-W and end-on)
+
+![m43_props v01](m43_props/v01/preview.png)
 
 ## m4_props
 
@@ -598,6 +640,16 @@ M4: the Mega Rat (mission 9 miniboss), the basic rat at 2.6x.
 
 ![rats_megarat v01](rats_megarat/v01/preview.png)
 
+## rats_top
+
+### rats_top v01
+
+2026-11-18
+
+M4.3 first pass: the construction rat on the city map (4 facings x 4 walk frames, the map's character camera)
+
+![rats_top v01](rats_top/v01/preview.png)
+
 ## science
 
 ### science v01
@@ -669,6 +721,14 @@ M2 side-view mission props: signal pole with a TSP call box (red / green / prior
 ![side_props v01](side_props/v01/preview.png)
 
 ## tiles
+
+### tiles v07
+
+2026-11-18
+
+M4.3: bike lanes in N-S streets' curb columns (painted, protected) and the slow street's sharrows
+
+![tiles v07](tiles/v07/preview.png)
 
 ### tiles v06
 

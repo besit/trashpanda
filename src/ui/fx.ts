@@ -113,3 +113,28 @@ export function fitText(t: Phaser.GameObjects.BitmapText, maxW: number, wrap = f
   t.setScale(s);
   return s;
 }
+
+/**
+ * M4.3 (game review): a crisp impact star where a hit lands (the white flash + puff were on the target's body, soft).
+ * Eight rays and a hot centre that burst out and fade in ~140 ms; big = the third hit of the combo or a stomp.
+ */
+export function impactStar(scene: Phaser.Scene, x: number, y: number, big = false, depth = 2600) {
+  const g = scene.add.graphics().setDepth(depth).setPosition(Math.round(x), Math.round(y));
+  const r0 = big ? 11 : 7, rays = 8;
+  const draw = (k: number) => {
+    g.clear();
+    const r = r0 * (0.6 + k * 0.7), inner = r * 0.35;
+    g.lineStyle(big ? 3 : 2, 0x16121f, 1 - k);
+    for (let i = 0; i < rays; i++) { const a = (i / rays) * Math.PI * 2 + (big ? 0.2 : 0), l = i % 2 ? r * 0.7 : r; g.lineBetween(Math.cos(a) * inner, Math.sin(a) * inner, Math.cos(a) * l, Math.sin(a) * l); }
+    g.lineStyle(1, big ? 0xfff08a : 0xffffff, 1 - k);
+    for (let i = 0; i < rays; i++) { const a = (i / rays) * Math.PI * 2 + (big ? 0.2 : 0), l = i % 2 ? r * 0.7 : r; g.lineBetween(Math.cos(a) * inner, Math.sin(a) * inner, Math.cos(a) * l, Math.sin(a) * l); }
+    if (k < 0.5) g.fillStyle(0xffffff, 1 - k * 2).fillCircle(0, 0, big ? 4 : 3);
+  };
+  draw(0);
+  const o = { k: 0 };
+  // real time, not scene time: it must play through the hit-stop that freezes the scene's clock
+  const t0 = performance.now(), dur = big ? 180 : 140;
+  const tick = () => { if (!g.active) return; o.k = Math.min(1, (performance.now() - t0) / dur); draw(o.k); if (o.k >= 1) g.destroy(); else requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+  return g;
+}

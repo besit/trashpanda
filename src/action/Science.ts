@@ -148,7 +148,10 @@ export class Wrecker {
         this.img.x += Math.sign(dx) * Math.min(Math.abs(dx), 80 * this.rage * dt);
         this.len = Phaser.Math.Linear(this.len, 40, 0.15); this.ang = Phaser.Math.Linear(this.ang, 0, 0.15);
         if (Math.abs(dx) < 3 || this.t <= 0) {
-          if (this.cycle % 2 === 0) { this.state = 'swing'; this.phase = 0; this.swings = 0; this.hitThisSwing = false; sfx.swing(); }
+          if (this.cycle % 2 === 0) {
+            // M4.3 (review): pick up the swing where the ball hangs (no sideways snap at the start)
+            this.state = 'swing'; this.phase = Math.asin(Phaser.Math.Clamp((this.ang - 0.45) / 0.75, -1, 1)); this.swings = this.phase < 0 ? -1 : 0; this.hitThisSwing = false; sfx.swing();
+          }
           else { this.state = 'hoist'; this.t = 0.7 / this.rage; this.shadow.setVisible(true); }
         }
         break;

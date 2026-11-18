@@ -5,8 +5,9 @@ import { Img, save } from './lib/raster.mjs';
 import { packAtlas, packTileset } from './lib/pack.mjs';
 import { raccoonSideFrames, appIcon, PIVOT_Y as RS_PIVOT_Y } from './sprites/raccoon_side.mjs';
 import { raccoonTopFrame, DIRS } from './sprites/raccoon_top.mjs';
-import { ratAnims, RAT_VARIANTS, bureaucratAnims, foremanAnims, megaRatAnims, BOSS_FH, MEGA_FW } from './sprites/rats.mjs';
+import { ratAnims, RAT_VARIANTS, bureaucratAnims, foremanAnims, megaRatAnims, BOSS_FH, MEGA_FW, ratTopFrame } from './sprites/rats.mjs';
 import * as M4 from './sprites/m4.mjs';
+import * as M43 from './sprites/m43.mjs';
 import { dogFjordPortrait, dogFjordStanding } from './sprites/dogfjord.mjs';
 import { PED_VARIANTS, CYC_VARIANTS, PED_DIRS, pedFrame, cycFrame, cycSideFrame, PED_FW, PED_FH, PED_OX, PED_OY } from './sprites/people.mjs';
 import { buildTiles } from './sprites/tiles.mjs';
@@ -87,7 +88,13 @@ const chars = [];
     manifest.anims[`cy_${v.id}_${d}`] = { frames: [0, 1, 2, 3].map((f) => `cy_${v.id}_${d}_${f}`), rate: 9, loop: true, atlas: 'chars' };
   }
   manifest.pivots.cy = { x: 0.5, y: 26 / 32 };
-  manifest.cyclists = CYC_VARIANTS.map((v) => v.id);
+  // M4.3: the Dock Drop's clutter crew, walking on the map
+  for (const d of PED_DIRS) {
+    for (let f = 0; f < 4; f++) chars.push({ name: `ratop_${d}_${f}`, img: ratTopFrame('construction', d, f / 4) });
+    manifest.anims[`ratop_${d}`] = { frames: [0, 1, 2, 3].map((f) => `ratop_${d}_${f}`), rate: 8, loop: true, atlas: 'chars' };
+  }
+  manifest.cyclists = CYC_VARIANTS.filter((v) => !v.share).map((v) => v.id);
+  manifest.shareCyclists = CYC_VARIANTS.filter((v) => v.share).map((v) => v.id); // M4.3: on the streets after the Dock Drop
   // side-view cyclists (vignettes, peloton): every variant
   for (const v of CYC_VARIANTS) {
     for (let f = 0; f < 4; f++) chars.push({ name: `cys_${v.id}_${f}`, img: cycSideFrame(v, f / 4) });
@@ -177,6 +184,8 @@ addProp('plywood', ND.plywood()); addProp('closedsign', ND.closedSign()); addPro
 addProp('crate', ND.crate()); addProp('vandegraaff', ND.vandegraaff()); addProp('wrecker', ND.wrecker());
 // M4: missions 9 + 10
 addProp('railseg_0', M4.railSeg(0)); addProp('railseg_1', M4.railSeg(1)); addProp('hoarding', M4.hoarding()); addProp('subwayside', M4.subwaySide()); addProp('slabplat', M4.slabPlatform()); addProp('barrel', M4.barrel());
+// M4.3: bike share (the Dock Drop): a docking station, an empty one, the trailer of docks
+addProp('sharedock', M43.shareDock(3)); addProp('sharedock_empty', M43.shareDock(0)); addProp('docktrailer_ew', M43.dockTrailer('ew')); addProp('docktrailer_ns', M43.dockTrailer('ns'));
 addProp('highwaymech_0', M4.highwayMech(0)); addProp('highwaymech_1', M4.highwayMech(1));
 // M3.4: the island airport mission
 addProp('jettug_0', AP.jetTug(0)); addProp('jettug_1', AP.jetTug(1)); addProp('jettugl_0', AP.jetTug(0, true)); addProp('jettugl_1', AP.jetTug(1, true)); addProp('surveystake', AP.surveyStake()); addProp('suitcase', AP.suitcase()); addProp('stakemap', AP.surveyStakeMap()); addProp('norwayrock', AP.norwayRock());
@@ -233,7 +242,7 @@ for (const [id, map] of Object.entries(maps)) {
     ground: map.ground.map((row) => row.map((n) => idx[n])),
     objects: map.objects,
     improvements: Object.fromEntries(Object.entries(map.improvements).map(([k, v]) => [k, { ...v, tiles: v.tiles.map(([x, y, n]) => [x, y, idx[n]]) }])),
-    spawn: map.spawn, markers: map.markers, lanes: map.lanes, exits: map.exits, lifeTokens: map.lifeTokens, eggs: map.eggs, overpasses: map.overpasses, underWalks: map.underWalks, bikebus: map.bikebus,
+    spawn: map.spawn, markers: map.markers, lanes: map.lanes, exits: map.exits, lifeTokens: map.lifeTokens, eggs: map.eggs, overpasses: map.overpasses, underWalks: map.underWalks, bikebus: map.bikebus, network: map.network, docks: map.docks,
     intersections: map.intersections, walkways: map.walkways, labels: map.labels, critters: map.critters, landmarks: map.landmarks,
     decals: map.decals.map(({ gen, ...d }) => d),
     tileColors,

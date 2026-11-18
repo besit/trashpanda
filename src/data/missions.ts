@@ -29,7 +29,7 @@ export interface MissionDef {
   /** pan the payoff camera vertically (N-S streets) instead of along x */
   focusAxis?: 'x' | 'y';
   /** M4.1: a top-down mission played on the map itself (the Bike Bus); its route is in the district's map data */
-  explore?: { kind: 'bikebus'; time: number };
+  explore?: { kind: 'bikebus' | 'docks'; time: number };
   /** the side-view mission (every mission but the explore ones) */
   action?: {
     bg: SideBg;
@@ -282,7 +282,7 @@ MISSIONS.death_by_highway = {
   title: 'DEATH BY HIGHWAY',
   district: 'waterfront',
   upgrades: ['gardiner_down'],
-  requires: ['bike_lane_war', 'streetcar_through', 'king_of_street', 'slow_down_dog', 'lane_eater', 'great_parking_lot', 'waterfront_heist', 'island_airport', 'save_the_science', 'finish_the_line', 'bike_bus'],
+  requires: ['bike_lane_war', 'streetcar_through', 'king_of_street', 'slow_down_dog', 'lane_eater', 'great_parking_lot', 'waterfront_heist', 'island_airport', 'save_the_science', 'finish_the_line', 'bike_bus', 'dock_drop'],
   briefing: 'hw_before',
   debrief: 'hw_after',
   focusX: 60 * 16,
@@ -358,4 +358,22 @@ MISSIONS.bike_bus = {
   focusX: 86 * 16,
   focusY: 49 * 16,
   explore: { kind: 'bikebus', time: 75 },
+};
+
+// M4.3 (Ivan: "Can we introduce citybikes into the game? Maybe a mission to install bikeshare stations? I wouldn't
+// brand them... Could also be a mission on the map"): DOCK DROP (Downtown), the second mission played on the map. Tow
+// a trailer of bike share docks to six gaps in the station map; Dog Fjord's clutter crew tries to cart new ones off
+// (ring your bell at them). The stations, city-wide, are its payoff (URBAN_RESEARCH section 25).
+MISSIONS.dock_drop = {
+  id: 'dock_drop',
+  title: 'DOCK DROP',
+  district: 'downtown',
+  upgrades: ['bike_share_grows'],
+  requires: ['king_of_street'],
+  briefing: 'dock_before',
+  debrief: 'dock_after',
+  focusAxis: 'y',
+  focusX: 72 * 16,
+  focusY: 14 * 16,
+  explore: { kind: 'docks', time: 90 },
 };

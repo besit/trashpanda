@@ -193,6 +193,21 @@ export function buildTiles() {
   for (let s2 = 0; s2 < 2; s2++) { const t = base('s'); speckle(t, 'S', 14, 206 + s2); speckle(t, 'g', 6, 208 + s2); for (let x = s2 * 2; x < 16; x += 4) t.rect(x, 2, 2, 12, 'w'); t.hline(0, 15, 4, 'H'); t.hline(0, 15, 5, 'g'); t.hline(0, 15, 10, 'H'); t.hline(0, 15, 11, 'g'); add(`rail${s2}`, t); }
   // zoo pen ground (packed dirt + straw)
   { const t = base('X'); speckle(t, 'x', 10, 182); speckle(t, 'y', 6, 183); speckle(t, 'j', 6, 184); add('pen', t); }
+  // ---- M4.3: the bike network on N-S streets ----
+  // Bike lanes in a N-S street's curb column, beside its two car lanes: a narrower sidewalk, the curb, then the lane.
+  // painted (Strachan today): asphalt with a solid white line on the traffic side
+  { const t = sidewalk(220); t.vline(6, 0, 15, 'T'); t.vline(7, 0, 15, 'S'); t.rect(8, 0, 8, 16, 'A'); speckle(t, 'a', 5, 221, [8, 0, 8, 16]); t.vline(8, 0, 15, 'g'); t.vline(15, 0, 15, 'W'); add('curb_w_paint', t); }
+  { const t = sidewalk(222); t.vline(9, 0, 15, 'T'); t.vline(8, 0, 15, 'S'); t.rect(0, 0, 8, 16, 'A'); speckle(t, 'a', 5, 223, [0, 0, 8, 16]); t.vline(7, 0, 15, 'g'); t.vline(0, 0, 15, 'W'); add('curb_e_paint', t); }
+  // protected: green lane, a concrete separator with bollards on the traffic side
+  { const t = sidewalk(224); t.vline(6, 0, 15, 'T'); t.vline(7, 0, 15, 'S'); t.rect(8, 0, 6, 16, 'E'); speckle(t, 'l', 4, 225, [8, 0, 6, 16]); t.rect(14, 0, 2, 16, 'T'); t.vline(13, 0, 15, 'S'); for (const y of [3, 11]) { t.set(14, y, 'R'); t.set(14, y - 1, 'q'); } add('curb_w_bike', t); }
+  { const t = sidewalk(226); t.vline(9, 0, 15, 'T'); t.vline(8, 0, 15, 'S'); t.rect(2, 0, 6, 16, 'E'); speckle(t, 'l', 4, 227, [2, 0, 6, 16]); t.rect(0, 0, 2, 16, 'T'); t.vline(2, 0, 15, 'S'); for (const y of [3, 11]) { t.set(1, y, 'R'); t.set(1, y - 1, 'q'); } add('curb_e_bike', t); }
+  // a slow street's sharrow: "bikes take the lane" - an upright bike under chevrons pointing the way the lane runs
+  // (the painted bike, end-on to the lane: two wheels and the frame between, under a chevron)
+  const NL = String.fromCharCode(10);
+  const BIKE_V = ['.WWW.', 'W...W', 'W...W', 'W...W', '.WWW.', '..W..', '.WWW.', 'W...W', 'W...W', 'W...W', '.WWW.'].join(NL);
+  const CHEV_UP = ['...W...', '..W.W..', '.W...W.'].join(NL), CHEV_DN = ['.W...W.', '..W.W..', '...W...'].join(NL);
+  { const t = asphalt(228); t.vline(14, 0, 15, 'y'); t.grid(5, 1, BIKE_V); t.grid(4, 13, CHEV_DN); add('sharrow_ns_w', t); }
+  { const t = asphalt(229); t.vline(0, 0, 15, 'y'); t.grid(2, 0, CHEV_UP); t.grid(3, 4, BIKE_V); add('sharrow_ns_e', t); }
   return tiles;
 }
 

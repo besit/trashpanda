@@ -20,6 +20,7 @@ export interface Lane {
   /** upgrade id: through-car traffic removed (King St corridor) */ noCars?: string;
   /** upgrade id: traffic calmed (slower cars) */ calm?: string;
   /** drivers speed here until calmed */ speedy?: boolean;
+  /** M4.3: network id that makes this a SLOW street (cars at cycling speed and fewer of them, bikes take the lane) */ slow?: string;
   /** a dedicated transit right-of-way: streetcars only (Queens Quay) */ transitOnly?: boolean;
   /** runs UNDER overpasses (the DVP under the Don bridges): drawn below the bridge-deck overlay */ under?: boolean;
   /** up on an elevated deck (the Gardiner): drawn above everything on the ground, fast, jams that clear */ elevated?: boolean;
@@ -63,7 +64,13 @@ export interface MapData {
   lifeTokens?: { x: number; y: number }[];
   /** M4.1: the Bike Bus's route (East End) */
   bikebus?: import('./BikeBus').BikeBusDef;
+  /** M4.3: the bike network's streets on this map (which mission adds each: src/data/network.ts) */
+  network?: NetSeg[];
+  /** M4.3: the Dock Drop's gaps (Downtown) */
+  docks?: import('./DockDrop').DockDropDef;
 }
+/** M4.3: a street on the bike network: its centre lines (px) for the city map; patch = the improvement that does it */
+export interface NetSeg { id: string; name: string; kind: 'protected' | 'slow'; segs: [number, number, number, number][]; patch?: string; painted?: boolean }
 
 /** depth band for things under an overpass: above the ground (-10) and decals (-9), below the deck overlay */
 export const UNDER_DEPTH = -8;
@@ -83,6 +90,13 @@ export class CityMap {
   private applied = new Set<string>();
   private pivots: Manifest['pivots'];
   private tagged = new Map<string, { img: Phaser.GameObjects.Image; zones: Phaser.GameObjects.Zone[] }[]>();
+  /** the bridge decks' copy of the ground (M4.3: an improvement's tiles on a bridge are put there too) */
+  private deck?: Phaser.Tilemaps.TilemapLayer;
+  private deckMap?: Phaser.Tilemaps.Tilemap;
+  private putTile(t: number, x: number, y: number) {
+    this.tilemap.putTileAt(t, x, y, false, this.layer);
+    if (this.deck && this.data.overpasses?.some(([x0, y0, x1, y1]) => x >= x0 && x <= x1 && y >= y0 && y <= y1)) this.deckMap!.putTileAt(t, x, y, false, this.deck);
+  }
 
   constructor(private scene: Phaser.Scene, readonly data: MapData) {
     this.pivots = (scene.registry.get('manifest') as Manifest).pivots;
@@ -97,7 +111,8 @@ export class CityMap {
       for (const [x0, y0, x1, y1] of data.overpasses) for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (data.ground[y]?.[x] !== undefined) masked[y][x] = data.ground[y][x];
       const om = scene.make.tilemap({ data: masked, tileWidth: ts, tileHeight: ts });
       const ots = om.addTilesetImage('tiles', 'tiles', ts, ts, data.tileset.margin, data.tileset.spacing)!;
-      om.createLayer(0, ots, 0, 0)!.setDepth(UNDER_DEPTH + 0.5);
+      this.deck = om.createLayer(0, ots, 0, 0)!.setDepth(UNDER_DEPTH + 0.5);
+      this.deckMap = om;
     }
     for (const d of data.decals ?? []) scene.add.image(d.x, d.y, d.key).setOrigin(0).setDepth(-9);
     this.solids = scene.physics.add.staticGroup();
@@ -152,7 +167,7 @@ export class CityMap {
     tags.forEach((t) => this.tagged.delete(t));
     if (!animate) {
       for (const r of removed) { r.img.destroy(); r.zones.forEach((z) => z.destroy()); }
-      for (const [x, y, t] of imp.tiles) this.tilemap.putTileAt(t, x, y, false, this.layer);
+      for (const [x, y, t] of imp.tiles) this.putTile(t, x, y);
       for (const p of imp.addProps) this.addObject(p);
       return 0;
     }
@@ -170,7 +185,7 @@ export class CityMap {
       const delay = Math.abs((axis === 'x' ? x : y) * ts - sweepFrom) / ts / speed;
       maxDelay = Math.max(maxDelay, delay);
       this.scene.time.delayedCall(delay, () => {
-        this.tilemap.putTileAt(t, x, y, false, this.layer);
+        this.putTile(t, x, y);
         if ((axis === 'x' ? x : y) % 2 === 0) puff(this.scene, x * ts + 8, y * ts + 8, 0x9bd35a, 3, 14, -5);
       });
     }

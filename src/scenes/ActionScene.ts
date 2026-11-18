@@ -22,7 +22,8 @@ import { ctx } from '../core/ctx';
 import { START_LIVES } from '../core/GameState';
 import { award, hitsPerLife, fmtScore, type ScoreKind } from '../core/Score';
 const POINTS_OF = (label: string) => Number(label.slice(1)) || 0;
-import { text, iris, shake, hitStop, puff, floatText, fitText } from '../ui/fx';
+import { text, iris, shake, hitStop, puff, floatText, fitText, impactStar } from '../ui/fx';
+import { rankByHits, rankByDelay, recordRank, rankLine, RANK_COLOR, type MissionRank } from '../core/Rank';
 import { openPause } from './PauseScene';
 import { ScrollLayer, STREET_Y, GROUND_Y, FRONT_Y, BACKROW_Y, SKYLINE_Y } from '../ui/sideLayout';
 import { music } from '../audio/Sequencer';
@@ -103,7 +104,14 @@ export class ActionScene extends Phaser.Scene {
   /** M3.3 (Ivan): a finished mission can be replayed from its marker, but a replay earns NO points */
   private replay = false;
 
-  create(data: { mission?: string; debug?: boolean; replay?: boolean }) {
+  /** M4.3 (game review): once the boss arena is reached, losing a life restarts at the boss, not at the street's start */
+  private reachedBoss = false;
+  private atCheckpoint = false;
+
+  /** hits taken in earlier tries of this mission (restarts after a lost life): they count toward the rank */
+  private carriedHits = 0;
+
+  create(data: { mission?: string; debug?: boolean; replay?: boolean; checkpoint?: boolean; hits?: number }) {
     const want = MISSIONS[data?.mission ?? 'bike_lane_war'];
     this.mission = (want?.action ? want : MISSIONS.bike_lane_war) as MissionDef & { action: NonNullable<MissionDef['action']> }; // explore missions never come here
     this.debugRun = !!data?.debug; this.replay = !!data?.replay;
@@ -112,6 +120,9 @@ export class ActionScene extends Phaser.Scene {
     this.bossDone = false; this.buildDone = false; this.chaseDone = false;
     this.input2 = new InputManager(this);
     const a = this.mission.action;
+    // the Lane Eater's boss is the end of its autoscroll: no checkpoint there
+    this.atCheckpoint = !!data?.checkpoint && !!a.boss && a.boss.kind !== 'laneeater';
+    this.reachedBoss = this.atCheckpoint; this.carriedHits = data?.hits ?? 0;
     this.groundY = a.groundY ?? GROUND_Y;
     this.worldW = a.length + GAME_W;
     this.physics.world.gravity.y = SIDE.gravity;
@@ -128,7 +139,7 @@ export class ActionScene extends Phaser.Scene {
     if (a.decor === 'hoarding') for (let x = 160; x < a.length; x += 230) this.add.image(x, STREET_Y + 12, 'world', 'hoarding').setOrigin(0.5, 1).setDepth(20).setScale(1.2);
 
     // the Lane Eater mission starts the raccoon clear of the machine creeping in from the left
-    this.player = new SidePlayer(this, a.autoscroll ? 150 : 60, this.groundY - 10);
+    this.player = new SidePlayer(this, this.atCheckpoint ? Math.max(60, a.boss!.at - 230) : a.autoscroll ? 150 : 60, this.groundY - 10);
     // M3.1: the difficulty sets how many hits one life takes (easy 7, normal 5, hard 3)
     this.player.maxHp = hitsPerLife(ctx.state); this.player.hp = this.player.maxHp; this.earned = 0; this.scored = { pieces: 0, riders: 0, cleared: 0 };
     this.physics.add.collider(this.player.sprite, this.ground);
@@ -144,7 +155,7 @@ export class ActionScene extends Phaser.Scene {
 
     if (a.escort) this.escort = new Escort(this, a.escort, -30);
     // M4.2: the arena's spots (asphalt, fences, stakes, rail piles) are already there as you ride up, not popped in at the lock
-    this.depavePre = a.depave ? new DepaveSpots(this, a.depave, this.arenaLeftAt(a.depave.at), this.groundY) : undefined;
+    this.depavePre = a.depave && !this.atCheckpoint ? new DepaveSpots(this, a.depave, this.arenaLeftAt(a.depave.at), this.groundY) : undefined;
     this.buildPre = a.build ? new BuildSpots(this, a.build, this.arenaLeftAt(a.build.at), this.groundY) : undefined;
     this.peloton = undefined; this.eater = undefined; this.scrolling = false; this.ambushIdx = 0; this.autoX = 0;
     this.depave = undefined; this.depaveDone = false; this.monster = undefined; this.digger = undefined; this.tug = undefined; this.cases = [];
@@ -154,16 +165,21 @@ export class ActionScene extends Phaser.Scene {
       this.eater = new LaneEater(this, -100, this.groundY); // front just off screen; it creeps in
       this.scrolling = true;
     }
-    if (a.chase && !a.chase.startAt) this.chase = new Chase(this, a.chase, 60, this.groundY);
+    if (a.chase && !a.chase.startAt && !this.atCheckpoint) this.chase = new Chase(this, a.chase, 60, this.groundY);
     // M4 (mission 6): crates to crouch behind, guards on watch with flashlights
     // M4.2 (Ivan: "can I hide behind the crate? not clear"): the crates stand IN FRONT of the raccoon (depth over the player's 100)
     this.hideTag?.destroy(); this.hideTag = undefined;
     for (const cx of a.crates ?? []) { this.add.image(cx, this.groundY + 2, 'world', 'crate').setOrigin(0.5, 1).setDepth(101); this.crates.push(cx); }
-    for (const pd of a.patrols ?? []) {
+    for (const pd of this.atCheckpoint ? [] : a.patrols ?? []) {
       const r = this.spawnRat('guard', pd.at);
-      this.patrols.push(new Patrol(this, r, this.groundY, (x) => { this.say('SPOTTED! THE GUARD CALLED FOR BACKUP!', 0xff6347, 1800); this.time.delayedCall(300, () => this.spawnRat('basic', this.edgeX(x + 140))); this.time.delayedCall(700, () => this.spawnRat('basic', x - 140)); }));
+      this.patrols.push(new Patrol(this, r, this.groundY, (x) => { this.say('SPOTTED! THE GUARD CALLED FOR BACKUP!', 0xff6347, 1800); this.time.delayedCall(300, () => this.spawnRat('basic', this.edgeX(x + 140))); this.time.delayedCall(700, () => this.spawnRat('basic', this.edgeX(x - 140))); }));
     }
     if (a.build) this.add.image(a.build.at + 60, STREET_Y, 'school_side').setOrigin(0, 1).setDepth(2);
+    // at the checkpoint, everything before the boss counts as done
+    if (this.atCheckpoint) {
+      while (this.waveIdx < a.waves.length && a.waves[this.waveIdx].at < a.boss!.at) this.waveIdx++;
+      this.depaveDone = !!a.depave; this.buildDone = !!a.build; this.chaseDone = !!a.chase;
+    }
 
     const cam = this.cameras.main;
     cam.setBounds(0, 0, this.worldW, GAME_H).setRoundPixels(true);
@@ -311,12 +327,15 @@ export class ActionScene extends Phaser.Scene {
     this.physics.add.existing(z, true);
     const b = z.body as Phaser.Physics.Arcade.StaticBody;
     b.checkCollision.down = false; b.checkCollision.left = false; b.checkCollision.right = false;
+    // M4.3 (review): a falling slab is solid only once it has landed (no invisible platform in mid-air)
+    if (float) { b.enable = false; this.time.delayedCall(420, () => { if (z.active) b.enable = true; }); }
     this.platforms.add(z);
   }
 
   private async intro() {
     this.player.frozen = true;
     await iris(this, 'open', 80, this.groundY - 20, 500);
+    if (this.atCheckpoint) { this.flashGo('CHECKPOINT: THE BOSS!'); this.player.frozen = false; return; }
     const a = this.mission.action;
     // M3.1: stacked top-down (origin y 0). Multi-line text centred on a fixed y grew upward into the title.
     const t1 = text(this, GAME_W / 2, 48, this.mission.title, 'font_big').setScrollFactor(0).setDepth(1000);
@@ -344,11 +363,12 @@ export class ActionScene extends Phaser.Scene {
   /** M4.2: the hint box goes when a result takes the screen (no text over text) */
   private clearSay() { this.sayObj?.destroy(); this.sayBox?.destroy(); this.sayObj = undefined; this.sayBox = undefined; }
   private say(msg: string, tint = 0xfff08a, hold = 1600) {
+    if (this.finished) return; // M4.3 (review): a delayed hint must not land on the result card
     this.sayObj?.destroy(); this.sayBox?.destroy();
     const t = fitText(text(this, GAME_W / 2, 34, msg, 'font_outline').setOrigin(0.5, 0).setScrollFactor(0).setDepth(2001).setTint(tint), GAME_W - 16, true);
     // M3.3 (Ivan: text over text): the hint sits in its own dark box, like the dialogue box without a name
     const g = this.add.graphics().setScrollFactor(0).setDepth(2000.5);
-    g.fillStyle(0x16121f, 0.82).fillRoundedRect(GAME_W / 2 - t.width / 2 - 7, 30, t.width + 14, t.height + 8, 3).lineStyle(1, 0x69657a).strokeRoundedRect(GAME_W / 2 - t.width / 2 - 7, 30, t.width + 14, t.height + 8, 3);
+    g.fillStyle(0x16121f, 0.94).fillRoundedRect(GAME_W / 2 - t.width / 2 - 7, 30, t.width + 14, t.height + 8, 3).lineStyle(1, 0x69657a).strokeRoundedRect(GAME_W / 2 - t.width / 2 - 7, 30, t.width + 14, t.height + 8, 3);
     this.sayObj = t; this.sayBox = g;
     this.tweens.add({ targets: [t, g], alpha: 0, delay: hold, duration: 400, onComplete: () => { t.destroy(); g.destroy(); if (this.sayObj === t) { this.sayObj = undefined; this.sayBox = undefined; } } });
   }
@@ -371,15 +391,33 @@ export class ActionScene extends Phaser.Scene {
     this.scored = { pieces, riders, cleared };
   }
 
+  private goBand?: Phaser.GameObjects.Graphics;
   private flashGo(msg: string) {
     this.hud.go.setText(msg).setScale(1);
     const s = fitText(this.hud.go, GAME_W - 16);
     this.hud.go.setAlpha(1).setScale(s * 1.5);
     this.tweens.add({ targets: this.hud.go, scale: s, duration: 200 });
     this.tweens.add({ targets: this.hud.go, alpha: 0, delay: 900, duration: 300 });
+    // M4.3: on its own dark band (it landed on the Megamart's signs: text on text)
+    const h = this.hud.go.height * s + 8;
+    this.goBand?.destroy();
+    this.goBand = this.add.graphics().setScrollFactor(0).setDepth(1999.5).fillStyle(0x16121f, 0.6).fillRect(0, this.hud.go.y - h / 2, GAME_W, h);
+    this.tweens.add({ targets: this.goBand, alpha: 0, delay: 900, duration: 300 });
+  }
+  /** M4.3: a dark band behind a result card (head + sub lines), so it never sits on lettering in the background */
+  private cardBand(headY: number, headH: number, sub: Phaser.GameObjects.BitmapText) {
+    const top = headY - headH / 2 - 6, bottom = sub.y + sub.height + 6;
+    this.add.graphics().setScrollFactor(0).setDepth(2999).fillStyle(0x16121f, 0.86).fillRect(0, top, GAME_W, bottom - top);
   }
 
+  /** M4.3 (game review): a dark band behind the top HUD line, so it reads over towers and the Gardiner's deck */
+  private hudBand?: Phaser.GameObjects.Graphics;
+  private drawHudBand() {
+    this.hudBand ??= this.add.graphics().setScrollFactor(0).setDepth(1999);
+    this.hudBand.clear().fillStyle(0x16121f, 0.5).fillRect(0, 0, GAME_W, 18).fillStyle(0x16121f, 0.25).fillRect(0, 18, GAME_W, 2);
+  }
   private buildHud() {
+    this.hudBand = undefined; this.drawHudBand();
     const g = this.add.graphics().setScrollFactor(0).setDepth(2000);
     const label = text(this, GAME_W / 2, 6, '', 'font_outline', 0).setOrigin(0.5, 0).setScrollFactor(0).setDepth(2000);
     const go = text(this, GAME_W / 2, 70, '', 'font_big').setScrollFactor(0).setDepth(2000).setAlpha(0);
@@ -388,7 +426,7 @@ export class ActionScene extends Phaser.Scene {
   }
 
   private layoutHud() {
-    this.hud.label.setX(GAME_W / 2); this.hud.go.setX(GAME_W / 2); this.hud.score.setX(GAME_W - 6);
+    this.hud.label.setX(GAME_W / 2); this.hud.go.setX(GAME_W / 2); this.hud.score.setX(GAME_W - 6); this.drawHudBand();
     for (const l of this.layers) l.refit();
     if (wantsTouch() && window.innerHeight > window.innerWidth && !this.finished) openPause(this);
   }
@@ -468,16 +506,28 @@ export class ActionScene extends Phaser.Scene {
   }
 
   // ---------------- arena lock ----------------
-  private lockArena(kind: Lock['kind'], total: number, suvs = 0): Lock {
+  /** M4.3: the impact star at the middle of where a hitbox meets its target */
+  private impact(h: { x: number; y: number; w: number; h: number; dmg?: number }, r: { x: number; y: number; width: number; height: number }) {
+    const x0 = Math.max(h.x, r.x), x1 = Math.min(h.x + h.w, r.x + r.width), y0 = Math.max(h.y, r.y), y1 = Math.min(h.y + h.h, r.y + r.height);
+    impactStar(this, x1 > x0 ? (x0 + x1) / 2 : h.x + h.w / 2, y1 > y0 ? (y0 + y1) / 2 : h.y + h.h / 2, (h.dmg ?? 1) > 1);
+  }
+  /** a stomp lands: the star under the raccoon's feet */
+  private stompStar() { impactStar(this, this.player.sprite.x, this.player.body.bottom, true); }
+
+  private lockArena(kind: Lock['kind'], total: number, suvs = 0, want?: number): Lock {
     const cam = this.cameras.main;
     cam.stopFollow(); this.follow.on = false;
-    // lock exactly where the camera already is: no jump
-    const left = Phaser.Math.Clamp(Math.round(cam.scrollX), 0, this.worldW - GAME_W);
-    cam.setScroll(left, cam.scrollY);
+    // lock exactly where the camera already is: no jump. M4.3 (review): an arena whose spots were placed before
+    // you arrived (want) locks where they expect it, the camera easing over the few pixels it lagged
+    const here = Phaser.Math.Clamp(Math.round(cam.scrollX), 0, this.worldW - GAME_W);
+    const left = want === undefined ? here : Phaser.Math.Clamp(want, 0, this.worldW - GAME_W);
+    if (left !== here) { cam.setScroll(here, cam.scrollY); this.tweens.add({ targets: cam, scrollX: left, duration: 220, ease: 'Sine.easeOut', onUpdate: () => { for (const l of this.layers) l.update(Math.round(cam.scrollX)); } }); }
+    else cam.setScroll(left, cam.scrollY);
     cam.setBounds(left, 0, GAME_W, GAME_H);
     this.physics.world.setBounds(left, 0, GAME_W, GAME_H + 100);
     this.player.body.setCollideWorldBounds(true);
     this.lock = { kind, left, startKills: this.killed, total, suvsLeft: suvs, suvT: 0.8 };
+    if (kind === 'boss') this.reachedBoss = true; // M4.3: the checkpoint
     return this.lock;
   }
 
@@ -582,17 +632,20 @@ export class ActionScene extends Phaser.Scene {
 
   private startBuild() {
     const b = this.mission.action.build!;
-    const l = this.lockArena('build', b.rats.length + b.suvs, b.suvs);
+    const l = this.lockArena('build', b.rats.length + b.suvs, b.suvs, this.buildPre ? this.arenaLeftAt(b.at) : undefined);
     this.build = this.buildPre ?? new BuildSpots(this, b, l.left, this.groundY);
     this.spawnRats(b.rats, l.left);
     this.flashGo('BUILD IT!');
     this.say('PUMP THE STAKES TO BUILD');
   }
 
+  /** M4.3: a result card takes the screen: no banner fading out behind it */
+  private clearGo() { this.tweens.killTweensOf(this.hud.go); this.hud.go.setAlpha(0); this.goBand?.destroy(); this.goBand = undefined; }
+
   private async win() {
     if (this.finished) return;
     this.finished = true;
-    this.clearSay();
+    this.clearSay(); this.clearGo();
     this.player.frozen = true;
     music.play(SONG_WIN);
     sfx.ding();
@@ -604,9 +657,15 @@ export class ActionScene extends Phaser.Scene {
     const sub0 = this.escort ? `DELAY: ${this.escort.delay.toFixed(1)} S\nCLEARED: ${this.escort.cleared}` : this.peloton ? `RIDERS RALLIED: ${this.peloton.joinedTotal}\nRATS DEFEATED: ${this.killed}` : `RATS DEFEATED: ${this.killed}`;
     const firstWin = !ctx.state.completedMissions.includes(this.mission.id) && !this.replay;
     if (firstWin) this.earned += award(ctx.state, 'mission');
-    const sub = this.replay ? `${sub0}\nREPLAY: NO POINTS` : `${sub0}\nSCORE +${this.earned}${firstWin ? ' (MISSION BONUS)' : ''}`;
+    // M4.3: the rank (hits taken; the escort: its delay); the best one is kept, replays can improve it
+    const hits = this.carriedHits + this.player.hitsTaken;
+    const r: MissionRank = this.escort ? { rank: rankByDelay(this.escort.delay), detail: `${this.escort.delay.toFixed(1)} S LATE` } : { rank: rankByHits(hits), detail: hits === 1 ? '1 HIT' : `${hits} HITS` };
+    const rec = recordRank(ctx.state, this.mission.id, r);
+    const sub = `${rankLine(r, rec)}\n${this.replay ? `${sub0}\nREPLAY: NO POINTS` : `${sub0}\nSCORE +${this.earned}${firstWin ? ' (MISSION BONUS)' : ''}`}`;
     if (this.peloton && !this.replay) ctx.state.ridersRallied += this.peloton.joinedTotal;
-    fitText(text(this, GAME_W / 2, 60 + th / 2 + 8, sub, 'font_outline').setOrigin(0.5, 0).setScrollFactor(0).setDepth(3000).setCenterAlign(), GAME_W - 16, true);
+    const subT = fitText(text(this, GAME_W / 2, 60 + th / 2 + 8, sub, 'font_outline').setOrigin(0.5, 0).setScrollFactor(0).setDepth(3000).setCenterAlign(), GAME_W - 16, true);
+    this.cardBand(60, th, subT);
+    subT.setCharacterTint(0, `RANK ${r.rank}`.length, false, RANK_COLOR[r.rank]);
     if (!this.replay) ctx.state.ratsDefeated += this.killed + (this.escort?.cleared ?? 0);
     await new Promise((r) => this.time.delayedCall(2000, r));
     await iris(this, 'close', this.player.sprite.x - this.cameras.main.scrollX, this.player.sprite.y - 16, 500);
@@ -631,22 +690,25 @@ export class ActionScene extends Phaser.Scene {
    */
   private async lose(msg = 'BONK!', costsLife = true) {
     if (this.finished) return;
-    this.clearSay();
+    this.clearSay(); this.clearGo();
     this.finished = true;
     if (costsLife) music.play(SONG_LOSE); else music.stop();
     this.player.frozen = true;
     if (costsLife) ctx.state.lives = Math.max(0, ctx.state.lives - 1);
     const out = costsLife && ctx.state.lives <= 0;
-    fitText(text(this, GAME_W / 2, 70, out ? 'OUT OF LIVES!' : msg, 'font_big').setScrollFactor(0).setDepth(3000).setTint(0xff6347), GAME_W - 16);
-    const sub = out ? 'BACK TO THE MAP TO REGROUP' : costsLife ? `-1 LIFE   LIVES LEFT: ${ctx.state.lives}` : 'TRY AGAIN';
-    fitText(text(this, GAME_W / 2, 84, sub, 'font_outline').setOrigin(0.5, 0).setScrollFactor(0).setDepth(3000), GAME_W - 16, true);
+    const loseT = text(this, GAME_W / 2, 70, out ? 'OUT OF LIVES!' : msg, 'font_big').setScrollFactor(0).setDepth(3000).setTint(0xff6347);
+    const loseS = fitText(loseT, GAME_W - 16);
+    const cp = this.reachedBoss && !out && !!this.mission.action.boss && this.mission.action.boss.kind !== 'laneeater';
+    const sub = out ? 'BACK TO THE MAP TO REGROUP' : costsLife ? `-1 LIFE   LIVES LEFT: ${ctx.state.lives}${cp ? '\nBACK TO THE BOSS' : ''}` : 'TRY AGAIN';
+    const loseSub = fitText(text(this, GAME_W / 2, 84, sub, 'font_outline').setOrigin(0.5, 0).setScrollFactor(0).setDepth(3000).setCenterAlign(), GAME_W - 16, true);
+    this.cardBand(70, loseT.height, loseSub); void loseS;
     if (costsLife) { sfx.hurt(); shake(this, 300, 0.01); }
     if (out) ctx.state.lives = START_LIVES;
     ctx.save();
     await new Promise((r) => this.time.delayedCall(2200, r));
     await iris(this, 'close');
     if (out) { this.physics.world.gravity.y = 0; if (this.debugRun) this.scene.start('Title', { replay: { kind: 'mission', id: this.mission.id } }); else this.scene.start('Explore', { district: this.mission.district, from: undefined }); }
-    else this.scene.restart({ mission: this.mission.id, debug: this.debugRun });
+    else this.scene.restart({ mission: this.mission.id, debug: this.debugRun, replay: this.replay, checkpoint: cp, hits: this.carriedHits + this.player.hitsTaken });
   }
 
   /** every beat of the mission is done: the mission ends right away (Ivan: no riding past the boss) */
@@ -674,8 +736,8 @@ export class ActionScene extends Phaser.Scene {
     // ---- beats triggered by position ----
     if (!this.lock && !this.finished) {
       if (this.waveIdx < a.waves.length && px > a.waves[this.waveIdx].at) { this.spawnWave(this.waveIdx); this.waveIdx++; }
-      else if (a.depave && !this.depave && px > a.depave.at) {
-        const l = this.lockArena('depave', a.depave.rats.length);
+      else if (a.depave && !this.depave && !this.depaveDone && px > a.depave.at) {
+        const l = this.lockArena('depave', a.depave.rats.length, 0, this.depavePre ? this.arenaLeftAt(a.depave.at) : undefined);
         this.depave = this.depavePre ?? new DepaveSpots(this, a.depave, l.left, this.groundY);
         this.spawnRats(a.depave.rats, l.left);
         this.flashGo(this.depave.fence ? 'TEAR IT DOWN!' : this.depave.stakes ? 'PULL THE STAKES!' : this.depave.rail ? 'LAY THE TRACK!' : 'DEPAVE IT!');
@@ -717,14 +779,14 @@ export class ActionScene extends Phaser.Scene {
         this.flashGo('FINAL BOSS!'); music.play(SONG_BOSS);
         this.time.delayedCall(1500, () => this.say('JUMP THE SHOCKWAVES AND THE CARS!\nPUMP THE GLOWING VENT. STOMP ITS DECK!', 0xfff08a, 3600));
       }
-      else if (a.build && !this.build && this.chaseDone && px > a.build.at) this.startBuild();
-      else if (a.chase?.startAt && !this.chase && px > a.chase.startAt) { this.chase = new Chase(this, a.chase, px, this.groundY); this.flashGo('AFTER THEM!'); this.say('THEY\'VE GOT THE EXHIBITS!\nCATCH THEM BEFORE THE TRUCK!', 0xfff08a, 2400); }
+      else if (a.build && !this.build && !this.buildDone && this.chaseDone && px > a.build.at) this.startBuild();
+      else if (a.chase?.startAt && !this.chase && !this.chaseDone && px > a.chase.startAt) { this.chase = new Chase(this, a.chase, px, this.groundY); this.flashGo('AFTER THEM!'); this.say('THEY\'VE GOT THE EXHIBITS!\nCATCH THEM BEFORE THE TRUCK!', 0xfff08a, 2400); }
       else if (a.boss?.kind === 'wrecker' && !this.wrecker && px > a.boss.at) {
         const l = this.lockArena('boss', 0);
         this.wrecker = new Wrecker(this, l.left + GAME_W - 70, this.groundY, { left: l.left, right: l.left + GAME_W });
         this.enterFromRight([this.wrecker.img]);
         this.flashGo('BOSS!'); music.play(SONG_BOSS);
-        this.time.delayedCall(1300, () => this.say('ONLY THE BALL HURTS. JUMP IT, DODGE ITS SHADOW.\nPUMP THE ENGINE. STOMP THE CAB!', 0xfff08a, 3600));
+        this.time.delayedCall(1300, () => this.say('ONLY THE BALL HURTS: JUMP IT OR DODGE IT.\nPUMP THE ENGINE. STOMP THE CAB!', 0xfff08a, 3600));
       }
     }
 
@@ -783,10 +845,10 @@ export class ActionScene extends Phaser.Scene {
       if (d.alive) {
         const rr = d.roofRect();
         if (this.landingOn(pRect, d.roofY(), rr.x, rr.right, d)) {
-          if (d.hit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 0, id: 7900 + Math.floor(this.time.now / 150) }, 'stomp')) { this.player.bounce(); hitStop(this, 70); }
+          if (d.hit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 0, id: 7900 + Math.floor(this.time.now / 150) }, 'stomp')) { this.stompStar(); this.player.bounce(); hitStop(this, 70); }
         } else {
           const ar = d.armRect();
-          for (const h of hits) if (overlap(h, ar) && d.hit(h, 'pump')) { hitStop(this, 70); shake(this, 90, 0.005); }
+          for (const h of hits) if (overlap(h, ar) && d.hit(h, 'pump')) { this.impact(h, ar); hitStop(this, 70); shake(this, 90, 0.005); }
           if (Phaser.Geom.Rectangle.Overlaps(d.rect(), pRect) && pRect.bottom > d.roofY() + 40 && this.player.hurt(d.x)) { shake(this, 140, 0.01); hitStop(this, 70); }
         }
       } else if (!this.bossDone) {
@@ -801,10 +863,10 @@ export class ActionScene extends Phaser.Scene {
       if (m.alive) {
         const mr = m.rect();
         if (this.landingOn(pRect, m.roofY(), mr.x + 6, mr.right - 6, m)) {
-          if (m.hit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 0, id: 7700 + Math.floor(this.time.now / 150) }, 'stomp')) { this.player.bounce(); hitStop(this, 70); }
+          if (m.hit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 0, id: 7700 + Math.floor(this.time.now / 150) }, 'stomp')) { this.stompStar(); this.player.bounce(); hitStop(this, 70); }
         } else {
           const tr = m.tyreRect();
-          for (const h of hits) if (overlap(h, tr) && m.hit(h, 'pump')) { hitStop(this, 70); shake(this, 90, 0.005); }
+          for (const h of hits) if (overlap(h, tr) && m.hit(h, 'pump')) { this.impact(h, tr); hitStop(this, 70); shake(this, 90, 0.005); }
           if (m.dangerous && Phaser.Geom.Rectangle.Overlaps(m.frontRect(), pRect) && pRect.bottom > m.roofY() + 8 && this.player.hurt(m.x)) { shake(this, 160, 0.012); hitStop(this, 80); }
         }
       } else if (!this.bossDone) {
@@ -819,7 +881,7 @@ export class ActionScene extends Phaser.Scene {
       const hidden = this.player.onGround && this.crates.some((cx) => Math.abs(px - cx) < 16);
       for (const pt of this.patrols) pt.update(dt, pRect, hidden);
       // hidden: the raccoon goes into the crate's shadow; near a crate, a bobbing HIDE shows where to stand
-      this.player.sprite.setAlpha(hidden ? 0.55 : 1);
+      if (this.player.invulnT <= 0) this.player.sprite.setAlpha(hidden ? 0.55 : 1); // M4.3 (review): keep the hurt blink
       const near = this.crates.find((cx) => Math.abs(px - cx) < 60 && Math.abs(px - cx) >= 16);
       const guarded = this.patrols.some((pt) => !pt.alarmed && pt.rat.alive && Math.abs(pt.rat.sprite.x - px) < 260);
       if (!this.hideTag) this.hideTag = text(this, 0, 0, 'HIDE HERE', 'font_outline').setDepth(212).setTint(0xfff08a).setVisible(false);
@@ -833,10 +895,10 @@ export class ActionScene extends Phaser.Scene {
       if (wk.alive) {
         const rr = wk.roofRect();
         if (this.landingOn(pRect, wk.roofY(), rr.x, rr.right, wk)) {
-          if (wk.hit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 0, id: 7500 + Math.floor(this.time.now / 150) }, 'stomp')) { this.player.bounce(); hitStop(this, 70); }
+          if (wk.hit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 0, id: 7500 + Math.floor(this.time.now / 150) }, 'stomp')) { this.stompStar(); this.player.bounce(); hitStop(this, 70); }
         } else {
           const er = wk.engineRect();
-          for (const h of hits) if (overlap(h, er) && wk.hit(h, 'pump')) { hitStop(this, 70); shake(this, 90, 0.005); }
+          for (const h of hits) if (overlap(h, er) && wk.hit(h, 'pump')) { this.impact(h, er); hitStop(this, 70); shake(this, 90, 0.005); }
           // M4.2: only the ball (and its shockwaves) hurt; the truck itself is safe to stand by and pump
           if (wk.touches(pRect) && this.player.hurt(wk.ballPos().x)) { shake(this, 200, 0.014); hitStop(this, 90); }
           else if (wk.waveHits(pRect, this.player.onGround) && this.player.hurt(wk.ballPos().x)) { shake(this, 140, 0.01); hitStop(this, 70); }
@@ -854,10 +916,10 @@ export class ActionScene extends Phaser.Scene {
       if (m.alive) {
         const rr = m.roofRect();
         if (this.landingOn(pRect, m.roofY(), rr.x, rr.right, m)) {
-          if (m.hit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 0, id: 7400 + Math.floor(this.time.now / 150) }, 'stomp')) { this.player.bounce(); hitStop(this, 70); }
+          if (m.hit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 0, id: 7400 + Math.floor(this.time.now / 150) }, 'stomp')) { this.stompStar(); this.player.bounce(); hitStop(this, 70); }
         } else {
           const cr = m.chestRect();
-          for (const h of hits) if (overlap(h, cr) && m.hit(h, 'pump')) { hitStop(this, 70); shake(this, 90, 0.005); }
+          for (const h of hits) if (overlap(h, cr) && m.hit(h, 'pump')) { this.impact(h, cr); hitStop(this, 70); shake(this, 90, 0.005); }
         }
       } else if (!this.bossDone) {
         this.bossDone = true; this.clearSay(); this.killed++; this.pts('boss', m.x, this.groundY - 120);
@@ -873,10 +935,10 @@ export class ActionScene extends Phaser.Scene {
         const rr = g.roofRect();
         if (g.blast(pRect, pb, dt / 1000) && !this.player.frozen && Math.random() < 0.05) floatText(this, px, pRect.y - 12, 'WHOOSH', 'font', 0xc9c5d1, 200);
         if (this.landingOn(pRect, g.roofY(), rr.x, rr.right, g)) {
-          if (g.hit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 0, id: 7600 + Math.floor(this.time.now / 150) }, 'stomp')) { this.player.bounce(); hitStop(this, 70); }
+          if (g.hit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 0, id: 7600 + Math.floor(this.time.now / 150) }, 'stomp')) { this.stompStar(); this.player.bounce(); hitStop(this, 70); }
         } else {
           const tr = g.tugRect();
-          for (const h of hits) if (overlap(h, tr) && g.hit(h, 'pump')) { hitStop(this, 70); shake(this, 90, 0.005); }
+          for (const h of hits) if (overlap(h, tr) && g.hit(h, 'pump')) { this.impact(h, tr); hitStop(this, 70); shake(this, 90, 0.005); }
           if (g.dangerous && Phaser.Geom.Rectangle.Overlaps(g.rect(), pRect) && pRect.bottom > g.roofY() + 10 && this.player.hurt(g.x)) { shake(this, 150, 0.012); hitStop(this, 80); }
         }
       } else if (!this.bossDone) {
@@ -928,11 +990,11 @@ export class ActionScene extends Phaser.Scene {
       const cr = c.rect();
       // stomp the roof
       if (this.landingOn(pRect, c.roofY(), cr.x + 4, cr.right - 4, c)) {
-        if (c.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 0, id: 9000 + Math.floor(this.time.now / 150) })) { this.player.bounce(); hitStop(this, 60); if (!c.alive) { this.killed++; this.pts('suv', c.x, this.groundY - 50); } }
+        if (c.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 0, id: 9000 + Math.floor(this.time.now / 150) })) { this.stompStar(); this.player.bounce(); hitStop(this, 60); if (!c.alive) { this.killed++; this.pts('suv', c.x, this.groundY - 50); } }
         continue;
       }
       let wasHit = false;
-      for (const h of hits) if (overlap(h, cr) && c.takeHit(h)) { wasHit = true; hitStop(this, 60); shake(this, 80, 0.005); if (!c.alive) { this.killed++; this.pts('suv', c.x, this.groundY - 50); } }
+      for (const h of hits) if (overlap(h, cr) && c.takeHit(h)) { wasHit = true; this.impact(h, cr); hitStop(this, 60); shake(this, 80, 0.005); if (!c.alive) { this.killed++; this.pts('suv', c.x, this.groundY - 50); } }
       if (!wasHit && c.dangerous && Phaser.Geom.Rectangle.Overlaps(cr, pRect) && pRect.bottom > c.roofY() + 8 && this.player.hurt(c.x)) { shake(this, 150, 0.012); hitStop(this, 80); }
     }
     this.cars = this.cars.filter((c) => c.alive || c.img.active);
@@ -945,9 +1007,9 @@ export class ActionScene extends Phaser.Scene {
       this.boss.update(dt, px, pRect, hits, this.player.onGround, bounds);
       if (this.boss.alive) {
         const bb = this.boss.body, bRect = new Phaser.Geom.Rectangle(bb.x, bb.y, bb.width, bb.height);
-        for (const h of hits) if (overlap(h, bRect) && this.boss.takeHit(h, px)) { hitStop(this, h.dmg > 1 ? 100 : 55); shake(this, 90, h.dmg > 1 ? 0.01 : 0.004); }
+        for (const h of hits) if (overlap(h, bRect) && this.boss.takeHit(h, px)) { this.impact(h, bRect); hitStop(this, h.dmg > 1 ? 100 : 55); shake(this, 90, h.dmg > 1 ? 0.01 : 0.004); }
         if (pb.velocity.y > 60 && pRect.bottom < bRect.y + 10 && overlap({ x: pRect.x, y: pRect.y, w: pRect.width, h: pRect.height }, bRect)) {
-          if (this.boss.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 260, id: 8000 + Math.floor(this.time.now / 200) }, px)) this.player.bounce();
+          if (this.boss.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 260, id: 8000 + Math.floor(this.time.now / 200) }, px)) { this.stompStar(); this.player.bounce(); }
         }
         const bab = this.boss.attackBox();
         if (bab && overlap(bab, pRect) && this.player.hurt(this.boss.sprite.x)) { shake(this, 150, 0.01); hitStop(this, 80); }
@@ -978,12 +1040,12 @@ export class ActionScene extends Phaser.Scene {
         // M3.4: a Barrier Rat's board takes anything from the front; get behind it, or stomp
         if (r.blocks(px)) { if (newHit(h.id)) { sfx.clang(); puff(this, r.sprite.x + r.facing * 10, r.sprite.y - 16, 0xff9a2e, 6, 14, 95); floatText(this, r.sprite.x, r.sprite.y - 40, 'BLOCKED!', 'font', 0xff9a2e, 300); } wasHit = true; continue; }
         if (!r.takeHit(h, px)) continue;
-        wasHit = true;
+        wasHit = true; this.impact(h, rRect);
         hitStop(this, h.dmg > 1 ? 90 : 50); shake(this, 90, h.dmg > 1 ? 0.008 : 0.004);
         if (!r.alive) { this.killed++; if (!this.replay) { r.reward = `+${award(ctx.state, 'rat')}`; this.earned += POINTS_OF(r.reward); } }
       }
       if (!wasHit && pb.velocity.y > 60 && pRect.bottom < rRect.y + 10 && overlap({ x: pRect.x, y: pRect.y, w: pRect.width, h: pRect.height }, rRect)) {
-        if (r.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 60, id: 5000 + Math.floor(this.time.now / 200) }, px)) { this.player.bounce(); hitStop(this, 50); if (!r.alive) { this.killed++; if (!this.replay) { r.reward = `+${award(ctx.state, 'rat')}`; this.earned += POINTS_OF(r.reward); } } }
+        if (r.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 60, id: 5000 + Math.floor(this.time.now / 200) }, px)) { this.stompStar(); this.player.bounce(); hitStop(this, 50); if (!r.alive) { this.killed++; if (!this.replay) { r.reward = `+${award(ctx.state, 'rat')}`; this.earned += POINTS_OF(r.reward); } } }
         continue;
       }
       const rab = r.attackBox();

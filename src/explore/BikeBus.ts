@@ -3,9 +3,9 @@
 // You lead it: stop at each stop (slow down beside the kids and they hop on and ride in a line behind you),
 // ring your bell at the SUVs parked in the bike lane so they move, and reach the school before the bell.
 import Phaser from 'phaser';
-import { GAME_W } from '../config';
 import { text, floatText } from '../ui/fx';
 import { sfx } from '../audio/sfx';
+import { drawGuide, MissionHud, type MapMission } from './guide';
 
 export interface BikeBusStep { kind: 'stop' | 'block' | 'school'; x: number; y: number; kids?: number; key?: string }
 export interface BikeBusDef { start: [number, number]; steps: BikeBusStep[] }
@@ -14,7 +14,7 @@ interface Rider { s: Phaser.GameObjects.Sprite; id: string; f: string }
 
 const BOARD_R = 30, BOARD_T = 0.5, BELL_R = 56, SCHOOL_R = 30, GAP = 7; // GAP: trail samples (2 px each) between riders
 
-export class BikeBus {
+export class BikeBus implements MapMission {
   state: 'ride' | 'won' | 'late' = 'ride';
   t: number;
   step = 0;
@@ -25,7 +25,7 @@ export class BikeBus {
   private waiting = new Map<number, Phaser.GameObjects.Sprite[]>();
   private blocks = new Map<number, { img: Phaser.GameObjects.Image; zone: Phaser.GameObjects.Zone }>();
   private dwell = 0;
-  private hud: Phaser.GameObjects.BitmapText;
+  private hud: MissionHud;
   private arrow: Phaser.GameObjects.Graphics;
   private edgeLabel: Phaser.GameObjects.BitmapText;
   private signs: Phaser.GameObjects.Graphics;
@@ -51,7 +51,7 @@ export class BikeBus {
       }
     });
     this.signs.setDepth(5);
-    this.hud = text(scene, GAME_W / 2, 44, '', 'font_outline').setOrigin(0.5, 0).setScrollFactor(0).setDepth(20010);
+    this.hud = new MissionHud(scene);
     this.arrow = scene.add.graphics().setDepth(20005);
     this.edgeLabel = text(scene, 0, 0, '', 'font_outline').setScrollFactor(0).setDepth(20006).setVisible(false);
   }
@@ -105,7 +105,6 @@ export class BikeBus {
       const near = Phaser.Math.Distance.Between(px, py, s.x, s.y) < BOARD_R;
       const slow = this.trail.length < 2 || Phaser.Math.Distance.Between(this.trail[this.trail.length - 1].x, this.trail[this.trail.length - 1].y, px, py) < 0.5;
       this.dwell = near ? this.dwell + dt * (slow ? 1.6 : 1) : 0;
-      if (near && this.dwell < BOARD_T) this.hud.setTint(0xfff08a);
       if (this.dwell >= BOARD_T) this.board();
     } else if (s?.kind === 'school' && Phaser.Math.Distance.Between(px, py, s.x, s.y) < SCHOOL_R) {
       this.state = 'won';
@@ -135,37 +134,16 @@ export class BikeBus {
     const sec = Math.ceil(this.t), mm = Math.floor(sec / 60), ss = String(sec % 60).padStart(2, '0');
     const s = this.target;
     const what = !s ? '' : s.kind === 'stop' ? 'NEXT STOP: STOP BESIDE THE KIDS' : s.kind === 'block' ? 'AN SUV IN THE BIKE LANE: RING YOUR BELL (E)' : 'TO THE SCHOOL!';
-    this.hud.setText(`BIKE BUS  KIDS ${this.kids}/${this.total}  BELL IN ${mm}:${ss}\n${what}`).setTint(this.t < 15 ? 0xff9a2e : 0xffffff).setCenterAlign();
-    // M4.2 (Ivan: "it wasn't obvious where to go; make the arrow more apparent"): a big bouncing arrow and a pulsing
-    // ring over the next stop when it's on screen; at the screen's edge a big arrow with what's there when it isn't
-    const g = this.arrow.clear();
-    if (!s) { this.edgeLabel.setVisible(false); return; }
-    const cam = this.scene.cameras.main, v = cam.worldView;
-    const now = this.scene.time.now, bob = Math.sin(now / 140) * 3, pulse = (now % 900) / 900;
-    const col = s.kind === 'block' ? 0xff9a2e : s.kind === 'school' ? 0x7cc6f2 : 0xfff08a;
-    const word = s.kind === 'stop' ? 'KIDS' : s.kind === 'block' ? 'SUV' : 'SCHOOL';
-    if (Phaser.Geom.Rectangle.Contains(v, s.x, s.y - 20)) {
-      g.setScrollFactor(1);
-      g.lineStyle(2, col, 1 - pulse).strokeCircle(s.x, s.y - 4, 10 + pulse * 18);
-      // above the target, unless that's under the HUD lines at the top: then below it, pointing up
-      const up = s.y - 58 - v.y < 70, ty = up ? s.y + 26 - bob : s.y - 58 + bob, d = up ? -1 : 1;
-      g.fillStyle(0x16121f).fillTriangle(s.x - 11, ty - d, s.x + 11, ty - d, s.x, ty + 14 * d);
-      g.fillStyle(col).fillTriangle(s.x - 8, ty + d, s.x + 8, ty + d, s.x, ty + 11 * d);
-      g.fillStyle(0x16121f).fillRect(s.x - 4, up ? ty : ty - 10, 8, 10); g.fillStyle(col).fillRect(s.x - 2, up ? ty + 1 : ty - 9, 4, 9);
-      this.edgeLabel.setVisible(false);
-    } else {
-      g.setScrollFactor(0);
-      const cx = v.width / 2, cy = v.height / 2 + 10, a = Math.atan2(s.y - (v.y + cy), s.x - (v.x + cx));
-      const ex = Phaser.Math.Clamp(cx + Math.cos(a) * 400, 22, v.width - 22), ey = Phaser.Math.Clamp(cy + Math.sin(a) * 400, 70, v.height - 22);
-      const k = 1 + 0.15 * Math.sin(now / 120);
-      const tip = (r: number, da: number) => [ex + Math.cos(a + da) * r * k, ey + Math.sin(a + da) * r * k] as const;
-      const [x1, y1] = tip(16, 0), [x2, y2] = tip(12, 2.5), [x3, y3] = tip(12, -2.5);
-      g.fillStyle(0x16121f).fillTriangle(x1 + Math.cos(a) * 2, y1 + Math.sin(a) * 2, x2 - Math.cos(a) * 2, y2 - Math.sin(a) * 2, x3 - Math.cos(a) * 2, y3 - Math.sin(a) * 2);
-      g.fillStyle(col).fillTriangle(x1, y1, x2, y2, x3, y3);
-      this.edgeLabel.setVisible(true).setText(word).setTint(col).setPosition(ex - Math.cos(a) * 22, ey - Math.sin(a) * 18);
-    }
+    this.hud.set(`BIKE BUS  KIDS ${this.kids}/${this.total}  BELL IN ${mm}:${ss}\n${what}`, this.t < 15 ? 0xff9a2e : 0xffffff);
+    // M4.2 (Ivan: "it wasn't obvious where to go; make the arrow more apparent"): the guide arrow (guide.ts, M4.3)
+    drawGuide(this.scene, this.arrow, this.edgeLabel, s && { x: s.x, y: s.y, color: s.kind === 'block' ? 0xff9a2e : s.kind === 'school' ? 0x7cc6f2 : 0xfff08a, word: s.kind === 'stop' ? 'KIDS' : s.kind === 'block' ? 'SUV' : 'SCHOOL' });
     void px; void py;
   }
+
+  route() { return this.def.steps.slice(this.step).map((s, i) => ({ x: s.x, y: s.y, kind: s.kind, next: i === 0 })); }
+  intro(touch: boolean) { return touch ? 'STOP BESIDE THE KIDS AT EVERY STOP.\nRED (BELL) AT THE SUVS IN THE BIKE LANE.' : 'STOP BESIDE THE KIDS AT EVERY STOP.\nE (BELL) AT THE SUVS IN THE BIKE LANE.'; }
+  lateCard(): [string, string] { return ['THE BELL RANG!', `THE BIKE BUS WAS LATE (${this.kids}/${this.total} KIDS).\nBACK TO THE FIRST STOP!`]; }
+  winCard(): [string, string] { return ['ON TIME!', `KIDS: ${this.kids}/${this.total}   ${Math.ceil(this.t)} S TO THE BELL`]; }
 
   /** the run is over: clear the HUD so the result card stands alone */
   hideHud() { this.hud.setVisible(false); this.arrow.clear(); this.edgeLabel.setVisible(false); }

@@ -166,26 +166,69 @@ export function lotLight() {
 // ---------------------------------------------------------------- side view (mission 7)
 
 /** the big-box wall behind the parking lot: tileable 768 x 120 */
-export function bigBoxStrip(W = 768) {
+/**
+ * The Megamart wall behind mission 4 (scrolls with the street). M4.3 (game review: one sign every 384 px meant every
+ * screen looked the same): three different 384-px bays - the store front, the garden centre, the pickup bay - with
+ * rooftop units breaking the skyline and lamp posts along the lot.
+ */
+export function bigBoxStrip(W = 1152) {
   const H = 120, img = new Img(W, H), r = rng(2021);
   img.rect(0, 30, W, 90, 'h');
   for (let x = 0; x < W; x += 16) img.vline(x, 30, H - 1, 'G');
   img.rect(0, 30, W, 4, 'G'); img.hline(0, W - 1, 34, 'g');
-  // repeating MEGAMART sign + dock doors + a cart corral
-  for (let s = 0; s < W; s += 384) {
-    img.rect(s + 120, 44, 150, 24, 'R'); img.rect(s + 122, 46, 146, 20, 'q');
-    pixelWord(img, 'MEGAMART', s + 195, 51, 'W', 2); // real letters (M3: the old blocks read as blank squares)
-    for (const dx of [20, 300]) { img.rect(s + dx, 80, 48, 40, 'G'); for (let y = 82; y < H; y += 4) img.hline(s + dx + 2, s + dx + 45, y, 'h'); }
-    img.rect(s + 170, 92, 50, 28, 'k'); img.rect(s + 172, 94, 46, 26, 'U');
+  // rooftop units (silhouette variety)
+  for (const [x, w, h] of [[40, 30, 8], [250, 22, 6], [470, 34, 9], [610, 18, 5], [860, 28, 8], [1040, 24, 7]]) {
+    img.rect(x, 30 - h, w, h, 'G'); img.hline(x, x + w - 1, 30 - h, 'h'); for (let i = x + 3; i < x + w - 2; i += 4) img.vline(i, 32 - h, 28, 'g');
   }
-  for (let i = 0; i < 40; i++) img.set(r.int(0, W - 1), r.int(36, H - 1), 'H');
+  const dock = (x) => { img.rect(x, 80, 48, 40, 'G'); for (let y = 82; y < H; y += 4) img.hline(x + 2, x + 45, y, 'h'); };
+  const banner = (cx, y, word, bg, fg, sc = 1) => {
+    const w = pixelWidth(word) * sc + 10;
+    img.rect(cx - w / 2 - 1, y - 1, w + 2, 5 * sc + 8, 'k'); img.rect(cx - w / 2, y, w, 5 * sc + 6, bg);
+    pixelWord(img, word, cx, y + 3, fg, sc);
+  };
+  // bay 1: the store front: the big sign, dock doors, the entrance
+  banner(195, 44, 'MEGAMART', 'R', 'W', 2);
+  dock(20); dock(300);
+  img.rect(170, 92, 50, 28, 'k'); img.rect(172, 94, 46, 26, 'U'); img.vline(195, 94, 119, 'k');
+  // bay 2: the garden centre: a chain-link pen of potted shrubs, pallets of soil, a SALE tag
+  const g0 = 384;
+  banner(g0 + 120, 46, 'GARDEN CENTRE', 'E', 'W');
+  img.rect(g0 + 30, 76, 190, 44, 'g');
+  for (let x = g0 + 30; x < g0 + 220; x += 3) for (let y = 77; y < H; y += 3) img.set(x + ((y / 3) % 2), y, 'H');
+  for (let x = g0 + 40; x < g0 + 214; x += 17) { img.rect(x, 108, 10, 8, 'w'); img.ellipse(x + 5, 103, 7, 6, 'e'); img.ellipse(x + 3, 101, 4, 3, 'l'); }
+  for (let x = g0 + 30; x <= g0 + 220; x += 38) img.vline(x, 74, H - 1, 'k');
+  img.hline(g0 + 30, g0 + 220, 74, 'k');
+  for (const [x, n] of [[g0 + 250, 3], [g0 + 300, 2]]) for (let k = 0; k < n; k++) { img.rect(x, 112 - k * 8, 40, 8, 'X'); img.rect(x, 118 - k * 8, 40, 2, 'w'); img.hline(x, x + 39, 112 - k * 8, 'j'); }
+  banner(g0 + 300, 50, 'SALE', 'o', 'K', 2);
+  // bay 3: the pickup bay: an awning over two lanes, the "SUV DAYS" banner, bollards
+  const p0 = 768;
+  banner(p0 + 110, 42, 'SUV DAYS', 'U', 'W', 2);
+  banner(p0 + 110, 64, 'FREE PARKING', 'y', 'K');
+  for (let x = p0 + 20; x < p0 + 200; x++) img.vline(x, 84, 90, (Math.floor((x - p0) / 8) % 2) ? 'W' : 'R');
+  img.hline(p0 + 20, p0 + 199, 91, 'k');
+  img.rect(p0 + 34, 92, 64, 28, 'k'); img.rect(p0 + 36, 94, 60, 26, 'g'); img.rect(p0 + 120, 92, 64, 28, 'k'); img.rect(p0 + 122, 94, 60, 26, 'g');
+  banner(p0 + 110, 98, 'PICKUP', 'R', 'W');
+  for (const x of [p0 + 26, p0 + 194]) { img.rect(x, 104, 5, 16, 'y'); img.rect(x, 108, 5, 2, 'K'); img.rect(x, 114, 5, 2, 'K'); }
+  dock(p0 + 250); dock(p0 + 310);
+  // lamp posts along the lot, in the gaps between the bays' signs and doors
+  for (const x of [96, 288, 384 + 235, 384 + 362, 768 + 225, 768 + 370]) { img.vline(x, 56, H - 1, 'k'); img.vline(x + 1, 56, H - 1, 'g'); img.rect(x - 6, 54, 14, 3, 'k'); img.rect(x - 5, 57, 12, 1, 'Y'); }
+  for (let i = 0; i < 60; i++) img.set(r.int(0, W - 1), r.int(36, H - 1), 'H');
   return img;
 }
+
+/** M4.3: the Megamart strip's three bays, for the art history */
+export function bigBoxPreview() { const s = bigBoxStrip(); return { frames: [s.crop(0, 0, 384, 120), s.crop(384, 0, 384, 120), s.crop(768, 0, 384, 120)], cols: 1 }; }
 
 const GLYPHS = {
   M: ['#...#', '##.##', '#.#.#', '#...#', '#...#'], E: ['####', '#...', '###.', '#...', '####'], G: ['.###', '#...', '#.##', '#..#', '.###'],
   A: ['.##.', '#..#', '####', '#..#', '#..#'], R: ['###.', '#..#', '###.', '#.#.', '#..#'], T: ['#####', '..#..', '..#..', '..#..', '..#..'],
+
+  S: ['.###', '#...', '.##.', '...#', '###.'], L: ['#...', '#...', '#...', '#...', '####'], N: ['#..#', '##.#', '#.##', '#..#', '#..#'],
+  D: ['###.', '#..#', '#..#', '#..#', '###.'], C: ['.###', '#...', '#...', '#...', '.###'], U: ['#..#', '#..#', '#..#', '#..#', '.##.'],
+  V: ['#...#', '#...#', '.#.#.', '.#.#.', '..#..'], Y: ['#...#', '.#.#.', '..#..', '..#..', '..#..'], F: ['####', '#...', '###.', '#...', '#...'],
+  P: ['###.', '#..#', '###.', '#...', '#...'], K: ['#..#', '#.#.', '##..', '#.#.', '#..#'], I: ['###', '.#.', '.#.', '.#.', '###'],
 };
+const pixelWidth = (word) => word.split('').reduce((t, ch) => t + (ch === ' ' ? 3 : GLYPHS[ch][0].length + 1), 0) - 1;
 /** 5-px-tall pixel lettering centred on cx, each pixel drawn as sc x sc */
 function pixelWord(img, word, cx, y, col, sc = 1) {
   const adv = (ch) => (ch === ' ' ? 3 : GLYPHS[ch][0].length + 1);

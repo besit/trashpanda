@@ -22,7 +22,7 @@ test('SELECT MISSION is numbered in the order the missions open up', async ({ pa
   await page.waitForTimeout(300);
   const labels: string[] = await page.evaluate(() => (window as unknown as W).__TP_GAME!.scene.getScene('Title').items.map((i: any) => i.label));
   expect(labels[1]).toMatch(/^1\. THE BIKE LANE WAR/);
-  expect(labels[labels.length - 1]).toMatch(/^12\. DEATH BY HIGHWAY/);
+  expect(labels[labels.length - 1]).toMatch(/^13\. DEATH BY HIGHWAY/);
   expect(labels.findIndex((l) => l.includes('THE BIKE BUS'))).toBeGreaterThan(labels.findIndex((l) => l.includes('THE GREAT PARKING LOT')));
 });
 

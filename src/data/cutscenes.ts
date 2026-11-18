@@ -651,6 +651,48 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'wait', ms: 400 },
   ],
 
+  // ---- Dock Drop (M4.3): before ----
+  dock_before: [
+    { t: 'side', sky: 'day', street: 'plain', bg: 'king' },
+    { t: 'music', song: 'none' },
+    { t: 'actor', id: 'p1', frame: 'ped_c_E_0', anim: 'ped_c_E', x: -20, y: SIDEWALK, depth: 40, scale: 2 },
+    { t: 'caption', text: 'DOWNTOWN. 5:30 PM.', y: 18, hold: 700 },
+    { t: 'move', id: 'p1', x: 170, ms: 2400, wait: true },
+    { t: 'bang', id: 'p1', text: '?' },
+    { t: 'caption', text: 'THE NEAREST SHARE BIKE: 20 MINUTES AWAY.', y: 18, hold: 1300 },
+    { t: 'clear' },
+    { t: 'actor', id: 'tp', frame: 'rs_2', anim: 'rs_ride', x: -30, y: GROUND + 2, depth: 90 },
+    { t: 'move', id: 'tp', x: 60, ms: 900, ease: 'Cubic.easeOut', wait: true, anim: 'rs_idle' },
+    { t: 'sfx', name: 'bell' },
+    { t: 'say', who: 'TRASH PANDA', text: 'BIKE SHARE: TAKE A BIKE FROM ONE DOCK, LEAVE IT AT ANOTHER. TO THE SUBWAY, TO WORK, TO THE PARK.' },
+    { t: 'say', who: 'TRASH PANDA', text: 'IT ONLY WORKS IF THERE\'S A DOCK NEAR YOU. DOWNTOWN HAS GAPS. I BROUGHT A TRAILER OF DOCKS.' },
+    { t: 'music', song: 'dogfjord' },
+    { t: 'actor', id: 'df', frame: 'dfs_laugh', x: 300, y: SIDEWALK + 6, depth: 49, world: true },
+    { t: 'sfx', name: 'laugh' },
+    { t: 'say', who: VILLAIN, text: 'DOCKS? ON MY SIDEWALKS? THAT\'S CLUTTER! MY CREW WILL CART EVERY ONE OF THEM AWAY.' },
+    { t: 'say', who: 'TRASH PANDA', text: 'SIX GAPS. STOP AT EACH ONE TO SET A DOCK DOWN, AND RING THE CRATE RATS OFF THEM. GO!' },
+  ],
+
+  // ---- Dock Drop (M4.3): after ----
+  dock_after: [
+    { t: 'side', sky: 'day', street: 'paint', bg: 'king' },
+    { t: 'music', song: 'improve' },
+    { t: 'actor', id: 'b1', frame: 'cys_e_0', anim: 'cys_e', x: -40, y: GROUND, depth: 60, scale: 0.8 },
+    { t: 'actor', id: 'b2', frame: 'cys_f_0', anim: 'cys_f', x: -100, y: GROUND, depth: 61, scale: 0.8 },
+    { t: 'actor', id: 'b3', frame: 'cys_e_0', anim: 'cys_e', x: -170, y: GROUND, depth: 62, scale: 0.8 },
+    { t: 'actor', id: 'p1', frame: 'ped_c_E_0', anim: 'ped_c_E', x: 120, y: SIDEWALK, depth: 40, scale: 2 },
+    { t: 'caption', text: 'THE NEXT EVENING.', y: 18, hold: 600 },
+    { t: 'move', id: 'b1', x: 460, ms: 4200 },
+    { t: 'move', id: 'b2', x: 430, ms: 4400 },
+    { t: 'move', id: 'b3', x: 400, ms: 4600 },
+    { t: 'wait', ms: 2400 },
+    { t: 'clear' },
+    { t: 'caption', text: 'A DOCK ON EVERY CORNER THAT NEEDED ONE.', y: 22, hold: 800 },
+    { t: 'caption', text: 'GRAB A BIKE. RIDE.', y: 40, font: 'font_big', hold: 2200 },
+    { t: 'sfx', name: 'ding' },
+    { t: 'wait', ms: 400 },
+  ],
+
   // ---- Save the Science (M4): before ----
   sci_before: [
     { t: 'side', sky: 'day', street: 'plain', bg: 'science' },

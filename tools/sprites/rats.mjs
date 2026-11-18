@@ -217,3 +217,20 @@ export function megaRatAnims() {
   return { frames, anims };
 }
 export function megaRatPreview() { return { frames: megaRatAnims().frames, cols: 7 }; }
+
+// ---- M4.3: a rat on the city map (the Dock Drop's "clutter crew"), rendered with the map's 32-degree character
+// camera like the pedestrians: same SDF model, 4 facings, a walk cycle
+const TOP_ELEV = (32 * Math.PI) / 180;
+const topCam = () => orthoCam([0, -Math.cos(TOP_ELEV), -Math.sin(TOP_ELEV)]);
+const TOP_YAW = { E: 0, S: Math.PI / 2, W: Math.PI, N: -Math.PI / 2 };
+export const RAT_TOP_FW = 24, RAT_TOP_FH = 28;
+export function ratTopFrame(variant, dir, t, S = 0.85) {
+  const raw = scene(ratModel(variant, { walk: t }));
+  const sc = (p) => { const q = yawInv(p, TOP_YAW[dir]); const r = raw([q[0] / S, q[1] / S, q[2] / S]); return [r[0] * S, r[1]]; };
+  return render(sc, { w: RAT_TOP_FW, h: RAT_TOP_FH, cx: 12, cy: 25, cam: topCam(), ambient: 0.15 });
+}
+export function ratTopPreview() {
+  const frames = [];
+  for (const d of ['E', 'S', 'W', 'N']) for (let f = 0; f < 4; f++) frames.push(ratTopFrame('construction', d, f / 4));
+  return { frames, cols: 4 };
+}

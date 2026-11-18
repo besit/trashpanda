@@ -171,8 +171,8 @@ export function generateQueenWest() {
   const stopZone = (xs) => xs.map((s) => [s - 112, s + 24]);
   park(QUEEN, 'W', 'parked', [...stopZone(stops.queen_wb), [(SX - 1) * TS, (SX + 5) * TS]]);
   park(QUEEN + 3, 'E', 'parked', [...stopZone(stops.queen_eb).map(([a, b]) => [a - 24 + 112 - 24, b + 112]), [(SX - 1) * TS, (SX + 5) * TS]]);
-  park(DUNDAS, 'W', undefined, stopZone(stops.dundas_wb));
-  park(DUNDAS + 3, 'E', undefined, stopZone(stops.dundas_eb));
+  park(DUNDAS, 'W', 'park_qw_dundas', stopZone(stops.dundas_wb));
+  park(DUNDAS + 3, 'E', 'park_qw_dundas', stopZone(stops.dundas_eb));
 
   // ---------- the civic upgrade: protected bike lanes replace Queen's parking lanes ----------
   const imp = { tiles: [], addProps: [], removeTag: 'parked' };
@@ -246,5 +246,14 @@ export function generateQueenWest() {
   // two hidden extra lives: deep in the park's north-west trees, and at the far east end of the back lane
   // M3.3 (Ivan): one heart in the open, one hidden behind a building (here: behind a Queen St shop, in the laneway)
   const lifeTokens = [{ x: R(0.04, 0.06)[0], y: R(0.04, 0.06)[1] }, D.hiddenHeart(950, 1000, { x: (W - 2) * TS, y: (laneRow + 1) * TS + 10 })];
+  D.bikeShare([[14, QUEEN - 2], [80, DUNDAS + 5], [SX + 6, QUEEN + 5]]); // M4.3: the Dock Drop's stations, city-wide
+  // ---------- M4.3: the bike network (src/data/network.ts says which mission adds each street) ----------
+  // Strachan has painted bike lanes today (Ivan: "I think Strachan has bike lanes in reality"; URBAN_RESEARCH §26)
+  D.paintNS('qw_strachan', SX, QUEEN + 4, H - 1);
+  D.netStreet('qw_queen', 'QUEEN ST W', 'protected', [[0, (QUEEN + 2) * TS, W * TS, (QUEEN + 2) * TS]], { patch: 'queen_protected_lanes' });
+  D.netEW('qw_dundas', 'DUNDAS ST W', DUNDAS, { tag: 'park_qw_dundas' });
+  D.netNS('qw_ossington', 'OSSINGTON AVE', OX, 'slow', { laneIds: ['oss_sb', 'oss_nb'] });
+  D.netNS('qw_bellwoods', 'BELLWOODS AVE', BX, 'slow', { laneIds: ['bell_sb', 'bell_nb'] });
+  D.netNS('qw_strachan', 'STRACHAN AVE', SX, 'protected', { y0: QUEEN + 4, painted: true });
   return D.out({ spawn: { x: 45 * TS + 8, y: (QUEEN - 2) * TS + 8 }, lifeTokens });
 }

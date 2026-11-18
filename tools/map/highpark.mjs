@@ -311,8 +311,8 @@ export function generateHighPark() {
   const stops = { queen_wb: [(RX - 1) * TS, (PS - 1) * TS], queen_eb: [(RX + 5) * TS, (PS + 5) * TS], ronc_sb: [(BLOOR - 3) * TS - 40, (QUEEN - 3) * TS - 40], ronc_nb: [(QUEEN + 7) * TS + 40, (BLOOR + 7) * TS + 40] };
   for (const c of [PS, RX]) { D.tprop('ttcstop', c - 2, QUEEN - 1, 8, 8); D.tprop('ttcstop', c + 5, QUEEN + 4, 8, 6); }
   const stopZone = (xs) => xs.map((s) => [s - 112, s + 24]);
-  D.parkCars(QUEEN, 'W', undefined, stopZone(stops.queen_wb), PS + 4);
-  D.parkCars(QUEEN + 3, 'E', undefined, stopZone(stops.queen_eb), PS + 4);
+  D.parkCars(QUEEN, 'W', 'park_hp_queen', stopZone(stops.queen_wb), PS + 4);
+  D.parkCars(QUEEN + 3, 'E', 'park_hp_queen', stopZone(stops.queen_eb), PS + 4);
 
   // ---------- the civic upgrade: Parkside slowed by design ----------
   const calm = { tiles: [], addProps: [], removeTag: 'camstump' };
@@ -356,5 +356,11 @@ export function generateHighPark() {
   // hidden extra lives: behind the greenhouse, and in the north woods above the pond
   // M3.3: the second heart hides behind a house east of Parkside
   const lifeTokens = [{ x: P(0.10, 0.20)[0], y: P(0.10, 0.20)[1] }, D.hiddenHeart(1110, 944, { x: gh.x + 100, y: gh.y + 10 })];
+  D.bikeShare([[PS + 8, BLOOR + 5], [RX + 6, QUEEN - 2]]); // M4.3: the Dock Drop's stations, city-wide
+  // ---------- M4.3: the bike network ----------
+  D.netStreet('hp_bloor', 'BLOOR ST W', 'protected', [[0, (BLOOR + 2) * TS, W * TS, (BLOOR + 2) * TS]], { patch: 'bloor_lanes_kept' });
+  D.netStreet('hp_parkside', 'PARKSIDE DR', 'slow', [[(PS + 2) * TS, 0, (PS + 2) * TS, H * TS]], { patch: 'parkside_calming' });
+  D.netEW('hp_queensway', 'THE QUEENSWAY', QUEEN, { tag: 'park_hp_queen' });
+  D.netNS('hp_ronc', 'RONCESVALLES AVE', RX, 'protected');
   return D.out({ spawn: { x: (W - 3) * TS, y: (QUEEN - 2) * TS + 8 }, lifeTokens });
 }

@@ -59,7 +59,7 @@ export const UPGRADES: Record<string, Upgrade> = {
     id: 'queen_tsp',
     name: 'TRANSIT SIGNAL PRIORITY',
     tree: 'transit',
-    livability: 3,
+    livability: 2,
     categories: { transit: 10, carDependence: 3 },
     mapPatches: ['queen_tsp'],
     headline: 'TORONTO SWITCHES ON TRANSIT SIGNAL PRIORITY',
@@ -146,7 +146,7 @@ export const UPGRADES: Record<string, Upgrade> = {
     id: 'science_reopened',
     name: 'SCIENCE BY THE LAKE',
     tree: 'publicSpace',
-    livability: 3,
+    livability: 2,
     categories: { greenPublic: 6, walking: 3, transit: 3 },
     mapPatches: ['science_reopened'],
     // M4.1: the warehouse, the rats and the pop-up are game fiction; the closure, the storage, the interim site and
@@ -173,7 +173,7 @@ export const UPGRADES: Record<string, Upgrade> = {
     id: 'quiet_airport',
     name: 'THE PARK STAYS A PARK',
     tree: 'publicSpace',
-    livability: 3,
+    livability: 2,
     categories: { greenPublic: 8, safety: 4, walking: 3 },
     mapPatches: ['quiet_airport'],
     headline: 'NO JETS. LITTLE NORWAY PARK STAYS A PARK.',
@@ -194,5 +194,18 @@ export const UPGRADES: Record<string, Upgrade> = {
     blurb: 'AFTER BLOOR GOT BIKE LANES IN 2016, CYCLING ON IT ROSE 49%, AND A STUDY FOUND MORE ECONOMIC ACTIVITY ALONG THE STREET, NOT LESS.',
     source: 'CITY OF TORONTO 2017 BLOOR PILOT EVALUATION; TCAT BLOOR ECONOMIC IMPACT STUDY (2019)',
     stat: { key: 'bikeLanes', amount: 2 },
+  },
+  // M4.3 (Ivan: "citybikes... a big part of Toronto cycling scene. And I love that they are expanding"): unbranded in
+  // the game; the numbers are the real system's (URBAN_RESEARCH section 25)
+  bike_share_grows: {
+    id: 'bike_share_grows',
+    name: 'BIKE SHARE, EVERYWHERE',
+    tree: 'cycling',
+    livability: 3,
+    categories: { cycling: 8, carDependence: 4, transit: 2 },
+    mapPatches: ['bike_share_grows'],
+    headline: 'SIX NEW STATIONS. SHARE BIKES ON EVERY STREET.',
+    blurb: 'TORONTO\'S BIKE SHARE BEGAN IN 2011. IN 2025 RIDERS TOOK 7.8 MILLION TRIPS ON IT, 180 NEW STATIONS WENT IN (ITS BIGGEST YEAR YET), AND IT REACHED ALL 25 WARDS. THE GAME\'S BIKES ARE UNBRANDED.',
+    source: 'CITY OF TORONTO, 2025 TORONTO CYCLING YEAR IN REVIEW (MARCH 2026); TORONTO OPEN DATA, BIKE SHARE RIDERSHIP',
   },
 };

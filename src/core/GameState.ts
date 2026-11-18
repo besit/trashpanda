@@ -1,8 +1,9 @@
 import { livability } from './Livability';
 import { UPGRADES } from '../data/upgrades';
 import { DIFFICULTY, type Difficulty } from './Score';
+import type { MissionRank } from './Rank';
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 export const START_LIVES = 3, MAX_LIVES = 9;
 
 export interface GameState {
@@ -24,6 +25,8 @@ export interface GameState {
   name: string;
   /** v3: identifies this run in the high-score tables (one entry per run) */
   runId: string;
+  /** v4 (M4.3): the best rank per mission */
+  ranks: Record<string, MissionRank>;
   /** where the raccoon was on the map; district added in v2 (M2) */
   player: { scene: 'explore'; district: string; x: number; y: number };
 }
@@ -41,6 +44,7 @@ export function newGame(difficulty: Difficulty = 'normal', name = 'RAC'): GameSt
     playTimeMs: 0,
     lives: START_LIVES,
     ridersRallied: 0,
+    ranks: {},
     player: { scene: 'explore', district: 'queenwest', x: -1, y: -1 },
   };
 }
@@ -63,6 +67,8 @@ export function migrate(raw: unknown): GameState | null {
     score: typeof s.score === 'number' && s.score >= 0 ? Math.floor(s.score) : 0,
     name: typeof s.name === 'string' && /^[A-Z]{1,3}$/.test(s.name) ? s.name : 'RAC',
     runId: typeof s.runId === 'string' && s.runId ? s.runId : base.runId,
+    // v3 saves: no ranks yet
+    ranks: s.ranks && typeof s.ranks === 'object' ? Object.fromEntries(Object.entries(s.ranks).filter(([, r]) => r && /^[SABC]$/.test((r as MissionRank).rank))) : {},
     // v1 saves had no district: they were always in Queen West
     // M4.1 dropped the North district: a save standing there starts again at the Queen West spawn
     player: s.player?.district === 'north' ? { ...base.player } : { ...base.player, ...(s.player ?? {}), district: typeof s.player?.district === 'string' ? s.player.district : 'queenwest' },

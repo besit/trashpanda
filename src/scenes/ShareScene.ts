@@ -3,6 +3,7 @@
 // livability score and their scores on top"). An overlay that composes a pixel-art poster from the game's own
 // sprites and backgrounds at native resolution, stamps the player's numbers on it, upscales it crisply, and hands
 // it to X / Facebook / Instagram (the phone's share sheet when there is one) or saves it.
+import { networkDone, NETWORK_TOTAL } from '../data/network';
 import Phaser from 'phaser';
 import { GAME_W, GAME_H } from '../config';
 import { ctx } from '../core/ctx';
@@ -85,7 +86,7 @@ export class ShareScene extends Phaser.Scene {
   /** the numbers stamped on the poster */
   private stats() {
     const s = ctx.state, total = Object.keys(MISSIONS).length;
-    return { liv: livability(s.upgrades), score: fmtScore(s.score), done: s.completedMissions.filter((m) => m in MISSIONS).length, total };
+    return { liv: livability(s.upgrades), score: fmtScore(s.score), done: s.completedMissions.filter((m) => m in MISSIONS).length, total, net: networkDone(s.completedMissions).length };
   }
 
   /** compose the poster at native resolution in a render texture, then export it (async) */
@@ -141,7 +142,8 @@ export class ShareScene extends Phaser.Scene {
       rt.draw(t); t.destroy();
     };
     const head = this.mission ? `I JUST WON: ${MISSIONS[this.mission]?.title ?? ''}` : 'MY TORONTO SO FAR';
-    const nums = this.portrait ? [`LIVABILITY ${st.liv}`, `SCORE ${st.score}`, `${st.done}/${st.total} MISSIONS`] : [`LIVABILITY ${st.liv}   SCORE ${st.score}   ${st.done}/${st.total} MISSIONS`];
+    // M4.3: the bike network instead of the mission count (how much of the city is safe to ride)
+    const nums = this.portrait ? [`LIVABILITY ${st.liv}/100`, `BIKE NETWORK ${st.net}/${NETWORK_TOTAL}`, `SCORE ${st.score}`] : [`LIVABILITY ${st.liv}/100   BIKE NETWORK ${st.net}/${NETWORK_TOTAL}   SCORE ${st.score}`];
     if (this.portrait) {
       strip(0, 82); words('TRASH PANDA', cx, 10, 'font_big', 0xfff08a); words('RIGHT OF WAY', cx, 34, 'font_outline', 0xff6347); words(head, cx, 56, 'font_outline');
       strip(H - 82, 82); nums.forEach((n, i) => words(n, cx, H - 76 + i * 14, 'font_outline', i === 0 ? 0x9bd35a : 0xffffff)); words('PLAY FREE: BESIT.GITHUB.IO/TRASHPANDA', cx, H - 26, 'font', 0x9793a6);
@@ -172,7 +174,7 @@ export class ShareScene extends Phaser.Scene {
 
   private shareText() {
     const st = this.stats();
-    return `${this.mission ? `I just won ${MISSIONS[this.mission]?.title ?? 'a mission'}` : 'Fixing Toronto\'s streets'} in TRASH PANDA: RIGHT OF WAY. Livability ${st.liv}, score ${st.score}. Play free:`;
+    return `${this.mission ? `I just won ${MISSIONS[this.mission]?.title ?? 'a mission'}` : 'Fixing Toronto\'s streets'} in TRASH PANDA: RIGHT OF WAY. Livability ${st.liv}/100, bike network ${st.net}/${NETWORK_TOTAL} streets, score ${st.score}. Play free:`;
   }
 
   private save() {

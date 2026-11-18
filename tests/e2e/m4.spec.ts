@@ -7,8 +7,8 @@ const errorsOf = (page: Page) => { const e: string[] = []; page.on('pageerror', 
 const tp = (page: Page) => page.evaluate(() => (window as unknown as W).__TP!.state());
 const actionReady = (page: Page) => page.waitForFunction(() => typeof (window as unknown as W).__TP?.state === 'function' && !(window as unknown as W).__TP!.state().frozen, null, { timeout: 20_000 });
 const ride = async (page: Page, to: number) => { await page.evaluate((x) => (window as unknown as W).__TP!.skipTo(x), to - 30); await page.keyboard.down('d'); await page.waitForTimeout(500); await page.keyboard.up('d'); };
-const ALL = ['bike_lane_war', 'streetcar_through', 'king_of_street', 'slow_down_dog', 'lane_eater', 'great_parking_lot', 'waterfront_heist', 'island_airport', 'save_the_science', 'finish_the_line', 'bike_bus'];
-const UPS = ['queen_protected_lanes', 'queen_tsp', 'king_transit_corridor', 'parkside_calming', 'bloor_lanes_kept', 'parking_to_park', 'public_waterfront', 'quiet_airport', 'science_reopened', 'ontario_line', 'school_street'];
+const ALL = ['bike_lane_war', 'streetcar_through', 'king_of_street', 'slow_down_dog', 'lane_eater', 'great_parking_lot', 'waterfront_heist', 'island_airport', 'save_the_science', 'finish_the_line', 'bike_bus', 'dock_drop'];
+const UPS = ['queen_protected_lanes', 'queen_tsp', 'king_transit_corridor', 'parkside_calming', 'bloor_lanes_kept', 'parking_to_park', 'public_waterfront', 'quiet_airport', 'science_reopened', 'ontario_line', 'school_street', 'bike_share_grows'];
 const save = (extra: object) => JSON.stringify({ version: 3, upgrades: [], completedMissions: [], flags: { sawIntro: true, exploreHint: true }, ratsDefeated: 0, playTimeMs: 0, lives: 3, ridersRallied: 0, difficulty: 'normal', score: 0, name: 'TST', runId: 'tstm4e2e', player: { scene: 'explore', district: 'queenwest', x: -1, y: -1 }, ...extra });
 
 test('M4.1: Save the Science\'s warehouse is on Queens Quay; its marker starts the mission', async ({ page }) => {
@@ -107,7 +107,8 @@ test('Death by Highway unlocks last; beating the Highway Mech leads to the endin
   await page.waitForTimeout(3800);
   const card: string[] = await page.evaluate(() => (window as unknown as W).__TP_GAME!.scene.getScene('Ending').children.list.flatMap((o: any) => (o.list ?? [o])).filter((o: any) => o.text).map((o: any) => o.text));
   expect(card.some((t) => t.includes('REPORT CARD'))).toBe(true);
-  expect(card.some((t) => t === '12 / 12')).toBe(true); // M4.1: the Bike Bus
+  expect(card.some((t) => t === '13 / 13')).toBe(true); // M4.1: the Bike Bus; M4.3: the Dock Drop
+  expect(card.some((t) => t === 'EVERY STREET: SAFE TO RIDE')).toBe(true); // M4.3: no tier name, the whole bike network
   await page.keyboard.press('Enter'); await page.waitForTimeout(600); await page.keyboard.press('Enter');
   await page.waitForFunction(() => (window as unknown as W).__TP_GAME!.scene.getScene('Title')?.scene.isActive(), null, { timeout: 20_000 });
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('trashpanda.save.v1')!).flags.ended)).toBe(true);

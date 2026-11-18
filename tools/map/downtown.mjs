@@ -125,8 +125,8 @@ export function generateDowntown() {
   const stopsK = { wb: [(SP - 1) * TS, (JN - 1) * TS, (UN - 1) * TS, (BY - 1) * TS], eb: [(SP + 5) * TS, (JN + 5) * TS, (UN + 5) * TS, (BY + 5) * TS] };
   for (const c of [SP, UN, BY]) for (const row of [DUNDAS, QUEEN, KING]) { D.tprop('ttcstop', c - 2, row - 1, 8, 8); D.tprop('ttcstop', c + 5, row + 4, 8, 6); }
   const stopZone = (xs) => xs.map((s) => [s - 112, s + 24]);
-  D.parkCars(DUNDAS, 'W', undefined, stopZone(stopsQ.wb)); D.parkCars(DUNDAS + 3, 'E', undefined, stopZone(stopsQ.eb));
-  D.parkCars(QUEEN, 'W', undefined, stopZone(stopsQ.wb)); D.parkCars(QUEEN + 3, 'E', undefined, stopZone(stopsQ.eb));
+  D.parkCars(DUNDAS, 'W', 'park_dt_dundas', stopZone(stopsQ.wb)); D.parkCars(DUNDAS + 3, 'E', 'park_dt_dundas', stopZone(stopsQ.eb));
+  D.parkCars(QUEEN, 'W', 'park_dt_queen', stopZone(stopsQ.wb)); D.parkCars(QUEEN + 3, 'E', 'park_dt_queen', stopZone(stopsQ.eb));
   D.parkCars(KING, 'W', 'kingparked', stopZone(stopsK.wb)); D.parkCars(KING + 3, 'E', 'kingparked', stopZone(stopsK.eb));
 
   // ---------- the civic upgrade: King St transit priority corridor ----------
@@ -177,5 +177,20 @@ export function generateDowntown() {
   const lifeTokens = [{ x: 2 * TS, y: (laneY + 1) * TS + 4 }, D.hiddenHeart(976, 760, { x: cx + 124, y: 22 * TS })];
   // easter eggs (M3.1 scoring): ride the length of Graffiti Alley
   const eggs = [{ id: 'graffiti_alley', x: 2 * TS, y: laneY * TS, w: (SP - 4) * TS, h: 2 * TS, label: 'GRAFFITI ALLEY', fact: 'RUSH LANE, SOUTH OF QUEEN:\nEVERY WALL IS PAINTED.' }];
-  return D.out({ spawn: { x: 3 * TS, y: (QUEEN - 2) * TS + 8 }, lifeTokens, eggs });
+  // ---------- M4.3: the Dock Drop (bike share, unbranded): six gaps in the map of stations ----------
+  // You start at the marker with a trailer of docks; set one down at each gap. After the mission they stay.
+  const dockSpots = [['CHINATOWN', SP + 6, DUNDAS + 5], ['CITY HALL', NX0 + 12, 40], ['OLD CITY HALL', BY + 6, QUEEN - 2], ['GRAFFITI ALLEY', 4, laneY], ['KING + JOHN', JN + 5, KING - 2], ['KING + BAY', BY + 6, KING + 5]];
+  const docks = { start: [(UN + 8) * TS + 8, (QUEEN + 5) * TS + 8], spots: dockSpots.map(([name, x, row]) => ({ name, ...D.dockSpot(x, row) })) };
+  D.markers.push({ id: 'dock_drop', x: docks.start[0], y: docks.start[1], label: 'DOCK DROP' });
+  D.improvements.bike_share_grows = { tiles: [], addProps: docks.spots.map((s) => ({ type: 'prop', key: 'sharedock', x: s.x, y: s.y })) };
+
+  // ---------- M4.3: the bike network ----------
+  D.netEW('dt_queen', 'QUEEN ST W', QUEEN, { tag: 'park_dt_queen' });
+  D.netEW('dt_dundas', 'DUNDAS ST W', DUNDAS, { tag: 'park_dt_dundas' });
+  D.netStreet('dt_king', 'KING ST W', 'slow', [[0, (KING + 2) * TS, W * TS, (KING + 2) * TS]], { patch: 'king_transit_corridor' });
+  D.netNS('dt_john', 'JOHN ST', JN, 'slow', { y0: QUEEN + 4, laneIds: ['john_sb', 'john_nb'] });
+  D.netNS('dt_spadina', 'SPADINA AVE', SP, 'protected');
+  D.netNS('dt_university', 'UNIVERSITY AVE', UN, 'protected');
+  D.netNS('dt_bay', 'BAY ST', BY, 'protected');
+  return D.out({ spawn: { x: 3 * TS, y: (QUEEN - 2) * TS + 8 }, lifeTokens, eggs, docks });
 }

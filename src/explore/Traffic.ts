@@ -71,6 +71,8 @@ export class Traffic {
   private spawn(lane: Lane, at?: number, kind: Kind = 'car') {
     // King St corridor: no through traffic (a rare local delivery still turns in)
     if (kind === 'car' && this.has(lane.noCars) && Math.random() < 0.88) return;
+    // M4.3: a slow street keeps half its cars (the rest find the main roads)
+    if (kind === 'car' && this.has(lane.slow) && Math.random() < 0.5) return;
     if (kind !== 'streetcar' && lane.transitOnly) return;
     const horiz = lane.axis === 'x';
     const f = face(lane);
@@ -81,10 +83,13 @@ export class Traffic {
     let s: Vehicle['s'];
     let off = 0;
     if (kind === 'bike') {
-      const id = Phaser.Utils.Array.GetRandom(this.manifest.cyclists ?? ['a']);
+      // M4.3: after the Dock Drop, a third of the riders are on share bikes
+      const share = this.has('bike_share_grows') && this.manifest.shareCyclists?.length && Math.random() < 0.35;
+      const id = Phaser.Utils.Array.GetRandom((share ? this.manifest.shareCyclists : this.manifest.cyclists) ?? ['a']);
       const pv = this.manifest.pivots.cy ?? { x: 0.5, y: 0.8 };
       // in a mixed lane, cyclists hug the right-hand side (between the tracks and the parked cars)
-      if (!lane.bikeOnly) off = lane.dir === 1 ? 6 : -6;
+      // M4.3: on a slow street they take the lane (ride in the middle of it)
+      if (!lane.bikeOnly && !this.has(lane.slow)) off = lane.dir === 1 ? 6 : -6;
       s = this.scene.add.sprite(0, 0, 'chars', `cy_${id}_${f}_0`).setOrigin(pv.x, pv.y).play(`cy_${id}_${f}`);
     } else {
       const key = kind === 'streetcar' ? `streetcar_${f}` : Math.random() < 0.2 ? `suv_${f}` : `car_${COLORS[Math.floor(Math.random() * COLORS.length)]}_${f}`;
@@ -96,7 +101,7 @@ export class Traffic {
     // cars > streetcars > cyclists > pedestrians (16-28), so a cyclist in mixed traffic visibly holds cars up
     let speed = kind === 'streetcar' ? (this.has(lane.priority) ? 68 : 52) : kind === 'bike' ? 32 + Math.random() * 7 : lane.light ? 52 + Math.random() * 14 : 72 + Math.random() * 26;
     if (kind === 'car' && lane.speedy && !this.has(lane.calm)) speed = 108 + Math.random() * 22; // Parkside before calming
-    if (kind === 'car' && this.has(lane.calm)) speed *= 0.5;
+    if (kind === 'car' && (this.has(lane.calm) || this.has(lane.slow))) speed *= 0.5;
     if (lane.elevated) speed = 120 + Math.random() * 30; // the Gardiner, when it's moving
     const plan = this.planTurn(lane, kind);
     const v: Vehicle = { s, lane, kind, speed, v: speed, len, honkCd: 0, stopT: 0, served: new Set(), off, base, plan };
@@ -198,6 +203,7 @@ export class Traffic {
         let kind: Kind = l.bikeOnly ? 'bike' : 'car';
         // brave cyclists in mixed traffic before there's anywhere safer to ride
         if (l.cyclists === 'mixed' && !this.protectedLanes && Math.random() < 0.18) kind = 'bike';
+        if (this.has(l.slow) && Math.random() < 0.5) kind = 'bike'; // M4.3: a slow street is half bikes
         this.spawn(l, undefined, kind);
         st.t = l.bikeOnly ? 2.2 + Math.random() * 2.5 : l.elevated ? 1.8 + Math.random() * 1.6 : l.axis === 'y' ? (l.light ? 9 : 5) + Math.random() * 4 : 2.6 + Math.random() * 3;
       }

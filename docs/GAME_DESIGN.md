@@ -113,7 +113,7 @@ The cost is a 0.3 s wipe at the seam. The design target of "one city" is kept: s
 
 ## Livability
 - Headline score starts at **60 (TORONTO)**.
-- Tiers: 65 Better · 70 Great · 75 Excellent · 80 World-Class · 90 Amsterdam/Copenhagen territory · 100 Raccoon Utopia.
+- ~~Tiers~~ (dropped in M4.3, Ivan: comparing Toronto to Amsterdam/Copenhagen oversold it): the score is shown out of 100, and beside it **BIKE NETWORK n/28**, the streets that are protected or slow (see M4.3 below). Thirteen missions add up to exactly 100.
 - Six visible categories: Cycling, Transit, Walking, Green + Public Space, Safety, Less Car Dependence. The master prompt's other categories fold into these.
 - Main missions (now 10) are worth about +3 each and side missions +1–2, so a complete run lands around 94–100. After M2: 60 → 64 (bike lanes) → 67 (TSP) → 71 (King corridor) → 74 (Parkside), in any order after mission 1.
 
@@ -259,3 +259,15 @@ None. No ads, purchases, energy or login.
 - **Save the Science:** crates stand in front of the raccoon; HIDDEN / HIDE HERE; the getaway truck drives off with the exhibit if the rats reach it.
 - **The Jet Tug** revs at the edge (nothing to climb yet), then crosses fast. **The Monster SUV** bounces you off its drawn roof, and only its front hurts.
 - **The mission list** (debug) is numbered in unlock order.
+
+## M4.3: Ivan's notes after M4.2 + a code and game review
+- **The bike network:** every street on the five maps (28) ends up PROTECTED (a curb-separated lane each way) or SLOW (humps, sharrows, cars at cycling speed and half as many, bikes take the lane). Each mission adds two or three streets anywhere in the city (`src/data/network.ts`); the payoff sweeps in the ones on the current map and a toast names them all. The city map draws the network (green protected, yellow slow, grey painted) with a legend. Fiction: RACCOON TRANSIT PLAN (URBAN_RESEARCH §26).
+- **No tier names:** LIVABILITY n/100 and BIKE NETWORK n/28 on the HUD; the report card says EVERY STREET: SAFE TO RIDE at the end, and counts protected and slow streets.
+- **Strachan** has painted bike lanes from the start (real, south of King); mission 7 makes them protected.
+- **Dock Drop** (Downtown, after King of the Street): bike share, unbranded. Tow a trailer of docks to six gaps in 90 s; stop at each to set a station down (share bikes ride out of it); ring your bell at the clutter crew who cart new stations off. Payoff: stations on every map and share-bike riders in traffic (URBAN_RESEARCH §25).
+- **Boss checkpoint:** once a boss fight starts, losing a life restarts at the boss (the Lane Eater, whose boss is the end of its autoscroll, still restarts at the start).
+- **Ranks:** S/A/B/C per mission (hits taken; the escort: its delay; the map missions: time left), the best kept and shown on FIXED markers; replays can improve it (still no points). Hits from lives lost in the same attempt count.
+- **Hit feedback:** an impact star where each hit lands (big for combo hit 3 and stomps), a swoosh showing the swing's reach.
+- **Readability:** a dark band behind the action HUD's top line, the GO banners and the result cards; the map missions' status lines in their own box under the livability HUD; hint boxes more opaque.
+- **The Megamart wall** is three different bays (store front, garden centre, pickup bay) instead of one sign per screen.
+

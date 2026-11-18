@@ -60,10 +60,25 @@ export class SidePlayer {
   /** something that takes the hit instead (the Lane Eater peloton); returns true if it did */
   shield?: () => boolean;
 
+  /** M4.3 (game review): the swing's reach, drawn as a fading crescent in front of the raccoon (a bigger one for hit 3) */
+  private swoosh?: Phaser.GameObjects.Graphics;
+  private drawSwoosh() {
+    if (this.swingT <= 0) { this.swoosh?.clear(); return; }
+    this.swoosh ??= this.scene.add.graphics().setDepth(101);
+    const p = 1 - this.swingT / SIDE.swingTime, big = this.combo === 3;
+    const g = this.swoosh.clear().setPosition(Math.round(this.sprite.x + this.facing * 6), Math.round(this.sprite.y - 18)).setScale(this.facing, 1);
+    const r = big ? 22 : 17, a0 = big ? -2.2 : -1.2, sweep = big ? 2.9 : 2.0;
+    const a1 = a0 + sweep * Math.min(1, p * 1.6), alpha = p < 0.75 ? 0.9 : 0.9 * (1 - (p - 0.75) / 0.25);
+    g.lineStyle(big ? 4 : 3, 0xffffff, alpha * 0.35).beginPath().arc(0, 0, r, a0, a1).strokePath();
+    g.lineStyle(big ? 2 : 1, big ? 0xfff08a : 0xffffff, alpha).beginPath().arc(0, 0, r - 1, Math.max(a0, a1 - 1.1), a1).strokePath();
+  }
+
+  /** M4.3: hits taken this life (the mission's rank) */
+  hitsTaken = 0;
   hurt(fromX: number, dmg = 1): boolean {
     if (this.invulnT > 0 || this.dashT > 0 || this.dead) return false;
     if (this.shield?.()) { this.invulnT = SIDE.invuln * 0.6; return false; }
-    this.hp -= dmg; this.invulnT = SIDE.invuln; this.hurtT = 0.3;
+    this.hp -= dmg; this.invulnT = SIDE.invuln; this.hurtT = 0.3; this.hitsTaken++;
     this.body.setVelocity((this.sprite.x < fromX ? -1 : 1) * 180, -200);
     sfx.hurt();
     if (this.hp <= 0) { this.dead = true; }
@@ -115,6 +130,7 @@ export class SidePlayer {
       sfx.swing();
     }
     this.swingT = Math.max(0, this.swingT - dt);
+    this.drawSwoosh();
 
     if (this.dashT > 0) {
       this.dashT -= dt;

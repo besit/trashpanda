@@ -13,6 +13,8 @@ export interface Manifest {
   /** lazily loaded per district: building atlas, map json, ground decals */
   districts?: Record<string, { atlas: { key: string; png: string; json: string }; map: string; images: Record<string, string> }>;
   cyclists?: string[];
+  /** M4.3: bike share riders (after the Dock Drop) */
+  shareCyclists?: string[];
 }
 
 /** Loads the manifest, then every asset it lists, then builds fonts + animations. */

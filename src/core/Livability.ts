@@ -2,24 +2,15 @@ import { BASE_CATEGORIES, UPGRADES, type Category } from '../data/upgrades';
 
 export const START_LIVABILITY = 60;
 
-export const TIERS: { min: number; name: string }[] = [
-  { min: 100, name: 'RACCOON UTOPIA' },
-  { min: 90, name: 'AMSTERDAM/COPENHAGEN TERRITORY' },
-  { min: 80, name: 'WORLD-CLASS TORONTO' },
-  { min: 75, name: 'EXCELLENT TORONTO' },
-  { min: 70, name: 'GREAT TORONTO' },
-  { min: 65, name: 'BETTER TORONTO' },
-  { min: 0, name: 'TORONTO' },
-];
+// M4.3 (Ivan): no tier names comparing Toronto to other cities ("Amsterdam/Copenhagen territory" oversold a city
+// whose streets the game hadn't changed that much). The score is out of 100, and the HUD shows how much of the
+// bike network is done (src/data/network.ts) beside it.
 
 export function livability(upgrades: readonly string[]): number {
   const sum = upgrades.reduce((s, id) => s + (UPGRADES[id]?.livability ?? 0), START_LIVABILITY);
   return Math.max(0, Math.min(100, sum));
 }
 
-export function tierName(score: number): string {
-  return TIERS.find((t) => score >= t.min)!.name;
-}
 
 export function categories(upgrades: readonly string[]): Record<Category, number> {
   const out = { ...BASE_CATEGORIES };

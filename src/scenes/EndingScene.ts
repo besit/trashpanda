@@ -6,7 +6,8 @@ import { InputManager } from '../input/InputManager';
 import { text, iris, wrapLines } from '../ui/fx';
 import { ScrollLayer, STREET_Y, GROUND_Y, FRONT_Y, BACKROW_Y, SKYLINE_Y } from '../ui/sideLayout';
 import { ctx } from '../core/ctx';
-import { livability, tierName } from '../core/Livability';
+import { livability } from '../core/Livability';
+import { networkDone, NETWORK_TOTAL } from '../data/network';
 import { endStats } from '../core/Livability';
 import { fmtScore, DIFFICULTY } from '../core/Score';
 import { submitRun } from '../core/Leaderboard';
@@ -52,12 +53,14 @@ export class EndingScene extends Phaser.Scene {
   }
 
   private showStats() {
-    const s = ctx.state, st = endStats(s.upgrades), liv = livability(s.upgrades);
+    const s = ctx.state, st = endStats(s.upgrades), liv = livability(s.upgrades), net = networkDone(s.completedMissions);
     const total = Object.keys(MISSIONS).length, done = s.completedMissions.length;
     const lines: [string, string][] = [
       ['MISSIONS', `${done} / ${total}`],
       ['LIVABILITY', `${liv} / 100`],
-      ['PROTECTED BIKE LANES', String(st.bikeLanes)],
+      // M4.3: the bike network: protected streets and slow streets (src/data/network.ts)
+      ['PROTECTED STREETS', String(net.filter((n) => n.kind === 'protected').length)],
+      ['SLOW STREETS', String(net.filter((n) => n.kind === 'slow').length)],
       ['PARKS + PUBLIC SPACES', String(st.parksCreated)],
       ['TRANSIT UPGRADES', String(st.transitUpgrades)],
       ['HIGHWAY LANES REMOVED', String(st.lanesRemoved)],
@@ -67,8 +70,11 @@ export class EndingScene extends Phaser.Scene {
       ['SCORE', `${fmtScore(s.score)}  (${DIFFICULTY[s.difficulty].label})`],
     ];
     const c = this.add.container(0, 0).setDepth(10);
+    // M4.3: the card on a dark band (its rows ran over the riding raccoon in the vignette behind)
+    c.add(this.add.graphics().fillStyle(0x16121f, 0.78).fillRect(0, 4, GAME_W, 44 + lines.length * 13 - 2));
     c.add(text(this, GAME_W / 2, 14, "THE RACCOON'S REPORT CARD", 'font_big'));
-    c.add(text(this, GAME_W / 2, 28, tierName(liv), 'font').setTint(0x9bd35a));
+    // M4.3 (Ivan): no tier name comparing Toronto to another city: the network, street by street
+    c.add(text(this, GAME_W / 2, 28, net.length === NETWORK_TOTAL ? 'EVERY STREET: SAFE TO RIDE' : `BIKE NETWORK: ${net.length} OF ${NETWORK_TOTAL} STREETS`, 'font').setTint(0x9bd35a));
     lines.forEach(([k, v], i) => {
       const y = 44 + i * 13;
       const a = text(this, GAME_W / 2 - 8, y, k, 'font_outline', 0).setOrigin(1, 0.5).setAlpha(0), b = text(this, GAME_W / 2 + 8, y, v, 'font_outline', 0).setOrigin(0, 0.5).setTint(0xfff08a).setAlpha(0);

@@ -7,7 +7,8 @@ import { TopDownPlayer } from '../explore/TopDownPlayer';
 import { Traffic } from '../explore/Traffic';
 import { Crowd } from '../explore/Crowd';
 import { ctx } from '../core/ctx';
-import { livability, tierName } from '../core/Livability';
+import { livability } from '../core/Livability';
+import { networkPatches, networkLabel, missionNetwork } from '../data/network';
 import { completeMission } from '../core/GameState';
 import { UPGRADES } from '../data/upgrades';
 import { MISSIONS, missionAvailable } from '../data/missions';
@@ -17,7 +18,10 @@ import { text, iris, floatText, shake, bellRing, blinds, wrapLines } from '../ui
 const BANNER_Y = 104;
 import { MAX_LIVES } from '../core/GameState';
 import { award, awardOnce, fmtScore } from '../core/Score';
+import { rankByTimeLeft, recordRank, rankLine } from '../core/Rank';
 import { BikeBus } from '../explore/BikeBus';
+import { DockDrop } from '../explore/DockDrop';
+import type { MapMission } from '../explore/guide';
 import { submitRun } from '../core/Leaderboard';
 import { music } from '../audio/Sequencer';
 import { SONG_MAIN, SONG_IMPROVE, SONG_WIN } from '../audio/songs';
@@ -25,7 +29,7 @@ import { sfx } from '../audio/sfx';
 import { openPause, type MapInfo } from './PauseScene';
 import type { Manifest } from './BootScene';
 
-interface ExploreData { from?: 'mission' | 'district'; missionId?: string; won?: boolean; replay?: boolean; district?: string; /** M4.1: run this explore mission (the Bike Bus) */ bikebus?: string; debug?: boolean; entry?: { side: 'w' | 'e' | 'n' | 's'; street?: string; dy?: number; y?: number; fromDistrict?: string } }
+interface ExploreData { from?: 'mission' | 'district'; missionId?: string; won?: boolean; replay?: boolean; district?: string; /** M4.1: run this mission on the map (the Bike Bus; M4.3: or the Dock Drop) */ bikebus?: string; debug?: boolean; entry?: { side: 'w' | 'e' | 'n' | 's'; street?: string; dy?: number; y?: number; fromDistrict?: string } }
 type Hud = { lives: Phaser.GameObjects.BitmapText; points: Phaser.GameObjects.BitmapText; box: Phaser.GameObjects.Graphics; meter: Phaser.GameObjects.Graphics; score: Phaser.GameObjects.BitmapText; tier: Phaser.GameObjects.BitmapText; stamina: Phaser.GameObjects.Graphics; prompt: Phaser.GameObjects.BitmapText; label: Phaser.GameObjects.BitmapText };
 
 const DIR_V = [[1, 0], [0.7, 0.7], [0, 1], [-0.7, 0.7], [-1, 0], [-0.7, -0.7], [0, -1], [0.7, -0.7]];
@@ -44,8 +48,10 @@ export class ExploreScene extends Phaser.Scene {
   private shownLiv = 60;
   private busy = false;
   private near: { kind: 'mission' | 'landmark'; id: string; replay?: boolean } | null = null;
-  /** M4.1: the Bike Bus, while it runs */
-  private bus?: BikeBus;
+  /** M4.1: a mission played on the map, while it runs (the Bike Bus; M4.3: the Dock Drop) */
+  private em?: MapMission;
+  /** upgrades + the bike network's streets so far (M4.3): what the map and its traffic show */
+  private unlocked() { return [...ctx.state.upgrades, ...networkPatches(ctx.state.completedMissions)]; }
   private data0: ExploreData = {};
 
   constructor() { super('Explore'); }
@@ -79,6 +85,7 @@ export class ExploreScene extends Phaser.Scene {
     const md = this.cache.json.get(`map_${this.district}`) as MapData;
     this.map = new CityMap(this, md);
     for (const u of ctx.state.upgrades) for (const p of UPGRADES[u]?.mapPatches ?? []) if (md.improvements[p]) this.map.applyImprovement(p);
+    for (const p of networkPatches(ctx.state.completedMissions)) if (md.improvements[p]) this.map.applyImprovement(p); // M4.3: the bike network
 
     let start = md.spawn;
     if (data.entry) {
@@ -99,14 +106,16 @@ export class ExploreScene extends Phaser.Scene {
       data.entry = { ...e, side };
     }
     else if (ctx.state.player.district === this.district && ctx.state.player.x > 0 && ctx.state.player.x < this.map.widthPx && ctx.state.player.y < this.map.heightPx) start = ctx.state.player;
-    const busDef = data.bikebus ? md.bikebus : undefined;
+    const emKind = data.bikebus ? MISSIONS[data.bikebus]?.explore?.kind : undefined;
+    const busDef = emKind === 'bikebus' ? md.bikebus : undefined, dockDef = emKind === 'docks' ? md.docks : undefined;
     if (busDef) start = { x: busDef.start[0], y: busDef.start[1] };
+    if (dockDef) start = { x: dockDef.start[0], y: dockDef.start[1] };
     this.player = new TopDownPlayer(this, start.x, start.y);
     if (data.entry) this.player.dir = { w: 0, e: 4, n: 2, s: 6 }[data.entry.side];
     this.physics.world.setBounds(0, 0, this.map.widthPx, this.map.heightPx);
     this.physics.add.collider(this.player.sprite, this.map.solids);
 
-    this.traffic = new Traffic(this, md.lanes, md.intersections, this.map.widthPx, this.map.heightPx, ctx.state.upgrades);
+    this.traffic = new Traffic(this, md.lanes, md.intersections, this.map.widthPx, this.map.heightPx, this.unlocked());
     this.traffic.setDensity(ctx.state.upgrades.length ? 0.8 : 1);
     this.crowd = new Crowd(this, md.walkways, md.critters ?? [], this.district === 'downtown' ? 44 : 34, md.underWalks ?? []);
     this.crowd.onSquirrelSpotted = () => {
@@ -125,13 +134,15 @@ export class ExploreScene extends Phaser.Scene {
 
     this.buildMarkers();
     this.buildHud();
-    this.bus = undefined;
-    if (busDef && data.bikebus) {
-      const m = MISSIONS[data.bikebus];
-      this.bus = new BikeBus(this, busDef, m?.explore?.time ?? 75);
-      this.physics.add.collider(this.player.sprite, this.bus.solids);
+    this.em = undefined;
+    const emTime = data.bikebus ? MISSIONS[data.bikebus]?.explore?.time ?? 75 : 75;
+    if (busDef) this.em = new BikeBus(this, busDef, emTime);
+    else if (dockDef) this.em = new DockDrop(this, dockDef, emTime, (this.registry.get('manifest') as Manifest).shareCyclists ?? []);
+    if (this.em) {
+      const em = this.em;
+      if (em.solids) this.physics.add.collider(this.player.sprite, em.solids);
       this.markers.forEach((mk) => mk.g.setVisible(false));
-      this.time.delayedCall(700, () => this.toast(wantsTouch() ? 'STOP BESIDE THE KIDS AT EVERY STOP.\nRED (BELL) AT THE SUVS IN THE BIKE LANE.' : 'STOP BESIDE THE KIDS AT EVERY STOP.\nE (BELL) AT THE SUVS IN THE BIKE LANE.', 4200));
+      this.time.delayedCall(700, () => this.toast(em.intro(wantsTouch()), 4200));
     }
     if (wantsTouch()) this.touch = new TouchControls(this, { map: true });
     this.scale.on('resize', this.layout, this);
@@ -197,7 +208,7 @@ export class ExploreScene extends Phaser.Scene {
       const g = this.add.container(m.x, m.y).setDepth(m.y);
       const ring = this.add.ellipse(0, 0, 26, 10, done ? 0x55a144 : 0xd42a24, 0.35).setStrokeStyle(1, done ? 0x9bd35a : 0xff6347);
       const arrow = this.add.triangle(0, -28, -5, 0, 5, 0, 0, 7, done ? 0x9bd35a : 0xf5c22e).setStrokeStyle(1, 0x16121f);
-      const label = text(this, 0, -40, done ? 'FIXED!' : MISSIONS[m.id]?.title ?? m.label, 'font_outline');
+      const label = text(this, 0, -40, done ? (ctx.state.ranks[m.id] ? `FIXED! RANK ${ctx.state.ranks[m.id].rank}` : 'FIXED!') : MISSIONS[m.id]?.title ?? m.label, 'font_outline');
       label.setTint(done ? 0x9bd35a : 0xfff08a);
       g.add([ring, arrow, label]);
       this.tweens.add({ targets: arrow, y: -24, duration: 450, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
@@ -292,7 +303,8 @@ export class ExploreScene extends Phaser.Scene {
       g.fillStyle(filled ? col : 0x443f54).fillRect(x + 1 + i * 5.45, y + 1, 4, h - 2);
     }
     this.hud.score.setText(String(Math.round(v)));
-    this.hud.tier.setText(tierName(Math.round(v)));
+    // M4.3 (Ivan): no tier names comparing Toronto to other cities: how much of the bike network is done instead
+    this.hud.tier.setText(networkLabel(ctx.state.completedMissions));
   }
 
   private toast(msg: string, ms = 4200) {
@@ -346,7 +358,7 @@ export class ExploreScene extends Phaser.Scene {
       await this.wait(700);
       banner = text(this, GAME_W / 2, BANNER_Y, 'THE CITY IS CHANGING...', 'font_big').setScrollFactor(0).setDepth(20005);
       music.play(SONG_IMPROVE);
-      for (const u of mission?.upgrades ?? []) for (const p of UPGRADES[u].mapPatches) dur = Math.max(dur, this.map.applyImprovement(p, true, startX - GAME_W / 2));
+      for (const p of this.payoffPatches(mission)) dur = Math.max(dur, this.map.applyImprovement(p, true, startX - GAME_W / 2));
       cam.pan(startX + 420, focusY, Math.max(1400, dur * 0.6), 'Sine.easeInOut');
     } else {
       const fx = mission?.focusX ?? this.player.x, startY = Phaser.Math.Clamp(mission?.focusY ?? this.player.y - 150, GAME_H / 2, this.map.heightPx - GAME_H / 2);
@@ -354,10 +366,10 @@ export class ExploreScene extends Phaser.Scene {
       await this.wait(700);
       banner = text(this, GAME_W / 2, BANNER_Y, 'THE CITY IS CHANGING...', 'font_big').setScrollFactor(0).setDepth(20005);
       music.play(SONG_IMPROVE);
-      for (const u of mission?.upgrades ?? []) for (const p of UPGRADES[u].mapPatches) dur = Math.max(dur, this.map.applyImprovement(p, true, startY - GAME_H / 2, 'y'));
+      for (const p of this.payoffPatches(mission)) dur = Math.max(dur, this.map.applyImprovement(p, true, startY - GAME_H / 2, 'y'));
       cam.pan(fx, startY + 360, Math.max(1400, dur * 0.7), 'Sine.easeInOut');
     }
-    this.traffic.setUpgrades(ctx.state.upgrades);
+    this.traffic.setUpgrades(this.unlocked());
     this.traffic.setDensity(0.8);
     await this.wait(Math.max(1600, dur * 0.6));
     const up = UPGRADES[mission.upgrades[0]];
@@ -389,7 +401,20 @@ export class ExploreScene extends Phaser.Scene {
       this.scene.start('Cutscene', { id: 'ending', next: 'Ending' });
       return;
     }
-    if (firstTime) this.nextHint(missionId);
+    if (!firstTime) return;
+    // M4.3: the streets this mission added to the bike network (here or in other districts), then where to go next
+    const added = missionNetwork(missionId);
+    if (added.length) {
+      const names = added.map((n) => n.name).filter((v, i, a) => a.indexOf(v) === i).join(' + ');
+      this.toast(`${networkLabel(ctx.state.completedMissions)} STREETS\nNEW: ${names}`, 3200);
+      this.time.delayedCall(3900, () => this.nextHint(missionId));
+    } else this.nextHint(missionId);
+  }
+
+  /** the map patches a mission's payoff sweeps in here: its upgrades', and its bike network streets on this map */
+  private payoffPatches(mission: (typeof MISSIONS)[string] | undefined) {
+    if (!mission) return [];
+    return [...mission.upgrades.flatMap((u) => UPGRADES[u].mapPatches), ...missionNetwork(mission.id).map((n) => `net_${n.id}`)];
   }
 
   /**
@@ -468,13 +493,13 @@ export class ExploreScene extends Phaser.Scene {
     else this.scene.start(to, toData);
   }
 
-  /** M4.1: the Bike Bus reached the school (won) or the bell rang first (late: ride it again from the start) */
-  private async finishBus(won: boolean) {
-    if (this.busy || !this.bus) return;
+  /** M4.1: a map mission is over: won (the Bike Bus reached the school; M4.3: every dock set) or late (again from the start) */
+  private async finishExplore(won: boolean) {
+    if (this.busy || !this.em) return;
     this.busy = true; this.player.frozen = true;
     const data = this.data0 as ExploreData, id = data.bikebus!, m = MISSIONS[id], replay = !!data.replay;
-    const bus = this.bus;
-    bus.hideHud(); this.toasts.forEach((t) => t.setVisible(false));
+    const em = this.em;
+    em.hideHud(); this.toasts.forEach((t) => t.setVisible(false));
     const head = (msg: string, sub: string) => {
       const t = text(this, GAME_W / 2, 66, msg, 'font_big').setScrollFactor(0).setDepth(20030);
       t.setScale(0.1); this.tweens.add({ targets: t, scale: 1, duration: 300, ease: 'Back.easeOut' });
@@ -482,7 +507,7 @@ export class ExploreScene extends Phaser.Scene {
     };
     if (!won) {
       music.stop(); sfx.hurt();
-      head('THE BELL RANG!', `THE BIKE BUS WAS LATE (${bus.kids}/${bus.total} KIDS).\nBACK TO THE FIRST STOP!`);
+      head(...em.lateCard());
       await this.wait(2200);
       await iris(this, 'close', GAME_W / 2, GAME_H / 2, 450);
       this.leaving = true;
@@ -492,8 +517,11 @@ export class ExploreScene extends Phaser.Scene {
     music.play(SONG_WIN);
     const firstWin = !ctx.state.completedMissions.includes(id) && !replay;
     const earned = firstWin ? award(ctx.state, 'mission') : 0;
-    const sec = Math.ceil(bus.t);
-    head('ON TIME!', `KIDS: ${bus.kids}/${bus.total}   ${sec} S TO THE BELL\n${replay ? 'REPLAY: NO POINTS' : `SCORE +${earned}${firstWin ? ' (MISSION BONUS)' : ''}`}`);
+    const [wh, ws] = em.winCard();
+    // M4.3: the rank, on the time left on the clock
+    const r = { rank: rankByTimeLeft(em.t / (m.explore?.time ?? 75)), detail: `${Math.ceil(em.t)} S LEFT` };
+    const rec = recordRank(ctx.state, id, r);
+    head(wh, `${rankLine(r, rec)}\n${ws}\n${replay ? 'REPLAY: NO POINTS' : `SCORE +${earned}${firstWin ? ' (MISSION BONUS)' : ''}`}`);
     await this.wait(2200);
     await iris(this, 'close', GAME_W / 2, GAME_H / 2, 450);
     this.leaving = true;
@@ -525,8 +553,8 @@ export class ExploreScene extends Phaser.Scene {
   }
 
   minimapInfo(): MapInfo {
-    const route = this.bus ? this.bus.def.steps.slice(this.bus.step).map((s, i) => ({ x: s.x, y: s.y, kind: s.kind, next: i === 0 })) : undefined;
-    return { map: this.map, district: this.district, player: { x: this.player.x, y: this.player.y }, markers: this.bus ? [] : this.markers.map((m) => ({ x: m.x, y: m.y, label: MISSIONS[m.id]?.title ?? m.id, done: m.done })), route };
+    const route = this.em?.route();
+    return { map: this.map, district: this.district, player: { x: this.player.x, y: this.player.y }, markers: this.em ? [] : this.markers.map((m) => ({ x: m.x, y: m.y, label: MISSIONS[m.id]?.title ?? m.id, done: m.done })), route };
   }
 
   update(_t: number, dt: number) {
@@ -534,9 +562,9 @@ export class ExploreScene extends Phaser.Scene {
     if (!this.busy && this.input2.justPressed('pause')) { openPause(this); return; }
     if (!this.busy && this.input2.justPressed('map')) { openPause(this, 'map'); return; }
     this.player.update(this.input2, dt);
-    if (this.bus && !this.busy) {
-      this.bus.update(dt, this.player.x, this.player.y);
-      if (this.bus.state !== 'ride') void this.finishBus(this.bus.state === 'won');
+    if (this.em && !this.busy) {
+      this.em.update(dt, this.player.x, this.player.y);
+      if (this.em.state !== 'ride') void this.finishExplore(this.em.state === 'won');
     }
     this.traffic.update(dt, this.player.x, this.player.y);
     this.crowd.update(dt, this.player.x, this.player.y, this.cameras.main.worldView);
@@ -544,7 +572,7 @@ export class ExploreScene extends Phaser.Scene {
     this.checkLifeTokens();
     this.checkEggs();
     // district edges: riding off the map along a street that continues (not while leading the Bike Bus)
-    if (!this.busy && !this.bus) {
+    if (!this.busy && !this.em) {
       const px = this.player.x, py = this.player.y;
       for (const e of this.map.data.exits ?? []) {
         const [lo, hi] = exitSpan(e), along = e.side === 'n' || e.side === 's' ? px : py;
@@ -557,7 +585,7 @@ export class ExploreScene extends Phaser.Scene {
     // what's nearby: a mission marker or a landmark
     this.near = null;
     // M3.3 (Ivan): a FIXED marker can be replayed, for no points
-    for (const m of this.markers) if (!this.bus && Phaser.Math.Distance.Between(this.player.x, this.player.y, m.x, m.y) < 22) this.near = { kind: 'mission', id: m.id, replay: m.done };
+    for (const m of this.markers) if (!this.em && Phaser.Math.Distance.Between(this.player.x, this.player.y, m.x, m.y) < 22) this.near = { kind: 'mission', id: m.id, replay: m.done };
     if (!this.near) for (const l of this.map.data.landmarks ?? []) if (Phaser.Math.Distance.Between(this.player.x, this.player.y, l.x, l.y + 24) < 40) this.near = { kind: 'landmark', id: l.id };
     const key = wantsTouch() ? 'RED' : 'E';
     this.hud.prompt.setText(this.busy || !this.near ? '' : this.near.kind === 'mission' ? (this.near.replay ? `${key}: REPLAY (NO POINTS)` : `${key}: START MISSION`) : `${key}: READ THE PLAQUE`);
@@ -575,7 +603,7 @@ export class ExploreScene extends Phaser.Scene {
         const [vx, vy] = DIR_V[this.player.dir];
         bellRing(this, this.player.x + vx * 7, this.player.y + vy * 3 - 14 - this.player.z, this.player.y + 3);
         this.crowd.bell(this.player.x, this.player.y);
-        this.bus?.bell(this.player.x, this.player.y);
+        this.em?.bell(this.player.x, this.player.y);
       }
     }
     // stamina bar under the player when boosting / recovering
@@ -593,6 +621,6 @@ export class ExploreScene extends Phaser.Scene {
     w.__TP = { ...(w.__TP ?? {}), scene: 'Explore', district: this.district, state: ctx.state, player: () => ({ x: this.player.x, y: this.player.y }), teleport: (x: number, y: number) => this.player.sprite.setPosition(x, y), startMission: (id: string) => this.startMission(id), improve: (id: string) => this.map.applyImprovement(id, true, this.player.x), improveNow: (id: string) => this.map.applyImprovement(id, false), traffic: () => this.traffic.count, map: this.map.data,
       goto: (district: string, y?: number) => this.scene.start('Explore', { from: 'district', district, entry: y !== undefined ? { side: 'w', y } : undefined }),
       exits: () => this.map.data.exits,
-      markers: () => this.markers.map((m) => m.id), busy: () => this.busy, song: () => music.current, bus: () => this.bus };
+      markers: () => this.markers.map((m) => m.id), applied: (id: string) => this.map.isApplied(id), hudTier: () => this.hud.tier.text, busy: () => this.busy, song: () => music.current, bus: () => this.em };
   }
 }

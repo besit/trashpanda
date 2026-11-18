@@ -14,6 +14,7 @@ import { sfx } from '../audio/sfx';
 import { puff, floatText, shake } from '../ui/fx';
 import type { Hitbox } from './SidePlayer';
 
+const ROLL = 0.4;
 type State = 'intro' | 'rev' | 'drive' | 'refuel' | 'away' | 'dead';
 const JET = { x0: -120, x1: 58 };   // the jet's span in the right-facing image, from the image centre
 const TUG = { x0: 64, x1: 118 };    // the tug's span
@@ -31,6 +32,8 @@ export class JetTug {
   private honkCd = 0;
   private refuelled = false;
   private revX = 0;
+  /** M4.3 (review): the tug rolls the last stretch in to its rev spot instead of appearing there */
+  private rollT = 0;
 
   constructor(private scene: Phaser.Scene, _x: number, private groundY: number, private bounds: { left: number; right: number }, private onCase: (x: number, dir: 1 | -1) => void) {
     // it starts off screen to the right, facing left; M4.2: it revs at the edge, only its tug showing
@@ -61,8 +64,9 @@ export class JetTug {
     this.img.x = this.dir === -1 ? this.bounds.right - 46 + TUG.x1 : this.bounds.left + 46 - TUG.x1;
     this.revX = this.img.x;
     this.platform.x = this.img.x + this.jetMid(); pb.reset(this.platform.x, this.platform.y);
+    this.img.x = this.revX - this.dir * 64; // it rolls in from here (rollT)
     pb.checkCollision.up = false; // no riding until it rolls
-    this.state = 'rev'; this.t = 1.1 / this.rage;
+    this.state = 'rev'; this.rollT = ROLL; this.t = 1.1 / this.rage + ROLL;
     sfx.boost();
     floatText(this.scene, Phaser.Math.Clamp(this.rect().centerX, this.bounds.left + 50, this.bounds.right - 50), this.groundY - 56, 'VRRROOOM!', 'font_red', 0xffffff, 700);
   }
@@ -115,6 +119,7 @@ export class JetTug {
     switch (this.state) {
       case 'intro': if (this.t <= 0) { this.refuelled = false; this.revAt(); } break;
       case 'rev': { // shaking on the spot, smoke and blast; then off it goes
+        if (this.rollT > 0) { this.rollT = Math.max(0, this.rollT - dt); const k = this.rollT / ROLL; this.img.x = this.revX - this.dir * 64 * k * k; break; }
         this.img.x = this.revX + (Math.random() < 0.5 ? -1 : 1);
         if (Math.random() < 0.7) puff(this.scene, this.rect().centerX - this.dir * 30, this.groundY - 8, 0x69657a, 1, 10, 106);
         if (this.t <= 0) { this.state = 'drive'; (this.platform.body as Phaser.Physics.Arcade.Body).checkCollision.up = true; sfx.carHonk(); }

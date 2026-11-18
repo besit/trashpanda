@@ -29,6 +29,10 @@ export const CYC_VARIANTS = [
   { id: 'b', skin: 'deep', top: 'white', legs: 'denim', helmet: 'blue', bike: 'black' },
   { id: 'c', skin: 'light', top: 'green', legs: 'khaki', helmet: 'yellow', bike: 'red', kidSeat: true },
   { id: 'd', skin: 'brown', top: 'purple', legs: 'grey', helmet: 'white', bike: 'teal' },
+  // M4.3: bike share riders (unbranded: a chunky step-through with fenders and a front basket). They join traffic
+  // once the Dock Drop mission puts stations across the city
+  { id: 'e', skin: 'deep', top: 'orange', legs: 'denim', helmet: 'white', bike: 'green', share: true },
+  { id: 'f', skin: 'pale', top: 'blue', legs: 'black', helmet: 'yellow', bike: 'green', share: true },
 ];
 
 const m = (ramp) => ({ ramp });
@@ -93,6 +97,12 @@ function cycModel(v, t) {
     { d: sd.capsule(BB, [5, 0, 9], 0.6), m: frame },
     { d: sd.capsule([5, 0, 9.8], [6.8, 0, 3.6], 0.5), m: m(['g', 'G', 'h']) },
     { d: sd.capsule([4.2, -3.2, 12.2], [4.2, 3.2, 12.2], 0.45), m: m(['g', 'G', 'h']) },
+    ...(v.share ? [ // the share bike: fat down tube, fenders over both wheels, a black basket on the front rack
+      { d: sd.capsule(BB, [4.6, 0, 9.2], 1.0), m: frame },
+      { d: (p) => Math.max(sd.torusY([-6.8, 0, 3.6], 3.5, 0.45)(p), -(p[2] - 4.4)), m: frame },
+      { d: (p) => Math.max(sd.torusY([6.8, 0, 3.6], 3.5, 0.45)(p), -(p[2] - 4.4)), m: frame },
+      { d: sd.box([7.4, 0, 9.8], [1.6, 1.9, 1.3], 0.3), m: m(['K', 'k', 'g']) },
+    ] : []),
     { d: sd.capsule(hipR, kR, 1.05), m: legs }, { d: sd.capsule(kR, pedR, 0.85), m: legs },
     { d: sd.capsule(hipL, kL, 1.05), m: legs }, { d: sd.capsule(kL, pedL, 0.85), m: legs },
     { d: (p) => smin(sd.ellipsoid([-1.6, 0, 13.4], [2.2, 2.6, 3.0])(p), sd.ellipsoid([0.4, 0, 15.6], [2.0, 2.5, 2.0])(p), 1), m: top },

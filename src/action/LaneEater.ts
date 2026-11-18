@@ -179,16 +179,19 @@ export class LaneEater {
   /** the lane it has eaten: bike-lane green is paved over with car-lane paint */
   // M4.2 (Ivan: "the flowerbeds flicker... draw them once"): the paved strip is anchored in the world from a fixed
   // start and redrawn only when its end moves a whole pixel (it used to be redrawn every frame from the camera's edge)
+  // M4.3 (review): ...and only the stretch on screen, from a whole multiple of 24 px (so the dashes keep their world
+  // positions): a redraw is a handful of rects however far the eater has come
   private laneEnd = NaN;
-  private drawLane(_fromX: number) {
-    const fromX = -200, x1 = Math.round(this.x - 40);
-    if (x1 === this.laneEnd) return;
-    this.laneEnd = x1;
+  private laneFrom = NaN;
+  private drawLane(camX: number) {
+    const fromX = Math.max(-200, Math.floor((camX - 24) / 24) * 24), x1 = Math.round(this.x - 40);
+    if (x1 === this.laneEnd && fromX === this.laneFrom) return;
+    this.laneEnd = x1; this.laneFrom = fromX;
     const g = this.lane.clear(), y0 = STREET_Y + 16, h = 12;
     if (x1 <= fromX) return;
     g.fillStyle(0x363644).fillRect(fromX, y0, x1 - fromX, h + 3);
     g.fillStyle(0x262631).fillRect(fromX, y0 + h + 3, x1 - fromX, 1);
-    for (let x = Math.ceil(fromX / 24) * 24; x < x1; x += 24) g.fillStyle(0xf6f2e9).fillRect(x, y0 + h - 1, 12, 2);
+    for (let x = fromX; x < x1; x += 24) g.fillStyle(0xf6f2e9).fillRect(x, y0 + h - 1, Math.min(12, x1 - x), 2);
   }
 
   /** a gob of hot asphalt from the conveyor, landing near `tx` in `tF` seconds, with a shadow where it'll land */

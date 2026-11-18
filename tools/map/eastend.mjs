@@ -166,7 +166,8 @@ export function generateEastEnd() {
   const st = () => ({ wb: [(BV - 1) * TS, (CW - 1) * TS, (LS - 1) * TS], eb: [(BV + 5) * TS, (CW + 5) * TS, (LS + 5) * TS] });
   for (const c of [BV, CW, LS]) for (const row of [GERRARD, QUEEN]) { D.tprop('ttcstop', c - 2, row - 1, 8, 8); D.tprop('ttcstop', c + 5, row + 4, 8, 6); }
   const zone = (xs) => xs.map((s) => [s - 112, s + 24]);
-  for (const row of BRIDGES) { D.parkCars(row, 'W', undefined, zone(st().wb), BV + 4); D.parkCars(row + 3, 'E', undefined, zone(st().eb), BV + 4); }
+  const rowName = { [GERRARD]: 'gerrard', [DUNDAS]: 'dundas', [QUEEN]: 'queen' };
+  for (const row of BRIDGES) { D.parkCars(row, 'W', `park_ee_${rowName[row]}`, zone(st().wb), BV + 4); D.parkCars(row + 3, 'E', `park_ee_${rowName[row]}`, zone(st().eb), BV + 4); }
   D.ewLanes('gerrard', GERRARD, { streetcar: true, stopsWB: st().wb, stopsEB: st().eb });
   D.ewLanes('dundas', DUNDAS, {});
   D.ewLanes('queen', QUEEN, { streetcar: true, stopsWB: st().wb, stopsEB: st().eb, cyclists: 'mixed' });
@@ -198,5 +199,13 @@ export function generateEastEnd() {
   const overpasses = [...BRIDGES.map((row) => [0, row - 3, DVP.x1 + 2, row + 6]), [0, FB - 1, DVP.x1 + 2, FB + 1]];
   // easter egg: the benches at the top of Riverdale hill
   const eggs = [{ id: 'riverdale_view', x: (RP.x0 + 6) * TS, y: (RP.y0 + 4) * TS, w: 5 * TS, h: 3 * TS, label: 'THE VIEW FROM THE HILL', fact: 'THE WHOLE SKYLINE AT ONCE.\nPEOPLE COME UP HERE\nFOR THE SUNSET.' }];
+  D.bikeShare([[BV + 8, GERRARD + 5], [70, QUEEN - 2], [LS + 6, DUNDAS + 5]]); // M4.3: the Dock Drop's stations, city-wide
+  // ---------- M4.3: the bike network (the E-W ones run on across the Don bridges) ----------
+  D.netEW('ee_gerrard', 'GERRARD ST E', GERRARD, { tag: 'park_ee_gerrard' });
+  D.netEW('ee_dundas', 'DUNDAS ST E', DUNDAS, { tag: 'park_ee_dundas' });
+  D.netEW('ee_queen', 'QUEEN ST E', QUEEN, { tag: 'park_ee_queen' });
+  D.netNS('ee_broadview', 'BROADVIEW AVE', BV, 'protected');
+  D.netNS('ee_carlaw', 'CARLAW AVE', CW, 'slow', { y0: GERRARD - 3, laneIds: ['carlaw_sb', 'carlaw_nb'] });
+  D.netNS('ee_leslie', 'LESLIE ST', LS, 'protected');
   return D.out({ spawn: { x: 40 * TS, y: (QUEEN - 2) * TS + 8 }, lifeTokens, eggs, overpasses, underWalks: [trailIdx], bikebus });
 }

@@ -286,5 +286,13 @@ export function generateWaterfront() {
   const lifeTokens = [{ x: (SP + 5) * TS, y: 8 * TS }, D.hiddenHeart(952, 728, { x: 118 * TS, y: (LAKE_Y + 3) * TS })];
   // easter egg: ride onto the sand at Sugar Beach
   const eggs = [{ id: 'sugar_beach', x: 109 * TS, y: LAKE_Y * TS, w: 11 * TS, h: 7 * TS, label: 'SUGAR BEACH', fact: 'A CANDY-PINK BEACH IN THE\nMIDDLE OF THE CITY.' }];
+  D.bikeShare([[30, QQ - 2], [96, QQ - 2], [UN + 6, LAKESHORE + 5]]); // M4.3: the Dock Drop's stations, city-wide
+  // ---------- M4.3: the bike network ----------
+  // Strachan's painted lanes run on from Queen West down to the lake (URBAN_RESEARCH §26)
+  D.paintNS('wf_strachan', ST, 0, QQ - 4);
+  D.netStreet('wf_queensquay', 'QUEENS QUAY', 'protected', [[0, (QQ + 7) * TS + 8, W * TS, (QQ + 7) * TS + 8]]);
+  D.netStreet('wf_lakeshore', 'LAKE SHORE BLVD', 'protected', [[0, (LAKESHORE + 2) * TS, W * TS, (LAKESHORE + 2) * TS]], { patch: 'gardiner_down' });
+  D.netNS('wf_strachan', 'STRACHAN AVE', ST, 'protected', { y1: QQ - 4, painted: true });
+  for (const [c, name, id] of [[SP, 'SPADINA AVE', 'wf_spadina'], [UN, 'UNIVERSITY AVE', 'wf_university'], [BY, 'BAY ST', 'wf_bay']]) D.netNS(id, name, c, 'protected', { y1: QQ - 4 });
   return D.out({ spawn: { x: (UN + 2) * TS, y: 4 * TS }, lifeTokens, eggs });
 }
