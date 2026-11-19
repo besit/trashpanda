@@ -15,6 +15,8 @@ export interface Manifest {
   cyclists?: string[];
   /** M4.3: bike share riders (after the Dock Drop) */
   shareCyclists?: string[];
+  /** M4.4: the share posters' art (portraits, emblem, ribbon), loaded when the share screen first opens */
+  posters?: { png: string; json: string };
 }
 
 /** Loads the manifest, then every asset it lists, then builds fonts + animations. */

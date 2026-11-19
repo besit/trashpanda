@@ -20,7 +20,7 @@ import { DIFFICULTY, HighScores, fmtScore, type Difficulty } from '../core/Score
 import { fetchTop, leaderboardEnabled } from '../core/Leaderboard';
 import { fullscreenSupported, isInstalled } from '../core/fullscreen';
 
-export const VERSION_LABEL = 'M4.3 PREVIEW';
+export const VERSION_LABEL = 'M4.4 PREVIEW';
 
 /** M3.3 (Ivan): after a debug mission or vignette, come back to a REPLAY / BACK TO THE LIST / MAIN MENU menu */
 export interface Replay { kind: 'mission' | 'vignette'; id: string }
@@ -104,9 +104,12 @@ export class TitleScene extends Phaser.Scene {
     });
     void iris(this, 'open');
     // re-layout for a new view width (phone rotation, window resize)
-    const onResize = () => { if (!this.leaving) this.scene.restart(); };
+    // M4.4: only a new view WIDTH needs a re-layout; a phone keyboard opening (or the page scrolling to a focused text
+    // field) also fires 'resize', and a restart then wiped the open page and its timers
+    const laidOutW = this.scale.width;
+    const onResize = () => { this.naming?.place?.(); if (this.naming || this.scale.width === laidOutW) return; if (!this.leaving) this.scene.restart(); };
     this.scale.on('resize', onResize);
-    this.events.once('shutdown', () => this.scale.off('resize', onResize));
+    this.events.once('shutdown', () => { this.scale.off('resize', onResize); this.dropNameField(); this.naming = undefined; });
     this.events.on('resume', () => this.input2.swallow());
     const kb = this.input.keyboard!;
     const menuKey = (d: number) => () => { if (this.started && !this.leaving && !this.naming && !this.closePage && this.menu.visible) this.moveSel(d); };
@@ -175,47 +178,95 @@ export class TitleScene extends Phaser.Scene {
     return list;
   }
 
-  // ---- arcade initials: up/down change the letter, left/right move, ENTER moves on / starts ----
-  private naming?: { d: Difficulty; letters: string[]; pos: number; objs: Phaser.GameObjects.BitmapText[]; title: Phaser.GameObjects.BitmapText; panel: Phaser.GameObjects.Graphics };
+  // ---- your initials (M4.4, Ivan: "I want to use a keyboard when entering the initials, and on the phone as well"):
+  // type them (Backspace goes back); the arrows / stick still work arcade-style; on a phone, tapping the letters
+  // focuses a hidden text field over them, which brings up the phone's own keyboard ----
+  private naming?: { d: Difficulty; letters: string[]; pos: number; objs: Phaser.GameObjects.BitmapText[]; title: Phaser.GameObjects.BitmapText; panel: Phaser.GameObjects.Graphics; field?: HTMLInputElement; place?: () => void };
   private startNaming(d: Difficulty) {
-    this.menu.setVisible(false);
-    const panel = this.add.graphics().fillStyle(0x16121f, 0.7).fillRoundedRect(GAME_W / 2 - 110, 44, 220, 116, 6);
-    const title = text(this, GAME_W / 2, 60, 'YOUR INITIALS', 'font_big');
+    this.menu.setVisible(false); this.logo?.setVisible(false); // (the big logo showed through the panel: text on text)
+    const touch = wantsTouch();
+    // on a phone the keyboard covers the bottom of the screen: the letters sit near the top
+    const top = touch ? 6 : 44, ly = top + 50;
+    const panel = this.add.graphics().fillStyle(0x16121f, 0.82).fillRoundedRect(GAME_W / 2 - 110, top, 220, touch ? 104 : 116, 6);
+    const title = text(this, GAME_W / 2, top + 14, 'YOUR INITIALS', 'font_big');
     const letters = ['R', 'A', 'C'];
-    const objs = letters.map((l, i) => {
-      const t = text(this, GAME_W / 2 - 24 + i * 24, 100, l, 'font_big').setScale(1.5);
-      t.setInteractive({ useHandCursor: true }).on('pointerdown', () => { if (!this.naming) return; this.naming.pos = i; this.bumpLetter(1); });
-      return t;
-    });
-    const help = text(this, GAME_W / 2, 132, wantsTouch() ? 'TAP A LETTER TO CHANGE IT' : 'UP/DOWN: LETTER   LEFT/RIGHT: MOVE', 'font');
-    const ok = text(this, GAME_W / 2, 150, wantsTouch() ? '> TAP HERE TO START <' : 'ENTER: START', 'font_outline').setTint(0xfff08a);
+    const objs = letters.map((l, i) => text(this, GAME_W / 2 - 24 + i * 24, ly, l, 'font_big').setScale(1.5));
+    const help = text(this, GAME_W / 2, ly + 30, touch ? 'TAP THE LETTERS TO TYPE' : 'TYPE YOUR INITIALS   BACKSPACE: BACK', 'font');
+    const ok = text(this, GAME_W / 2, ly + (touch ? 44 : 50), touch ? '> TAP HERE TO START <' : 'ENTER: START', 'font_outline').setTint(0xfff08a);
     ok.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.finishNaming());
     objs.push(help, ok);
     this.naming = { d, letters, pos: 0, objs, title, panel };
+    if (touch) this.nameField(ly);
     this.drawNaming();
     // keyboard: real keydown events, so a quick tap is never missed between frames
     const kb = this.input.keyboard!;
-    const on = (k: string, f: () => void) => kb.on(`keydown-${k}`, () => { if (this.naming) f(); });
-    on('UP', () => this.bumpLetter(1)); on('W', () => this.bumpLetter(1));
-    on('DOWN', () => this.bumpLetter(-1)); on('S', () => this.bumpLetter(-1));
-    on('LEFT', () => this.moveCursor(-1)); on('A', () => this.moveCursor(-1));
-    on('RIGHT', () => this.moveCursor(1)); on('D', () => this.moveCursor(1));
+    const on = (k: string, f: () => void) => kb.on(`keydown-${k}`, () => { if (this.naming && !this.typingInField()) f(); });
+    on('UP', () => this.bumpLetter(1)); on('DOWN', () => this.bumpLetter(-1));
+    on('LEFT', () => this.moveCursor(-1)); on('RIGHT', () => this.moveCursor(1));
+    kb.on('keydown', this.onNameKey, this);
+  }
+  /** a letter typed on a keyboard goes in the slot and moves on; Backspace steps back */
+  private onNameKey(e: KeyboardEvent) {
+    const n = this.naming; if (!n || this.typingInField() || e.repeat) return;
+    // a captured key (Backspace) reaches this listener twice with the same event: count it once
+    if (e === this.lastNameKey) return;
+    this.lastNameKey = e;
+    // the cursor counts the letters typed: 3 = all typed (nothing lit; Backspace takes the third one back)
+    if (/^[a-z]$/i.test(e.key)) { this.typedFrame = this.game.loop.frame; if (n.pos < 3) { n.letters[n.pos] = e.key.toUpperCase(); n.pos++; } sfx.move(); this.drawNaming(); }
+    else if (e.key === 'Backspace') { n.pos = Math.max(0, n.pos - 1); sfx.move(); this.drawNaming(); }
+  }
+  /** E, Z and X are letters here, not CONFIRM: a frame that typed one ignores confirm */
+  private typedFrame = -9;
+  private lastNameKey?: KeyboardEvent;
+  private typingInField() { return !!this.naming?.field && document.activeElement === this.naming.field; }
+  /** phones: an invisible text field over the letters; a tap focuses it (the browser opens the keyboard) */
+  private nameField(ly: number) {
+    const n = this.naming!;
+    const f = document.createElement('input');
+    Object.assign(f, { type: 'text', autocomplete: 'off', spellcheck: false, value: '' }); // no maxLength: a digit or a space must not use up a slot (the letters are filtered below)
+    f.setAttribute('autocapitalize', 'characters'); f.setAttribute('autocorrect', 'off'); f.setAttribute('enterkeyhint', 'go'); f.setAttribute('aria-label', 'Your initials');
+    // 16px text: iOS zooms the page into anything smaller
+    Object.assign(f.style, { position: 'fixed', opacity: '0.01', fontSize: '16px', color: 'transparent', background: 'transparent', border: 'none', outline: 'none', caretColor: 'transparent', zIndex: '10', padding: '0' });
+    const place = () => {
+      const r = this.game.canvas.getBoundingClientRect(), k = r.width / GAME_W;
+      Object.assign(f.style, { left: `${r.left + (GAME_W / 2 - 50) * k}px`, top: `${r.top + (ly - 16) * k}px`, width: `${100 * k}px`, height: `${32 * k}px` });
+    };
+    place();
+    f.addEventListener('focus', () => { this.input.keyboard?.disableGlobalCapture(); f.value = ''; n.pos = 0; this.drawNaming(); });
+    f.addEventListener('blur', () => this.input.keyboard?.enableGlobalCapture());
+    f.addEventListener('input', () => {
+      const v = f.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
+      if (f.value !== v) f.value = v;
+      v.split('').forEach((c, i) => { n.letters[i] = c; });
+      n.pos = Math.min(2, v.length); sfx.move(); this.drawNaming();
+    });
+    f.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); f.blur(); this.finishNaming(); } });
+    document.body.appendChild(f);
+    n.field = f; n.place = place;
   }
   private bumpLetter(dir: number) {
     const n = this.naming!; const A = 'A'.charCodeAt(0);
+    if (n.pos > 2) n.pos = 2;
     n.letters[n.pos] = String.fromCharCode(A + ((n.letters[n.pos].charCodeAt(0) - A + dir + 26) % 26));
     sfx.move(); this.drawNaming();
   }
-  private moveCursor(dx: number) { const n = this.naming!; n.pos = (n.pos + dx + 3) % 3; sfx.move(); this.drawNaming(); }
+  private moveCursor(dx: number) { const n = this.naming!; n.pos = (Math.min(2, n.pos) + dx + 3) % 3; sfx.move(); this.drawNaming(); }
   private drawNaming() {
     const n = this.naming!;
     n.letters.forEach((l, i) => n.objs[i].setText(l).setTint(i === n.pos ? 0xfff08a : 0xffffff));
   }
+  private dropNameField() {
+    const f = this.naming?.field; if (!f) return;
+    this.input.keyboard?.enableGlobalCapture();
+    f.remove();
+  }
   private finishNaming() {
     const n = this.naming; if (!n) return;
     sfx.select();
+    this.dropNameField();
     this.naming = undefined;
-    ['UP', 'W', 'DOWN', 'S', 'LEFT', 'A', 'RIGHT', 'D'].forEach((k) => this.input.keyboard?.off(`keydown-${k}`));
+    ['UP', 'DOWN', 'LEFT', 'RIGHT'].forEach((k) => this.input.keyboard?.off(`keydown-${k}`));
+    this.input.keyboard?.off('keydown', this.onNameKey, this);
     [...n.objs, n.title, n.panel].forEach((o) => o.destroy());
     void this.go(false, n.d, n.letters.join(''));
   }
@@ -427,12 +478,13 @@ export class TitleScene extends Phaser.Scene {
     }
     if (this.pageObjs.length) return; // a page is opening (its close handler arms after a moment)
     if (this.naming) {
+      if (this.typingInField()) return; // the phone keyboard is typing into the field
       // the touch stick / gamepad (keys are handled by keydown events in startNaming)
       const nx = this.input2.moveX < -0.5 ? -1 : this.input2.moveX > 0.5 ? 1 : 0;
       if (ny !== 0 && this.lastNY === 0 && !this.anyKeyDown()) this.bumpLetter(-ny);
       if (nx !== 0 && this.lastNX === 0 && !this.anyKeyDown()) this.moveCursor(nx);
       this.lastNY = ny; this.lastNX = nx;
-      if (this.input2.justPressed('confirm')) { if (this.naming.pos < 2) { this.naming.pos++; sfx.move(); this.drawNaming(); } else this.finishNaming(); }
+      if (this.input2.justPressed('confirm') && this.game.loop.frame - this.typedFrame > 1) { if (this.naming.pos < 2) { this.naming.pos++; sfx.move(); this.drawNaming(); } else this.finishNaming(); }
       return;
     }
     // the touch stick / gamepad (keyboard arrows go through keydown events: a quick tap is never missed)

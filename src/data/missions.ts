@@ -240,8 +240,8 @@ MISSIONS.save_the_science = {
   focusY: 47 * 16,
   action: {
     bg: 'science', street: 'plain', sky: 'day', length: 2950,
-    intro: 'SNEAK PAST THE GUARDS. GET THE EXHIBITS BACK!',
-    hint: ['STAY OUT OF THE BEAMS: PASS WHILE A GUARD LOOKS AWAY, OR STAND BEHIND A CRATE', 'STAY OUT OF THE BEAMS: PASS WHILE A GUARD LOOKS AWAY, OR STAND BEHIND A CRATE'],
+    intro: 'SNEAK UP ON THE GUARDS. GET THE EXHIBITS BACK!',
+    hint: ['HIDE BEHIND A CRATE, LET THE GUARD WALK PAST, THEN HIT IT FROM BEHIND', 'HIDE BEHIND A CRATE, LET THE GUARD WALK PAST, THEN HIT IT FROM BEHIND'],
     waves: [],
     patrols: [{ at: 470 }, { at: 820 }, { at: 1170 }],
     crates: [400, 740, 1090],

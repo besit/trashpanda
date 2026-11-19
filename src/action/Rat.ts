@@ -38,6 +38,8 @@ export class Rat {
   reward = '';
   /** M4: standing watch (a Patrol drives its facing); it doesn't chase until the alarm */
   patrol = false;
+  /** M4.4: a guard on patrol walks its beat at this speed (0: it stands and looks) */
+  patrolVX = 0;
   private glintT = 0;
   private turnT = 0;
   private age = 0;
@@ -117,9 +119,10 @@ export class Rat {
     }
     this.sprite.setFlipX(this.facing === -1);
     if (this.shielded && (this.glintT -= dt) <= 0) { this.glintT = 0.3; puff(this.scene, this.sprite.x + Phaser.Math.Between(-6, 6), this.sprite.y - Phaser.Math.Between(8, 26), 0xf5c22e, 1, 6, 95); }
-    if (this.patrol && this.state !== 'hurt') { // on watch: stand still, face where the Patrol says
-      if (ground) b.setVelocityX(0);
-      if (this.sprite.anims.isPlaying) { this.sprite.anims.stop(); this.sprite.setFrame(`rat_${this.kind}_0`); }
+    if (this.patrol && this.state !== 'hurt') { // on watch: walk the beat / stand and look, as the Patrol says
+      if (ground) b.setVelocityX(this.patrolVX);
+      if (this.patrolVX) { if (this.sprite.anims.currentAnim?.key !== `rat_${this.kind}_walk` || !this.sprite.anims.isPlaying) this.sprite.play(`rat_${this.kind}_walk`); }
+      else if (this.sprite.anims.isPlaying) { this.sprite.anims.stop(); this.sprite.setFrame(`rat_${this.kind}_0`); }
       this.sprite.setFlipX(this.facing === -1);
       return;
     }

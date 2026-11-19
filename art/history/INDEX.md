@@ -100,6 +100,14 @@ v01: CN Tower re-drawn against Ivan's photo: tapering shaft, banded main pod (gl
 
 ## cn_tower_map
 
+### cn_tower_map v02
+
+2026-11-19
+
+M4.4 (Ivan: make the CN Tower's shape better): the whole tower on the map: trefoil base, shaft, main pod with its window band, the SkyPod, the antenna
+
+![cn_tower_map v02](cn_tower_map/v02/preview.png)
+
 ### cn_tower_map v01
 
 2026-11-15
@@ -109,6 +117,14 @@ M3.4 (Ivan): the shaft is the trefoil base continued, one SDF render: the foils 
 ![cn_tower_map v01](cn_tower_map/v01/preview.png)
 
 ## cyclists
+
+### cyclists v03
+
+2026-11-19
+
+M4.4 (Ivan): the bike share bikes are orange; rider e in teal
+
+![cyclists v03](cyclists/v03/preview.png)
 
 ### cyclists v02
 
@@ -298,6 +314,14 @@ M3 East End: MEGAMART big-box facade, the Broadview Hotel, lot lights, asphalt p
 
 ## font
 
+### font v02
+
+2026-11-19
+
+M4.4: a '^' glyph (an upside-down V) for the city map's arrows; the north and side labels had no arrow, the font had no '^'
+
+![font v02](font/v02/preview.png)
+
 ### font v01
 
 2026-11-09
@@ -343,6 +367,14 @@ M3 mission 5 boss: the Lane Eater, a road-paving machine that eats bike lanes. T
 ![lane_eater v01](lane_eater/v01/preview.png)
 
 ## m43_props
+
+### m43_props v04
+
+2026-11-19
+
+M4.4 (Ivan): orange share bikes in the docks and on the trailer
+
+![m43_props v04](m43_props/v04/preview.png)
 
 ### m43_props v03
 
@@ -481,6 +513,16 @@ v01: dog bowl (Garrison Creek hollow; first pass had hard sector shading, now Ba
 v01: pedestrians (9 variants incl. kid and dog walker), 4 directions, SDF + 32-degree camera like the raccoon.
 
 ![people v01](people/v01/preview.png)
+
+## posters
+
+### posters v01
+
+2026-11-19
+
+M4.4 (Ivan: a hero portrait of the raccoon like Dog Fjord's): the raccoon bust (smirk, yell) and Dog Fjord re-rendered facing left, at twice the game's density
+
+![posters v01](posters/v01/preview.png)
 
 ## props
 

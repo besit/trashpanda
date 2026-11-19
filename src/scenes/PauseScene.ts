@@ -253,7 +253,8 @@ export class PauseScene extends Phaser.Scene {
       const name = `${DISTRICTS[g.to].name}${open ? ` ${open}!` : ''}`;
       // M4.3 (review): kept inside the frame's span by half the label's own length (long names used to stick out
       // into the title row or under the close button)
-      const label = g.side === 'n' ? `^ ${name}` : g.side === 's' ? `v ${name}` : g.side === 'w' ? `< ${name}` : `${name} >`;
+      // M4.4 (Ivan): the side labels are turned on their side, so a '^' turned with them points out of the map
+      const label = g.side === 's' ? `v ${name}` : `^ ${name}`;
       const t = text(this, 0, 0, label, 'font');
       const half = t.width / 2 + 3, ns = g.side === 'n' || g.side === 's';
       const pos = ns ? Phaser.Math.Clamp(x0 + along, x0 + half, Math.min(x0 + w, GAME_W - 30) - half) : Phaser.Math.Clamp(y0 + along, y0 + half, y0 + h - half);

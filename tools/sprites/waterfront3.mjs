@@ -21,7 +21,7 @@ const rot = (x, y, a) => [x * Math.cos(a) + y * Math.sin(a), -x * Math.sin(a) + 
  * core as it rises; a glass elevator strip runs up each re-entrant corner (Ivan's references: the base
  * photo, the plan drawing). The whole thing is turned ~12 degrees so it doesn't sit square to the grid.
  */
-export function cnTowerBuilding(w = 96, d = 48, shaftH = 300) {
+export function cnTowerBuilding(w = 96, d = 48, shaftH = 300, full = false) {
   const Hb = 118, gy = Hb - 24; // ground centre row
   const turn = 0.21;
   const arms = [0, 1, 2].map((k) => -Math.PI / 2 + turn + (k * 2 * Math.PI) / 3);
@@ -29,7 +29,7 @@ export function cnTowerBuilding(w = 96, d = 48, shaftH = 300) {
   // base slowly narrowing down"): the whole thing is one SDF now, base and shaft, rendered in one pass. The
   // foils spread wide at the ground, merge into the core by z = 66 and carry on up the shaft as three ribs that
   // slowly thin out; the core itself narrows from 9 to 5; the glass lifts ride up the corners all the way.
-  const ZTOP = shaftH + gy - 6; // the shaft leaves the top of the image
+  const ZTOP = full ? (shaftH + gy - 6) * 0.6 : shaftH + gy - 6; // the shaft leaves the top of the image (full: the base + ribs stop at the pod)
   const coreR = (z) => 9 - 4 * Math.min(1, z / ZTOP);
   const foil = (a) => (p) => {
     const [u, v] = rot(p[0], p[1] / 0.62, -a);
@@ -52,8 +52,26 @@ export function cnTowerBuilding(w = 96, d = 48, shaftH = 300) {
     ...arms.map((a) => ({ d: foil(a), m: conc })),
     ...arms.map((a) => ({ d: lift(a + Math.PI / 3), m: glass })),
   ];
+  // M4.4 (Ivan: "CN tower, make the shape better"): the whole tower on the map, not a shaft running off its top:
+  // the main pod (white decks over a dark band of windows) about 60% of the way up, the shaft on to the little
+  // SkyPod, then the antenna. Real proportions: main pod at 346 of 553 m, the SkyPod at 447 m
+  if (full) {
+    const rad = (p) => Math.hypot(p[0], p[1] / 0.62);
+    const ZT = shaftH + gy - 6, zp = ZTOP, zs = ZT * 0.79, za = ZT * 0.83;
+    const pod = (p) => {
+      const z = p[2] - zp;
+      // a squat drum that bulges at its window band and tapers to the shaft below and above
+      const R = z < -9 ? 0 : z < -3 ? 8 + (z + 9) * 2.2 : z < 4 ? 21 : z < 9 ? 21 - (z - 4) * 2.6 : 0;
+      return Math.max(rad(p) - R, -9 - z, z - 9) * 0.6;
+    };
+    const podM = mat(['G', 'h', 'H', 'W'], { fn: (p) => { const z = p[2] - zp; return z > -1.5 && z < 2.5 ? ['K', 'k', 'u', 'U'] : z >= 2.5 && z < 4 ? 'W' : null; } });
+    const upper = (p) => Math.max(rad(p) - 4.2, zp - p[2], p[2] - zs);
+    const sky = (p) => Math.max(rad(p) - 8, Math.abs(p[2] - zs - 2) - 3.2);
+    const ant = (p) => Math.max(rad(p) - (2.6 - 1.6 * Math.min(1, (p[2] - za) / (ZT - za))), za - 1 - p[2], p[2] - ZT);
+    objs.push({ d: pod, m: podM }, { d: upper, m: conc }, { d: sky, m: mat(['G', 'h', 'H', 'W'], { fn: (p) => (Math.abs(p[2] - zs - 2) < 1 ? ['k', 'u', 'U'] : null) }) }, { d: ant, m: mat(['g', 'G', 'h', 'H'], { fn: (p) => (Math.round(p[2]) % 9 === 0 ? 'h' : null) }) });
+  }
   const H = shaftH + Hb;
-  const img = render(scene(objs), { w, h: H, cx: w / 2, cy: shaftH + gy, cam: obliqueCam(1, ZTOP + 80), maxT: 2 * ZTOP + 400, steps: 260, ambient: 0.2, light: [-0.7, 0.35, 0.6] });
+  const img = render(scene(objs), { w, h: H, cx: w / 2, cy: shaftH + gy, cam: obliqueCam(1, shaftH + gy + 80), maxT: 2 * (shaftH + gy) + 400, steps: 300, ambient: 0.2, light: [-0.7, 0.35, 0.6] });
   return { img, footprint: { w, d }, facadeH: img.h - d };
 }
 
@@ -215,3 +233,6 @@ export function waterfront3Preview() {
   const frames = items.map((it) => { const f = new Img(fw, fh); f.blit(it, Math.round((fw - it.w) / 2), fh - it.h); return f; });
   return { frames, cols: 3 };
 }
+
+/** M4.4: the whole tower, for the art history */
+export function cnTowerFullPreview() { return { frames: [cnTowerBuilding(96, 48, 190, true).img], cols: 1 }; }

@@ -730,3 +730,36 @@ Ivan asked for bike share (unbranded), Strachan's real bike lanes, a Livability 
 ### Numbers
 57 browser tests (4 new) and 21 unit tests pass. JS is 384 KB gzipped.
 
+## 2026-11-18: M4.4, Ivan's notes on M4.2 / M4.3 (posters, initials, the Science Centre, the CN Tower)
+
+Ivan's list: posters you can read, more of them in the style of classic games, a hero portrait of the raccoon, typed initials (keyboard and phone), the city map's arrows, orange share bikes, guards that walk past your crate, a Wrecker you can only hit after a drop, a better CN Tower, every road west to High Park, the arches' overlap. The review doc is [docs/reviews/M4.4.md](reviews/M4.4.md).
+
+### What changed
+- **Posters:** drawn at 768 x 432 (twice the game), saved at 2304 x 1296, previewed as the saved PNG over the canvas. A raccoon hero portrait (SDF, like Dog Fjord's) and six new posters: VERSUS, TITLE, SUNSET, BOSSES, STREETS, SCORES. `tools/posters.mjs` renders all twenty into `docs/reviews/m44/posters/`. ![](reviews/m44/posters/01_versus_wide.png)
+- **Save the Science:** guards walk a beat across a crate (hide, let them pass, take them down from behind); the Wrecker is only hittable while its ball is stuck, and every swing starts high. ![](reviews/m44/07_guard_walks_past.png)
+- **Initials** typed on a keyboard, or with the phone's keyboard through a hidden text field. **The CN Tower** whole on the map. ![](reviews/m44/12_cn_tower.png)
+
+### Causes worth remembering
+- **"Unreadable posters" was the preview, not the file:** the game canvas showed a 2304 px poster at 384 px. The fix shows the PNG itself in an `<img>` over the canvas.
+- **The font had no `^`.** The north labels on the city map never had an arrow, and Ivan's "the bottom one shows a proper arrow" was the only one that rendered.
+- **The unavoidable Wrecker hit:** after driving over you, the swing started with the chain lengthening from 40 to 84 px straight down onto the raccoon's head.
+- **Phaser sends Backspace's keydown twice** to a generic `keydown` listener (it's a captured key); letters arrive once. Typed initials dropped duplicate events.
+- **The title restarted itself** when a text field took focus: the page scrolled, Phaser fired `resize`, and the restart wiped the open page and its timers (the disclaimer never armed). It now only re-lays out for a new width. A real phone keyboard would have done the same.
+
+### Failures along the way
+- **Text on text again, five times:**
+  - The tall VS poster's VS landed on THE RACCOON.
+  - The high-score title sat on its column headings.
+  - The title poster's words sat on the wheel's tyre.
+  - The faceoff VS sat on a facade.
+  - The big logo showed through the initials panel.
+
+  Each one got a plate, a burst, or the overlap removed.
+- **The boss-select poster** drew its sprites in the wrong cells at first: a cropped image keeps its frame's own anchor, so the crop has to be offset by hand.
+- **The raccoon portrait** took four renders: first a profile (the camera was looking along the face, not at it), then a bowling-pin body and a hidden pump.
+- **A perfect bot killed the new Wrecker in one window** (11 damage in 3.2 s); it has 24 HP now.
+- **Heredocs with apostrophes** broke shell edits again; the edits moved into script files.
+
+### Numbers
+62 browser tests (5 new) and 21 unit tests pass. JS is 389 KB gzipped; the posters atlas (15 KB) loads only with the share screen.
+

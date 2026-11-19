@@ -172,7 +172,9 @@ export class ActionScene extends Phaser.Scene {
     for (const cx of a.crates ?? []) { this.add.image(cx, this.groundY + 2, 'world', 'crate').setOrigin(0.5, 1).setDepth(101); this.crates.push(cx); }
     for (const pd of this.atCheckpoint ? [] : a.patrols ?? []) {
       const r = this.spawnRat('guard', pd.at);
-      this.patrols.push(new Patrol(this, r, this.groundY, (x) => { this.say('SPOTTED! THE GUARD CALLED FOR BACKUP!', 0xff6347, 1800); this.time.delayedCall(300, () => this.spawnRat('basic', this.edgeX(x + 140))); this.time.delayedCall(700, () => this.spawnRat('basic', this.edgeX(x - 140))); }));
+      // M4.4: its beat runs from past the crate before it to a little beyond where it starts
+      const crate = Math.max(...(a.crates ?? []).filter((c) => c < pd.at), pd.at - 140);
+      this.patrols.push(new Patrol(this, r, this.groundY, [crate - 60, pd.at + 60], (x) => { this.say('SPOTTED! THE GUARD CALLED FOR BACKUP!', 0xff6347, 1800); this.time.delayedCall(300, () => this.spawnRat('basic', this.edgeX(x + 140))); this.time.delayedCall(700, () => this.spawnRat('basic', this.edgeX(x - 140))); }));
     }
     if (a.build) this.add.image(a.build.at + 60, STREET_Y, 'school_side').setOrigin(0, 1).setDepth(2);
     // at the checkpoint, everything before the boss counts as done
@@ -786,7 +788,7 @@ export class ActionScene extends Phaser.Scene {
         this.wrecker = new Wrecker(this, l.left + GAME_W - 70, this.groundY, { left: l.left, right: l.left + GAME_W });
         this.enterFromRight([this.wrecker.img]);
         this.flashGo('BOSS!'); music.play(SONG_BOSS);
-        this.time.delayedCall(1300, () => this.say('ONLY THE BALL HURTS: JUMP IT OR DODGE IT.\nPUMP THE ENGINE. STOMP THE CAB!', 0xfff08a, 3600));
+        this.time.delayedCall(1300, () => this.say('IT CAN ONLY BE HIT WHILE THE BALL IS STUCK.\nTHEN GET CLEAR: JUMP THE SWING!', 0xfff08a, 3600));
       }
     }
 
@@ -1036,9 +1038,13 @@ export class ActionScene extends Phaser.Scene {
       if (!r.alive) continue;
       const rb = r.body, rRect = new Phaser.Geom.Rectangle(rb.x, rb.y, rb.width, rb.height);
       let wasHit = false;
-      for (const h of hits) if (overlap(h, rRect)) {
+      for (let h of hits) if (overlap(h, rRect)) {
         // M3.4: a Barrier Rat's board takes anything from the front; get behind it, or stomp
         if (r.blocks(px)) { if (newHit(h.id)) { sfx.clang(); puff(this, r.sprite.x + r.facing * 10, r.sprite.y - 16, 0xff9a2e, 6, 14, 95); floatText(this, r.sprite.x, r.sprite.y - 40, 'BLOCKED!', 'font', 0xff9a2e, 300); } wasHit = true; continue; }
+        // M4.4: a guard on patrol hit from behind is a one-hit TAKEDOWN; from the front, it raises the alarm
+        const watch = this.patrols.find((pt) => pt.rat === r && !pt.alarmed);
+        if (watch && watch.behind(px)) { h = { ...h, dmg: 99 }; floatText(this, r.sprite.x, r.sprite.y - 44, 'TAKEDOWN!', 'font_outline', 0x9bd35a, 600); }
+        else if (watch) watch.alarm();
         if (!r.takeHit(h, px)) continue;
         wasHit = true; this.impact(h, rRect);
         hitStop(this, h.dmg > 1 ? 90 : 50); shake(this, 90, h.dmg > 1 ? 0.008 : 0.004);

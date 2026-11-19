@@ -1,7 +1,7 @@
 // Original 5x7 pixel font (uppercase, Sega-arcade style). Builds Phaser RetroFont sheets.
 import { Img } from '../lib/raster.mjs';
 
-export const CHARS = ' !"#%&\'()*+,-./0123456789:;<=>?ABCDEFGHIJKLMNOPQRSTUVWXYZ_$@';
+export const CHARS = ' !"#%&\'()*+,-./0123456789:;<=>?ABCDEFGHIJKLMNOPQRSTUVWXYZ_$@^';
 
 export const GLYPHS7 = {
   ' ': '.....|.....|.....|.....|.....|.....|.....',
@@ -34,6 +34,8 @@ export const GLYPHS7 = {
   '<': '...#.|..#..|.#...|#....|.#...|..#..|...#.',
   '=': '.....|.....|#####|.....|#####|.....|.....',
   '>': '.#...|..#..|...#.|....#|...#.|..#..|.#...',
+  // M4.4: an upside-down V (the city map's arrows: 'v' under the map, '^' turned on its side for left and right)
+  '^': '..#..|..#..|.#.#.|.#.#.|#...#|#...#|#...#',
   '?': '.###.|#...#|....#|...#.|..#..|.....|..#..',
   A: '.###.|#...#|#...#|#####|#...#|#...#|#...#',
   B: '####.|#...#|#...#|####.|#...#|#...#|####.',

@@ -438,7 +438,10 @@ export class ExploreScene extends Phaser.Scene {
       const arrow = text(this, GAME_W - 18, y + h - 10, wantsTouch() ? 'TAP' : 'E >', 'font', 1).setScrollFactor(0).setDepth(20011).setOrigin(1, 0).setTint(0xfff08a);
       this.tweens.add({ targets: arrow, alpha: 0.3, duration: 400, yoyo: true, repeat: -1 });
       // M4.1 (Ivan): a small SHARE button after each mission (S, or tap it): the poster overlay
-      const share = shareMission ? text(this, GAME_W - 18, y - 10, wantsTouch() ? '[ SHARE ]' : '[ S: SHARE ]', 'font_outline', 1).setScrollFactor(0).setDepth(20011).setOrigin(1, 0.5).setTint(0x7cc6f2) : undefined;
+      // M4.4 (Ivan missed it after Save the Science): a boxed button, not a line of text
+      const share = shareMission ? text(this, GAME_W - 20, y - 11, wantsTouch() ? 'SHARE A POSTER' : 'S: SHARE A POSTER', 'font_outline', 1).setScrollFactor(0).setDepth(20012).setOrigin(1, 0.5).setTint(0xfff08a) : undefined;
+      const shareBox = share ? this.add.graphics().setScrollFactor(0).setDepth(20011) : undefined;
+      if (share && shareBox) { const r = share.getBounds(); shareBox.fillStyle(0x25529b, 0.95).fillRoundedRect(r.x - 6, r.y - 4, r.width + 12, r.height + 8, 3).lineStyle(1, 0x7cc6f2).strokeRoundedRect(r.x - 6, r.y - 4, r.width + 12, r.height + 8, 3); this.tweens.add({ targets: [share], alpha: 0.6, duration: 600, yoyo: true, repeat: -1 }); }
       const openShare = () => { sfx.select(); this.scene.launch('Share', { from: 'Explore', mission: shareMission }); this.scene.pause(); ready = this.time.now + 500; };
       const sKey = shareMission ? this.input.keyboard?.addKey('S') : undefined;
       const onS = () => openShare();
@@ -452,7 +455,7 @@ export class ExploreScene extends Phaser.Scene {
         sfx.select();
         if (++page < pages.length) { show(); return; }
         this.events.off('update', poll); this.input.off('pointerdown', advance);
-        [box, tt, bt, pg, arrow].forEach((o) => o.destroy()); share?.destroy(); sKey?.off('down', onS);
+        [box, tt, bt, pg, arrow].forEach((o) => o.destroy()); share?.destroy(); shareBox?.destroy(); sKey?.off('down', onS);
         resolve();
       };
       const poll = () => { if (this.input2.justPressed('act') || this.input2.justPressed('confirm')) advance(); };

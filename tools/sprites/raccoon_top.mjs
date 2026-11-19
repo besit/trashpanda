@@ -117,3 +117,4 @@ export function raccoonTopFrames() {
 
 /** M3.1: the pedal cycle facing east + south, the tail swinging now */
 export function topRidePreview() { return { frames: [0, Math.PI / 2].flatMap((y) => [0, 1, 2, 3].map((f) => raccoonTopFrame(y, f / 4))), cols: 4 }; }
+export { model as raccoonTopModel };

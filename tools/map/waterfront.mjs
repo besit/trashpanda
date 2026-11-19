@@ -66,6 +66,9 @@ export function generateWaterfront() {
   D.exitNS('n', SP, 'downtown', 'spadina'); D.exitNS('n', UN, 'downtown', 'university'); D.exitNS('n', BY, 'downtown', 'bay');
   // M3.2 (Ivan): from High Park you come down onto the trail at the west end; ride west along it to go back
   D.exit('w', QQ + 5, 'highpark', 'trail');
+  // M4.4 (Ivan: every road going west leads to High Park): Lake Shore and Queens Quay too (you come out at the
+  // bottom of Parkside, where the trail comes in)
+  D.exit('w', LAKESHORE, 'highpark', 'lakeshore', 'trail'); D.exit('w', QQ, 'highpark', 'queensquay', 'trail');
   // M3.3 (Ivan): east along Queens Quay or Lake Shore -> the East End (you come out at the bottom of Leslie St)
   D.exit('e', QQ, 'eastend', 'queensquay', 'leslie'); D.exit('e', LAKESHORE, 'eastend', 'lakeshore', 'leslie');
 
@@ -89,7 +92,7 @@ export function generateWaterfront() {
   for (let x = SP + 5; x < 75; x += 4) { D.tprop('tree_b', x, 6, 8, 10, { solid: 4 }); D.tprop('parklamp', x + 2, 6, 8, 8); }
   D.addBuilding((SP + 5) * TS, 13 * TS, { w: 13 * TS, d: 120, floors: 1, seed: 1989, kind: 'dome' }, { base: (LAKESHORE - 7) * TS }, { graffiti: null });
   D.landmarks.push({ id: 'dome', x: (SP + 11) * TS, y: (LAKESHORE - 7) * TS + 4, label: 'ROGERS CENTRE (SKYDOME)', fact: 'OPENED IN 1989 WITH THE\nFIRST FULLY RETRACTABLE\nMOTORIZED ROOF.' });
-  D.addBuilding(59 * TS, 6 * TS, { w: 6 * TS, d: 48, floors: 1, seed: 1976, kind: 'cntower', shaftH: 420 }, { base: (LAKESHORE - 9) * TS }, { graffiti: null });
+  D.addBuilding(59 * TS, 6 * TS, { w: 6 * TS, d: 48, floors: 1, seed: 1976, kind: 'cntower', shaftH: 190, full: true }, { base: (LAKESHORE - 9) * TS }, { graffiti: null });
   D.landmarks.push({ id: 'cntower', x: 62 * TS, y: (LAKESHORE - 9) * TS + 4, label: 'THE CN TOWER', fact: 'OPENED 1976. 553 M TALL.\nTHE WORLD\'S TALLEST\nTOWER UNTIL 2007.' });
   D.addBuilding(66 * TS, 9 * TS, { w: 9 * TS, d: 64, floors: 1, seed: 2013, kind: 'aquarium' }, { base: (LAKESHORE - 6) * TS }, { graffiti: null });
   D.landmarks.push({ id: 'aquarium', x: 70 * TS + 8, y: (LAKESHORE - 6) * TS + 4, label: 'RIPLEY\'S AQUARIUM', fact: 'OPENED IN 2013, AT THE\nFOOT OF THE CN TOWER.' });

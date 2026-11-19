@@ -23,27 +23,38 @@ test('M4.1: Save the Science\'s warehouse is on Queens Quay; its marker starts t
   expect(errors).toEqual([]);
 });
 
-test('Save the Science: a crate hides you from a flashlight; standing in it raises the alarm; the Wrecker reloads', async ({ page }) => {
+test("Save the Science: a guard walks past a hidden raccoon; from behind it's a takedown; its beam raises the alarm; the Wrecker can only be hit while its ball is stuck", async ({ page }) => {
   const errors = errorsOf(page);
   await page.goto('./?debug&scene=Action&mission=save_the_science');
   await actionReady(page);
-  // settle behind the crate while the guard looks the other way (a raccoon still in the air isn't hidden)
-  await page.waitForFunction(() => (window as unknown as W).__TP!.patrols()[0].rat.facing === 1, null, { timeout: 8000 });
+  // M4.4: crouch behind the first crate; the guard walks its beat right past it
   await page.evaluate(() => { (window as unknown as W).__TP!.player.invulnT = 99999; const g = (window as unknown as W).__TP_GAME!.scene.getScene('Action'); g.player.body.reset(400, (window as unknown as W).__TP!.gy() - 10); });
-  await page.waitForTimeout(250);
-  await page.waitForFunction(() => (window as unknown as W).__TP!.patrols()[0].rat.facing === -1, null, { timeout: 8000 });
-  await page.waitForTimeout(500);
+  await page.waitForFunction(() => (window as unknown as W).__TP!.patrols()[0].rat.sprite.x < 380, null, { timeout: 15_000 });
   expect((await tp(page)).alarms).toBe(0);
-  await page.evaluate(() => { const g = (window as unknown as W).__TP_GAME!.scene.getScene('Action'); g.player.body.reset(430, (window as unknown as W).__TP!.gy() - 10); });
+  // it turns at the end of its beat and walks back past; once its back is to us, hit it from behind
+  await page.waitForFunction(() => { const r = (window as unknown as W).__TP!.patrols()[0].rat; return r.facing === 1 && r.sprite.x > 425; }, null, { timeout: 15_000 });
+  expect((await tp(page)).alarms).toBe(0);
+  await page.evaluate(() => { const g = (window as unknown as W).__TP_GAME!.scene.getScene('Action'); const r = (window as unknown as W).__TP!.patrols()[0].rat; g.player.body.reset(r.sprite.x - 18, (window as unknown as W).__TP!.gy() - 10); g.player.facing = 1; });
+  await page.keyboard.press('e'); await page.waitForTimeout(400);
+  expect(await page.evaluate(() => (window as unknown as W).__TP!.patrols()[0].rat.alive)).toBe(false);
+  expect((await tp(page)).alarms).toBe(0);
+  // out in the open, in front of the second guard: spotted
+  await page.waitForFunction(() => { const r = (window as unknown as W).__TP!.patrols()[1].rat; return r.facing === -1 && r.sprite.x > 720; }, null, { timeout: 15_000 });
+  await page.evaluate(() => { const g = (window as unknown as W).__TP_GAME!.scene.getScene('Action'); const r = (window as unknown as W).__TP!.patrols()[1].rat; g.player.body.reset(r.sprite.x - 60, (window as unknown as W).__TP!.gy() - 10); });
   await page.waitForFunction(() => (window as unknown as W).__TP!.state().alarms > 0, null, { timeout: 8000 });
   await page.evaluate(() => (window as unknown as W).__TP!.killAll());
   await page.waitForTimeout(1500);
   await ride(page, 2560);
-  await page.waitForFunction(() => (window as unknown as W).__TP!.state().wrecker?.phase === 'reload', null, { timeout: 25_000 });
+  // the Wrecker: a hit while it drives just clangs off; a hit while the ball is stuck counts
+  await page.waitForFunction(() => (window as unknown as W).__TP!.state().wrecker?.phase === 'drive', null, { timeout: 25_000 });
+  const pump = () => page.evaluate(() => { const g = (window as unknown as W).__TP_GAME!.scene.getScene('Action'); const er = (window as unknown as W).__TP!.wrecker().engineRect(); g.player.body.reset(er.x - 14, (window as unknown as W).__TP!.gy() - 10); g.player.facing = 1; g.player.invulnT = 99999; });
   const hp0 = (await tp(page)).wrecker.hp;
-  await page.evaluate(() => { const g = (window as unknown as W).__TP_GAME!.scene.getScene('Action'); const er = (window as unknown as W).__TP!.wrecker().engineRect(); g.player.body.reset(er.x - 20, (window as unknown as W).__TP!.gy() - 10); g.player.facing = 1; });
-  await page.waitForTimeout(100); await page.keyboard.press('e'); await page.waitForTimeout(300);
-  expect((await tp(page)).wrecker.hp).toBeLessThan(hp0);
+  await pump(); await page.waitForTimeout(60); await page.keyboard.press('e'); await page.waitForTimeout(250);
+  if ((await tp(page)).wrecker.phase === 'drive') expect((await tp(page)).wrecker.hp).toBe(hp0);
+  await page.waitForFunction(() => (window as unknown as W).__TP!.state().wrecker?.phase === 'stuck', null, { timeout: 25_000 });
+  const hp1 = (await tp(page)).wrecker.hp;
+  await pump(); await page.waitForTimeout(60); await page.keyboard.press('e'); await page.waitForTimeout(300);
+  expect((await tp(page)).wrecker.hp).toBeLessThan(hp1);
   expect(errors).toEqual([]);
 });
 

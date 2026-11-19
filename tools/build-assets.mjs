@@ -8,6 +8,7 @@ import { raccoonTopFrame, DIRS } from './sprites/raccoon_top.mjs';
 import { ratAnims, RAT_VARIANTS, bureaucratAnims, foremanAnims, megaRatAnims, BOSS_FH, MEGA_FW, ratTopFrame } from './sprites/rats.mjs';
 import * as M4 from './sprites/m4.mjs';
 import * as M43 from './sprites/m43.mjs';
+import * as PO from './sprites/posters.mjs';
 import { dogFjordPortrait, dogFjordStanding } from './sprites/dogfjord.mjs';
 import { PED_VARIANTS, CYC_VARIANTS, PED_DIRS, pedFrame, cycFrame, cycSideFrame, PED_FW, PED_FH, PED_OX, PED_OY } from './sprites/people.mjs';
 import { buildTiles } from './sprites/tiles.mjs';
@@ -284,6 +285,22 @@ font('font_red', 'q', 'outline', 'K', 2);
 }
 
 // clean stale outputs from older builds (e.g. M1's single queenwest-in-world atlas leftovers)
+// M4.4: the share posters' own art (hero portraits at twice the game's density, the emblem, the ribbon): its own
+// atlas, loaded the first time the share screen opens
+{
+  const po = [
+    ...['smirk', 'shout'].map((e) => ({ name: `pr_racc_${e}`, img: PO.raccoonPortrait(e, 1.5) })),
+    ...['grin', 'laugh'].map((e) => ({ name: `pr_dog_${e}`, img: PO.dogPortraitHi(e, 1.5) })),
+    { name: 'pr_racc_small', img: PO.raccoonPortrait('smirk', 1) },
+    { name: 'pr_dog_small', img: PO.dogPortraitHi('grin', 1) },
+    { name: 'pr_ribbon_s', img: PO.ribbon(400) },
+    { name: 'pr_racc_ride', img: PO.raccoonRidingAway(0) },
+    { name: 'pr_wheel', img: PO.wheelEmblem(92) },
+    { name: 'pr_wheel_s', img: PO.wheelEmblem(74) },
+    { name: 'pr_ribbon', img: PO.ribbon(520) },
+  ];
+  manifest.posters = { ...packAtlas(po, path.join(OUT, 'posters')), png: 'gen/posters.png', json: 'gen/posters.json' };
+}
 fs.writeFileSync(path.join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 1));
 const size = fs.readdirSync(OUT).reduce((s, f) => s + fs.statSync(path.join(OUT, f)).size, 0);
 console.log(`assets built in ${Date.now() - t0}ms -> ${OUT} (${(size / 1024).toFixed(0)} KB, chars ${manifest.atlases.chars.w}x${manifest.atlases.chars.h}, world ${manifest.atlases.world.w}x${manifest.atlases.world.h}, ${Object.entries(manifest.districts).map(([k, d]) => `${k} ${d.atlas.w}x${d.atlas.h}`).join(', ')})`);

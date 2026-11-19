@@ -11,7 +11,7 @@ import { cnTowerBuilding, domeBuilding, aquariumBuilding, powerPlantBuilding } f
 
 export function anyBuilding(gen) {
   // M3.1 Waterfront landmarks: drawn whole (their footprint is the ground they stand on)
-  if (gen.kind === 'cntower') return cnTowerBuilding(gen.w, gen.d, gen.shaftH);
+  if (gen.kind === 'cntower') return cnTowerBuilding(gen.w, gen.d, gen.shaftH, gen.full);
   if (gen.kind === 'dome') return domeBuilding(gen.w, gen.d);
   if (gen.kind === 'aquarium') return aquariumBuilding(gen.w, gen.d);
   if (gen.kind === 'ferry') return ferryTerminalBuilding(gen.w, gen.d);

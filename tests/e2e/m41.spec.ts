@@ -58,7 +58,7 @@ test('the Bike Bus: late for the bell -> back to the first stop', async ({ page 
   expect(errors).toEqual([]);
 });
 
-test('share: SHARE YOUR CITY in the pause menu -> four posters, wide + tall, saved as a full-size PNG', async ({ page }) => {
+test('share: SHARE YOUR CITY in the pause menu -> ten posters (M4.4), wide + tall, saved as a full-size PNG', async ({ page }) => {
   const errors = errorsOf(page);
   await explore(page);
   await page.waitForTimeout(800);
@@ -69,18 +69,18 @@ test('share: SHARE YOUR CITY in the pause menu -> four posters, wide + tall, sav
   await page.keyboard.press('Enter');
   await page.waitForFunction(() => (window as unknown as W).__TP?.share?.().ready, null, { timeout: 10_000 });
   const seen = new Set<string>();
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 10; i++) {
     for (let k = 0; k < 2; k++) {
       await page.waitForFunction(() => (window as unknown as W).__TP!.share().ready, null, { timeout: 10_000 });
       const s = await page.evaluate(() => (window as unknown as W).__TP!.share());
-      expect(s.portrait ? [s.w, s.h] : [s.w, s.h]).toEqual(s.portrait ? [216, 384] : [384, 216]);
+      expect([s.w, s.h]).toEqual(s.portrait ? [432, 768] : [768, 432]); // M4.4: twice the game's resolution
       expect(s.size).toBeGreaterThan(20_000);
       seen.add(`${s.poster}-${s.portrait}`);
       await page.keyboard.press('ArrowUp'); await page.waitForTimeout(250);
     }
     await page.keyboard.press('ArrowRight'); await page.waitForTimeout(250);
   }
-  expect(seen.size).toBe(8);
+  expect(seen.size).toBe(20);
   await page.waitForFunction(() => (window as unknown as W).__TP!.share().ready, null, { timeout: 10_000 });
   const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 5000 }), page.evaluate(() => (window as unknown as W).__TP_GAME!.scene.getScene('Share').shareTo('save'))]);
   expect(dl.suggestedFilename()).toMatch(/^trash-panda-[a-z]+-(wide|tall)\.png$/);

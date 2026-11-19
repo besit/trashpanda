@@ -271,3 +271,14 @@ None. No ads, purchases, energy or login.
 - **Readability:** a dark band behind the action HUD's top line, the GO banners and the result cards; the map missions' status lines in their own box under the livability HUD; hint boxes more opaque.
 - **The Megamart wall** is three different bays (store front, garden centre, pickup bay) instead of one sign per screen.
 
+## M4.4: Ivan's notes on M4.2 / M4.3
+- **Save the Science, the guards:** they walk their beat back and forth across a crate. Crouch behind it and the guard walks right past; hit it from behind for a one-hit TAKEDOWN. In its beam (not hidden), or hit from the front: the alarm (it chases and calls two rats).
+- **The Wrecker:** only hittable while its ball is STUCK in the ground after a drop (3 s, with a GET CLEAR! warning at the end); a hit outside the window clangs off and says so. Each cycle: drive over you, hoist (a shadow), drop (shockwaves: jump them), stuck, haul the ball out, wind it up to the far end of its arc (always high over a standing raccoon), then two swings back and forth (jump the low point, or stand clear). 24 HP, so about three windows.
+- **Initials:** typed on a keyboard (Backspace steps back); on a phone, tapping the letters opens the phone's own keyboard (a hidden text field over them). The arrows still work.
+- **The city map:** the side neighbours' labels are turned with a `^`, so the arrow points out of the map.
+- **Bike share bikes are orange** (docks, the trailer, the riders in traffic).
+- **The Waterfront:** Lake Shore and Queens Quay lead west to High Park too (like the trail).
+- **The CN Tower** on the map is the whole tower: trefoil base, shaft, main pod, SkyPod, antenna. **The Freedom Arches** overlap left over right.
+- **Share posters (ten):** drawn at 768 x 432 (twice the game's resolution), exported x3 (2304 x 1296), previewed as the exported PNG itself. A hero portrait of the raccoon (an SDF bust like Dog Fjord's). Six new posters after classic game screens: VERSUS (a fighting game's VS screen), TITLE (a 16-bit title screen with an emblem), SUNSET (an arcade racer's road to the horizon), BOSSES (a boss-select grid: the beaten ones lit), STREETS (a beat-em-up cover), SCORES (an arcade high-score table). The four from M4.1 fixed per Ivan's notes. `tools/posters.mjs` renders all twenty into a folder for review.
+- **The payoff's share button** is a boxed, blinking button (SHARE A POSTER). The share screen only comes up after a mission's first win (and from the pause menu): replays and the debug list skip the payoff.
+

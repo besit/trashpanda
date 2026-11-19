@@ -31,8 +31,9 @@ export const CYC_VARIANTS = [
   { id: 'd', skin: 'brown', top: 'purple', legs: 'grey', helmet: 'white', bike: 'teal' },
   // M4.3: bike share riders (unbranded: a chunky step-through with fenders and a front basket). They join traffic
   // once the Dock Drop mission puts stations across the city
-  { id: 'e', skin: 'deep', top: 'orange', legs: 'denim', helmet: 'white', bike: 'green', share: true },
-  { id: 'f', skin: 'pale', top: 'blue', legs: 'black', helmet: 'yellow', bike: 'green', share: true },
+  // M4.4 (Ivan): the share bikes are orange
+  { id: 'e', skin: 'deep', top: 'teal', legs: 'denim', helmet: 'white', bike: 'orange', share: true },
+  { id: 'f', skin: 'pale', top: 'blue', legs: 'black', helmet: 'yellow', bike: 'orange', share: true },
 ];
 
 const m = (ramp) => ({ ramp });

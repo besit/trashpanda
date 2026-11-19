@@ -186,3 +186,4 @@ export function dogFjordStanding(expr = 'grin', podium = false) {
 export function dogFjordStandingPreview() {
   return { frames: [dogFjordStanding('grin'), dogFjordStanding('laugh'), dogFjordStanding('grin', true), dogFjordStanding('laugh', true)], cols: 4 };
 }
+export { model as dogFjordModel };

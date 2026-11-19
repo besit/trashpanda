@@ -7,9 +7,10 @@ import { Img } from '../lib/raster.mjs';
 function dockedBike(img, x, y) {
   img.circle(x + 3, y + 7, 3, 'K', false); img.circle(x + 11, y + 7, 3, 'K', false);   // wheels
   img.set(x + 3, y + 7, 'g'); img.set(x + 11, y + 7, 'g');
-  img.line(x + 3, y + 7, x + 6, y + 3, 'E'); img.line(x + 6, y + 7, x + 10, y + 4, 'l');   // step-through frame
-  img.line(x + 3, y + 7, x + 6, y + 7, 'E'); img.line(x + 10, y + 3, x + 11, y + 7, 'E');
-  img.hline(x + 1, x + 5, y + 4, 'L'); img.hline(x + 9, x + 13, y + 4, 'L');                // fenders
+  // M4.4 (Ivan): orange share bikes
+  img.line(x + 3, y + 7, x + 6, y + 3, 'o'); img.line(x + 6, y + 7, x + 10, y + 4, 'O');   // step-through frame
+  img.line(x + 3, y + 7, x + 6, y + 7, 'o'); img.line(x + 10, y + 3, x + 11, y + 7, 'o');
+  img.hline(x + 1, x + 5, y + 4, 'd'); img.hline(x + 9, x + 13, y + 4, 'd');                // fenders
   img.hline(x + 5, x + 7, y + 2, 'k');                                                     // saddle
   img.vline(x + 10, y + 1, y + 3, 'G'); img.rect(x + 11, y + 1, 4, 3, 'k'); img.hline(x + 11, x + 14, y + 1, 'g'); // bars + basket
 }
@@ -33,7 +34,7 @@ export function dockTrailer(view) {
   if (view === 'ew') { // seen from the side, hitch to the right (flipped for westbound)
     const W = 22, H = 14, img = new Img(W, H);
     img.rect(1, 4, 16, 6, 'G'); img.hline(1, 16, 4, 'h');
-    for (let i = 0; i < 3; i++) { img.rect(2 + i * 5, 0, 4, 5, 'E'); img.hline(2 + i * 5, 5 + i * 5, 0, 'L'); }
+    for (let i = 0; i < 3; i++) { img.rect(2 + i * 5, 0, 4, 5, 'o'); img.hline(2 + i * 5, 5 + i * 5, 0, 'O'); }
     img.hline(1, 16, 2, 'y');                                   // the strap
     img.thick(17, 8, 21, 8, 'k', 1);                            // the hitch bar
     img.circle(5, 11, 2, 'K'); img.circle(13, 11, 2, 'K'); img.set(5, 11, 'g'); img.set(13, 11, 'g');
@@ -42,7 +43,7 @@ export function dockTrailer(view) {
   }
   const W = 16, H = 18, img = new Img(W, H); // seen end-on (hitch toward the top: flipped for southbound)
   img.rect(2, 5, 12, 9, 'G'); img.hline(2, 13, 5, 'h');
-  for (let i = 0; i < 2; i++) { img.rect(3 + i * 5, 2, 4, 7, 'E'); img.hline(3 + i * 5, 6 + i * 5, 2, 'L'); }
+  for (let i = 0; i < 2; i++) { img.rect(3 + i * 5, 2, 4, 7, 'o'); img.hline(3 + i * 5, 6 + i * 5, 2, 'O'); }
   img.vline(8, 0, 4, 'k');                                      // the hitch bar
   img.rect(0, 12, 2, 5, 'K'); img.rect(14, 12, 2, 5, 'K');      // wheels
   img.outline('K'); img.pivot = { x: 0.5, y: 0.85 };

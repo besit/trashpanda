@@ -75,7 +75,7 @@ test('a boss slides in from beyond the screen edge; the Monster SUV bounces you 
   expect(errors).toEqual([]);
 });
 
-test('the Wrecker: drives, swings, hoists and drops; only the ball hurts, the truck is safe to stand by', async ({ page }) => {
+test('the Wrecker: drives, hoists, drops, gets stuck, hauls, winds up and swings; the truck is safe to stand by', async ({ page }) => {
   const errors = errorsOf(page);
   await page.goto('./?debug&scene=Action&mission=save_the_science');
   await actionReady(page);
@@ -83,8 +83,8 @@ test('the Wrecker: drives, swings, hoists and drops; only the ball hurts, the tr
   await page.keyboard.down('d'); await page.waitForTimeout(250); await page.keyboard.up('d');
   await page.waitForFunction(() => (window as unknown as W).__TP!.wrecker?.(), null, { timeout: 15_000 });
   const seen = new Set<string>();
-  for (let i = 0; i < 70 && seen.size < 6; i++) { seen.add(await page.evaluate(() => (window as unknown as W).__TP!.state().wrecker.phase)); await page.waitForTimeout(200); }
-  for (const ph of ['drive', 'swing', 'hoist', 'drop', 'stuck']) expect(seen.has(ph)).toBe(true);
+  for (let i = 0; i < 600 && seen.size < 8; i++) { seen.add(await page.evaluate(() => (window as unknown as W).__TP!.state().wrecker.phase)); await page.waitForTimeout(40); }
+  for (const ph of ['drive', 'hoist', 'drop', 'stuck', 'haul', 'windup', 'swing']) expect(seen.has(ph)).toBe(true);
   // stand at the truck through a whole swing: the ball never comes back through the cab
   await page.waitForFunction(() => (window as unknown as W).__TP!.state().wrecker.phase === 'swing', null, { timeout: 20_000 });
   const r = await page.evaluate(async () => {
