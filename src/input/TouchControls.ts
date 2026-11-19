@@ -4,6 +4,9 @@ import Phaser from 'phaser';
 import { touchState } from './InputManager';
 import { GAME_W, GAME_H } from '../config';
 
+/** M4.6: the centre line of the MAP / pause buttons (the run's score is above them) */
+export const TOP_BTN_Y = 31;
+
 interface Btn { id: 'jump' | 'dash' | 'act' | 'boost' | 'pause' | 'map'; x: number; y: number; r: number; label: string; color: number; g?: Phaser.GameObjects.Graphics; t?: Phaser.GameObjects.BitmapText }
 
 export function wantsTouch(): boolean {
@@ -58,7 +61,8 @@ export class TouchControls {
 
   private layout() {
     const bx = GAME_W - 44, by = GAME_H - 46;
-    const pos: Record<string, [number, number]> = { jump: [bx, by + 18], act: [bx - 30, by], dash: [bx + 26, by - 8], boost: [bx - 6, by - 30], pause: [GAME_W - 14, 14], map: [GAME_W - 40, 14] };
+    // M4.6 (Ivan: the score sat over MAP and pause on a phone): the two top buttons sit under the score line
+    const pos: Record<string, [number, number]> = { jump: [bx, by + 18], act: [bx - 30, by], dash: [bx + 26, by - 8], boost: [bx - 6, by - 30], pause: [GAME_W - 14, TOP_BTN_Y], map: [GAME_W - 40, TOP_BTN_Y] };
     for (const b of this.buttons) { [b.x, b.y] = pos[b.id]; b.t?.setPosition(b.x, b.y); }
   }
   private relayout() { this.layout(); this.drawButtons(); }

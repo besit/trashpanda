@@ -9,7 +9,8 @@ import { ratAnims, RAT_VARIANTS, bureaucratAnims, foremanAnims, megaRatAnims, BO
 import * as M4 from './sprites/m4.mjs';
 import * as M43 from './sprites/m43.mjs';
 import * as PO from './sprites/posters.mjs';
-import { dogFjordPortrait, dogFjordStanding } from './sprites/dogfjord.mjs';
+import { raccoonPortrait2d, dogPortrait2d, GW as PORTRAIT_W } from './sprites/portraits.mjs';
+import { dogFjordStanding } from './sprites/dogfjord.mjs';
 import { PED_VARIANTS, CYC_VARIANTS, PED_DIRS, pedFrame, cycFrame, cycSideFrame, PED_FW, PED_FH, PED_OX, PED_OY } from './sprites/people.mjs';
 import { buildTiles } from './sprites/tiles.mjs';
 import { BRICKS } from './sprites/buildings.mjs';
@@ -73,7 +74,8 @@ const chars = [];
   ma.frames.forEach((f, i) => chars.push({ name: `rat_megarat_${i}`, img: f }));
   for (const [k, a] of Object.entries(ma.anims)) manifest.anims[`rat_megarat_${k}`] = { frames: Array.from({ length: a.count }, (_, i) => `rat_megarat_${a.start + i}`), rate: a.rate, loop: a.loop };
   manifest.pivots.rat_megarat = { x: 0.47, y: (MEGA_FW - 1) / MEGA_FW };
-  for (const e of ['grin', 'laugh', 'shock']) chars.push({ name: `df_${e}`, img: dogFjordPortrait(e) });
+  // M4.6 (Ivan): the dialogue portrait is the 2D drawing too (112 x 100, shown at 2x)
+  for (const e of ['grin', 'laugh', 'shock']) chars.push({ name: `df_${e}`, img: dogPortrait2d(e, 112 / PORTRAIT_W) });
   // in-world Dog Fjord (side vignettes)
   for (const [n, e, pod] of [['dfs_grin', 'grin', false], ['dfs_laugh', 'laugh', false], ['dfs_pod', 'grin', true], ['dfs_podlaugh', 'laugh', true]]) {
     const im = dogFjordStanding(e, pod); chars.push({ name: n, img: im }); manifest.pivots[n] = im.pivot;
@@ -112,7 +114,7 @@ const world = [];
 const addProp = (name, img) => { world.push({ name, img }); manifest.pivots[name] = img.pivot ?? { x: 0.5, y: 1 }; };
 addProp('tree_a', P.tree(1)); addProp('tree_b', P.tree(2, 0.85)); addProp('sapling', P.sapling());
 addProp('streetlight', P.streetlight()); addProp('ttcstop', P.ttcStop()); addProp('bikering', P.bikeRing());
-addProp('hydrant', P.hydrant()); addProp('bench', P.bench()); addProp('planter', P.planter()); addProp('bollard', P.bollard());
+addProp('hydrant', P.hydrant()); addProp('bench', P.bench()); addProp('planter', P.planter()); addProp('planter_l', P.planter(1.5)); addProp('bollard', P.bollard());
 addProp('cone', P.cone()); addProp('signal', P.trafficSignal()); addProp('newsbox', P.newsBox());
 addProp('tree_c', P.tree(3, 1.2));
 addProp('tbgates', PK.tbGates()); addProp('parklamp', PK.parkLamp()); addProp('picnic', PK.picnicTable(Math.PI / 4)); addProp('picnic_l', PK.picnicTable(-Math.PI / 4));
@@ -289,10 +291,11 @@ font('font_red', 'q', 'outline', 'K', 2);
 // atlas, loaded the first time the share screen opens
 {
   const po = [
-    { name: 'pr_racc_smirk', img: PO.raccoonPortrait('smirk', 1.5) }, // M4.5: the yell is no longer used (Ivan liked the smirk)
-    ...['grin', 'laugh'].map((e) => ({ name: `pr_dog_${e}`, img: PO.dogPortraitHi(e, 1.5) })),
-    { name: 'pr_racc_small', img: PO.raccoonPortrait('smirk', 1) },
-    { name: 'pr_dog_small', img: PO.dogPortraitHi('grin', 1) },
+    // M4.6 (Ivan: "pure 2d pixel art"): the hero portraits are 2D drawings now (tools/sprites/portraits.mjs)
+    { name: 'pr_racc_smirk', img: raccoonPortrait2d('smirk', 1.5) },
+    ...['grin', 'laugh'].map((e) => ({ name: `pr_dog_${e}`, img: dogPortrait2d(e, 1.5) })),
+    { name: 'pr_racc_small', img: raccoonPortrait2d('smirk', 1) },
+    { name: 'pr_dog_small', img: dogPortrait2d('grin', 1) },
     { name: 'pr_ribbon_s', img: PO.ribbon(400) },
     { name: 'pr_racc_ride', img: PO.raccoonRidingAway(0) },
     { name: 'pr_wheel', img: PO.wheelEmblem(92) },

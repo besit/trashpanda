@@ -81,14 +81,16 @@ export function bench() {
   ];
   return draw(objs, 20, 14, 10, 11);
 }
-export function planter() {
+// M4.6 (Ivan: the vignette's flowerbeds flickered): `s` renders it at a bigger size natively (the 1.5x planter
+// used to be stretched on screen, which shimmered as it scrolled)
+export function planter(s = 1) {
   const objs = [
     { d: sd.box([0, 0, 2.5], [5, 2.5, 2.5], 0.4), m: mat(R.concrete) },
     { d: sd.ellipsoid([-2, 0, 6], [3, 2.4, 2]), m: mat(R.green) },
     { d: sd.ellipsoid([2.2, 0.4, 6.4], [2.8, 2.2, 2.2]), m: mat(R.green) },
     { d: sd.sphere([0, 1.5, 6.5], 0.8), m: mat(['o', 'O', 'Y']) },
   ];
-  return draw(objs, 16, 14, 8, 12);
+  return draw(objs, Math.round(16 * s), Math.round(14 * s), 8 * s, 12 * s, 0, { scale: s });
 }
 export function bollard() {
   const objs = [

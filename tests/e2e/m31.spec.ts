@@ -20,6 +20,7 @@ test('new game: pick HARD, enter initials -> a hard run (3 hits a life) with tho
   for (const k of ['ArrowUp', 'ArrowUp', 'ArrowRight', 'ArrowUp']) { await page.keyboard.press(k); await page.waitForTimeout(100); }
   await page.keyboard.press('Enter'); await page.waitForTimeout(150);
   await page.waitForTimeout(400); await page.keyboard.press('Enter'); // M4.1: the disclaimer
+  await page.waitForFunction(() => (window as unknown as W).__TP_GAME?.scene.isActive('Pause'), null, { timeout: 5000 }); await page.waitForTimeout(300); await page.keyboard.press('Enter'); // M4.6: the controls, the first time
   await page.waitForFunction(() => (window as unknown as W).__TP_GAME?.scene.isActive('Cutscene'), null, { timeout: 10_000 });
   await page.keyboard.press('Escape');
   await sceneIs(page, 'Explore');

@@ -290,3 +290,10 @@ None. No ads, purchases, energy or login.
 - **The raccoon's hero portrait:** no bandana; a neck, shoulders, a chest and arms, the whole bust inside the frame; fur-coloured triangular ears with round tips and dark insides; the pump in detail (end caps, a band, grip ribs, a gauge, the hose and its chuck, a wide T-handle with black grips). The smirk everywhere (the yell is retired).
 - **VERSUS:** Dog Fjord faces left, toward the raccoon; his laugh is a proper open mouth with a full row of teeth. On the tall poster the slash cuts the raccoon off, not the picture's edge.
 - **SCORES:** your run is a lit band behind its row; the name column fits the longest name shown.
+
+## M4.6: Ivan's notes on M4.5
+- **The hero portraits are 2D pixel art** (the raccoon, Dog Fjord on the posters, and Dog Fjord's dialogue portrait): flat shapes, hard outlines, cel shading. The raccoon keeps the smirk, a whole torso with a fur ruff, the pump in one paw (fingers round it) and a fist on its hip; Dog Fjord faces left (grin, laugh, shock).
+- **The controls page** opens once, after the satire notice of the first new game on a device, then leads into the intro (`settings.controlsSeen`).
+- **Phones:** a tap on START no longer reaches the hidden difficulty list (it opened a second name box); MAP and pause sit under the score.
+- **The vignettes' planters** are drawn at their size once (they were stretched on screen and flickered as they scrolled); every other stretched prop too.
+- **Downtown:** the arches as in M4.4 (the left one on top).

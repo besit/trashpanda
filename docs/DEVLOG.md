@@ -788,3 +788,26 @@ Ivan's list: names of up to 10 letters, no debug games on the scoreboard, a CN T
 ### Numbers
 64 browser tests and 21 unit tests pass.
 
+## 2026-11-19: M4.6, Ivan's notes on M4.5 (2D portraits, the phone name box, controls, flicker)
+
+Ivan's list: redraw the raccoon and Dog Fjord portraits as pure 2D pixel art (no 3D shapes), show the controls on a first game, a name box that stayed over the next screens on his iPhone, the score over MAP and pause on a phone, flickering flowerbeds in the Bike Lane War, and the arches back as in M4.4. (The CN Tower: "looks great!") The review doc is [docs/reviews/M4.6.md](reviews/M4.6.md).
+
+### What changed
+- **The portraits, drawn in 2D:** a new toolkit (`tools/lib/draw2d.mjs`): shapes in design units, each part outlined, cel shadows as flat shapes, details by hand. One drawing per character at every size, including Dog Fjord's in-game portrait. ![](reviews/m46/09_portraits_before_after.png)
+- **The phone name box:** fixed at the cause (below). **The controls** open once, before the first ride. **MAP / pause** moved under the score.
+- **The flowerbeds:** drawn at full size once. ![](reviews/m46/08_planters_before_after.png)
+
+### Causes worth remembering
+- **The name box that stayed up:** one tap did two things. The START label finished the name, then the scene's own tap handler saw no name box any more and checked the menu items, which were hidden but still there, and the tap landed on NORMAL: a second name box. Reproduced on an emulated iPhone before touching anything; the test now replays that tap. The same handler also kept calling `getBounds()` on items an earlier action had just destroyed (an error per menu tap).
+- **"Redrawn all the time":** the planters weren't redrawn, they were stretched. A sprite at 1.5x is resampled every frame, so which pixel rows double changes as it moves and its dither shimmers. A sprite should be drawn at the size it's shown.
+- **Pillow shading makes blobs:** shading every edge toward the middle (what the 3D renders did) reads as a soft blob. Flat shadow shapes on one side, plus outlines between parts, read as drawn.
+
+### Failures along the way
+- **The first 2D raccoon** still had a sack for a torso and sausage arms: rebuilt with a tapered torso, elbows and fingers.
+- **The first 2D Dog Fjord** had his nose over his own eye and cat ears: the lower face moved down, the ears became folded flaps.
+- **A shift-every-coordinate edit** also moved a pair of x positions (the laugh's fangs), which then floated like drops; the fangs went.
+- **Heredocs with apostrophes** broke the shell once more: the code went in through a file.
+
+### Numbers
+68 browser tests (4 new) and 21 unit tests pass.
+

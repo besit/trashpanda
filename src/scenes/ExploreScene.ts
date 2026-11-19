@@ -241,7 +241,7 @@ export class ExploreScene extends Phaser.Scene {
   /** points just earned on the map: a pop under the score + refresh the HUD */
   private scorePop(pts: number, what: string) {
     if (!pts) return;
-    floatText(this, GAME_W - 30, 26, `${what} +${pts}`, 'font_outline', 0xfff08a, 900).setScrollFactor(0).setDepth(20004).setOrigin(1, 0.5);
+    floatText(this, GAME_W - 30, wantsTouch() ? 54 : 26, `${what} +${pts}`, 'font_outline', 0xfff08a, 900).setScrollFactor(0).setDepth(20004).setOrigin(1, 0.5);
     this.drawLives();
   }
   /** easter eggs: ride into one to find it (once per run) */

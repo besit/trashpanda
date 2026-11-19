@@ -25,7 +25,7 @@ export const NAME_MAX = 10;
 const NAME_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const SLOT_W = 14;
 
-export const VERSION_LABEL = 'M4.5 PREVIEW';
+export const VERSION_LABEL = 'M4.6 PREVIEW';
 
 /** M3.3 (Ivan): after a debug mission or vignette, come back to a REPLAY / BACK TO THE LIST / MAIN MENU menu */
 export interface Replay { kind: 'mission' | 'vignette'; id: string }
@@ -101,11 +101,12 @@ export class TitleScene extends Phaser.Scene {
         this.closePage(); return;
       }
       if (this.naming) return; // the letters + START handle their own taps
-      // tap a menu item
-      this.items.forEach((it, i) => {
-        const b = it.t!.getBounds();
-        if (p.x > b.x - 10 && p.x < b.right + 10 && p.y > b.y - 3 && p.y < b.bottom + 3) { this.sel = i; this.refresh(); sfx.select(); it.action(); }
-      });
+      // M4.6 (Ivan: on an iPhone the name box stayed over the next screens): the tap on START finished the name, then
+      // reached the HIDDEN difficulty list under it and opened a second name box. Only a visible menu takes taps.
+      if (!this.menu.visible || this.leaving || this.pageObjs.length) return;
+      // tap a menu item (one: an item's action can swap the list, destroying the others)
+      const i = this.items.findIndex((it) => { const b = it.t!.getBounds(); return p.x > b.x - 10 && p.x < b.right + 10 && p.y > b.y - 3 && p.y < b.bottom + 3; });
+      if (i >= 0) { const it = this.items[i]; this.sel = i; this.refresh(); sfx.select(); it.action(); }
     });
     void iris(this, 'open');
     // re-layout for a new view width (phone rotation, window resize)
@@ -189,6 +190,7 @@ export class TitleScene extends Phaser.Scene {
   // phone's own keyboard. Letters and digits, up to NAME_MAX; an empty name plays as RAC ----
   private naming?: { d: Difficulty; letters: string[]; pos: number; objs: Phaser.GameObjects.BitmapText[]; title: Phaser.GameObjects.BitmapText; panel: Phaser.GameObjects.Graphics; field?: HTMLInputElement; place?: () => void };
   private startNaming(d: Difficulty) {
+    if (this.naming || this.leaving) return; // never two name boxes
     this.menu.setVisible(false); this.logo?.setVisible(false); // (the big logo showed through the panel: text on text)
     const touch = wantsTouch();
     // on a phone the keyboard covers the bottom of the screen: the letters sit near the top
@@ -460,6 +462,11 @@ export class TitleScene extends Phaser.Scene {
       // the page's keys are read in update(), which skips everything while leaving
       this.leaving = false;
       await new Promise<void>((res) => this.showDisclaimer(res));
+      // M4.6 (Ivan): the first new game on this device shows the controls before the ride
+      if (!ctx.settings.controlsSeen) {
+        ctx.settings.controlsSeen = true; ctx.applySettings();
+        await new Promise<void>((res) => { this.events.once('resume', () => { this.leaving = true; res(); }); openPause(this, 'controls', true); });
+      }
       this.leaving = true;
       await iris(this, 'close');
       this.scene.start('Cutscene', { id: 'intro', next: 'Explore' });

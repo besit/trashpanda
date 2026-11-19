@@ -1,5 +1,6 @@
 // Interprets cutscene timelines: captions, villain portraits, dialogue, title cards, wipes,
 // the highway ("another car lane") shot, and side-view vignettes with simple actors.
+import { bakedImage } from '../ui/bake';
 import Phaser from 'phaser';
 import { GAME_W, GAME_H } from '../config';
 import { InputManager } from '../input/InputManager';
@@ -29,8 +30,7 @@ export class CutsceneScene extends Phaser.Scene {
   private captions: Phaser.GameObjects.GameObject[] = [];
   private layers: ScrollLayer[] = [];
   /** street furniture that scrolls with the street (wraps around): planters, parked cars */
-  private decor: { img: Phaser.GameObjects.Image; wx: number }[] = [];
-  private decorSpan = 0;
+  private decor: { img: Phaser.GameObjects.Image; wx: number; span: number }[] = [];
   /** actors standing on the street (rats, parked cars): x = ox + wx - panX */
   private worldActors = new Map<string, { wx: number }>();
   private bgGroup: Phaser.GameObjects.GameObject[] = [];
@@ -112,10 +112,10 @@ export class CutsceneScene extends Phaser.Scene {
   /** a repeating row of street furniture that scrolls with the street layer */
   private addDecor(keys: string[], y: number, spacing: number, depth: number, scale = 1) {
     const n = Math.ceil((GAME_W + 160) / spacing);
-    this.decorSpan = n * spacing;
+    const span = n * spacing; // M4.6: each row wraps on its own span (a second row used to overwrite the first's)
     for (let i = 0; i < n; i++) {
-      const img = this.add.image(0, y, 'world', keys[i % keys.length]).setOrigin(0.5, 1).setDepth(depth).setScale(scale);
-      this.bgGroup.push(img); this.decor.push({ img, wx: 20 + i * spacing });
+      const img = bakedImage(this, 0, y, 'world', keys[i % keys.length], scale).setOrigin(0.5, 1).setDepth(depth);
+      this.bgGroup.push(img); this.decor.push({ img, wx: 20 + i * spacing, span });
     }
   }
 
@@ -148,7 +148,7 @@ export class CutsceneScene extends Phaser.Scene {
         else if (bg === 'science') this.layer('science_nd', FRONT_Y.science, 140, 1.0, 0);
         else { this.layer(`backrow_${s.sky}`, BACKROW_Y, 80, 0.3); this.layer('facades_qw', FRONT_Y.queen, 96, 1.0, 300); }
         this.layer(`street_${s.street}`, STREET_Y, 70, 1.0);
-        if (s.street === 'protected') this.addDecor(['planter'], STREET_Y + 32, 70, 70, 1.5);
+        if (s.street === 'protected') this.addDecor(['planter_l'], STREET_Y + 32, 70, 70); // M4.6: drawn at this size (it was scaled 1.5x and shimmered)
         if (s.parked) this.addDecor(['carside_red', 'suvside', 'carside_blue', 'carside_blue_r'], GROUND_PARKED, 150, 40);
         if (s.patios) this.addDecor(['patio_r', 'patio_f'], STREET_Y + 18, 90, 45, 1.6);
         this.boxTop = true;
@@ -432,8 +432,7 @@ export class CutsceneScene extends Phaser.Scene {
     this.input2.update();
     this.panX += dt * this.pan;
     for (const l of this.layers) l.update(this.panX);
-    const span = this.decorSpan;
-    for (const d of this.decor) d.img.x = Math.round(((((d.wx - this.panX) % span) + span) % span) - 80);
+    for (const d of this.decor) d.img.x = Math.round(((((d.wx - this.panX) % d.span) + d.span) % d.span) - 80);
     for (const [id, w] of this.worldActors) { const a = this.actors.get(id); if (a) a.x = Math.round(this.ox + w.wx - this.panX); }
     // signals that turn green as the streetcar comes up to them
     for (const t of this.triggers) {

@@ -302,7 +302,7 @@ export class ShareScene extends Phaser.Scene {
         words('PLAY FREE', W / 2, H - 76, MID, 0xfff08a); words(LINK, W / 2, H - 46, SMALL, 0xc9c5d1);
       } else {
         gfx((g) => split(g));
-        hi('pr_racc_smirk', -18, H - 52, { ox: 0 });
+        hi('pr_racc_smirk', -6, H - 52, { ox: 0 }); // M4.6: the 2D raccoon's pump handle stays inside the poster
         hi('pr_dog_laugh', W + 18, H - 52, { ox: 1 });
         words('THE RACCOON', 18, H - 92, MID, 0xfff08a, W, 0, true);
         words('DOG FJORD', W - 18, H - 92, MID, 0xffa199, W, 1, true);

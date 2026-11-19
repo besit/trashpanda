@@ -4,6 +4,7 @@
 //         speed down. Too slow and they leap over the sidewalk into the pond.
 //  Build: in the school zone, pump the three labelled stake sets to raise a speed hump, a raised crosswalk
 //         (across the road) and a curb extension while SUV Rats speed through. Finished pieces slow cars.
+import { bakedImage } from '../ui/bake';
 import Phaser from 'phaser';
 import { sfx } from '../audio/sfx';
 import { puff, floatText, shake } from '../ui/fx';
@@ -46,14 +47,14 @@ export class Chase {
     // the real camera, tipped over on its side and carried (same sprite as on the map + in the vignette);
     // M4: or the Science Centre's Van de Graaff generator, upright
     // M4.2 (Ivan: the ball is drawn over things it shouldn't be): carried at the rats' depth, behind the raccoon
-    this.cam = def.goal === 'truck' ? scene.add.image(0, 0, 'world', 'vandegraaff').setOrigin(0.5, 0.5).setScale(1.6).setDepth(92.5) : scene.add.image(0, 0, 'world', 'speedcam').setOrigin(0.5, 0.5).setScale(2).setAngle(90).setDepth(93);
+    this.cam = def.goal === 'truck' ? bakedImage(scene, 0, 0, 'world', 'vandegraaff', 1.6).setOrigin(0.5, 0.5).setDepth(92.5) : scene.add.image(0, 0, 'world', 'speedcam').setOrigin(0.5, 0.5).setScale(2).setAngle(90).setDepth(93);
     this.bar = scene.add.graphics().setDepth(210);
     this.place(); // positioned from the first frame (they used to sit at x = 0 during the title card)
     for (const cx of def.cones) this.cones.push({ img: scene.add.image(cx, groundY + 1, 'world', 'cone').setOrigin(0.5, 1).setScale(2).setDepth(91), x: cx, hit: false });
     if (def.goal === 'truck') { // the moving truck waits at the end of the street, tailgate open
       // M4.2 (Ivan: "I tried to fight the truck, nothing happened, why is it there?"): it's where the rats are running TO.
       // They load the exhibit and it drives off with it, or you catch them and it leaves empty. It isn't a target.
-      this.truck = scene.add.image(def.pondAt + 90, groundY + 2, 'world', 'vanside').setOrigin(0.5, 1).setScale(1.3).setDepth(60); // never flipped: its lettering would mirror
+      this.truck = bakedImage(scene, def.pondAt + 90, groundY + 2, 'world', 'vanside', 1.3).setOrigin(0.5, 1).setDepth(60); // never flipped: its lettering would mirror
       this.truckLabel = scene.add.bitmapText(def.pondAt + 90, groundY - 78, 'font_outline', 'THEIR GETAWAY TRUCK\nCATCH THEM BEFORE IT!').setOrigin(0.5).setDepth(61).setTint(0xff6347).setCenterAlign();
       return;
     }

@@ -17,23 +17,24 @@ import { UPGRADES } from '../data/upgrades';
 import { networkDone, networkPatches, networkLabel } from '../data/network';
 import { fullscreenSupported, isFullscreen, isInstalled, toggleFullscreen } from '../core/fullscreen';
 
-export interface PauseData { from: string; mode?: 'menu' | 'map' | 'controls' }
+export interface PauseData { from: string; mode?: 'menu' | 'map' | 'controls'; /** M4.6: the controls page shown before the first ride */ first?: boolean }
 const NET_GREEN = 0x55e05a, NET_YELLOW = 0xf5c22e;
 export interface MapInfo { map: CityMap; district?: string; player: { x: number; y: number }; markers: { x: number; y: number; label: string; done: boolean }[]; /** M4.1: the Bike Bus's stops still to come */ route?: { x: number; y: number; kind: string; next: boolean }[] }
 
 type Item = { label: () => string; act?: () => void; left?: () => void; right?: () => void; t?: Phaser.GameObjects.BitmapText; /** fires on pointerUP (browsers only allow fullscreen from a touch's pointerup) */ onUp?: boolean };
 
 /** Open the pause overlay from a gameplay scene (no-op if already open). */
-export function openPause(scene: Phaser.Scene, mode: PauseData['mode'] = 'menu') {
+export function openPause(scene: Phaser.Scene, mode: PauseData['mode'] = 'menu', first = false) {
   if (scene.scene.isActive('Pause') || scene.scene.isPaused()) return;
   sfx.select();
-  scene.scene.launch('Pause', { from: scene.scene.key, mode } satisfies PauseData);
+  scene.scene.launch('Pause', { from: scene.scene.key, mode, first } satisfies PauseData);
   scene.scene.pause();
 }
 
 export class PauseScene extends Phaser.Scene {
   private input2!: InputManager;
   private from = '';
+  private first = false;
   private mode: 'menu' | 'map' | 'controls' = 'menu';
   private root!: Phaser.GameObjects.Container;
   private items: Item[] = [];
@@ -49,6 +50,7 @@ export class PauseScene extends Phaser.Scene {
 
   create(data: PauseData) {
     this.from = data.from;
+    this.first = !!data.first;
     this.input2 = new InputManager(this);
     // the key/button that opened the overlay is still held: don't let it close the overlay again (M1 flicker bug)
     this.input2.swallow();
@@ -136,7 +138,9 @@ export class PauseScene extends Phaser.Scene {
       this.root.add(text(this, cx, 174, CONTROLS_ALT, 'font').setTint(0x9793a6));
       this.root.add(text(this, cx, 184, CONTROLS_PAD, 'font').setTint(0x9793a6));
     }
-    this.root.add(text(this, cx, GAME_H - 12, wantsTouch() ? 'X: BACK' : 'ESC / E: BACK', 'font').setTint(0x9793a6));
+    // M4.6 (Ivan: "show controls page when the person starts the game for the first time"): then it leads into the ride
+    if (this.first) this.root.add(text(this, cx, GAME_H - 12, wantsTouch() ? '> TAP X: RIDE <' : '> ENTER: RIDE <', 'font_outline').setTint(0xfff08a));
+    else this.root.add(text(this, cx, GAME_H - 12, wantsTouch() ? 'X: BACK' : 'ESC / E: BACK', 'font').setTint(0x9793a6));
   }
 
   // ---------- city map ----------

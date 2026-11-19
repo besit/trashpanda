@@ -1,6 +1,7 @@
 // Side-view missions. One host scene; each mission composes beats from data (src/data/missions.ts):
 // ride sections, arena waves (rats + SUV Rats), a boss, the streetcar escort, the camera chase and the
 // build-the-street arena. The arena lock never jumps the camera, and the release eases back into follow.
+import { bakedImage } from '../ui/bake';
 import Phaser from 'phaser';
 import { GAME_W, GAME_H, DEBUG } from '../config';
 import { InputManager } from '../input/InputManager';
@@ -136,7 +137,7 @@ export class ActionScene extends Phaser.Scene {
     this.platforms = this.physics.add.staticGroup();
     if (a.bg === 'queen' && a.street === 'plain') this.queenDecor();
     // M4 (mission 9): construction hoardings along the sidewalk
-    if (a.decor === 'hoarding') for (let x = 160; x < a.length; x += 230) this.add.image(x, STREET_Y + 12, 'world', 'hoarding').setOrigin(0.5, 1).setDepth(20).setScale(1.2);
+    if (a.decor === 'hoarding') for (let x = 160; x < a.length; x += 230) bakedImage(this, x, STREET_Y + 12, 'world', 'hoarding', 1.2).setOrigin(0.5, 1).setDepth(20); // M4.6: drawn once at 1.2x (no shimmer)
 
     // the Lane Eater mission starts the raccoon clear of the machine creeping in from the left
     this.player = new SidePlayer(this, this.atCheckpoint ? Math.max(60, a.boss!.at - 230) : a.autoscroll ? 150 : 60, this.groundY - 10);

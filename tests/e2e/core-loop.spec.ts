@@ -23,6 +23,11 @@ test('title -> new game -> intro cutscene -> explore', async ({ page }) => {
   await page.waitForTimeout(400);
   expect((await page.evaluate(() => (window as unknown as { __TP_GAME: any }).__TP_GAME.scene.getScene('Title').pageObjs.filter((o: any) => o.text).map((o: any) => o.text).join(' ')))).toContain('AI CAN MAKE MISTAKES');
   await page.keyboard.press('Enter');
+  // M4.6: the first new game shows the controls page before the intro
+  await active(page, 'Pause', 5000);
+  await page.waitForTimeout(300);
+  expect(await page.evaluate(() => (window as unknown as { __TP_GAME: any }).__TP_GAME.scene.getScene('Pause').first)).toBe(true);
+  await page.keyboard.press('Enter');
   await active(page, 'Cutscene');
   await page.waitForTimeout(500);
   await page.keyboard.press('Escape'); // skip
@@ -153,7 +158,7 @@ test('touch: MAP button opens an overlay that stays open until X is tapped (M1 f
   // game coords -> page coords
   const toPage = (gx: number, gy: number) => page.evaluate(([gx, gy]) => { const c = document.querySelector('canvas')!; const r = c.getBoundingClientRect(); return { x: r.left + (gx * r.width) / c.width, y: r.top + (gy * r.height) / c.height }; }, [gx, gy]);
   const gw = await page.evaluate(() => document.querySelector('canvas')!.width);
-  const map = await toPage(gw - 40, 14);
+  const map = await toPage(gw - 40, 31); // M4.6: under the score
   await page.touchscreen.tap(map.x, map.y);
   await active(page, 'Pause');
   await page.waitForTimeout(800);
@@ -162,7 +167,7 @@ test('touch: MAP button opens an overlay that stays open until X is tapped (M1 f
   await page.touchscreen.tap(close.x, close.y);
   await page.waitForFunction(() => !(window as unknown as { __TP_GAME: G }).__TP_GAME.scene.isActive('Pause'));
   // and the pause button works again afterwards (no stuck touch state)
-  const pause = await toPage(gw - 14, 14);
+  const pause = await toPage(gw - 14, 31);
   await page.touchscreen.tap(pause.x, pause.y);
   await active(page, 'Pause');
   expect(errors).toEqual([]);
