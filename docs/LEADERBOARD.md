@@ -47,7 +47,7 @@ service cloud.firestore {
 
       function valid(d) {
         return d.keys().hasOnly(['name', 'score', 'difficulty', 'missions', 'updated'])
-          && d.name is string && d.name.matches('^[A-Z]{1,3}$')
+          && d.name is string && d.name.matches('^[A-Z0-9]{1,10}$')
           && d.score is int && d.score >= 0 && d.score <= 200000
           && d.difficulty in ['easy', 'normal', 'hard']
           && d.missions is int && d.missions >= 0 && d.missions <= 12
@@ -62,7 +62,7 @@ service cloud.firestore {
 
 - **It can't stop a determined cheater.** The game runs in the browser, so anyone can send a made-up score that stays inside the rules' limits.
 - **The rules keep it sane:**
-  - only three capital letters for initials
+  - a name of 1 to 10 capital letters or digits (M4.5; it was three initials. Until these rules are republished, the game falls back to posting a long name's first three letters)
   - a score ceiling, and scores can only go up
   - a rate limit on updates
   - no deletes

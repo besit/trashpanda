@@ -80,8 +80,9 @@ export function generateDowntown() {
   const poolW = (PX1 - PX0 + 1) * TS;
   // the arches stand on the concrete either side of the pool (their pivot is the midpoint of their feet)
   // M4.2 (Ivan): closer together, across the pool's right half, clear of the TORONTO sign (which is over the left half)
-  // M4.4 (Ivan): each arch leans, so its near (south) leg passes in front of the next arch's far leg: the left one on top
-  for (let k = 0; k < 3; k++) D.prop('arch', Math.round(PX0 * TS + poolW * (0.62 + 0.13 * k)), ((PY0 + PY1 + 1) / 2) * TS, { depth: (PY1 + 1) * TS + 8 - k });
+  // M4.5 (Ivan, again: "should be drawn left to right"): painted in order, left first, so each arch lies over
+  // the one to its left (M4.4 had it the other way round)
+  for (let k = 0; k < 3; k++) D.prop('arch', Math.round(PX0 * TS + poolW * (0.62 + 0.13 * k)), ((PY0 + PY1 + 1) / 2) * TS, { depth: (PY1 + 1) * TS + 8 + k });
   const signX = PX0 * TS + poolW / 4 + 8;
   D.prop('torontosign', signX, PY0 * TS - 3, { solidBox: [-46, -6, 92, 6] });
   D.landmarks.push({ id: 'npsquare', x: signX, y: PY0 * TS + 8, label: 'NATHAN PHILLIPS SQUARE', fact: 'CITY HALL OPENED 1965.\nTHE POOL BECOMES A\nSKATING RINK IN WINTER.' });

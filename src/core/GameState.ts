@@ -65,7 +65,7 @@ export function migrate(raw: unknown): GameState | null {
     // v2 saves: no difficulty or score yet -> a normal run that starts scoring now
     difficulty: typeof s.difficulty === 'string' && s.difficulty in DIFFICULTY ? s.difficulty : 'normal',
     score: typeof s.score === 'number' && s.score >= 0 ? Math.floor(s.score) : 0,
-    name: typeof s.name === 'string' && /^[A-Z]{1,3}$/.test(s.name) ? s.name : 'RAC',
+    name: typeof s.name === 'string' && /^[A-Z0-9]{1,10}$/.test(s.name) ? s.name : 'RAC',
     runId: typeof s.runId === 'string' && s.runId ? s.runId : base.runId,
     // v3 saves: no ranks yet
     ranks: s.ranks && typeof s.ranks === 'object' ? Object.fromEntries(Object.entries(s.ranks).filter(([, r]) => r && /^[SABC]$/.test((r as MissionRank).rank))) : {},

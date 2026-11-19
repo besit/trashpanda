@@ -35,17 +35,45 @@ test('initials: typed on the keyboard (E is a letter here, not confirm); Backspa
   expect(errors).toEqual([]);
 });
 
+test('M4.5: a name of up to 10 letters and digits; an empty name plays as RAC', async ({ page }) => {
+  const errors = errorsOf(page);
+  await toInitials(page);
+  await page.keyboard.type('ivan2thegreat', { delay: 40 });
+  expect(await page.evaluate(() => (window as unknown as W).__TP_GAME!.scene.getScene('Title').naming.letters.join(''))).toBe('IVAN2THEGR');
+  await page.keyboard.press('Enter');
+  expect(await intoTheGame(page)).toBe('IVAN2THEGR');
+  await toInitials(page);
+  await page.keyboard.press('Enter');
+  expect(await intoTheGame(page)).toBe('RAC');
+  expect(errors).toEqual([]);
+});
+
+test('M4.5: a run played with ?debug never reaches the high scores', async ({ page }) => {
+  await page.goto('./');
+  await page.evaluate(() => localStorage.clear());
+  await page.goto('./?debug&scene=Explore');
+  await sceneIs(page, 'Explore');
+  await page.evaluate(() => { const tp = (window as unknown as W).__TP!; tp.state.score = 5000; tp.save(); });
+  const debugged = await page.evaluate(() => ({ scores: JSON.parse(localStorage.getItem('trashpanda.highscores') ?? '[]').length, flag: (window as unknown as W).__TP!.state.flags.debugRun }));
+  expect(debugged).toEqual({ scores: 0, flag: true });
+  // the same run carried on without ?debug stays off the board
+  await page.goto('./?scene=Explore');
+  await sceneIs(page, 'Explore');
+  await page.evaluate(() => { const tp = (window as unknown as W).__TP!; tp.state.score = 9000; tp.save(); });
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('trashpanda.highscores') ?? '[]').length)).toBe(0);
+});
+
 test("initials on a phone: a text field over the letters (the phone's own keyboard); Go starts the run", async ({ page }) => {
   const errors = errorsOf(page);
   await toInitials(page, '?touch');
-  const field = page.locator('input[aria-label="Your initials"]');
+  const field = page.locator('input[aria-label="Your name"]');
   await expect(field).toHaveCount(1);
   await field.click();
   await field.fill('z3d!x');
-  expect(await page.evaluate(() => (window as unknown as W).__TP_GAME!.scene.getScene('Title').naming.letters.join(''))).toBe('ZDX');
+  expect(await page.evaluate(() => (window as unknown as W).__TP_GAME!.scene.getScene('Title').naming.letters.join(''))).toBe('Z3DX');
   await field.press('Enter');
   await expect(field).toHaveCount(0);
-  expect(await intoTheGame(page)).toBe('ZDX');
+  expect(await intoTheGame(page)).toBe('Z3DX');
   expect(errors).toEqual([]);
 });
 

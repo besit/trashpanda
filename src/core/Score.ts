@@ -49,9 +49,12 @@ export const HighScores = {
   load(): ScoreEntry[] {
     try { const raw = localStorage.getItem(HS_KEY); const a = raw ? JSON.parse(raw) : []; return Array.isArray(a) ? a : []; } catch { return []; }
   },
-  /** one entry per run (a run's entry rises as its score does); keeps the top 10 */
+  /**
+   * one entry per run (a run's entry rises as its score does); keeps the top 10. M4.5 (Ivan: "The debug games
+   * should not be in the scoreboard"): a run that was ever played in a ?debug session never goes in
+   */
   record(s: GameState) {
-    if (s.score <= 0) return;
+    if (s.score <= 0 || s.flags.debugRun) return;
     const list = this.load().filter((e) => e.runId !== s.runId);
     list.push({ name: s.name, score: s.score, difficulty: s.difficulty, runId: s.runId, missions: s.completedMissions.length, date: new Date().toISOString().slice(0, 10) });
     list.sort((a, b) => b.score - a.score);

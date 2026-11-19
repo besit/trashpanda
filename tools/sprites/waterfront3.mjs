@@ -34,7 +34,9 @@ export function cnTowerBuilding(w = 96, d = 48, shaftH = 300, full = false) {
   const foil = (a) => (p) => {
     const [u, v] = rot(p[0], p[1] / 0.62, -a);
     const z = Math.max(0, p[2]);
-    const L = z < 66 ? 10 + 19 * (1 - z / 66) : 10 - 6.5 * Math.min(1, (z - 66) / (ZTOP - 66)); // the arm's reach
+    // M4.5 (Ivan: "a very sharp decrease at 1/4-1/3 of the height and then it's almost straight. Let's make it
+    // gradual!"): one smooth curve from the ground to the pod instead of two straight pieces
+    const L = 3.5 + 25.5 * Math.pow(1 - Math.min(1, z / ZTOP), 1.7); // the arm's reach
     const hw = 6.4 - 3.6 * Math.min(1, z / ZTOP);                                                 // half-width across
     const tip = u + Math.abs(v) * 0.75 - L;                                                        // chamfered hexagonal tip
     const dArm = Math.max(Math.abs(v) - hw, tip, -u - 2);
@@ -56,19 +58,42 @@ export function cnTowerBuilding(w = 96, d = 48, shaftH = 300, full = false) {
   // the main pod (white decks over a dark band of windows) about 60% of the way up, the shaft on to the little
   // SkyPod, then the antenna. Real proportions: main pod at 346 of 553 m, the SkyPod at 447 m
   if (full) {
+    // M4.5 (Ivan's close-up of the top): the main pod is a stack, from the bottom: a rounded bowl, then
+    // dark / light / dark bands of windows under a white rim, a narrower drum on top of it and the boxy
+    // lift housings round the shaft; the slim upper shaft; the SkyPod as a little stack of ribbed rings;
+    // the antenna, thick and segmented at first with a red light band, then thin, with a red tip
     const rad = (p) => Math.hypot(p[0], p[1] / 0.62);
-    const ZT = shaftH + gy - 6, zp = ZTOP, zs = ZT * 0.79, za = ZT * 0.83;
-    const pod = (p) => {
-      const z = p[2] - zp;
-      // a squat drum that bulges at its window band and tapers to the shaft below and above
-      const R = z < -9 ? 0 : z < -3 ? 8 + (z + 9) * 2.2 : z < 4 ? 21 : z < 9 ? 21 - (z - 4) * 2.6 : 0;
-      return Math.max(rad(p) - R, -9 - z, z - 9) * 0.6;
+    const ZT = shaftH + gy - 6, zp = ZTOP, zs = ZT * 0.8, za = zs + 7;
+    const bowl = (p) => {
+      const z = p[2] - zp; // the bowl runs z -16..-4, rounding out from the shaft to the full width
+      const R = z < -16 ? 0 : 7 + 14 * Math.sqrt(Math.min(1, (z + 16) / 12));
+      return Math.max(rad(p) - R, -16 - z, z + 4) * 0.6;
     };
-    const podM = mat(['G', 'h', 'H', 'W'], { fn: (p) => { const z = p[2] - zp; return z > -1.5 && z < 2.5 ? ['K', 'k', 'u', 'U'] : z >= 2.5 && z < 4 ? 'W' : null; } });
-    const upper = (p) => Math.max(rad(p) - 4.2, zp - p[2], p[2] - zs);
-    const sky = (p) => Math.max(rad(p) - 8, Math.abs(p[2] - zs - 2) - 3.2);
-    const ant = (p) => Math.max(rad(p) - (2.6 - 1.6 * Math.min(1, (p[2] - za) / (ZT - za))), za - 1 - p[2], p[2] - ZT);
-    objs.push({ d: pod, m: podM }, { d: upper, m: conc }, { d: sky, m: mat(['G', 'h', 'H', 'W'], { fn: (p) => (Math.abs(p[2] - zs - 2) < 1 ? ['k', 'u', 'U'] : null) }) }, { d: ant, m: mat(['g', 'G', 'h', 'H'], { fn: (p) => (Math.round(p[2]) % 9 === 0 ? 'h' : null) }) });
+    const band = (p) => Math.max(rad(p) - 21, -4 - (p[2] - zp), (p[2] - zp) - 8);
+    // the roof of each level is grey concrete (seen from above); its sides carry the bands
+    const roof = ['g', 'G', 'h', 'H'];
+    const bandM = mat(['G', 'h', 'H', 'W'], { fn: (p) => { const z = p[2] - zp; if (rad(p) < 20.2) return roof; return z < -0.5 ? ['K', 'k', 'g', 'G'] : z < 2.5 ? null : z < 6 ? ['K', 'k', 'u', 'U'] : 'W'; } });
+    const rim = (p) => Math.max(rad(p) - 22, Math.abs(p[2] - zp - 7.8) - 0.9);
+    const rimM = mat(['h', 'H', 'W', 'W'], { fn: (p) => (rad(p) < 21.2 ? roof : null) });
+    const drum = (p) => Math.max(rad(p) - 14, zp + 8 - p[2], p[2] - zp - 15);
+    const drumM = mat(['G', 'h', 'H', 'W'], { fn: (p) => { const z = p[2] - zp; if (rad(p) < 13.2) return roof; return z > 10 && z < 12.5 ? ['K', 'k', 'g', 'G'] : null; } });
+    // the lift housings: three boxes standing on the drum round the shaft
+    const boxes = (p) => Math.min(...arms.map((a) => { const [u, v] = rot(p[0], p[1] / 0.62, -a); return Math.max(Math.abs(u - 5) - 2.6, Math.abs(v) - 2.6); })) ;
+    const housing = (p) => Math.max(boxes(p), zp + 14 - p[2], p[2] - zp - 22);
+    const upper = (p) => Math.max(rad(p) - (4.4 - 0.8 * Math.min(1, Math.max(0, p[2] - zp) / (zs - zp))), zp - p[2], p[2] - zs);
+    // the SkyPod: a squat stack of rings, widest in the middle
+    const sky = (p) => { const z = p[2] - zs; const R = 5.6 + 2 * Math.cos(Math.max(-1.5, Math.min(1.5, (z - 3) / 2.4))) - (Math.round(z) % 2 ? 0.6 : 0); return Math.max(rad(p) - R, -z, z - 6.5) * 0.7; };
+    const skyM = mat(['G', 'h', 'H', 'W'], { fn: (p) => (Math.round(p[2] - zs) % 2 ? ['g', 'G', 'h', 'H'] : null) });
+    const ZM = za + (ZT - za) * 0.45; // where the thick segment of the antenna ends
+    const ant = (p) => Math.max(rad(p) - (p[2] < ZM ? 2.8 : 1.7 - 0.9 * Math.min(1, (p[2] - ZM) / (ZT - ZM))), zs + 6 - p[2], p[2] - ZT);
+    const antM = mat(['g', 'G', 'h', 'H'], { fn: (p) => {
+      const z = p[2];
+      if (z > ZT - 4) return ['r', 'R', 'q', 'q'];                    // the red tip
+      if (z > ZM - 5 && z < ZM) return ['r', 'R', 'R', 'q'];          // the red light band at the top of the thick segment
+      if (z < ZM && Math.round(z) % 7 === 0) return 'g';              // its segments
+      return z > ZM ? ['G', 'h', 'H', 'W'] : null;
+    } });
+    objs.push({ d: bowl, m: mat(['G', 'h', 'H', 'W', 'W']) }, { d: band, m: bandM }, { d: rim, m: rimM }, { d: drum, m: drumM }, { d: housing, m: conc }, { d: upper, m: conc }, { d: sky, m: skyM }, { d: ant, m: antM });
   }
   const H = shaftH + Hb;
   const img = render(scene(objs), { w, h: H, cx: w / 2, cy: shaftH + gy, cam: obliqueCam(1, shaftH + gy + 80), maxT: 2 * (shaftH + gy) + 400, steps: 300, ambient: 0.2, light: [-0.7, 0.35, 0.6] });

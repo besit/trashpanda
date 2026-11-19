@@ -3,6 +3,7 @@ import { newGame, type GameState } from './GameState';
 import { HighScores, type Difficulty } from './Score';
 import { SaveSystem, type Settings } from './SaveSystem';
 import { synth } from '../audio/Synth';
+import { DEBUG } from '../config';
 
 export const ctx = {
   state: newGame() as GameState,
@@ -13,6 +14,8 @@ export const ctx = {
   save() {
     const now = performance.now();
     if (this.sessionStart) { this.state.playTimeMs += now - this.sessionStart; this.sessionStart = now; }
+    // a ?debug session can skip, cheat and jump missions: its run is marked for good and kept off the scoreboard
+    if (DEBUG) this.state.flags.debugRun = true;
     SaveSystem.save(this.state);
     HighScores.record(this.state);
   },

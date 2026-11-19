@@ -289,7 +289,7 @@ font('font_red', 'q', 'outline', 'K', 2);
 // atlas, loaded the first time the share screen opens
 {
   const po = [
-    ...['smirk', 'shout'].map((e) => ({ name: `pr_racc_${e}`, img: PO.raccoonPortrait(e, 1.5) })),
+    { name: 'pr_racc_smirk', img: PO.raccoonPortrait('smirk', 1.5) }, // M4.5: the yell is no longer used (Ivan liked the smirk)
     ...['grin', 'laugh'].map((e) => ({ name: `pr_dog_${e}`, img: PO.dogPortraitHi(e, 1.5) })),
     { name: 'pr_racc_small', img: PO.raccoonPortrait('smirk', 1) },
     { name: 'pr_dog_small', img: PO.dogPortraitHi('grin', 1) },

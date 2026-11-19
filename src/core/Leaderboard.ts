@@ -21,14 +21,14 @@ export const submitAllowed = () => leaderboardEnabled() && !DEBUG && !(typeof na
  * use to rate-limit updates; the rules also only let a run's score go up.
  */
 export async function submitRun(s: GameState): Promise<boolean> {
-  if (!submitAllowed() || s.score <= 0) return false;
+  if (!submitAllowed() || s.score <= 0 || s.flags.debugRun) return false; // M4.5: nor a run once played with ?debug
   const doc = `projects/${LEADERBOARD.projectId}/databases/(default)/documents/${LEADERBOARD.collection}/${s.runId}`;
-  const body = {
+  const body = (name: string) => ({
     writes: [{
       update: {
         name: doc,
         fields: {
-          name: { stringValue: s.name },
+          name: { stringValue: name },
           score: { integerValue: String(Math.floor(s.score)) },
           difficulty: { stringValue: s.difficulty },
           missions: { integerValue: String(s.completedMissions.length) },
@@ -36,10 +36,16 @@ export async function submitRun(s: GameState): Promise<boolean> {
       },
       updateTransforms: [{ fieldPath: 'updated', setToServerValue: 'REQUEST_TIME' }],
     }],
-  };
+  });
+  const post = (name: string) => fetch(`${base()}:commit?key=${LEADERBOARD.apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body(name)) });
   try {
-    const r = await fetch(`${base()}:commit?key=${LEADERBOARD.apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    return r.ok;
+    const r = await post(s.name);
+    if (r.ok) return true;
+    // M4.5: names grew from 3 initials to 10 characters. Until the project's rules are republished
+    // (docs/LEADERBOARD.md) they only take 1-3 capital letters, so a refused long name tries its first three letters
+    const short = s.name.replace(/[^A-Z]/g, '').slice(0, 3);
+    if (r.status === 403 && short && short !== s.name) return (await post(short)).ok;
+    return false;
   } catch { return false; }
 }
 

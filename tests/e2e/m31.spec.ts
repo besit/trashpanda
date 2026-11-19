@@ -15,16 +15,17 @@ test('new game: pick HARD, enter initials -> a hard run (3 hits a life) with tho
   await page.keyboard.press('Enter'); await page.waitForTimeout(400);
   await page.keyboard.press('Enter'); await page.waitForTimeout(400);      // NEW GAME -> difficulty (NORMAL selected)
   await page.keyboard.press('ArrowDown'); await page.waitForTimeout(150);  // HARD
-  await page.keyboard.press('Enter'); await page.waitForTimeout(400);      // -> initials
-  await page.keyboard.press('ArrowDown'); await page.waitForTimeout(100);  // R -> Q
-  for (let i = 0; i < 3; i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(150); }
+  await page.keyboard.press('Enter'); await page.waitForTimeout(400);      // -> your name
+  // M4.5: arcade-style with the arrows: UP twice on the first blank = B, RIGHT, UP = A; Enter starts
+  for (const k of ['ArrowUp', 'ArrowUp', 'ArrowRight', 'ArrowUp']) { await page.keyboard.press(k); await page.waitForTimeout(100); }
+  await page.keyboard.press('Enter'); await page.waitForTimeout(150);
   await page.waitForTimeout(400); await page.keyboard.press('Enter'); // M4.1: the disclaimer
   await page.waitForFunction(() => (window as unknown as W).__TP_GAME?.scene.isActive('Cutscene'), null, { timeout: 10_000 });
   await page.keyboard.press('Escape');
   await sceneIs(page, 'Explore');
   const s = await page.evaluate(() => (window as unknown as W).__TP!.state);
   expect(s.difficulty).toBe('hard');
-  expect(s.name).toBe('QAC');
+  expect(s.name).toBe('BA');
   // a mission on this run: the health bar has 3 segments
   await page.goto('./?debug&scene=Action&mission=bike_lane_war');
   await page.waitForFunction(() => (window as unknown as W).__TP?.state && !(window as unknown as W).__TP!.state().frozen, null, { timeout: 15_000 });

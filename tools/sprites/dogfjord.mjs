@@ -100,10 +100,14 @@ function model(expr) {
   objs.push({ d: sd.sphere([-2.2, 35.5, 52.6], 1.0), m: { flat: 'G' } }); // nose shine
   if (laugh) {
     // wide-open laughing mouth: FRA-HA-HA-HA-HA!
+    // M4.5 (Ivan: "fix his mouth, it looks weird"): the teeth showed only at the corners over a black hole.
+    // Now a proper laughing D: a full row of upper teeth along the top edge, a dark mouth, a tongue at the
+    // bottom and two little lower fangs
     objs.push({ d: sd.ellipsoid([0, 21, 31], [15, 6, 7]), m: { flat: 'K', fn: (p) => {
-      const top = 35.5 - (p[0] * p[0]) / 60;
-      if (p[2] > top) return Math.abs(p[0]) % 3.4 < 0.55 ? 'H' : 'W';
-      if (p[2] < 27.5 && Math.abs(p[0]) < 8) return p[2] < 26 ? 'P' : 'p';
+      const x = p[0], e = Math.sqrt(Math.max(0, 1 - (x / 15) ** 2)), edge = 31 + 7 * e; // the mouth's top edge here
+      if (p[2] > edge - 2.4 - 0.6 * e) return Math.abs(x) % 4 < 0.45 ? 'H' : 'W';         // upper teeth, faint gaps
+      if (Math.abs(Math.abs(x) - 8.5) < 0.9 && p[2] < 31 - 7 * e * 0.55 + 1.8) return 'W'; // lower fangs
+      if (p[2] < 31 - 7 * e * 0.35 && Math.abs(x) < 9) return p[2] < 31 - 7 * e * 0.6 ? 'P' : 'p'; // the tongue
       return 'k';
     } } });
   }

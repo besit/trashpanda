@@ -88,39 +88,69 @@ function raccoonBust(expr) {
       return 'W';
     } } });
   }
-  // the ears: rounded, dark inside, rimmed white, tilted out
+  // M4.5 (Ivan: "Ears should not be white and not that rectangular. More triangular but with round tips"):
+  // a rounded cone (wide at the base, a ball at the tip), flattened front to back, dark inside, tilted out
   for (const s of [-1, 1]) {
-    const base = [-3, 11 * s, 54];
-    objs.push({ d: (p) => sd.cone(base, 6.2, 9)(rollInv(p, 0.38 * s, base)), m: { ramp: FUR, fn: (p) => {
-      const q = rollInv(p, 0.38 * s, base);
-      const r = Math.hypot(q[0] - base[0], q[1] - base[1]), rmax = 6.2 * (1 - (q[2] - base[2]) / 9);
-      if (r > rmax - 1.4 || q[2] > base[2] + 6.5) return WHITE;
-      return q[0] > base[0] ? ['K', 'k', 'g'] : null;
+    const base = [-3, 11 * s, 52], H = 10, R0 = 6, R1 = 1.8;
+    const local = (p) => { const q = rollInv(p, 0.42 * s, base); return [base[0] + (q[0] - base[0]) * 2.2, q[1], q[2]]; };
+    const ear = (p) => sd.capsule(base, [base[0], base[1], base[2] + H], R0, R1)(local(p)) * 0.45;
+    objs.push({ d: ear, m: { ramp: FUR, fn: (p) => {
+      const q = rollInv(p, 0.42 * s, base), t = Math.min(1, Math.max(0, (q[2] - base[2]) / H));
+      const r = Math.abs(q[1] - base[1]), rmax = R0 + (R1 - R0) * t;
+      return q[0] > base[0] && r < rmax - 1.3 && t < 0.85 && q[2] > base[2] + 1 ? ['K', 'k', 'k', 'g'] : null; // the dark inside, on the front
     } } });
   }
-  // the bust: grey fur, a white bib, a red bandana knotted at the throat
-  objs.push({ d: (p) => smin(sd.ellipsoid([-4, 0, 10], [13, 26, 13])(p), sd.ellipsoid([-1, 0, 24], [10, 14, 8])(p), 6), m: { ramp: FUR, fn: (p) => (p[0] > 5 && Math.abs(p[1]) < 7 + (25 - p[2]) * 0.2 ? WHITE : null) } });
-  objs.push({ d: sd.ellipsoid([0, 0, 28.5], [12.2, 14.2, 3.4]), m: { ramp: ['r', 'R', 'R', 'q'], spec: 1 } });
-  objs.push({ d: (p) => smin(sd.ellipsoid([11.5, 0, 24], [3.2, 6.5, 5])(p), sd.sphere([12.6, 0, 28.4], 2.6)(p), 2), m: { ramp: ['r', 'R', 'R', 'q'], fn: (p) => (Math.abs(p[1]) < 0.5 && p[2] < 26 ? 'r' : null) } });
-  // the yellow bike pump (its attack) over the far shoulder, T-handle up
-  objs.push({ d: sd.capsule([-12, 15, 16], [-15, 25, 56], 2.4), m: { ramp: ['o', 'y', 'y', 'Y'], spec: 1 } });
-  objs.push({ d: sd.capsule([-15.1, 25.3, 58], [-15.3, 25.8, 62], 1.1), m: { ramp: ['g', 'G', 'h'] } });
-  objs.push({ d: sd.capsule([-15.3, 21.5, 63], [-15.3, 30, 63], 1.6), m: { ramp: ['K', 'k', 'g'] } });
+  // M4.5 (Ivan: "no red scarf... make the shoulders better, looks like he is cut off. Draw the torso
+  // properly"): a neck, broad shoulders, a chest with a pale front, and the arms hanging at the sides, the
+  // forearms darker (a raccoon's are)
+  const torso = (p) => {
+    let d = sd.ellipsoid([-2, 0, 7], [10.5, 14, 15])(p);                                    // chest + belly
+    d = smin(d, sd.capsule([-3, -13, 17], [-3, 13, 17], 6.4)(p), 5);                        // the shoulders
+    d = smin(d, sd.ellipsoid([-1.5, 0, 25], [7.5, 9.5, 6])(p), 4);                          // the neck, into the ruff
+    return d;
+  };
+  objs.push({ d: torso, m: { ramp: FUR, fn: (p) => (p[0] > 3 && Math.abs(p[1]) < 7.5 - Math.max(0, p[2] - 18) * 0.3 && p[2] < 27 ? ['G', 'h', 'H', 'H'] : null) } });
+  for (const s of [-1, 1]) {
+    objs.push({ d: (p) => smin(sd.capsule([-3, 16 * s, 16], [0, 18.5 * s, 3], 5, 4.8)(p), sd.capsule([0, 18.5 * s, 3], [3, 17 * s, -5], 4.8, 5)(p), 2.5), m: { ramp: FUR, fn: (p) => (p[2] < 2 ? FUR_DARK : null) } });
+  }
+  // the yellow bike pump (its attack) slung over the far shoulder: a barrel with dark end caps and a band, a
+  // pressure gauge, the hose looping down to its chuck, the steel rod and a wide T-handle with black grips
+  const A = [-12, 15, 12], B = [-15, 25, 54], AB = [B[0] - A[0], B[1] - A[1], B[2] - A[2]], L2 = AB[0] ** 2 + AB[1] ** 2 + AB[2] ** 2;
+  const along = (p) => ((p[0] - A[0]) * AB[0] + (p[1] - A[1]) * AB[1] + (p[2] - A[2]) * AB[2]) / L2;
+  const at = (t, off = [0, 0, 0]) => [A[0] + AB[0] * t + off[0], A[1] + AB[1] * t + off[1], A[2] + AB[2] * t + off[2]];
+  objs.push({ d: sd.capsule(A, B, 2.9), m: { ramp: ['o', 'y', 'y', 'Y'], spec: 1, fn: (p) => {
+    const t = along(p);
+    if (t > 0.94) return ['K', 'k', 'g', 'G'];                       // the top cap
+    if (Math.abs(t - 0.62) < 0.025) return ['K', 'k', 'g'];          // a band
+    if (t > 0.66 && t < 0.86 && Math.abs(Math.round(t * 60) - t * 60) < 0.18) return ['o', 'o', 'y']; // grip ribs
+    return null;
+  } } });
+  objs.push({ d: sd.cylY(at(0.38, [1.6, 2.6, 0]), 2.4, 0.9), m: { flat: 'W', fn: (p) => {
+    const c = at(0.38, [1.6, 2.6, 0]), r = Math.hypot(p[0] - c[0], p[2] - c[2]);
+    if (r > 1.7) return 'K';                                          // the gauge's rim
+    return Math.abs(p[0] - c[0] - (p[2] - c[2]) * 0.8) < 0.35 && p[2] > c[2] ? 'R' : 'W'; // its needle
+  } } });
+  const hose = [at(0.9, [1.5, 2.2, 0]), [-9, 29, 47], [-6, 31.5, 38], [-6.5, 31, 30]];
+  for (let i = 0; i < hose.length - 1; i++) objs.push({ d: sd.capsule(hose[i], hose[i + 1], 1.1), m: { ramp: ['K', 'k', 'g'] } });
+  objs.push({ d: sd.box([-6.5, 31, 28], [1.6, 1.6, 2.2], 0.6), m: { ramp: ['g', 'G', 'h', 'H'], spec: 1 } }); // the chuck
+  objs.push({ d: sd.capsule(at(1.02), [-15.4, 25.9, 61.5], 1.2), m: { ramp: ['g', 'G', 'h', 'H'], spec: 1 } });  // the rod
+  objs.push({ d: sd.capsule([-15.4, 15.5, 62.8], [-15.4, 36.3, 62.8], 2.3), m: { ramp: ['g', 'G', 'h'], fn: (p) => (Math.abs(p[1] - 25.9) > 3.6 ? ['K', 'K', 'k', 'g'] : null) } }); // the wide T-handle
   return objs;
 }
 
 const LIGHT = norm([0.7, 0.35, 0.8]);
-/** the raccoon's hero portrait, facing right. expr: 'smirk' | 'shout' */
+/** the raccoon's hero portrait, facing right. expr: 'smirk' | 'shout'. M4.5: the whole bust fits the frame (a rounded bottom, never a flat cut) */
 export function raccoonPortrait(expr = 'smirk', k = 1) {
   const sc = scene(raccoonBust(expr));
   const w = Math.round(PW * k), h = Math.round(PH * k);
-  return render(sc, { w, h, cx: w / 2 + 4 * k, cy: h + 6 * k, cam: orthoCam([-1, -0.62, -0.12]), light: LIGHT, ambient: 0.2, scale: 2.75 * k });
+  return render(sc, { w, h, cx: w / 2 + 4 * k, cy: h - 26 * k, cam: orthoCam([-1, -0.62, -0.12]), light: LIGHT, ambient: 0.2, scale: 2.4 * k });
 }
-/** Dog Fjord at the same density, facing LEFT (his portrait model seen from his right) */
+/** Dog Fjord at the same density, facing LEFT */
 export function dogPortraitHi(expr = 'grin', k = 1) {
   const sc = scene(dogFjordModel(expr));
   const w = Math.round(PW * k), h = Math.round(PH * k);
-  return render(sc, { w, h, cx: w / 2 - 4 * k, cy: h - 4 * k, cam: orthoCam([0.36, -1, -0.12]), light: norm([0.5, 0.7, 0.75]), ambient: 0.2, scale: 2.05 * k });
+  // M4.5 (Ivan: "Dog Fjord should be turned left, not right"): M4.4's camera stood on the wrong side of him
+  return render(sc, { w, h, cx: w / 2 - 4 * k, cy: h - 4 * k, cam: orthoCam([-0.36, -1, -0.12]), light: norm([-0.5, 0.7, 0.75]), ambient: 0.2, scale: 2.05 * k });
 }
 /** the raccoon on its bike seen from behind and a little above, riding away (the sunset poster) */
 export function raccoonRidingAway(t = 0) {

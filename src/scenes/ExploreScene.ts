@@ -621,7 +621,7 @@ export class ExploreScene extends Phaser.Scene {
 
   private exposeDebug() {
     const w = window as unknown as { __TP?: Record<string, unknown> };
-    w.__TP = { ...(w.__TP ?? {}), scene: 'Explore', district: this.district, state: ctx.state, player: () => ({ x: this.player.x, y: this.player.y }), teleport: (x: number, y: number) => this.player.sprite.setPosition(x, y), startMission: (id: string) => this.startMission(id), improve: (id: string) => this.map.applyImprovement(id, true, this.player.x), improveNow: (id: string) => this.map.applyImprovement(id, false), traffic: () => this.traffic.count, map: this.map.data,
+    w.__TP = { ...(w.__TP ?? {}), scene: 'Explore', district: this.district, state: ctx.state, save: () => ctx.save(), player: () => ({ x: this.player.x, y: this.player.y }), teleport: (x: number, y: number) => this.player.sprite.setPosition(x, y), startMission: (id: string) => this.startMission(id), improve: (id: string) => this.map.applyImprovement(id, true, this.player.x), improveNow: (id: string) => this.map.applyImprovement(id, false), traffic: () => this.traffic.count, map: this.map.data,
       goto: (district: string, y?: number) => this.scene.start('Explore', { from: 'district', district, entry: y !== undefined ? { side: 'w', y } : undefined }),
       exits: () => this.map.data.exits,
       markers: () => this.markers.map((m) => m.id), applied: (id: string) => this.map.isApplied(id), hudTier: () => this.hud.tier.text, busy: () => this.busy, song: () => music.current, bus: () => this.em };

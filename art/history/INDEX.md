@@ -100,6 +100,14 @@ v01: CN Tower re-drawn against Ivan's photo: tapering shaft, banded main pod (gl
 
 ## cn_tower_map
 
+### cn_tower_map v03
+
+2026-11-19
+
+v03 (Ivan, M4.4: 'the base should very gradually narrow down to the top... the top part doesn't look very convincing', with a new close-up of the top): one smooth taper from the ground to the pod; the pod as a stack (rounded bowl, dark/light/dark window bands, white rim, a narrower drum, lift housings, grey roofs), the ribbed SkyPod, the antenna thick and segmented with a red light band, then thin with a red tip
+
+![cn_tower_map v03](cn_tower_map/v03/preview.png)
+
 ### cn_tower_map v02
 
 2026-11-19
@@ -143,6 +151,14 @@ v01: cyclists (bike share, parent with kid seat...), 4 directions.
 ![cyclists v01](cyclists/v01/preview.png)
 
 ## dogfjord
+
+### dogfjord v07
+
+2026-11-19
+
+v07 (Ivan, M4.4 VERSUS: 'fix his mouth, it looks weird'): the laugh is a proper open D: a full row of upper teeth, a tongue, two small lower fangs (before: teeth only at the corners over a black hole)
+
+![dogfjord v07](dogfjord/v07/preview.png)
 
 ### dogfjord v06
 
@@ -515,6 +531,30 @@ v01: pedestrians (9 variants incl. kid and dog walker), 4 directions, SDF + 32-d
 ![people v01](people/v01/preview.png)
 
 ## posters
+
+### posters v04
+
+2026-11-19
+
+M4.5 final: the whole bust inside the frame (rounded bottom, arms ending in dark paws), so no poster shows it cut off
+
+![posters v04](posters/v04/preview.png)
+
+### posters v03
+
+2026-11-19
+
+M4.5: the ears rebuilt as flattened rounded cones (v02's had flat tops and read as slabs): triangular, a round tip, dark inside, fur-coloured. Posters now use the smirk only (Ivan liked it on the Title poster)
+
+![posters v03](posters/v03/preview.png)
+
+### posters v02
+
+2026-11-19
+
+M4.5 (Ivan on M4.4): raccoon without the red scarf, a proper torso (neck, shoulders, arms), fur-coloured triangular ears with round tips and dark insides, a detailed pump (end caps, band, grip ribs, gauge, hose + chuck, wide T-handle with black grips). Dog Fjord now really faces left; his laugh has a full row of teeth
+
+![posters v02](posters/v02/preview.png)
 
 ### posters v01
 

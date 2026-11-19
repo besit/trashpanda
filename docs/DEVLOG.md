@@ -763,3 +763,28 @@ Ivan's list: posters you can read, more of them in the style of classic games, a
 ### Numbers
 62 browser tests (5 new) and 21 unit tests pass. JS is 389 KB gzipped; the posters atlas (15 KB) loads only with the share screen.
 
+## 2026-11-18: M4.5, Ivan's notes on M4.4 (names, debug scores, the CN Tower, the raccoon portrait)
+
+Ivan's list: names of up to 10 letters, no debug games on the scoreboard, a CN Tower that narrows gradually with a convincing top (a new close-up photo), the arches drawn left to right, a better raccoon portrait (no scarf, a real torso, triangular ears, a detailed pump), and Dog Fjord on VERSUS turned left with a better mouth. The review doc is [docs/reviews/M4.5.md](reviews/M4.5.md).
+
+### What changed
+- **Names** up to 10 letters / digits, keyboard or phone. The online rules need republishing; until then a long name posts its first three letters.
+- **Debug runs** are marked (`flags.debugRun`) and kept off both scoreboards for good.
+- **The CN Tower:** one taper curve, and the top rebuilt from the photo. ![](reviews/m45/03_cn_tower_before_after.png)
+- **The raccoon portrait** rebuilt; Dog Fjord faces left and laughs with a full row of teeth. ![](reviews/m45/07_portraits_before_after.png)
+
+### Causes worth remembering
+- **"Arches overlap incorrectly" twice:** in M4.4 I read "drawn left to right" as "the left one on top". It means painter's order: draw the left first, so the right one ends up on top.
+- **Dog Fjord "facing left" in M4.4 faced right:** the camera was on the wrong side of the model. It needed a render to check, not reasoning about the camera vector.
+- **The flat-topped ears:** a cone truncated at its apex keeps a flat cap after inflating. A capsule with two radii gives a round tip for free.
+- **"Looks cut off":** the bust ran out of the bottom of its own picture, which shows as a hard edge wherever a poster floats it. The bust now fits inside the frame.
+
+### Failures along the way
+- **Text on text again:** "< YOU" on the tall high-score poster touched the score, and longer names would have covered it. It's a lit band behind the row now.
+- **The red speed lines** first painted over the raccoon when I split the VERSUS background into two passes.
+- **Two portrait iterations** before the ears read as triangles (art/history/posters v02 to v04).
+- **Heredocs with apostrophes** broke a shell edit again.
+
+### Numbers
+64 browser tests and 21 unit tests pass.
+

@@ -18,7 +18,7 @@ test('title -> new game -> intro cutscene -> explore', async ({ page }) => {
   await page.waitForTimeout(300);
   await page.keyboard.press('Enter'); // M3.1: difficulty (NORMAL)
   await page.waitForTimeout(300);
-  for (let i = 0; i < 3; i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(120); } // initials
+  await page.keyboard.press('Enter'); await page.waitForTimeout(120); // your name (M4.5: Enter starts; blank plays as RAC)
   // M4.1: the satire + AI notice, once, before the intro
   await page.waitForTimeout(400);
   expect((await page.evaluate(() => (window as unknown as { __TP_GAME: any }).__TP_GAME.scene.getScene('Title').pageObjs.filter((o: any) => o.text).map((o: any) => o.text).join(' ')))).toContain('AI CAN MAKE MISTAKES');

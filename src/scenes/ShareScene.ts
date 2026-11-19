@@ -266,14 +266,17 @@ export class ShareScene extends Phaser.Scene {
       standardWords();
     } else if (P === 'versus') {
       // a fighting game's VS screen: the two of them in the corners, facing each other, VS between them
-      const split = (g: Phaser.GameObjects.Graphics) => {
-        g.fillStyle(0x7e1620).fillRect(0, 0, W, H);
+      const split = (g: Phaser.GameObjects.Graphics, part: 'all' | 'red' | 'rest' = 'all') => {
+        if (part !== 'rest') {
+          g.fillStyle(0x7e1620).fillRect(0, 0, W, H);
+          // the red side's speed lines
+          g.fillStyle(0xd42a24, 0.55);
+          for (let i = 0; i < 9; i++) { const y = 20 + i * (H / 9); if (tall) g.fillRect(0, y * 0.55, W * 0.9, 3); else g.fillRect(0, y, W * 0.42, 3); }
+        }
+        if (part === 'red') return;
         g.fillStyle(0x3f2560);
         if (tall) g.fillPoints([{ x: 0, y: H * 0.58 }, { x: W, y: H * 0.42 }, { x: W, y: H }, { x: 0, y: H }], true);
         else g.fillPoints([{ x: W * 0.56, y: 0 }, { x: W, y: 0 }, { x: W, y: H }, { x: W * 0.44, y: H }], true);
-        // speed lines on each side
-        g.fillStyle(0xd42a24, 0.55);
-        for (let i = 0; i < 9; i++) { const y = 20 + i * (H / 9); if (tall) g.fillRect(0, y * 0.55, W * 0.9, 3); else g.fillRect(0, y, W * 0.42, 3); }
         g.fillStyle(0x7d47a8, 0.55);
         for (let i = 0; i < 9; i++) { const y = 26 + i * (H / 9); if (tall) g.fillRect(W * 0.1, H * 0.45 + y * 0.55, W * 0.9, 3); else g.fillRect(W * 0.58, y, W * 0.42, 3); }
         // the white slash between them
@@ -281,9 +284,12 @@ export class ShareScene extends Phaser.Scene {
         if (tall) g.fillPoints([{ x: 0, y: H * 0.58 - 5 }, { x: W, y: H * 0.42 - 5 }, { x: W, y: H * 0.42 + 5 }, { x: 0, y: H * 0.58 + 5 }], true);
         else g.fillPoints([{ x: W * 0.56 - 6, y: 0 }, { x: W * 0.56 + 6, y: 0 }, { x: W * 0.44 + 6, y: H }, { x: W * 0.44 - 6, y: H }], true);
       };
-      gfx(split);
+      // M4.5 (Ivan: the raccoon "looks like he is cut off"): on the tall poster the purple half is painted over
+      // him, so the slash cuts his body off cleanly instead of the picture's own bottom edge
       if (tall) {
-        hi('pr_racc_shout', -10, H * 0.5 + 10, { ox: 0 });
+        gfx((g) => split(g, 'red'));
+        hi('pr_racc_smirk', -10, H * 0.5 + 40, { ox: 0 });
+        gfx((g) => split(g, 'rest'));
         hi('pr_dog_laugh', W + 12, H - 150, { ox: 1 });
         words('THE RACCOON', 16, 146, MID, 0xfff08a, W, 0, true);
         words('DOG FJORD', W - 16, H - 142, MID, 0xffa199, W, 1, true);
@@ -295,7 +301,8 @@ export class ShareScene extends Phaser.Scene {
         words(`LIVABILITY ${st.liv}/100   SCORE ${st.score}`, W / 2, H - 100, SMALL, 0x9bd35a);
         words('PLAY FREE', W / 2, H - 76, MID, 0xfff08a); words(LINK, W / 2, H - 46, SMALL, 0xc9c5d1);
       } else {
-        hi('pr_racc_shout', -18, H - 52, { ox: 0 });
+        gfx((g) => split(g));
+        hi('pr_racc_smirk', -18, H - 52, { ox: 0 });
         hi('pr_dog_laugh', W + 18, H - 52, { ox: 1 });
         words('THE RACCOON', 18, H - 92, MID, 0xfff08a, W, 0, true);
         words('DOG FJORD', W - 18, H - 92, MID, 0xffa199, W, 1, true);
@@ -418,7 +425,7 @@ export class ShareScene extends Phaser.Scene {
       hi('pr_dog_laugh', W - (tall ? -20 : 40), (tall ? 470 : 404), { ox: 1, alpha: 0.82 });
       const rats = ['rat_basic_0', 'rat_construction_0', 'rat_lobbyist_0', 'rat_traffic_0', 'rat_barrier_0'];
       rats.forEach((f, i) => loPut(f, (tall ? cx + 6 : cx + 40) + i * (tall ? 20 : 34), GROUND_Y + off + (i % 2) * 6, 1, true));
-      hi('pr_racc_shout', tall ? -20 : 0, tall ? H - 150 : H - 60, { ox: 0 });
+      hi('pr_racc_smirk', tall ? -20 : 0, tall ? H - 150 : H - 60, { ox: 0 }); // M4.5: Ivan liked the smirk (the yell looked odd)
       if (tall) {
         fill(0x16121f, 0, 0, W, 132, 0.75);
         words('TRASH PANDA', W / 2, 16, BIG, 0xfff08a); words('TAKE BACK THE STREETS', W / 2, 58, MID, 0xff6347); words(head, W / 2, 96, MID);
@@ -437,17 +444,22 @@ export class ShareScene extends Phaser.Scene {
       gfx((g) => { for (let i = 0; i < 90; i++) { const x = (i * 97) % W, y = (i * 53 + (i % 7) * 31) % H; g.fillStyle(i % 3 ? 0x69657a : 0xf6f2e9).fillRect(x, y, 2, 2); } });
       const s = ctx.state;
       const rows = HighScores.load().slice(0, 10).map((e) => ({ ...e, you: e.runId === s.runId }));
-      if (!rows.some((r) => r.you) && s.score > 0) { rows.push({ name: s.name, score: s.score, difficulty: s.difficulty, runId: s.runId, missions: s.completedMissions.length, date: '', you: true }); rows.sort((a, b) => b.score - a.score); }
+      if (!rows.some((r) => r.you) && s.score > 0 && !s.flags.debugRun) { rows.push({ name: s.name, score: s.score, difficulty: s.difficulty, runId: s.runId, missions: s.completedMissions.length, date: '', you: true }); rows.sort((a, b) => b.score - a.score); }
       const shown = rows.slice(0, tall ? 10 : 8);
       const RAIN = [0xff6347, 0xff9a2e, 0xfff08a, 0x9bd35a, 0x35b2a6, 0x7cc6f2, 0x7d47a8, 0xc38ae0, 0xffa199, 0xc9c5d1];
       const t0 = tall ? 190 : 134, lh2 = tall ? 40 : 30;
       words('HIGH SCORES', W / 2, tall ? 76 : 40, [['font_big', 3], ['font_big', 2]], 0xfff08a);
-      words(tall ? 'RANK  NAME   SCORE' : 'RANK   NAME    SCORE    LEVEL', W / 2, t0 - (tall ? 34 : 26), SMALL, 0x9793a6);
+      // M4.5: names run up to 10 letters: the name column is as wide as the longest name shown, and the
+      // heading is built with the same widths (each line is centred, so they must all be the same length)
+      const nw = Math.max(4, ...shown.map((r) => r.name.length));
+      const row = (rank: string, name: string, score: string, level: string) => tall ? `${rank.padStart(4, ' ')}  ${name.padEnd(nw, ' ')}  ${score.padEnd(6, ' ')}` : `${rank.padStart(4, ' ')}   ${name.padEnd(nw, ' ')}   ${score.padEnd(6, ' ')}   ${level.padEnd(6, ' ')}`;
+      words(row('RANK', 'NAME', 'SCORE', 'LEVEL'), W / 2, t0 - (tall ? 34 : 26), SMALL, 0x9793a6);
       const ord = (n: number) => `${n}${n === 1 ? 'ST' : n === 2 ? 'ND' : n === 3 ? 'RD' : 'TH'}`;
       shown.forEach((r, i) => {
-        const line = tall ? `${ord(i + 1).padStart(4, ' ')}  ${r.name.padEnd(3, ' ')}  ${fmtScore(r.score)}` : `${ord(i + 1).padStart(4, ' ')}   ${r.name.padEnd(3, ' ')}    ${fmtScore(r.score)}    ${(DIFFICULTY[r.difficulty]?.label ?? '').padEnd(6, ' ')}`;
+        const line = row(ord(i + 1), r.name, fmtScore(r.score), DIFFICULTY[r.difficulty]?.label ?? '');
+        // M4.5: your run is a lit band behind its row (a "< YOU" beside it ran into the score once names grew)
+        if (r.you) fill(0xfff08a, 0, t0 + i * lh2 - (tall ? 8 : 6), W, tall ? 34 : 26, 0.22);
         words(line, W / 2, t0 + i * lh2, MID, r.you ? 0xffffff : RAIN[i % RAIN.length]);
-        if (r.you) words(tall ? '< YOU' : '< YOU', W - 14, t0 + i * lh2 + 4, SMALL, 0xfff08a, W, 1);
       });
       if (!shown.length) words('NO SCORES YET: BE THE FIRST', W / 2, t0 + 20, MID, 0xc9c5d1);
       if (tall && shown.length <= 5) hi('pr_racc_small', W / 2 + 6, H - 176);
