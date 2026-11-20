@@ -189,3 +189,23 @@ Snapshots go to `art/history/<asset>/vNN/` (`tools/snapshot.mjs`).
 - **Loop tooling** (gitignored, in `tools/scratch/piter/`): `render.mjs` draws the comparison sheet (`--sdf` adds the old 3D row), and `evolution.mjs` builds the strip of every `art/history/portraits_2d` version.
 - **Controls page:** desktop rows at 12 px from y 42, the notes at 148 / 158 on a dark band.
 - **Tall VERSUS poster:** Dog Fjord sits on the bottom bar (H - 110), so the VS badge clears his eyes.
+
+## M4.8 additions
+- **Portraits:** `tools/sprites/portraits.mjs` was redrawn again. `pumpAxis()` lays out every part of the pump along and across one axis, so it can't bend.
+- **`draw2d.mjs` gained fur tools** (all backwards compatible; the M4.7 portraits render pixel-identical with the new toolkit):
+  - `hash()`: a repeatable jitter
+  - `tufted()`: tufted fur edges
+  - `Canvas.furBreak()`: fur strokes interlocking where two tones meet
+  - `Canvas.furStrokes()` and `Canvas.furClusters()`: fur strands that follow a direction field, painted only over chosen tones, with calm zones and density scaled to size (full at k = 1.5, less at k = 1, none at the 112 px dialogue portrait)
+  - `Canvas.silhouette()`: one outer outline, coloured per material and per side
+  - `Canvas.despeckle()`: removes stray single pixels
+  - `shape()` accepts `line: null` for no outline.
+- **Palette:** `tools/palette.mjs` gained portrait-only keys: a warm raccoon grey ramp, a chestnut ramp, a hue-shifted pink skin ramp, chrome and teal. They were added only; no existing key changed.
+- **Loop tooling** (gitignored, in `tools/scratch/piter2/`):
+  - `render.mjs`: the sheet plus a 4x close-up, `_hero.png`. `--module` renders a variant copy.
+  - `evolution.mjs`: `FROM=<n>` limits the strip to versions from n on.
+  - `posters48.mjs`: saves every poster at full size, with an optional poster-name filter.
+- **ShareScene:**
+  - Tall VERSUS: the raccoon sits at (-30, H/2 + 64) and THE RACCOON is right-aligned.
+  - Tall TAKE BACK THE STREETS: Dog Fjord's bottom is at 420 and the raccoon at x -34.
+  - The bosses grid's hero crop starts at y 6.

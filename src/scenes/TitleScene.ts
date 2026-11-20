@@ -25,7 +25,7 @@ export const NAME_MAX = 10;
 const NAME_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const SLOT_W = 14;
 
-export const VERSION_LABEL = 'M4.7 PREVIEW';
+export const VERSION_LABEL = 'M4.8 PREVIEW';
 
 /** M3.3 (Ivan): after a debug mission or vignette, come back to a REPLAY / BACK TO THE LIST / MAIN MENU menu */
 export interface Replay { kind: 'mission' | 'vignette'; id: string }

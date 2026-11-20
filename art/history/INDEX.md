@@ -532,6 +532,86 @@ v01: pedestrians (9 variants incl. kid and dog walker), 4 directions, SDF + 32-d
 
 ## portraits_2d
 
+### portraits_2d v20
+
+2026-11-20
+
+M4.8 round 10: polish
+
+![portraits_2d v20](portraits_2d/v20/preview.png)
+
+### portraits_2d v19
+
+2026-11-20
+
+M4.8 round 09: low-risk finishing: no contact shadow outside the feet (a darker sole inside), mask lobe sheen, the lip shadow on the teeth fading to the corners, cone-shaded fangs, a 1 px forearm ridge, a bigger darker shock O with 1 px fangs at 112
+
+![portraits_2d v19](portraits_2d/v19/preview.png)
+
+### portraits_2d v18
+
+2026-11-20
+
+M4.8 round 08: Dog Fjord's mouth back to round 05's wide white crescent (pink palette kept), light-touch teeth, soft jowls with no outline, a thin lip edge; the raccoon's body light pass (near side brighter, far side and underside darker, deeper chest shadow, ground shadow), mask strands curving back, bigger catchlight, brighter nose top
+
+![portraits_2d v18](portraits_2d/v18/preview.png)
+
+### portraits_2d v17
+
+2026-11-20
+
+M4.8 round 07: chunky blocky dog teeth (lower teeth behind the thrust lip), pendulous drapes with a cast shadow, darker body and a dark lip margin; raccoon face strands per zone (mask out of the eye corners, muzzle thinned to its shade zones, fan on the forehead), longer body tufts, forearm ridge and wrist tufts, lit tail-ring rims, longer barrel
+
+![portraits_2d v17](portraits_2d/v17/preview.png)
+
+### portraits_2d v16
+
+2026-11-20
+
+M4.8 round 06: fur strands inside the raccoon's face zones (new furClusters, calm zones round the eyes and nose); Dog Fjord pink again (warm pink-peach lights, mauve only in shadow, a rosy-red terminator, no olive stipple), hanging drapes, dog teeth with the lip's shadow; darker upper arms with lit rims, body strands, grip highlights, lighter knuckles
+
+![portraits_2d v16](portraits_2d/v16/preview.png)
+
+### portraits_2d v15
+
+2026-11-20
+
+M4.8 round 05: Dog Fjord re-laid (features lower, wide bulldog crescent grin, drapes as curtains at the corners, fangs over the lip) in a hue-shifted skin palette (peach-ochre lights, desaturated mid, one mauve jaw core shadow, bounce at the collar); the raccoon's pump mid-stroke (slim barrel, chrome rod, wide T-bar, one paw per grip), forearms, rim light, cast shadows, body fur, toe lobes
+
+![portraits_2d v15](portraits_2d/v15/preview.png)
+
+### portraits_2d v14
+
+2026-11-20
+
+M4.8 round 04: the final direction, one pruned drawing: the raccoon standing on short legs with the full pump as a cane (paws stacked on the T-handle), ringed tail, cap + bandana + teal pump; Dog Fjord chin-up bulldog on sunk navy shoulders, iter_04 ears, soft drapes, comma nostrils, gold car tie
+
+![portraits_2d v14](portraits_2d/v14/preview.png)
+
+### portraits_2d v13
+
+2026-11-20
+
+M4.8 round 03: variant a: the bat pose (pump on the near shoulder behind, fist on hip, face clear), bandana + teal pump; Dog Fjord as a bulldog (underbite canines, hanging flews, nose rope, rose ears, smug lid), sunk in navy shoulders, gold car tie
+
+![portraits_2d v13](portraits_2d/v13/preview.png)
+
+### portraits_2d v12
+
+2026-11-20
+
+M4.8 round 02: variant a: warm-coat raccoon at 1.15x, cherry pump across the chest in front, green scarf, real hands, 4-tone mask; Dog Fjord modelled (flews, jowls, shadow-shape folds, chestnut patch), three-quarter, navy + gold car tie
+
+![portraits_2d v12](portraits_2d/v12/preview.png)
+
+### portraits_2d v11
+
+2026-11-20
+
+M4.8 round 01: variant A (planted staff): straight vertical pump, red bandana, 9-step hue-shifted fur ramp, tufted edges + fur strokes, selective outlines; Dog Fjord on iter_04's head, 8-step pink ramp, navy suit, red tie
+
+![portraits_2d v11](portraits_2d/v11/preview.png)
+
 ### portraits_2d v10
 
 2026-11-20
@@ -611,6 +691,80 @@ M4.7 iteration 01: re-proportioned to the 3D busts (raccoon head centred + short
 M4.6 (Ivan: redraw the raccoon and Dog Fjord portraits in pure 2D pixel art, no 3D): first 2D pass. Flat shapes, hard outlines, cel shading (tools/lib/draw2d.mjs). Raccoon: whole torso with a fur ruff, near paw's fingers round the pump, fist on the hip, the smirk. Dog Fjord: facing left, grin / laugh / shock.
 
 ![portraits_2d v01](portraits_2d/v01/preview.png)
+
+## portraits_2d_explore
+
+### portraits_2d_explore v09
+
+2026-11-20
+
+M4.8 round 03 variant c: elbow lean on a pump at screen-left, cycling cap + bulldog dog sunk in royal blue, cream chin blaze
+
+![portraits_2d_explore v09](portraits_2d_explore/v09/preview.png)
+
+### portraits_2d_explore v08
+
+2026-11-20
+
+M4.8 round 03 variant b: cane pose (paws stacked on the T-handle) + bulldog dog chin up (nostrils from below, double chin), charcoal pinstripe
+
+![portraits_2d_explore v08](portraits_2d_explore/v08/preview.png)
+
+### portraits_2d_explore v07
+
+2026-11-20
+
+M4.8 round 03 variant a: bat pose + bulldog dog sunk in navy, gold car tie
+
+![portraits_2d_explore v07](portraits_2d_explore/v07/preview.png)
+
+### portraits_2d_explore v06
+
+2026-11-20
+
+M4.8 round 02 variant c: cycling cap + chrome pump; dog chin down, sunk into big royal-blue shoulders, bold shapes + cool rim light
+
+![portraits_2d_explore v06](portraits_2d_explore/v06/preview.png)
+
+### portraits_2d_explore v05
+
+2026-11-20
+
+M4.8 round 02 variant b: red bandana + teal pump; dog chin up with a double chin, charcoal pinstripe, red tie, dense skin texture
+
+![portraits_2d_explore v05](portraits_2d_explore/v05/preview.png)
+
+### portraits_2d_explore v04
+
+2026-11-20
+
+M4.8 round 02 variant a: green scarf + cherry pump; dog three-quarter, navy, gold car tie, medium density
+
+![portraits_2d_explore v04](portraits_2d_explore/v04/preview.png)
+
+### portraits_2d_explore v03
+
+2026-11-20
+
+M4.8 round 01 variant c: over the rail, 1.22x close crop leaning on a level yellow pump, cycling cap, lost lit-side outlines; dog broad black suit + striped blue tie + pocket square
+
+![portraits_2d_explore v03](portraits_2d_explore/v03/preview.png)
+
+### portraits_2d_explore v02
+
+2026-11-20
+
+M4.8 round 01 variant b: the swagger, teal pump held diagonally across the chest, warm taupe coat, green knit scarf; dog charcoal pinstripe + gold car tie + flag pin
+
+![portraits_2d_explore v02](portraits_2d_explore/v02/preview.png)
+
+### portraits_2d_explore v01
+
+2026-11-20
+
+M4.8 round 01 variant a: planted staff, vertical yellow pump, red bandana, cool blue-grey fur; dog navy + red tie
+
+![portraits_2d_explore v01](portraits_2d_explore/v01/preview.png)
 
 ## posters
 

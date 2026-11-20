@@ -288,10 +288,12 @@ export class ShareScene extends Phaser.Scene {
       // him, so the slash cuts his body off cleanly instead of the picture's own bottom edge
       if (tall) {
         gfx((g) => split(g, 'red'));
-        hi('pr_racc_smirk', -10, H * 0.5 + 40, { ox: 0 });
+        // M4.8: the standing raccoon's head is high in his frame; he sits lower and further left (the slash cuts him at
+        // the thighs, clear of VS) and his name moves to the right, off his cap
+        hi('pr_racc_smirk', -30, H * 0.5 + 64, { ox: 0 });
         gfx((g) => split(g, 'rest'));
         hi('pr_dog_laugh', W + 12, H - 110, { ox: 1 }); // M4.7: the redrawn head is taller; he sits on the bottom bar so VS stays above his eyes
-        words('THE RACCOON', 16, 146, MID, 0xfff08a, W, 0, true);
+        words('THE RACCOON', W - 16, 146, MID, 0xfff08a, W, 1, true);
         words('DOG FJORD', W - 16, H - 142, MID, 0xffa199, W, 1, true);
         gfx((g) => starburst(g, W / 2, H * 0.5, 64, 40, 14));
         words('VS', W / 2, H * 0.5 - 40, [['font_big', 5]], 0xfff08a);
@@ -392,7 +394,7 @@ export class ShareScene extends Phaser.Scene {
       frameCell(hero, true);
       const pk = 1, pw = 232, ph = 208;
       const showH = Math.min(hero.h, ph * pk), showW = Math.min(hero.w, pw * pk);
-      hi('pr_racc_small', hero.x + hero.w / 2, hero.y + hero.h, { k: pk, crop: [Math.floor((pw - showW) / 2), Math.min(44, ph - showH), Math.floor(showW), Math.floor(showH)] });
+      hi('pr_racc_small', hero.x + hero.w / 2, hero.y + hero.h, { k: pk, crop: [Math.floor((pw - showW) / 2), Math.min(6, ph - showH), /* M4.8: the standing raccoon's cap is near the top */ Math.floor(showW), Math.floor(showH)] });
       words('YOU', hero.x + 6, hero.y + 4, [['font_outline', 2], ['font_outline', 1]], 0xfff08a, hero.w, 0);
       const done = ctx.state.completedMissions;
       const list = [...BOSSES.map(([m, atlas, frame, name]) => ({ beaten: done.includes(m), atlas, frame, name })), { beaten: !!ctx.state.flags.ended, atlas: 'posters', frame: 'pr_dog_small', name: 'DOG FJORD' }];
@@ -422,10 +424,10 @@ export class ShareScene extends Phaser.Scene {
       sky('sky_dusk');
       fill(0x16121f, 0, 0, W, H, 0.35);
       loBand('skyline_dusk', SKYLINE_Y + off + 10, 0x9a86c8); loBand('facades_dt', FRONT_Y.king + off, 0x8c80b8); street('street_plain');
-      hi('pr_dog_laugh', W - (tall ? -20 : 40), (tall ? 470 : 404), { ox: 1, alpha: 0.82 });
+      hi('pr_dog_laugh', W - (tall ? -20 : 40), (tall ? 420 : 404), { ox: 1, alpha: 0.82 }); // M4.8: up 50 on tall, so the standing raccoon's head clears his mouth
       const rats = ['rat_basic_0', 'rat_construction_0', 'rat_lobbyist_0', 'rat_traffic_0', 'rat_barrier_0'];
       rats.forEach((f, i) => loPut(f, (tall ? cx + 6 : cx + 40) + i * (tall ? 20 : 34), GROUND_Y + off + (i % 2) * 6, 1, true));
-      hi('pr_racc_smirk', tall ? -20 : 0, tall ? H - 150 : H - 60, { ox: 0 }); // M4.5: Ivan liked the smirk (the yell looked odd)
+      hi('pr_racc_smirk', tall ? -34 : 0, tall ? H - 150 : H - 60, { ox: 0 }); // M4.5: Ivan liked the smirk (the yell looked odd)
       if (tall) {
         fill(0x16121f, 0, 0, W, 132, 0.75);
         words('TRASH PANDA', W / 2, 16, BIG, 0xfff08a); words('TAKE BACK THE STREETS', W / 2, 58, MID, 0xff6347); words(head, W / 2, 96, MID);

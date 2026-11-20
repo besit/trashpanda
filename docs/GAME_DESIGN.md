@@ -301,3 +301,10 @@ None. No ads, purchases, energy or login.
 ## M4.7: Ivan's notes on M4.6
 - **The hero portraits, redrawn over 9 rounds** of a drawer / judge loop: the old 3D versions' proportions, symmetry and outlines, in the 2D style of Ivan's raccoon refs. The raccoon is a 3/4 head on a chunky bust that stays in the frame (fist on the hip, ringed tail, the pump). Dog Fjord's head outline is traced from the 3D bulldog: ears folded at the top corners, a pompadour on the crown, heavy jowls, the wink and the lopsided grin.
 - **The controls page:** the key rows no longer run into the missions note, and the small notes sit on a dark band.
+
+## M4.8: Ivan's notes on M4.7
+- **The hero portraits, 10 more rounds** of an artist / judge loop aimed at the craft of Ivan's raccoon ref 03, with three exploration rounds of different poses and palettes first.
+  - **The raccoon** is now a standing cyclist: a cycling cap, the red bandana, both paws on a teal floor pump mid-stroke, the ringed tail curled behind.
+  - **The pump is straight:** it's built on one axis.
+  - **Dog Fjord** keeps M4.7 iteration 04's head and ears and is now plainly a bulldog: a wide crescent grin with underbite fangs, the smug half-lidded patch eye, a navy suit and a gold tie with little red cars.
+- **Posters:** three layouts moved to fit the standing raccoon (tall VERSUS, tall TAKE BACK THE STREETS, the wide bosses grid).

@@ -841,3 +841,32 @@ A drawer agent edited `tools/sprites/portraits.mjs`. A judge agent scored each s
 ### Numbers
 68 browser tests and 21 unit tests pass.
 
+## 2026-11-20: M4.8, ten more portrait rounds aimed at ref 03
+
+Ivan on the M4.7 portraits: "Ok, the characters look better, but I want you to run another 10 rounds. This time let's focus on getting quality closer to raccoon-ref_03.jpg. Dog's head from iter_04 looks the best, but other aspects from iter_09. I want the artist agent to be far more creative... change colors, poses. And let's make sure the pump is straight. Right now it's bent." The review doc is [docs/reviews/M4.8.md](reviews/M4.8.md).
+
+### The loop
+- **Same two agents, a new brief.** The judge's scale put ref 03's craft at 9 to 10, and on it the M4.7 portraits scored raccoon 4.0 and Dog Fjord 3.5.
+- **Rounds 1 to 3 explored.** Each round the artist drew three genuinely different takes, 9 variants in all: a planted staff, a swagger with the pump across the chest, the pump as a rail, the pump on the shoulder, a cane, an elbow lean. Palettes were cool grey, warm taupe and steel. Accents were a bandana, a scarf and a cap.
+- **Rounds 4 to 10 refined** one direction: the cane pose standing, with the cap, the bandana and a teal pump, and Dog Fjord chin up on broad navy shoulders.
+
+![](reviews/m48/evolution.png)
+
+| Round | 00 | 01 | 02 | 03 | 04 | 05 | 06 | 07 | 08 | 09 | 10 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Raccoon | 4.0 | 5.5 | 5.5 | 5.5 | 6.0 | 6.5 | 6.5 | 7.0 | 7.0 | 7.0 | 7.0 |
+| Dog Fjord | 3.5 | 4.0 | 5.0 | 5.5 | 5.5 | 6.0 | 6.0 | 5.5 | 6.5 | 6.5 | 6.5 |
+
+### What worked, what didn't
+- **The pump was bent by construction.** The rod was drawn vertical, the barrel 11.6 degrees off vertical, and the handle tilted 7.6 degrees. `pumpAxis()` now places every part along one axis, so it can't bend.
+- **Exploration rounds found the pose.** None of round 1's three poses survived, and round 2's diagonal pump covered the face. The cane pose from round 3 is what carried. Without the variants the loop would have polished the old fist-on-hip bust.
+- **Toolkit first.** The artist spent round 1 partly on fur helpers (tufted edges, strokes that follow a direction, per-material outlines). Every later round used them.
+- **Uniform strands read as hatching.** Round 6's face fur, all horizontal at one density, looked like scanlines. Giving each zone its own flow, plus jitter in direction and length, made it read as fur in round 7.
+- **A palette can lose a character.** Round 5's hue-shifted skin turned Dog Fjord grey-mauve, and an olive half-tone read as stubble (a human cue). Round 6 brought the pink back and kept the cool tones in the shadows only.
+- **Optimising details into a worse whole.** Rounds 6 and 7 met every item on the fix list (dog teeth, then hanging lips with a dark edge), and Dog Fjord got lumpier and less appealing: pouches, rotten-looking teeth. I asked the judge to compare overall appeal with round 5. It agreed its own notes had pushed anatomy over the cartoon read, and round 8 restored round 5's mouth with round 6's colours. That gave the best Dog Fjord of the loop.
+- **The game, not just the sheet.** The standing raccoon's head sits high in his picture, which broke three poster layouts: the raccoon covered Dog Fjord's mouth, the cap sat under the THE RACCOON label, and the bosses grid cropped off the cap. All three were fixed after checking every poster at full size.
+- **Rate limit.** The artist hit the 5-hour usage limit partway through round 2. It was resumed with its work intact.
+
+### Numbers
+68 browser tests and 21 unit tests pass.
+
