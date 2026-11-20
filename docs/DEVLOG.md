@@ -870,3 +870,36 @@ Ivan on the M4.7 portraits: "Ok, the characters look better, but I want you to r
 ### Numbers
 68 browser tests and 21 unit tests pass.
 
+## 2026-11-20: M4.9 (preview), pxl and codixel, and ten rounds of painting with light
+
+Ivan asked whether two pixel-art skills (pxl and codixel) would help, then asked me to take what's good from both and run 10 more rounds on the hero art. His notes: "I liked the iter_02 of the raccoon. The pose and general vibe. Though... it feels like a toddler drawing in terms of separate shapes like fingers, arms. I want it to feel more professional with drawing from shades, not from shapes... The pump should be yellow as in the game. For the dog, honestly the iter_01 was the best... pretty minimal and not overly detailed. You seem to design from details like you think 'nose' and draw a shape. When professional artists draw... they think about how light is scattered and reflected, where are shadows and where are highlights." And: don't update the game until he gives the green light. The review doc is [docs/reviews/M4.9.md](reviews/M4.9.md).
+
+### The two skills
+Both are MIT licensed. Neither is installed; the useful parts are ported into `tools/lib/`.
+- **pxl** is a code-to-pixel-art tool. Its lint (stray pixels, jaggies, pillow shading) became `tools/pixelcheck.mjs`, and its annotate mode inspired `tools/annotate/`.
+- **codixel** is mostly a long skill file plus an engine. Its lit volumes, banding with a dither strip only where two bands meet, hue ramps, rim light and pixel-perfect lines became `tools/lib/light2d.mjs`.
+- **Not used:** codixel's main method, pixelating a reference image. Our characters have no source image, and pixelating someone else's art would copy it.
+
+### The loop
+New agents (a painter and a critic) and a new brief, built around Ivan's note: silhouette first, one light, parts separated by light and cast shadow, details last. Every round was checked in greys and by the pixel critic. The work stayed in `tools/sprites/portraits_next.mjs`, and the game's portraits rendered pixel-identical throughout.
+
+![](reviews/m49/evolution.png)
+
+| Round | 00 | 01 | 02 | 03 | 04 | 05 | 06 | 07 | 08 | 09 | 10 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Raccoon | 4.5 | 5.0 | 5.5 | 5.5 | 6.0 | 6.5 | 7.0 | 7.0 | 7.0 | 7.0 | 7.5 |
+| Dog Fjord | 4.5 | 6.0 | 6.0 | 6.5 | 7.0 | 7.5 | 7.5 | 7.5 | 7.5 | 7.5 | 7.5 |
+
+### What worked, what didn't
+- **One light map for the whole picture.** The painter's round 1 pipeline puts material names in the pixels and lights the whole picture with one value map, then maps each material onto its own ramp. That is what turned "parts" into "one lit figure": a shadow crosses fur, scarf and pump alike.
+- **Dark arms are stickers.** Dark forearms on a mid-dark chest can only read as shapes stuck on top. In the coat's colour they belong to the body, and they read through their lit top edge and the shadow they cast on the cream bib (round 2).
+- **Computed light is bland.** Round 2 was correct but soft: bands followed the outline and everything sat in light. Round 3 designed the light instead, with one hand-placed shadow edge per form, 35 to 45% of each form in shadow, cool shadows and warm lights.
+- **A light rim on the shadow side read as a halo.** A broken 1 px pale line outside the dark outline looked like a cut-out sticker. Removed in round 4.
+- **Fixes regress other fixes.** Round 3's light pass also thinned the tail into a twig and merged the arm into the bib. Each round compared its result with the round before.
+- **Dimming the bottom deleted its light.** Round 5's falloff turned the lower body into one dark skirt. Round 6 dimmed the light without merging it into the shadow.
+- **Fur only where light meets shadow.** A ref-03-style fur pass, tried as a separate experiment in round 9, helped on the head and hurt the crisp forearm, so round 10 kept it on the head only.
+- **A likeness check.** The critic flagged that M4.8's national-flag lapel pin plus patterned tie pointed at a real politician. The new Dog Fjord has iter_01's plain red tie and no pin.
+
+### Not done yet
+The game still uses the M4.8 portraits until Ivan's green light. Then `portraits_next.mjs` replaces `portraits.mjs`, every poster is re-checked at full size (the raccoon's pose changes back to a bust) along with the intro cutscene, and it ships.
+

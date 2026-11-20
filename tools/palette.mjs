@@ -51,6 +51,15 @@ export const PALETTE = {
   // ochre, a clean pink mid, a pink side plane, a rosy-red terminator, a cool mauve core shadow, a deep mauve crease, a
   // cool bounce light
   '/': '#ffbaa4', '¢': '#ffdac4', Q: '#f79d97', '£': '#e3868b', 9: '#e86e78', '§': '#a65f78', '¤': '#73405b', '°': '#c88c9e',
+  // M4.9: the yellow pump's ramp gets a warm ochre step between o (its shadow) and y (its base)
+  '¥': '#ea9526',
+  // M4.9 round 03: hue-shifted portrait keys: the coat's cool violet-brown shadows, a warm terminator glow and a warm
+  // light; a cool lilac shadow for cream fur; Dog Fjord's cool mauve shadow plane; the suit's blue-violet shadow and
+  // warm light; a neutral grey-lilac rim of reflected light
+  'µ': '#4f3c56', '¶': '#6e5272', '©': '#a8765e', '®': '#d2b08a', '²': '#a49aae', '³': '#b06a8c', '¹': '#232566', '¼': '#5a78b8', '½': '#b4b6d2',
+  // round 04: the coat's shadow pulled back toward the coat (a warm violet-brown plane and core); Dog's far side as a
+  // rose-mauve shadow, 1.5 value groups below his lit pink
+  'ª': '#7a5f66', 'º': '#584452', '»': '#c27585',
 };
 
 export const KEYS = Object.keys(PALETTE);

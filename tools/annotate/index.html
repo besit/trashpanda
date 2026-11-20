@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Annotate Art</title>
+<style>
+  :root { --bg: #16121f; --panel: #2a2536; --text: #f6f2e9; --muted: #9793a6; --accent: #fff08a; --mark: #ff3355; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 system-ui, sans-serif; display: flex; height: 100vh; }
+  aside { width: 260px; background: var(--panel); padding: 12px; display: flex; flex-direction: column; gap: 10px; overflow: auto; }
+  main { flex: 1; overflow: auto; display: flex; align-items: flex-start; justify-content: center; padding: 16px; position: relative; }
+  h1 { font-size: 16px; margin: 0; color: var(--accent); }
+  .files button { display: block; width: 100%; text-align: left; margin: 2px 0; background: #443f54; color: var(--text); border: 0; padding: 6px 8px; border-radius: 4px; cursor: pointer; }
+  .files button.on { outline: 2px solid var(--accent); }
+  .files button .dot { color: var(--accent); }
+  .tools { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tools button, .send { background: #69657a; color: var(--text); border: 0; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
+  .tools button.on { background: var(--accent); color: var(--bg); }
+  .send { background: var(--accent); color: var(--bg); font-weight: 700; width: 100%; padding: 8px; }
+  textarea { width: 100%; min-height: 90px; background: #16121f; color: var(--text); border: 1px solid #443f54; border-radius: 4px; padding: 6px; font: inherit; }
+  label { color: var(--muted); font-size: 12px; }
+  ol { margin: 0; padding-left: 20px; }
+  ol li { margin: 4px 0; }
+  ol input { width: 100%; background: #16121f; color: var(--text); border: 1px solid #443f54; border-radius: 3px; padding: 3px; font: inherit; }
+  .stage { position: relative; image-rendering: pixelated; }
+  canvas { display: block; image-rendering: pixelated; cursor: crosshair; }
+  .pin { position: absolute; transform: translate(-50%, -100%); background: var(--accent); color: var(--bg); font-weight: 700; border-radius: 10px 10px 10px 0; padding: 0 6px; pointer-events: none; font-size: 12px; }
+  .status { color: var(--muted); font-size: 12px; min-height: 1.4em; }
+</style>
+</head>
+<body>
+<aside>
+  <h1>Annotate</h1>
+  <div class="files" id="files"></div>
+  <div class="tools">
+    <button id="tPaint" class="on" title="paint marks (drag)">Paint</button>
+    <button id="tPin" title="click to pin a numbered note">Pin</button>
+    <button id="tErase" title="erase marks (drag)">Erase</button>
+    <button id="tClear">Clear</button>
+  </div>
+  <label>Brush <input id="brush" type="range" min="1" max="8" value="2"></label>
+  <label>Zoom <input id="zoom" type="range" min="1" max="8" value="3"></label>
+  <label for="comment">Comment on this picture</label>
+  <textarea id="comment" placeholder="What should change?"></textarea>
+  <label>Notes</label>
+  <ol id="notes"></ol>
+  <button class="send" id="send">Send to Claude</button>
+  <div class="status" id="status"></div>
+</aside>
+<main><div class="stage" id="stage"><canvas id="cv"></canvas></div></main>
+<script>
+const $ = (id) => document.getElementById(id);
+let file = null, img = null, tool = 'paint', marks = new Set(), notes = [], down = false;
+const cv = $('cv'), ctx = cv.getContext('2d');
+const Z = () => Number($('zoom').value);
+function setTool(t) { tool = t; for (const [id, n] of [['tPaint', 'paint'], ['tPin', 'pin'], ['tErase', 'erase']]) $(id).classList.toggle('on', n === t); }
+$('tPaint').onclick = () => setTool('paint'); $('tPin').onclick = () => setTool('pin'); $('tErase').onclick = () => setTool('erase');
+$('tClear').onclick = () => { marks.clear(); notes = []; draw(); listNotes(); };
+$('zoom').oninput = draw;
+async function loadList() {
+  const files = await (await fetch('/list')).json(), box = $('files'); box.innerHTML = '';
+  for (const f of files) { const b = document.createElement('button'); b.innerHTML = `${f.name} ${f.feedback ? '<span class="dot">&#9679;</span>' : ''}`; b.onclick = () => open(f.name); if (f.name === file) b.classList.add('on'); box.appendChild(b); }
+  if (!file && files.length) open(files[0].name);
+}
+async function open(name) {
+  file = name; img = new Image(); img.src = '/img/' + encodeURIComponent(name) + '?t=' + Date.now();
+  await img.decode();
+  const fb = await (await fetch('/feedback/' + encodeURIComponent(name))).json();
+  marks = new Set((fb?.marks || []).map(([x, y]) => x + ',' + y)); notes = fb?.notes || []; $('comment').value = fb?.comment || '';
+  $('status').textContent = fb ? `last sent ${fb.time}` : '';
+  draw(); listNotes(); loadList();
+}
+function draw() {
+  if (!img) return;
+  const z = Z(); cv.width = img.width * z; cv.height = img.height * z;
+  ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = '#5b8fb0'; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.drawImage(img, 0, 0, cv.width, cv.height);
+  ctx.fillStyle = 'rgba(255, 51, 85, 0.7)';
+  for (const k of marks) { const [x, y] = k.split(',').map(Number); ctx.fillRect(x * z, y * z, z, z); }
+  document.querySelectorAll('.pin').forEach((p) => p.remove());
+  notes.forEach((n, i) => { const p = document.createElement('div'); p.className = 'pin'; p.textContent = i + 1; p.style.left = (n.x + 0.5) * z + 'px'; p.style.top = n.y * z + 'px'; $('stage').appendChild(p); });
+}
+function listNotes() {
+  const ol = $('notes'); ol.innerHTML = '';
+  notes.forEach((n, i) => { const li = document.createElement('li'), inp = document.createElement('input'); inp.value = n.text; inp.oninput = () => { n.text = inp.value; }; li.appendChild(inp); ol.appendChild(li); });
+}
+function at(e) { const r = cv.getBoundingClientRect(), z = Z(); return [Math.floor((e.clientX - r.left) / z), Math.floor((e.clientY - r.top) / z)]; }
+function brushAt(x, y, on) { const b = Number($('brush').value), r = (b - 1) / 2; for (let j = Math.floor(-r); j <= Math.ceil(r); j++) for (let i = Math.floor(-r); i <= Math.ceil(r); i++) { const X = x + i, Y = y + j; if (X < 0 || Y < 0 || X >= img.width || Y >= img.height) continue; const k = X + ',' + Y; on ? marks.add(k) : marks.delete(k); } }
+cv.onpointerdown = (e) => {
+  const [x, y] = at(e);
+  e.preventDefault();
+  if (tool === 'pin') { notes.push({ x, y, text: '' }); draw(); listNotes(); setTimeout(() => { const inputs = $('notes').querySelectorAll('input'); inputs[inputs.length - 1].focus(); }, 0); return; }
+  down = true; brushAt(x, y, tool === 'paint'); draw();
+};
+cv.onpointermove = (e) => { if (!down) return; const [x, y] = at(e); brushAt(x, y, tool === 'paint'); draw(); };
+window.onpointerup = () => { down = false; };
+function colourAt(x, y) { const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const g = c.getContext('2d'); g.drawImage(img, 0, 0); const d = g.getImageData(x, y, 1, 1).data; return d[3] ? '#' + [d[0], d[1], d[2]].map((v) => v.toString(16).padStart(2, '0')).join('') : null; }
+$('send').onclick = async () => {
+  if (!file) return;
+  const z = Math.max(4, Z()), c = document.createElement('canvas'); c.width = img.width * z; c.height = img.height * z;
+  const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.fillStyle = '#5b8fb0'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+  g.fillStyle = 'rgba(255, 51, 85, 0.7)'; for (const k of marks) { const [x, y] = k.split(',').map(Number); g.fillRect(x * z, y * z, z, z); }
+  g.font = `bold ${Math.max(12, z * 3)}px system-ui`; notes.forEach((n, i) => { g.fillStyle = '#fff08a'; g.fillRect(n.x * z, n.y * z - z * 4, z * 4, z * 4); g.fillStyle = '#16121f'; g.fillText(String(i + 1), n.x * z + z, n.y * z - z); });
+  const body = { asset: file, size: [img.width, img.height], comment: $('comment').value, notes: notes.map((n, i) => ({ n: i + 1, x: n.x, y: n.y, text: n.text, colourUnder: colourAt(n.x, n.y) })), marks: [...marks].map((k) => k.split(',').map(Number)), annotated: c.toDataURL('image/png') };
+  const r = await fetch('/feedback/' + encodeURIComponent(file), { method: 'POST', body: JSON.stringify(body) });
+  $('status').textContent = r.ok ? 'Sent. Tell Claude to check the feedback.' : 'Send failed.';
+  loadList();
+};
+loadList();
+</script>
+</body>
+</html>

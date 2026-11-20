@@ -53,6 +53,12 @@ Every sprite uses only palette keys, so consistency is guaranteed by constructio
   - Eyes get a gradient iris, a highlight and a sparkle.
   - Texture thins out at small sizes, so the 112 px portrait stays clean.
 - **Appeal beats correctness:** judge the whole character before the fix list. A cartoon convention (Dog Fjord's puffed jowls around a big crescent grin) can read better than anatomy (hanging bulldog lips), and anatomy pushed too far made him lumpy and unlikeable.
+- **Paint with light, not with parts (M4.9, Ivan: "drawing from shades, not from shapes... professional artists... think about how light is scattered and reflected, where are shadows and where are highlights"):**
+  - Silhouette first, then one light for the whole figure.
+  - Separate parts by light, cast shadow and value, never by outlines inside the silhouette.
+  - Add details last, and only a few.
+  - 3 to 4 tones per material in hard bands. Shadows lean cool, lights warm.
+  - Check every portrait in greys (`tools/pixelcheck.mjs` writes the values view): one light side, one shadow side, the face as the contrast peak.
 - **The CN Tower (M4.5):** one smooth taper from the trefoil base to the pod (no kink); the top after the close-up reference: rounded bowl, dark/light/dark window bands, white rim, narrower drum, lift housings, ribbed SkyPod, antenna with a red light band and a red tip.
 
 ## Toronto artifacts (Ivan's direction: every district unmistakable)

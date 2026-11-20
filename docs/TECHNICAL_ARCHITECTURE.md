@@ -209,3 +209,20 @@ Snapshots go to `art/history/<asset>/vNN/` (`tools/snapshot.mjs`).
   - Tall VERSUS: the raccoon sits at (-30, H/2 + 64) and THE RACCOON is right-aligned.
   - Tall TAKE BACK THE STREETS: Dog Fjord's bottom is at 420 and the raccoon at x -34.
   - The bosses grid's hero crop starts at y 6.
+
+## M4.9 additions (tools only; the game is unchanged)
+- **`tools/lib/light2d.mjs`: light-first shading, adapted from codixel.** Importing it adds methods to draw2d's `Canvas`.
+  - `shadeForm` inflates part masks into one volume with an exact distance transform, then softens it.
+  - `lightValue` lights it from one direction, and `band` quantizes the light onto a ramp in flat bands with a 4x4 Bayer dither strip.
+  - Shadows and light: `castShadow`, `occlude` (contact shadow), `rimLight`, and `stepper` (steps a colour along its ramp).
+  - Lines and ramps: `line1` (pixel-perfect lines) and `hueRamp`.
+  - The painter agent added a value-map pipeline: `values`, `lightField`, `valueShape`, `crescentValue`, `castValue`, `paintLight`, `terminator`, `tones`, `tubeField`, `curveTubeField`, `rimPaint`, `cleanSilhouette`, `dejag`, `deorphan`.
+- **`tools/lib/pixelcheck.mjs` and `tools/pixelcheck.mjs`: a pixel-art critic.**
+  - pxl's lint rules: orphan, jaggy, pillow, near-duplicate.
+  - codixel's silhouette check: nubs, strips, holes.
+  - Views: colour usage, an ASCII view with rulers, a values (greyscale) PNG and a findings PNG with problems boxed.
+- **`tools/annotate/`:** a local annotate page (`node tools/annotate/serve.mjs [dir] [port]`, 127.0.0.1 only). It writes `<name>.feedback.json` (comment, notes with pixel positions and the colour under each, marked pixels) and `<name>.annotated.png` next to the pictures.
+- **`tools/ramp.mjs`:** prints a hue-shifted ramp to add as palette keys.
+- **`tools/sprites/portraits_next.mjs`:** the M4.9 portraits, kept out of the build until Ivan's green light. Same exports as `portraits.mjs`.
+- **Palette:** new portrait keys (`¥ µ ¶ © ® ² ³ ¹ ¼ ½ ª º »`), added only.
+- **Third-party notices:** `tools/lib/THIRD_PARTY.md` has the MIT notices for codixel (commit 604a9dc) and pxl (commit c1bea5c).

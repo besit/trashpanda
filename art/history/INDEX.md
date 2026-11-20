@@ -532,6 +532,86 @@ v01: pedestrians (9 variants incl. kid and dog walker), 4 directions, SDF + 32-d
 
 ## portraits_2d
 
+### portraits_2d v30
+
+2026-11-20
+
+M4.9 round 10: final (head fur pass, done with light)
+
+![portraits_2d v30](portraits_2d/v30/preview.png)
+
+### portraits_2d v29
+
+2026-11-20
+
+M4.9 round 09: polish: one solid barrel highlight, the far ear's last jaggy, no fur over the pump
+
+![portraits_2d v29](portraits_2d/v29/preview.png)
+
+### portraits_2d v28
+
+2026-11-20
+
+M4.9 round 08: the shock's eyes seated (lid shadow, top-arc lid line), one laugh crease, no cream sliver under the paw, pixelcheck clean on the dog
+
+![portraits_2d v28](portraits_2d/v28/preview.png)
+
+### portraits_2d v27
+
+2026-11-20
+
+M4.9 round 07: Dog's laugh and shock lit like the grin (teeth casting into the mouth, a tongue dome, lit lips, cheeks up; a tall O, value-only eyes), a flat lit belly, the paw's knuckles
+
+![portraits_2d v27](portraits_2d/v27/preview.png)
+
+### portraits_2d v26
+
+2026-11-20
+
+M4.9 round 06: the lit belly back inside the falloff, a knotted short scarf end, the tail lit as one tube, the far ear in shadow, the smirk as a crease shape
+
+![portraits_2d v26](portraits_2d/v26/preview.png)
+
+### portraits_2d v25
+
+2026-11-20
+
+M4.9 round 05: faces done with light (wet-sphere eyes, lit teeth, nose), light falloff to the bottom, hand-placed tufts, the scarf end, ear nick
+
+![portraits_2d v25](portraits_2d/v25/preview.png)
+
+### portraits_2d v24
+
+2026-11-20
+
+M4.9 round 04: no rim, a thick bushy tail, a tan forearm against the cream bib, warmer coat shadows, Dog's far side as one form-following shadow
+
+![portraits_2d v24](portraits_2d/v24/preview.png)
+
+### portraits_2d v23
+
+2026-11-20
+
+M4.9 round 03: designed light: hand-placed terminators, hue-shifted threshold ramps, a cool rim, the paw as a grip, Dog's far-cheek plane
+
+![portraits_2d v23](portraits_2d/v23/preview.png)
+
+### portraits_2d v22
+
+2026-11-20
+
+M4.9 round 02: lit volume, cel bands (variant a): coat-coloured arms, cream bib, lighter warm coat, salmon dog, no dither
+
+![portraits_2d v22](portraits_2d/v22/preview.png)
+
+### portraits_2d v21
+
+2026-11-20
+
+M4.9 round 01: painted with light (variant a, volume): one value map x material map, lit volumes + designed cast shadows, yellow straight pump
+
+![portraits_2d v21](portraits_2d/v21/preview.png)
+
 ### portraits_2d v20
 
 2026-11-20
@@ -693,6 +773,62 @@ M4.6 (Ivan: redraw the raccoon and Dog Fjord portraits in pure 2D pixel art, no 
 ![portraits_2d v01](portraits_2d/v01/preview.png)
 
 ## portraits_2d_explore
+
+### portraits_2d_explore v16
+
+2026-11-20
+
+M4.9 round 09 wildcard: iter_09 + a ref-03 fur pass on the raccoon, done with light (strands only at tone boundaries, calm eyes/nose/smirk)
+
+![portraits_2d_explore v16](portraits_2d_explore/v16/preview.png)
+
+### portraits_2d_explore v15
+
+2026-11-20
+
+M4.9 round 02 variant c: chunky wildcard, the value map read in 2x2 clusters, 3 tones per material (ref 05)
+
+![portraits_2d_explore v15](portraits_2d_explore/v15/preview.png)
+
+### portraits_2d_explore v14
+
+2026-11-20
+
+M4.9 round 02 variant b: dark raccoon forearms and paws separated by light (lit rim, deep cast shadow), far paw behind the barrel
+
+![portraits_2d_explore v14](portraits_2d_explore/v14/preview.png)
+
+### portraits_2d_explore v13
+
+2026-11-20
+
+M4.9 round 02 variant a: lit volume + hard cel bands, coat-coloured near arm and paws, cream bib
+
+![portraits_2d_explore v13](portraits_2d_explore/v13/preview.png)
+
+### portraits_2d_explore v12
+
+2026-11-20
+
+M4.9 round 01 variant c: RICH, volumes with long ramps, dither strips, rim + bounce light, fur at the light's edge (ref 03)
+
+![portraits_2d_explore v12](portraits_2d_explore/v12/preview.png)
+
+### portraits_2d_explore v11
+
+2026-11-20
+
+M4.9 round 01 variant b: CEL, flat lit base + hand-designed shadow crescents and shapes, 3 tones + accent, hard edges (refs 04/05)
+
+![portraits_2d_explore v11](portraits_2d_explore/v11/preview.png)
+
+### portraits_2d_explore v10
+
+2026-11-20
+
+M4.9 round 01 variant a: VOLUME, each mass a lit volume in 5 flat bands + designed cast shadows and creases
+
+![portraits_2d_explore v10](portraits_2d_explore/v10/preview.png)
 
 ### portraits_2d_explore v09
 
