@@ -290,7 +290,7 @@ export class ShareScene extends Phaser.Scene {
         gfx((g) => split(g, 'red'));
         hi('pr_racc_smirk', -10, H * 0.5 + 40, { ox: 0 });
         gfx((g) => split(g, 'rest'));
-        hi('pr_dog_laugh', W + 12, H - 150, { ox: 1 });
+        hi('pr_dog_laugh', W + 12, H - 110, { ox: 1 }); // M4.7: the redrawn head is taller; he sits on the bottom bar so VS stays above his eyes
         words('THE RACCOON', 16, 146, MID, 0xfff08a, W, 0, true);
         words('DOG FJORD', W - 16, H - 142, MID, 0xffa199, W, 1, true);
         gfx((g) => starburst(g, W / 2, H * 0.5, 64, 40, 14));

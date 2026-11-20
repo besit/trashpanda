@@ -811,3 +811,33 @@ Ivan's list: redraw the raccoon and Dog Fjord portraits as pure 2D pixel art (no
 ### Numbers
 68 browser tests (4 new) and 21 unit tests pass.
 
+## 2026-11-19: M4.7, the portraits in a redraw / judge loop, and the controls text
+
+Ivan on the M4.6 portraits: "it looks a little better, but I want you to take a look and iterate on them... proportions, symmetry, overall shapes were better [in 3D], if we don't consider the blobbiness, but I want the 2D style still." He asked for 5-10 rounds, with one agent redrawing and another judging, and saved raccoon pixel-art refs ("I especially like 3, 4 and 5"). Also: overlapping text on the controls screen. The review doc is [docs/reviews/M4.7.md](reviews/M4.7.md).
+
+### The loop
+A drawer agent edited `tools/sprites/portraits.mjs`. A judge agent scored each sheet against the old 3D row and the refs and wrote a ranked fix list, which became the next round's brief. I read every sheet and added art-direction notes where the judge missed things. Nine rounds; every one is in `art/history/portraits_2d` (v02-v10), and every critique is in `docs/reviews/m47/loop/`.
+
+![](reviews/m47/evolution.png)
+
+| Round | 00 | 01 | 02 | 03 | 04 | 05 | 06 | 07 | 08 | 09 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Raccoon | 5.5 | 7 | 7 | 7.5 | 7.5 | 8 | 8 | 8 | 8 | 8 |
+| Dog Fjord | 4.5 | 5.5 | 6.5 | 6.5 | 7 | 7 | 7 | 7.5 | 7.5 | 7.5 |
+
+### What worked, what didn't
+- **Measuring the 3D first.** The drawer's study round turned "proportions were better" into numbers. The raccoon's snout was twice the 3D length, its eyes were 50 apart instead of 26, and Dog Fjord's head was 77% of the frame.
+- **Hand-guessed outlines oscillate.** The judge's coordinates turned the dog's head from a trapezoid (round 2) into a mushroom (round 3). Tracing the 3D silhouette's outline as the 2D shape's control points ended that in one round (round 4).
+- **A judge can be wrong too.** In round 4 it asked for a hair base about 100 wide, which made a bowl cut in round 5. It caught its own error the next round (the 3D hair is about 78 wide).
+- **Fixes trade against each other.** The ears went from horns to sideways sheep ears, then tucked inside the outline (an acorn), then folded at the top corners. Each step fixed the last complaint and broke the silhouette somewhere else, until the target was stated as the outline itself.
+- **"Done, stop touching it" lists** from round 4 on kept good parts from regressing while the rest moved.
+- **The sheet isn't the game.** After the judge's "ship both", the real intro cutscene showed the laughing eye merged into the nose at 112. The sheet only had the grin at that size large enough to see. Round 9 fixed it.
+
+### Also
+- **Controls:** on a computer the eight key rows ran into the missions note. The rows are 12 px apart now, and the grey notes sit on a dark band so the ride behind the page doesn't show through.
+- **Tall VERSUS poster:** the taller new head put the VS badge over Dog Fjord's eyes, so he sits lower.
+- **A constraint the judge didn't know:** it asked for the raccoon's body to run out of the frame. Ivan's M4.5 note ("looks cut off") rules that out, so the bust keeps a finished bottom and the tail curls across it.
+
+### Numbers
+68 browser tests and 21 unit tests pass.
+

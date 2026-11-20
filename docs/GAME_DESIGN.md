@@ -297,3 +297,7 @@ None. No ads, purchases, energy or login.
 - **Phones:** a tap on START no longer reaches the hidden difficulty list (it opened a second name box); MAP and pause sit under the score.
 - **The vignettes' planters** are drawn at their size once (they were stretched on screen and flickered as they scrolled); every other stretched prop too.
 - **Downtown:** the arches as in M4.4 (the left one on top).
+
+## M4.7: Ivan's notes on M4.6
+- **The hero portraits, redrawn over 9 rounds** of a drawer / judge loop: the old 3D versions' proportions, symmetry and outlines, in the 2D style of Ivan's raccoon refs. The raccoon is a 3/4 head on a chunky bust that stays in the frame (fist on the hip, ringed tail, the pump). Dog Fjord's head outline is traced from the 3D bulldog: ears folded at the top corners, a pompadour on the crown, heavy jowls, the wink and the lopsided grin.
+- **The controls page:** the key rows no longer run into the missions note, and the small notes sit on a dark band.

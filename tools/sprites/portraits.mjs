@@ -3,7 +3,7 @@
 // art."): the hero portraits drawn in 2D: flat shapes, hard outlines, cel shading and pixels placed by hand
 // (tools/lib/draw2d.mjs). One drawing per character, laid out on the posters' 232 x 208 grid and drawn at any scale
 // (the in-game dialogue portrait is the same drawing, smaller), so every size is real pixel art, never a resample.
-import { Canvas, blob, curve, ell, bar } from '../lib/draw2d.mjs';
+import { Canvas, blob, curve, ell, bar, tube } from '../lib/draw2d.mjs';
 
 export const GW = 232, GH = 208; // the design grid (the posters' portrait size at k = 1)
 const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
@@ -55,109 +55,79 @@ function pump(c) {
   c.dot(g[0] + 2, g[1], 'K');
 }
 
+// M4.7 (Ivan: "proportions, symmetry, overall shapes were better [in the 3D version]... but I want the 2D style
+// still"): re-proportioned to the old 3D bust, in the chunky style of Ivan's refs 4/5. A big head over a smaller
+// rounded bust that ends inside the frame (posters float this picture: no hard bottom edge), a short snout (a 3/4 view,
+// not a profile), matching ears, ruffs on both cheeks, a two-lobed mask; the arms as outlined tubes (a hand-on-hip
+// triangle on the far side), a ringed tail. Flat cel shading, no dither on the fur.
 export function raccoonPortrait2d(expr = 'smirk', k = 1) {
   const W = Math.round(GW * k), H = Math.round(GH * k), c = new Canvas(W, H, k);
   const lw = k >= 1.4 ? 2 : 1;
   pump(c);
 
-  // ---- ears (behind the head): triangles with round tips, fur outside, dark inside ----
-  c.shape('earR', blob([[146, 40], [154, 20], [162, 11], [170, 14], [174, 28], [174, 46]]), 'h', { inner: 'g', lw });
-  c.paint('earR', blob([[154, 38], [159, 24], [164, 18], [169, 22], [170, 40]]), 'k');
-  c.paint('earR', blob([[156, 36], [160, 26], [164, 22], [167, 26], [167, 38]]), 'g', { pattern: 'checker' });
-  c.shape('earL', blob([[86, 62], [82, 40], [82, 24], [88, 17], [96, 20], [116, 38], [112, 50]]), 'h', { inner: 'g', lw });
-  c.paint('earL', blob([[92, 54], [88, 36], [89, 27], [94, 25], [104, 36], [106, 46]]), 'k');
-  c.paint('earL', blob([[94, 50], [91, 36], [92, 30], [96, 30], [102, 40]]), 'g', { pattern: 'checker' });
-  c.rim('earL', -2, -2, 'H');
+  // ---- ears (behind the head): a matching pair of triangles with round tips, dark inside ----
+  c.shape('earL', blob([[86, 52], [90, 36], [96, 27], [103, 24], [109, 30], [118, 44]]), 'h', { inner: 'g', lw });
+  c.paint('earL', blob([[92, 48], [95, 36], [100, 30], [104, 31], [111, 44]]), 'k');
+  c.rim('earL', -2, -2, 'H', { only: ['h'] });
+  c.shape('earR', blob([[128, 42], [137, 29], [143, 23], [150, 25], [155, 36], [160, 50]]), 'h', { inner: 'g', lw });
+  c.paint('earR', blob([[134, 42], [140, 32], [145, 28], [149, 31], [153, 44]]), 'k');
+  c.rim('earR', 2, 0, 'G', { only: ['h'] });
 
-  // ---- the torso: broad shoulders tapering to the waist, a fur ruff under the chin, a pale front; it ends in a
-  // rounded bottom inside the frame. Cel-shaded from the upper left (flat shadow shapes, no pillow shading) ----
-  c.shape('body', blob([[104, 108], [90, 122], [78, 130, 1], [76, 146], [84, 172], [98, 192], [120, 203], [150, 204], [172, 194], [186, 176], [196, 150], [198, 134], [188, 124, 1], [176, 112]]), 'h', { inner: 'g', lw });
-  // the pale front: from under the chin down the chest and belly
-  c.paint('body', blob([[120, 116], [158, 114], [170, 132], [170, 160], [162, 188], [144, 202], [126, 196], [116, 170], [112, 140]]), 'H');
-  // the shadow side (right) and under the chest, as flat shapes
-  c.paint('body', blob([[168, 112], [190, 124], [200, 140], [196, 170], [184, 192], [160, 204], [150, 206], [164, 186], [174, 160], [174, 134]]), 'G');
-  c.paint('body', blob([[176, 120], [196, 132], [198, 160], [188, 184], [172, 198], [180, 176], [184, 150], [182, 132]]), 'g', { pattern: 'checker' });
-  c.paint('body', blob([[96, 192], [120, 200], [150, 200], [170, 194], [160, 206], [116, 206]]), 'G');
-  c.paint('body', blob([[100, 186], [124, 194], [152, 194], [172, 186], [166, 196], [140, 202], [112, 198]]), 'G', { pattern: 'checker' });
-  // the chest's line (where the pecs meet) and the belly fur
-  c.stroke(curve([[120, 146], [130, 153], [140, 151]]), 'h', { on: 'body' });
-  c.stroke(curve([[164, 144], [154, 153], [144, 151]]), 'h', { on: 'body' });
-  c.stroke(curve([[142, 156], [142, 164]]), 'h', { on: 'body' });
-  for (const [x, y] of [[132, 176], [146, 180], [138, 190]]) c.stroke([[x, y], [x + 2, y + 3], [x + 4, y]], 'h', { on: 'body' });
+  // ---- the ringed tail (behind the body): out from behind the lower right of the bust, bushy (swelling from the base,
+  // tapering to the tip), curling up beside the elbow and framing the arm's triangle ----
+  const tailC = [[146, 185], [170, 196], [194, 195], [210, 187], [219, 174], [222, 160]];
+  const tailW = (t) => (t < 0.5 ? 14 + 16 * t : 22 - (t - 0.5) * 16);
+  c.shape('tail', tube(tailC, tailW), 'h', { inner: 'g', lw });
+  c.paint('tail', blob([[160, 202], [190, 206], [214, 194], [228, 172], [228, 150], [221, 152], [222, 168], [210, 186], [188, 197], [160, 196]]), 'G');
+  {
+    const cc = curve(tailC), n = cc.length;
+    for (const f of [0.4, 0.6, 0.79, 0.99]) {
+      const i = Math.round(f * (n - 1)), a = cc[Math.max(0, i - 1)], b = cc[Math.min(n - 1, i + 1)];
+      const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy), nx = -dy / l, ny = dx / l, p = cc[i];
+      const u = f > 0.9 ? 9 : 3.2, ux = dx / l * u, uy = dy / l * u;
+      c.paint('tail', [[p[0] - nx * 16 - ux, p[1] - ny * 16 - uy], [p[0] + nx * 16 - ux, p[1] + ny * 16 - uy], [p[0] + nx * 16 + ux, p[1] + ny * 16 + uy], [p[0] - nx * 16 + ux, p[1] - ny * 16 + uy]], 'k');
+    }
+  }
+
+  // ---- the torso: a bust narrower than the head; the shoulders slope out from under the jaw (the head's cheek tufts
+  // and ruff overlap them), the sides taper to a rounded bottom inside the frame; a pale chest patch, one flat shadow ----
+  c.shape('body', blob([[104, 112], [92, 121], [86, 130], [83, 146], [84, 166], [90, 182], [102, 194], [124, 199], [146, 195], [158, 184], [164, 168], [166, 148], [164, 132], [158, 123], [146, 113]]), 'h', { inner: 'K', lw });
+  c.paint('body', blob([[106, 116], [146, 116], [152, 128], [148, 148], [140, 168], [132, 182], [124, 188], [116, 182], [110, 168], [104, 148], [100, 128]]), 'H');
+  c.paint('body', blob([[150, 114], [166, 120], [174, 150], [170, 180], [156, 200], [134, 206], [146, 186], [152, 166], [154, 136]]), 'G');
+  c.paint('body', blob([[86, 180], [106, 190], [136, 190], [158, 182], [150, 204], [100, 204]]), 'G');
+  // a few fur notches at the chest patch's edges (no muscles: it is a chubby raccoon)
+  for (const [x, y, d] of [[104, 144, 1], [110, 164, 1], [149, 142, -1], [141, 162, -1]]) c.stroke([[x, y], [x + 4 * d, y + 2], [x, y + 4]], 'h', { on: 'body' });
   // the ruff: a zig-zag of fur under the jaw, in shadow
-  c.paint('body', blob([[100, 108], [176, 110], [180, 122], [170, 118, 1], [164, 126, 1], [156, 119, 1], [148, 128, 1], [140, 120, 1], [132, 129, 1], [124, 120, 1], [116, 127, 1], [110, 119, 1], [100, 124, 1], [96, 116]]), 'G');
+  c.paint('body', blob([[98, 108], [152, 108], [158, 118], [150, 116, 1], [144, 124, 1], [138, 117, 1], [132, 125, 1], [126, 117, 1], [120, 125, 1], [114, 117, 1], [108, 124, 1], [102, 117, 1], [94, 120]]), 'G');
 
-  // ---- the far arm: elbow out, fist on the hip ----
-  c.shape('armR', blob([[184, 126], [198, 130], [214, 152], [218, 166, 1], [206, 170], [194, 150], [182, 140]]), 'G', { inner: 'g', lw });
-  c.paint('armR', blob([[198, 136], [214, 154], [216, 164], [208, 166], [200, 150]]), 'g');
-  c.shape('foreR', blob([[206, 158], [218, 166, 1], [206, 182], [194, 194], [184, 188], [196, 174]]), 'g', { inner: 'K', lw });
-  c.paint('foreR', blob([[212, 170], [204, 184], [194, 192], [192, 188], [204, 176]]), 'k');
-  // the fist: knuckles to the front, the thumb on top
-  c.shape('fistR', blob([[176, 182, 1], [182, 178], [190, 180], [196, 186], [194, 196], [186, 200], [178, 198, 1], [174, 194, 1], [176, 190, 1], [174, 186, 1]]), 'k', { inner: 'K', lw });
-  c.stroke([[176, 186], [184, 186]], 'K', { on: 'fistR' }); c.stroke([[175, 191], [184, 191]], 'K', { on: 'fistR' }); c.stroke([[177, 195], [184, 196]], 'K', { on: 'fistR' });
-  c.stroke(curve([[180, 180], [188, 179], [194, 184]]), 'g', { on: 'fistR' });
-  for (const [x, y] of [[178, 184], [177, 189], [178, 193]]) c.dot(x, y, 'g');
+  // ---- the far arm: a chunky hand-on-hip triangle (ref 4's limbs: ~40% of the torso's width, tapered, big paws). A
+  // round deltoid mass at the shoulder, the upper arm down and out to a round elbow, the forearm back in to the big fist
+  // pressed against the waist; background shows in the triangle between them and the torso ----
+  c.shape('armR', tube([[160, 129], [194, 151]], 24, 20), 'h', { inner: 'K', lw });
+  c.paint('armR', blob([[148, 138], [190, 164], [206, 156], [210, 172], [180, 172], [148, 148]]), 'G');
+  c.stroke(curve([[151, 139], [154, 145], [153, 150]]), 'G', { on: 'body' });   // the crease where the arm overlaps the torso
+  c.shape('foreR', tube([[194, 152], [171, 176]], 19, 16), 'G', { inner: 'K', lw });
+  c.paint('foreR', blob([[208, 154], [184, 184], [172, 190], [176, 180], [200, 156]]), 'g');
+  // the fist: one big chunky shape, three knuckle bumps on its silhouette pressing against the body, the thumb on top
+  const fist = (pts) => pts.map(([x, y]) => [168 + (x - 167) * 1.2, 177 + (y - 177) * 1.2]);
+  c.shape('fistR', blob(fist([[160, 168], [168, 166], [176, 170], [178, 178], [173, 186], [164, 188], [158, 185], [155.5, 182], [158, 179], [155.5, 175.5], [158, 172.5], [156, 169.5]])), 'k', { inner: 'K', lw });
+  c.stroke(curve(fist([[161, 169], [169, 168], [175, 173]])), 'g', { on: 'fistR' });
+  for (const y of [177, 183.5]) c.stroke(fist([[158, y], [164, y]]), 'K', { on: 'fistR' });
+  for (const p of fist([[158, 174], [158, 180.5], [159, 186]])) c.dot(p[0], p[1], 'g');
 
-  // ---- the head ----
-  c.shape('head', blob([
-    [96, 46], [112, 35], [136, 31], [158, 35], [172, 45], [180, 58], [188, 68], [200, 75], [208, 84], [206, 94], [194, 101],
-    [178, 106], [164, 112], [146, 117], [124, 117, 1], [116, 114], [104, 119, 1], [102, 110], [88, 112, 1], [88, 104], [72, 104, 1],
-    [80, 95], [68, 86, 1], [80, 80], [80, 66], [88, 54],
-  ]), 'h', { inner: 'g', lw });
-  c.rim('head', 9, 5, 'G', { pattern: 'checker' });
-  c.rim('head', 5, 3, 'G');
-  c.rim('head', -3, -3, 'H', { only: ['h'] });
-  // the dark stripe up the middle of the forehead
-  c.paint('head', blob([[132, 66], [136, 44], [140, 33], [146, 34], [150, 46], [146, 66]]), 'G', { pattern: 'checker' });
-  c.paint('head', blob([[134, 64], [139, 44], [143, 38], [147, 48], [144, 64]]), 'G');
-  // the white muzzle (lower face, around the snout) with the cheeks below the mask
-  c.paint('head', blob([[118, 96], [140, 90], [160, 84], [182, 76], [200, 78], [208, 88], [202, 99], [186, 106], [164, 113], [140, 116], [116, 112], [106, 104]]), 'W');
-  c.paint('head', blob([[150, 104], [178, 100], [196, 100], [186, 107], [164, 113], [140, 116], [128, 112]]), 'H');
-  c.paint('head', blob([[110, 106], [124, 108], [140, 113], [124, 116], [108, 112]]), 'H', { pattern: 'checker' });
-  // the white brows above each eye
-  c.paint('head', blob([[94, 60], [104, 52], [118, 51], [130, 56], [132, 62], [116, 59], [100, 64]]), 'W');
-  c.paint('head', blob([[150, 58], [160, 51], [172, 53], [180, 60], [178, 64], [166, 59], [152, 62]]), 'W');
-  // the bandit mask: across both eyes, narrow over the bridge of the nose, down onto the cheeks
-  c.shape('mask', blob([
-    [84, 72], [92, 64], [104, 63], [118, 63], [130, 67], [140, 66], [152, 64], [166, 63], [178, 66], [186, 73], [182, 79],
-    [172, 82], [162, 84], [152, 86], [144, 92], [134, 98], [120, 100], [104, 98], [92, 94], [84, 86],
-  ]), 'k', { inner: 'K', clip: 'head' });
-  c.rim('mask', -2, -2, 'g', { only: ['k'] });
-  // eyes: half-lidded and pleased with itself, looking right
-  const eye = (cx, cy, w, hgt) => {
-    c.shape('eye' + cx, blob([[cx - w, cy + 1], [cx - w * 0.5, cy - hgt * 0.4], [cx + w * 0.5, cy - hgt * 0.45], [cx + w, cy], [cx + w * 0.4, cy + hgt * 0.55], [cx - w * 0.5, cy + hgt * 0.55]]), 'W', { inner: 'K' });
-    c.paint('eye' + cx, ell(cx + w * 0.38, cy + 0.6, Math.max(1.6, w * 0.38), Math.max(1.6, hgt * 0.5)), 'K');
-    c.paint('eye' + cx, ell(cx + w * 0.38, cy + 0.6, Math.max(1, w * 0.2), Math.max(1, hgt * 0.28)), 'w');
-    c.dot(cx + w * 0.22, cy - hgt * 0.05, 'W');
-    // the heavy upper lid: a flat line over the top third (the smirk's look)
-    c.stroke([[cx - w - 1, cy - 0.5], [cx - w * 0.4, cy - hgt * 0.32], [cx + w * 0.5, cy - hgt * 0.36], [cx + w + 1, cy - 0.8]], 'K', { t: Math.max(1, Math.round(1.6 * k)) });
-    c.paint('eye' + cx, blob([[cx - w, cy], [cx - w * 0.4, cy - hgt * 0.6], [cx + w * 0.5, cy - hgt * 0.6], [cx + w, cy - 1], [cx, cy - hgt * 0.15]]), 'k');
-  };
-  eye(112, 78, 10.5, 10.5);
-  eye(162, 76, 8, 9.5);
-  // the brows' expression: the near one level, the far one raised a touch
-  c.stroke(curve([[100, 61], [112, 57], [124, 59]]), 'H', { on: 'head' });
-  c.stroke(curve([[154, 58], [164, 53], [174, 56]]), 'H', { on: 'head' });
-  // the nose
-  c.shape('nose', blob([[192, 79], [202, 77], [210, 82], [209, 90], [201, 93], [193, 89]]), 'K', { lw });
-  c.paint('nose', ell(200, 81, 3, 1.5), 'g');
-  c.dot(199, 81, 'G');
-  // the smirk: a line down from the nose, then the mouth sweeping back and up into one raised corner
-  const mouth = curve([[201, 93], [200, 98], [193, 102], [182, 104], [171, 103], [162, 99], [158, 94]]);
-  c.stroke(mouth, 'K', { t: Math.max(1, Math.round(1.4 * k)) });
-  c.stroke(curve([[160, 97], [156, 93], [157, 90]]), 'K');                      // the corner's dimple
-  c.stroke(curve([[186, 106], [178, 108], [170, 107]]), 'G', { on: 'head' });   // the chin under the lip
-  for (const [x, y] of [[178, 92], [184, 90], [181, 96], [173, 94]]) c.dot(x, y, 'G');
-  // fur tufts on the cheeks: short strokes along the flare
-  for (const [x, y, dx, dy] of [[86, 100, -8, 2], [92, 106, -6, 5], [104, 112, -3, 5], [84, 88, -8, -2]]) c.stroke([[x, y], [x + dx, y + dy]], 'G', { on: 'head' });
-
-  // ---- the near arm: down to the elbow, up to the paw, whose fingers wrap round the pump ----
-  c.shape('armL', blob([[86, 124], [104, 132], [100, 150], [92, 170], [84, 180, 1], [72, 176], [72, 156], [76, 138]]), 'h', { inner: 'g', lw });
-  c.paint('armL', blob([[96, 138], [102, 134], [98, 154], [90, 172], [84, 178], [86, 166], [92, 150]]), 'G');
-  c.paint('armL', blob([[78, 134], [84, 128], [82, 144], [76, 160], [74, 150]]), 'H');
-  c.shape('foreL', blob([[72, 176], [84, 180, 1], [80, 166], [72, 152], [66, 142], [58, 144], [62, 156]]), 'G', { inner: 'g', lw });
-  c.paint('foreL', blob([[66, 146], [74, 156], [80, 168], [82, 178], [76, 170], [68, 158], [62, 150]]), 'g');
-  c.paint('foreL', blob([[58, 144], [66, 142], [70, 148], [62, 152]]), 'k');
+  // ---- the near arm: a chunky upper arm from the round shoulder mass to a round elbow, the chunky grey forearm up to
+  // the dark paw (its wrist as thick as the forearm), whose fingers wrap round the pump; a sliver of background in the V ----
+  c.paint('body', blob([[98, 130], [109, 134], [108, 162], [101, 180], [93, 178], [97, 154]]), 'G');   // the arm's cast shadow
+  c.shape('tuftL1', [[77, 175], [84, 176], [79.5, 183]], 'G', { inner: 'K', lw });   // fur notches at the elbow cap
+  c.shape('tuftL2', [[84, 176], [90, 173], [90, 181]], 'G', { inner: 'K', lw });
+  c.shape('armL', tube([[92, 129], [84, 166]], 22, 19), 'h', { inner: 'K', lw });
+  c.paint('armL', blob([[98, 128], [108, 128], [100, 168], [90, 182], [86, 176], [94, 160]]), 'G');
+  c.paint('armL', blob([[78, 134], [84, 122], [83, 142], [79, 158], [75, 150]]), 'H');
+  c.rim('armL', -2, 0, 'H', { only: ['h'] });   // a light edge on the arm's lit side, so it separates from the torso
+  c.stroke(curve([[102, 137], [100, 143], [101, 148]]), 'G', { on: 'body' });   // the crease where the arm overlaps the torso
+  c.shape('foreL', tube([[83, 169], [65, 144]], 18, 15), 'G', { inner: 'K', lw });
+  c.paint('foreL', blob([[74, 146], [86, 164], [94, 172], [88, 182], [80, 174], [72, 156]]), 'g');
+  c.paint('foreL', blob([[54, 146], [64, 136], [74, 142], [68, 152], [58, 154]]), 'k');
   // the back of the hand (right of the barrel), then four fingers across the front of it and the thumb over the top
   c.shape('paw', blob([[56, 130], [68, 129], [72, 138], [70, 148], [58, 150], [54, 140]]), 'k', { inner: 'K', lw });
   for (let i = 0; i < 4; i++) {
@@ -168,117 +138,228 @@ export function raccoonPortrait2d(expr = 'smirk', k = 1) {
   }
   c.shape('thumb', blob([[58, 131, 1], [52, 127], [47, 128], [48, 131], [56, 134, 1]]), 'k', { inner: 'K', lw });
   c.stroke([[50, 129], [55, 130]], 'g', { on: 'thumb' });
+
+  // ---- the head: a round cranium centred over the body, cheek ruffs flaring out on both sides ----
+  c.shape('head', blob([
+    [92, 50], [106, 41], [124, 37], [142, 39], [156, 46], [165, 57], [169, 70], [171, 82], [174, 90], [176, 98], [173, 104],
+    [178, 110, 1], [166, 112], [170, 117, 1], [156, 117], [144, 119], [130, 120], [116, 118, 1], [108, 113], [98, 118, 1], [96, 110], [84, 113, 1], [85, 105],
+    [70, 105, 1], [79, 97], [67, 90, 1], [79, 84], [80, 72], [84, 60],
+  ]), 'h', { inner: 'g', lw });
+  c.rim('head', 5, 3, 'G', { only: ['h'] });
+  c.rim('head', -2, -2, 'H', { only: ['h'] });
+  // the dark stripe down the middle of the forehead to the bridge of the nose
+  c.paint('head', blob([[118, 38], [129, 38], [134, 52], [134, 70], [127, 70], [121, 54]]), 'G');
+  // the white brows, a grey gap between them and the mask
+  c.paint('head', blob([[86, 65], [91, 57], [103, 52], [117, 52], [127, 57], [127, 62], [114, 59], [100, 60], [90, 66]]), 'W');
+  c.paint('head', blob([[137, 61], [142, 54], [153, 50], [164, 52], [169, 59], [167, 63], [157, 58], [147, 58], [139, 63]]), 'W');
+  // the white muzzle and cheeks under the mask
+  // (the near cheek's outer spikes stay grey so the head separates from the ruff)
+  c.paint('head', blob([[84, 94], [92, 95], [106, 93], [120, 90], [130, 85], [137, 84], [148, 87], [162, 88], [173, 86], [180, 95], [178, 104], [170, 108], [158, 110], [146, 110], [138, 106], [126, 108], [112, 108], [98, 105], [88, 102]]), 'W');
+  // the jaw under the smirk stays grey, with a jaw line, so the head ends clearly above the ruff (as in 3D)
+  c.stroke(curve([[124, 114.5], [142, 116.5], [158, 114.5], [170, 110]]), 'G', { on: 'head' });
+  // a grey line down the snout from the mask's bridge to the nose
+  c.stroke(curve([[139, 84], [148, 88], [157, 92]]), 'h', { on: 'head' });
+  // the bandit mask: a lobe round each eye, joined by a narrower bridge, the outer ends drooping onto the cheeks
+  c.shape('mask', blob([
+    [80, 80], [85, 70], [95, 65], [108, 63], [120, 64], [128, 67], [133, 73], [138, 68], [146, 63], [158, 62], [167, 65], [172, 74],
+    [169, 83], [160, 87], [150, 88], [142, 86], [137, 80], [133, 79], [128, 86], [118, 91], [104, 93], [91, 94], [82, 90],
+  ]), 'k', { inner: 'K', clip: 'head' });
+  c.rim('mask', -2, -2, 'g', { only: ['k'] });
+  // the eyes: half-lidded and pleased with itself, amber irises looking right, a white glint (refs 1, 3)
+  const t1 = Math.max(1, Math.round(1.5 * k));
+  const eye = (cx, cy, rx, ry) => {
+    const n = 'eye' + cx;
+    // a lighter rim under the eye (the lower lid) so the eye separates from the black mask
+    c.paint('mask', blob([[cx - rx - 1.5, cy], [cx - rx * 0.5, cy + ry * 0.9 + 2], [cx + rx * 0.55, cy + ry * 0.9 + 2], [cx + rx + 1.5, cy - 0.6], [cx + rx * 0.55, cy + ry * 0.9 + 0.5], [cx - rx * 0.5, cy + ry * 0.9 + 0.5]]), 'g');
+    c.shape(n, blob([[cx - rx, cy + 0.6], [cx - rx * 0.55, cy - ry], [cx + rx * 0.5, cy - ry], [cx + rx, cy - 0.4], [cx + rx * 0.55, cy + ry * 0.9], [cx - rx * 0.5, cy + ry * 0.9]]), 'W', { inner: 'K' });
+    const ix = cx + rx * 0.3, iy = cy + 0.6;
+    c.paint(n, ell(ix, iy, ry * 0.95, ry * 1.05), 'X');
+    c.paint(n, ell(ix + ry * 0.2, iy + ry * 0.35, ry * 0.7, ry * 0.5), 'j');
+    c.paint(n, ell(ix + 0.3, iy, ry * 0.48, ry * 0.58), 'K');
+    c.paint(n, ell(ix - ry * 0.35, iy - ry * 0.3, Math.max(0.9, 1.1 / k), Math.max(0.9, 1.1 / k)), 'W');
+    // the heavy upper lid over the top third (the smirk's look)
+    c.paint(n, blob([[cx - rx - 2, cy - ry - 3], [cx + rx + 2, cy - ry - 3], [cx + rx + 2, cy - ry * 0.45], [cx, cy - ry * 0.5], [cx - rx - 2, cy - ry * 0.3]]), 'k');
+    c.stroke([[cx - rx - 1, cy - ry * 0.25], [cx, cy - ry * 0.5], [cx + rx + 1, cy - ry * 0.45]], 'K', { t: t1 });
+  };
+  eye(117, 76, 9, 6.6);
+  eye(152, 74.5, 6.8, 5.4);
+  // the nose: at the end of the muzzle, below the mask (~15 under the far eye, as in 3D)
+  c.shape('nose', blob([[159, 92], [164, 88], [171, 89], [175, 93], [172, 98], [166, 100], [160, 97]]), 'K', { lw });
+  c.paint('nose', ell(166, 91, 2.6, 1.2), 'g');
+  c.dot(165, 91, 'G');
+  // the smirk: a line down from the nose, then the mouth sweeping back into the raised near corner and its dimple
+  c.stroke(curve([[167, 100], [166, 103], [160, 106], [153, 107.5], [147, 106.5], [143, 104], [140.5, 99.5]]), 'K', { t: Math.max(1, Math.round(1.3 * k)) });
+  c.stroke(curve([[142.5, 102.5], [139, 100], [139.5, 96.5]]), 'K');
+  c.stroke(curve([[166, 103], [170, 105], [173, 104]]), 'K');
+  for (const [x, y] of [[152, 97], [148, 100], [155, 101]]) c.dot(x, y, 'h');
+  // fur tufts on the cheek ruffs
+  for (const [x, y, dx, dy] of [[84, 98, -7, 2], [90, 104, -5, 5], [104, 110, -3, 5], [168, 106, 5, 2], [160, 113, 4, 3]]) c.stroke([[x, y], [x + dx, y + dy]], 'G', { on: 'head' });
   return c.img;
 }
 
 // ============================== DOG FJORD ==============================
-// A cartoon bulldog (never a real person's likeness): a huge pink pear-shaped head on a small suited body, a grey hair
-// swoop, pointed ears, a brown heart-shaped patch round one eye, thick black brows, a big black nose, jowls.
+// A cartoon bulldog (never a real person's likeness): a big pink jowly head on a small suited body, a compact grey
+// pompadour, rose ears folded at the top corners, a brown heart-shaped patch round the far eye, thick black brows, a big
+// black nose, heavy jowls.
 // Three-quarter view facing LEFT. Expressions: grin, laugh, shock.
+// M4.7: laid out on the old 3D version's coordinates (read off its render on this same grid) and drawn 1.1x larger
+// about (110, 100), so the face clusters in the middle of a broad jowly head as in 3D, while the in-game 112 x 100
+// dialogue portrait keeps the head ~61% of its width (what the old 3D dialogue portrait had).
+const DSC = 1.1;
+const T = ([x, y, s]) => (s ? [110 + (x - 110) * DSC, 100 + (y - 100) * DSC, 1] : [110 + (x - 110) * DSC, 100 + (y - 100) * DSC]);
+const B = (pts) => blob(pts.map(T));
+const Cv = (pts) => curve(pts).map(T);
+const E = (x, y, rx, ry, rot = 0) => { const [X, Y] = T([x, y]); return ell(X, Y, rx * DSC, ry * DSC, rot); };
 
 export function dogPortrait2d(expr = 'grin', k = 1) {
   const W = Math.round(GW * k), H = Math.round(GH * k), c = new Canvas(W, H, k);
-  const lw = k >= 1.4 ? 2 : 1, t2 = Math.max(1, Math.round(2 * k)), t3 = Math.max(1, Math.round(3.4 * k));
-  // ---- the suit (behind the chin): shoulders, lapels, the white shirt and the blue tie ----
-  c.shape('suit', blob([[56, 210, 1], [60, 184], [74, 166], [96, 158], [146, 158], [168, 166], [182, 184], [188, 210, 1]]), 'g', { inner: 'k', lw });
-  c.paint('suit', blob([[140, 160], [168, 168], [182, 186], [188, 210], [150, 210], [150, 180]]), 'k');
-  c.paint('suit', blob([[64, 186], [76, 170], [92, 162], [80, 180], [72, 210], [60, 210]]), 'G', { pattern: 'checker' });
-  c.shape('shirt', blob([[100, 158, 1], [140, 158, 1], [124, 206, 1], [118, 206, 1]]), 'W', { inner: 'K' });
-  c.paint('shirt', blob([[124, 160], [140, 158], [124, 204]]), 'H');
-  c.shape('lapelL', blob([[96, 158, 1], [116, 200, 1], [104, 186, 1], [92, 172, 1], [84, 164, 1]]), 'k', { inner: 'K' });
-  c.shape('lapelR', blob([[144, 158, 1], [158, 164, 1], [150, 172, 1], [138, 186, 1], [126, 200, 1]]), 'k', { inner: 'K' });
-  c.shape('tie', blob([[114, 166, 1], [126, 166, 1], [124, 176, 1], [130, 206, 1], [120, 212, 1], [110, 206, 1], [116, 176, 1]]), 'U', { inner: 'K' });
-  for (let y = 172; y < 210; y += 5) for (let x = 110 + ((y / 5) % 2) * 2.5; x < 132; x += 5) c.paint('tie', ell(x, y, 0.8, 0.8), 'c');
-  c.paint('tie', blob([[121, 166], [126, 166], [124, 176], [130, 206], [124, 210]]), 'u', { pattern: 'checker' });
-  c.shape('knot', blob([[113, 160, 1], [127, 160, 1], [125, 170, 1], [115, 170, 1]]), 'U', { inner: 'K' });
-  c.paint('knot', blob([[121, 160], [127, 160], [125, 170], [121, 170]]), 'u');
+  const lw = k >= 1.4 ? 2 : 1;
+  const px = (u, min = 1) => Math.max(min, Math.round(u * k * DSC)); // a stroke `u` design units thick, in pixels
 
-  // ---- ears: pointed flaps up and out (dog ears that read as little horns) ----
-  // M4.6: short folded flaps (a bulldog's rose ears), the fold's underside dark
-  c.shape('earL', blob([[74, 56], [58, 48], [40, 44, 1], [46, 56], [56, 70], [66, 74]]), 'P', { inner: 'p', lw });
-  c.paint('earL', blob([[62, 52], [44, 46], [48, 54], [60, 60]]), 'p');
-  c.stroke(curve([[44, 47], [56, 54], [68, 58]]), 'p', { on: 'earL' });
-  c.shape('earR', blob([[166, 50], [184, 42], [204, 38, 1], [198, 52], [188, 64], [178, 70]]), 'P', { inner: 'p', lw });
-  c.paint('earR', blob([[180, 46], [200, 40], [194, 50], [182, 56]]), 'p');
-  c.stroke(curve([[200, 41], [186, 49], [174, 54]]), 'p', { on: 'earR' });
+  // ---- the suit (behind the chin): shoulders tucked under the jowls, lapels, the white shirt and the blue tie ----
+  c.shape('suit', B([[62, 214, 1], [66, 186], [78, 168], [96, 156], [130, 156], [148, 168], [160, 186], [164, 214, 1]]), 'g', { inner: 'k', lw });
+  c.paint('suit', B([[124, 156], [148, 168], [160, 186], [166, 214], [136, 214], [134, 186]]), 'k');
+  c.shape('shirt', B([[93, 154, 1], [119, 154, 1], [107, 204, 1], [105, 204, 1]]), 'W', { inner: 'K' });
+  c.paint('shirt', B([[107, 154], [119, 154], [107, 204]]), 'H');
+  c.shape('lapelL', B([[90, 156, 1], [105, 202, 1], [95, 188, 1], [84, 174, 1], [77, 165, 1]]), 'k', { inner: 'K' });
+  c.shape('lapelR', B([[122, 156, 1], [137, 164, 1], [130, 178, 1], [118, 192, 1], [107, 202, 1]]), 'k', { inner: 'K' });
+  c.shape('tie', B([[102, 166, 1], [110, 166, 1], [109, 176, 1], [114, 206, 1], [106, 213, 1], [98, 206, 1], [103, 176, 1]]), 'U', { inner: 'K' });
+  for (let y = 174; y < 212; y += 5) for (let x = 98 + ((y / 5) % 2) * 2.5; x < 116; x += 5) c.paint('tie', E(x, y, 0.8, 0.8), 'c');
+  c.paint('tie', B([[107, 166], [110, 166], [109, 176], [114, 206], [108, 210]]), 'u');
+  c.shape('knot', B([[100, 159, 1], [112, 159, 1], [111, 167, 1], [101, 167, 1]]), 'U', { inner: 'K' });
+  c.paint('knot', B([[107, 159], [112, 159], [111, 167], [107, 167]]), 'u');
 
-  // ---- the head: narrow at the top, wide jowls at the bottom ----
-  c.shape('head', blob([
-    [100, 30], [126, 22], [152, 26], [172, 40], [182, 62], [190, 86], [202, 108], [208, 130], [204, 150], [192, 164], [172, 166],
-    [150, 172], [120, 174], [92, 172], [70, 166], [50, 164], [34, 152], [28, 130], [32, 106], [48, 82], [62, 58], [80, 38],
+  // ---- the head: a narrower skull on heavy low jowls (widest at ~136), the jowl lobes sagging at the lower corners,
+  // a flatter chin line overlapping the collar ----
+  // M4.7 iterations 04-05: the lower outline is TRACED from the 3D head's silhouette (the SDF skull + jowls rendered alone
+  // with dogPortraitHi's camera, sampled at 28 angles round its centroid; the bottom's two small dips smoothed into one U).
+  // The upper skull is wider than the bare 3D skull, as the 3D head reads with its hair on: the hair is the top of the
+  // dome, so skull + hair make one convex outline from the ear hinges up over the hair
+  c.shape('head', B([
+    [106, 40], [120, 40], [134, 43], [146, 49], [154, 58], [159, 69], [163, 80], [166, 91], [169, 102], [173, 116], [172.5, 126],
+    [170, 136], [164, 150], [153, 160], [138, 165], [122, 165.5], [108, 165], [94, 164.5], [80, 163], [66, 160], [54, 152], [48, 139],
+    [47, 124], [48.5, 112], [51, 101], [54, 91], [57, 80], [61, 69], [67, 59], [78, 50], [92, 43],
   ]), 'm', { inner: 'p', lw });
-  // shade: the right side and under the jowls (light from the upper left), a lit band on the left
-  c.paint('head', blob([[160, 40], [180, 56], [190, 84], [204, 110], [208, 132], [198, 152], [176, 164], [150, 170], [168, 150], [180, 128], [176, 96], [168, 66]]), 'P');
-  c.paint('head', blob([[150, 44], [168, 60], [174, 90], [178, 120], [168, 146], [150, 166], [158, 140], [166, 112], [160, 80]]), 'P', { pattern: 'checker' });
-  c.paint('head', blob([[44, 140], [70, 156], [100, 164], [130, 166], [160, 160], [150, 172], [100, 172], [60, 162]]), 'P');
-  c.paint('head', blob([[40, 104], [52, 84], [64, 62], [60, 84], [50, 104], [44, 124]]), 'M');
-  // the muzzle (paler) round the nose and mouth
-  c.paint('head', blob([[46, 116], [64, 98], [96, 92], [128, 98], [152, 112], [158, 134], [142, 152], [108, 158], [72, 154], [48, 138]]), 'M');
-  c.paint('head', blob([[128, 102], [152, 112], [158, 134], [144, 150], [148, 128]]), 'm');
-  // forehead wrinkles
-  for (const [y, x0, x1] of [[50, 106, 152], [57, 112, 148]]) c.stroke(curve([[x0, y + 2], [(x0 + x1) / 2, y - 1], [x1, y + 2]]), 'p', { on: 'head' });
-  // jowl folds and the chin
-  c.stroke(curve([[40, 118], [46, 138], [62, 154]]), 'p', { on: 'head' });
-  c.stroke(curve([[184, 112], [188, 134], [178, 152]]), 'p', { on: 'head' });
-  c.stroke(curve([[96, 166], [118, 170], [138, 166]]), 'p', { on: 'head' });
+  // three tones: the lit left plane (M), the base (m), one shadow shape down the right and under the jowls (P)
+  c.paint('head', B([[146, 30], [200, 40], [200, 190], [60, 190], [40, 160], [56, 152], [82, 157], [108, 158], [134, 155], [150, 147], [157, 132], [158, 112], [156, 92], [152, 72], [146, 54]]), 'P');
+  // the lit left plane: a wedge along the convex side, starting from nothing at the brow line, widest at the cheek
+  c.paint('head', B([[30, 80], [56, 81], [59, 96], [60, 112], [57, 127], [50, 140], [30, 142]]), 'M');
+  // the jowls' weight in flat shapes: a shadow crescent under each cheek pad following the sag down to the U
+  c.paint('head', B([[46, 128], [54, 138], [62, 147], [72, 154], [84, 158], [80, 170], [56, 166], [40, 150]]), 'P');
+  c.paint('head', B([[150, 124], [156, 136], [152, 148], [142, 156], [160, 164], [180, 140], [178, 120]]), 'P');
+  // forehead wrinkles (upper left)
+  c.stroke(Cv([[86, 67], [97, 64.5], [110, 66.5]]), 'p', { on: 'head', t: px(1.2) });
+  c.stroke(Cv([[89, 72.5], [99, 70.5], [112, 72.5]]), 'p', { on: 'head', t: px(1.2) });
+  // the jowl creases as folds (a dark line with a shadow sliver on its outer side; the right one is also the muzzle's
+  // far edge, from under the patch down into the jowl), and the chin fold under the lower lip with shadow below it
+  const LCR = [[66, 117], [59, 128], [61, 140], [68, 149]], RCR = [[121, 111], [129, 117], [134, 127], [134.5, 138], [129, 149]];
+  c.stroke(Cv(LCR.map(([x, y]) => [x - 1.8, y + 1])), 'P', { on: 'head', t: px(2.4, 2) });
+  c.stroke(Cv(RCR.map(([x, y]) => [x + 1.8, y + 1])), 'P', { on: 'head', t: px(2.4, 2) });
+  c.stroke(Cv(LCR), 'p', { on: 'head', t: px(1.4) });
+  c.stroke(Cv(RCR), 'p', { on: 'head', t: px(1.4) });
+  const chinY = expr === 'laugh' ? 158 : 154;
+  c.paint('head', B([[90, chinY], [110, chinY + 1.8], [130, chinY], [136, 172], [84, 172]]), 'P');
+  c.stroke(Cv([[92, chinY], [110, chinY + 1.8], [128, chinY]]), 'p', { on: 'head', t: px(1.4) });
   // the brown heart patch round the far eye
-  c.shape('patch', blob([[134, 72], [134, 62], [142, 57], [150, 62], [157, 57], [166, 60], [168, 70], [162, 82], [151, 93, 1], [140, 82]]), 'x', { inner: 'w', clip: 'head' });
-  c.paint('patch', blob([[136, 64], [142, 59], [148, 63], [142, 68], [137, 71]]), 'X');
+  c.shape('patch', B([[104, 89], [104, 82], [110, 77.5], [117, 78.5], [124, 77], [131, 80.5], [132, 89], [127, 99], [118, 109, 1], [109, 99]]), 'x', { inner: 'w', clip: 'head' });
+  c.paint('patch', B([[106, 84], [110, 80], [115, 81], [110, 87], [107, 89]]), 'X');
 
-  // ---- the hair: a grey swoop, a big quiff at the front combed back over to the right ----
-  c.shape('hair', blob([[84, 52], [82, 36], [94, 22], [116, 14], [142, 12], [164, 18], [180, 32], [184, 48], [176, 46], [164, 40], [146, 38], [126, 40], [108, 44], [96, 50]]), 'h', { inner: 'G', lw });
-  c.paint('hair', blob([[112, 18], [142, 14], [164, 20], [178, 34], [182, 46], [170, 40], [150, 30], [128, 24]]), 'H');
-  c.paint('hair', blob([[150, 34], [170, 38], [182, 46], [176, 46], [164, 42]]), 'G', { pattern: 'checker' });
-  for (const pts of [[[100, 40], [122, 28], [150, 24], [176, 36]], [[104, 46], [128, 36], [156, 34], [180, 44]], [[118, 22], [142, 18], [166, 24]]]) c.stroke(curve(pts), 'G', { on: 'hair' });
-  c.shape('quiff', blob([[72, 52], [70, 36], [80, 20], [98, 10], [118, 8], [132, 12], [116, 16], [102, 24], [94, 36], [90, 50], [80, 60]]), 'H', { inner: 'h', lw });
-  c.paint('quiff', blob([[80, 26], [96, 14], [116, 10], [104, 18], [90, 28], [84, 40]]), 'W');
-  c.stroke(curve([[78, 50], [80, 36], [90, 24], [106, 16]]), 'h', { on: 'quiff' });
-  c.stroke(curve([[84, 54], [86, 40], [96, 28], [114, 20]]), 'h', { on: 'quiff' });
+  // ---- ears: rose-ear flaps at the head's top corners, the base rising beside the hair, folded over and outward at
+  // ~45 degrees so each adds a small point to the silhouette's top corner (the cheeks stay the widest point), a
+  // straight light fold edge over a dark underside ----
+  c.shape('earL', B([[81, 47, 1], [54, 66, 1], [69, 72, 1]]), 'm', { inner: 'K', lw });
+  c.paint('earL', B([[53, 67, 1], [78, 55, 1], [70, 74, 1]]), 'P');
+  c.stroke(Cv([[80, 48], [56, 65]]), 'M', { on: 'earL', t: px(1.6) });
+  c.shape('earR', B([[140, 47, 1], [167, 66, 1], [153, 72, 1]]), 'P', { inner: 'K', lw });
+  c.paint('earR', B([[168, 67, 1], [143, 55, 1], [152, 74, 1]]), 'p');
+  c.stroke(Cv([[141, 48], [165, 65]]), 'm', { on: 'earR', t: px(1.6) });
+
+  // ---- the hair: a compact combed-back pompadour on the crown (the 3D's ~78 wide, pink skull showing at its sides,
+  // the front quiff a little higher than the back); tapered ridges sweep from the hairline up and back, converging to the
+  // crown; a temple recess and short sideburn wedges at the hairline; a pink shadow on the skin under the front ----
+  const HAIRLINE = [[146, 54], [143, 59], [139, 53], [134, 51.5], [120, 52], [108, 55], [100, 52], [92, 52], [84, 56], [79.5, 64], [76, 59]];
+  c.shape('hair', B([[75, 58], [74, 46], [78, 37], [85, 31], [95, 28.5], [105, 29], [114, 31], [127, 34], [139, 38], [146, 43], [148.5, 50], ...HAIRLINE]), 'H', { inner: 'P', lw });
+  c.paint('hair', B([[118, 30], [166, 38], [166, 70], [140, 56], [124, 53], [132, 42]]), 'h');
+  const hy = (pts) => pts.map(([x, y]) => [x, y + 2.5]);   // iter_04's ridges, at full length, set on the lower crown
+  for (const g of [
+    [[86, 55], [85, 43], [92, 33], [104, 29], [120, 32]],
+    [[93, 53], [95, 44], [104, 37], [120, 36], [138, 39]],
+    [[103, 54], [109, 46], [122, 42], [142, 43]],
+    [[116, 52], [126, 47], [144, 48], [151, 51]],
+  ]) c.stroke(Cv(hy(g)), 'G', { on: 'hair', t: px(1.8) });
+  for (const g of [[[80, 50], [79, 39], [85, 30], [96, 26]], [[89, 50], [90, 42], [97, 35], [108, 32]], [[99, 51], [102, 44], [112, 39]]]) c.stroke(Cv(hy(g)), 'W', { on: 'hair', t: px(1.4) });
+  c.stroke(Cv([[122, 53.5], [108, 56.5], [100, 53.5], [92, 53.5], [82, 58.5]]), 'P', { on: 'head', t: px(1.6) });
 
   // ---- the face ----
-  const brows = expr === 'shock' ? [[[76, 60], [92, 52], [108, 56]], [[134, 56], [150, 50], [164, 56]]]
-    : expr === 'laugh' ? [[[76, 64], [92, 58], [108, 62]], [[134, 62], [150, 57], [164, 62]]]
-      : [[[76, 68], [92, 62], [110, 62]], [[132, 62], [150, 60], [164, 66]]];
-  for (const b of brows) c.stroke(curve(b), 'K', { t: t3 });
+  const [NX, NY] = [84, 91], [FX, FY] = [117, 92];   // the near eye, the far (patch) eye
+  const bs = k < 0.8 ? 1.2 : 0;   // at the dialogue size the brows sit a unit higher, leaving a skin gap over the eyes
+  // ... and the near eye (with its brow) sits 2.5 higher, so a pixel of skin stays between it and the nose
+  const ny = NY - (k < 0.8 ? 2.5 : 0);
+  const brow = (pts) => c.stroke(Cv(pts.map(([x, y]) => [x, y - bs])), 'K', { t: px(4, 2) });
   if (expr === 'shock') {
-    for (const [x, y, r] of [[93, 76, 8], [150, 76, 7]]) {
-      c.shape('eye' + x, ell(x, y, r, r + 1), 'W', { inner: 'K' });
-      c.dot(x - 1, y + 1, 'K', Math.max(1, Math.round(1.6 * k)));
+    brow([[NX - 8, ny - 15], [NX, ny - 20], [NX + 8, ny - 16]]);
+    brow([[FX - 8, FY - 17], [FX, FY - 22], [FX + 8, FY - 17]]);
+    for (const [ex, ey] of [[NX, ny], [FX, FY]]) {
+      c.shape('eye' + ex, E(ex, ey, 5.5, 6.5), 'W', { inner: 'K' });
+      c.paint('eye' + ex, E(ex - 0.5, ey + 0.5, 2.4, 2.8), 'K');
     }
-  } else {
-    // grin: happy squints; laugh: shut tight
-    const up = expr === 'laugh' ? 7 : 6;
-    for (const [x, y] of [[93, 78], [150, 78]]) c.stroke(curve([[x - 10, y + 2], [x, y - up], [x + 10, y + 2]]), 'K', { t: t2 });
-    if (expr === 'grin') for (const [x, y] of [[93, 78], [150, 78]]) c.stroke(curve([[x - 7, y + 4], [x, y + 2], [x + 7, y + 4]]), 'p', { on: ['head', 'patch'] });
-  }
-  // the nose: big, black, shiny
-  c.shape('nose', blob([[70, 104], [82, 94], [100, 93], [112, 101], [108, 113], [92, 118], [76, 114]]), 'K', { lw });
-  c.paint('nose', ell(86, 100, 7, 3, -0.15), 'g');
-  c.paint('nose', ell(84, 99, 3, 1.4, -0.15), 'G');
-  c.dot(80, 110, 'k', Math.max(1, Math.round(1.4 * k))); c.dot(102, 109, 'k', Math.max(1, Math.round(1.4 * k)));
-  c.stroke([[92, 118], [93, 126]], 'p', { t: t2 > 1 ? 2 : 1 });
-  // freckle / whisker spots
-  for (const [x, y] of [[62, 120], [68, 126], [58, 128], [126, 116], [134, 122], [128, 126]]) c.dot(x, y, 'p', k >= 1 ? 1 : 0);
-  // the mouth
-  if (expr === 'grin') {
-    c.shape('mouth', blob([[56, 126, 1], [94, 132], [150, 122, 1], [140, 136], [96, 150], [64, 136]]), 'W', { inner: 'K', lw });
-    c.paint('mouth', blob([[60, 132], [96, 144], [142, 132], [136, 138], [96, 150], [66, 138]]), 'H');
-    for (let x = 66; x < 146; x += 9) c.stroke([[x, 124], [x, 152]], 'H', { on: 'mouth' });
-    c.stroke(curve([[60, 132], [96, 141], [144, 129]]), 'h', { on: 'mouth' });
-    c.stroke(curve([[52, 124], [56, 126], [58, 130]]), 'p', { on: 'head' });
-    c.stroke(curve([[154, 120], [150, 122], [149, 126]]), 'p', { on: 'head' });
   } else if (expr === 'laugh') {
-    c.shape('mouth', blob([[54, 124, 1], [96, 132], [152, 120, 1], [146, 142], [124, 162], [96, 168], [72, 158], [60, 142]]), 'k', { inner: 'K', lw });
-    // a full row of upper teeth and the tongue
-    c.paint('mouth', blob([[56, 125], [96, 133], [150, 121], [148, 128], [96, 140], [58, 132]]), 'W');
-    for (let x = 64; x < 148; x += 8) c.stroke([[x, 124], [x, 138]], 'H', { on: 'mouth', line: false });
-    c.paint('mouth', blob([[74, 156], [86, 146], [104, 144], [122, 148], [132, 156], [112, 166], [90, 166]]), 'P');
-    c.paint('mouth', blob([[86, 154], [104, 150], [118, 154], [108, 162], [92, 162]]), 'm');
-    c.stroke([[103, 150], [103, 162]], 'p', { on: 'mouth' });
+    brow([[NX - 8, ny - 12], [NX, ny - 15], [NX + 8, ny - 12]]);
+    brow([[FX - 8, FY - 14], [FX, FY - 18], [FX + 8, FY - 14]]);
+    // the near eye squeezed shut; the patch eye shut under a heavy lid
+    c.stroke(Cv([[NX - 7, ny + 2], [NX, ny - 4], [NX + 7, ny + 2]]), 'K', { t: px(3, 2) });
+    c.shape('lid', B([[FX - 8, FY + 1], [FX - 4, FY - 3], [FX + 4, FY - 3], [FX + 8, FY + 1], [FX, FY + 2]]), 'K');
+    c.stroke(Cv([[FX - 5, FY + 4], [FX, FY + 5], [FX + 5, FY + 4]]), 'w', { on: ['head', 'patch'] });
   } else {
-    // shock: a small round open mouth
-    c.shape('mouth', ell(100, 140, 11, 10), 'k', { inner: 'K', lw });
-    c.paint('mouth', ell(100, 146, 7, 4), 'P');
+    // the smug politician: a wink, the near brow pulled down toward the nose; the patch eye half open under a heavy
+    // lid with a glint, its brow cocked up
+    brow([[NX - 9, ny - 11], [NX - 1, ny - 12], [NX + 8, ny - 8]]);
+    brow([[FX - 8, FY - 13], [FX, FY - 17.5], [FX + 8, FY - 13.5]]);
+    c.stroke(Cv([[NX - 7, ny + 2], [NX - 3, ny - 1.5], [NX + 3, ny - 1.5], [NX + 7, ny + 1]]), 'K', { t: px(2.6, 2) });
+    c.stroke(Cv([[NX - 7, ny + 2], [NX - 10, ny + 4]]), 'K', { t: px(1.6) });
+    c.stroke(Cv([[NX - 4, ny + 5], [NX + 1, ny + 6], [NX + 5, ny + 5]]), 'p', { on: 'head' });
+    c.shape('eyeF', B([[FX - 7, FY + 1], [FX - 4, FY - 3.5], [FX + 4, FY - 3.5], [FX + 7, FY + 1], [FX + 3, FY + 4], [FX - 3, FY + 4]]), 'W', { inner: 'K' });
+    c.paint('eyeF', E(FX - 1.5, FY + 1.6, 3, 3), 'r');
+    c.paint('eyeF', E(FX - 1.5, FY + 2, 1.4, 1.6), 'K');
+    // the heavy flat lid, drooping a little at the outer end (no lash flicks)
+    c.paint('eyeF', B([[FX - 9, FY - 6], [FX + 9, FY - 6], [FX + 9, FY + 1.8], [FX + 4, FY + 0.8], [FX, FY + 0.4], [FX - 9, FY + 0.8]]), 'x');
+    c.stroke(Cv([[FX - 6.5, FY + 1], [FX, FY + 0.6], [FX + 4.5, FY + 1.2], [FX + 6.5, FY + 2.2]]), 'K', { on: 'eyeF', t: px(2.4, 2) });
+    c.dot(...T([FX - 0.3, FY + 1.4]), 'W');
+  }
+  // the muzzle as a forward block, in flat shapes: the far upper-lip pad's shadowed lower edge, a short tapered sliver
+  // following the flew line toward the far corner (not for the shock's small mouth), the nose's cast shadow; its far edge is the right fold above (no lit pad or bridge stripe:
+  // they split the face down the middle)
+  if (expr !== 'shock') c.paint('head', B([[99, 134], [106, 132.8], [114, 131.4], [121.5, 128.6], [114, 133.2], [106, 134.4]]), 'P');
+  c.paint('head', B([[84, 116], [96, 117.5], [105, 112], [111, 114], [105, 120], [93, 121.5], [84, 119.5]]), 'P');
+  // the nose: big, black, shiny
+  c.shape('nose', B([[74, 104], [80, 98], [92, 97], [103, 101], [103, 110], [94, 116], [82, 115], [75, 110]]), 'K', { lw });
+  c.paint('nose', E(85, 102, 5, 2, -0.15), 'g');
+  c.paint('nose', E(83, 101.5, 2, 1, -0.15), 'G');
+  c.dot(...T([79, 111]), 'k', Math.max(1, Math.round(1.2 * k))); c.dot(...T([99, 110]), 'k', Math.max(1, Math.round(1.2 * k)));
+  c.stroke(Cv([[89, 116], [89, 123]]), 'p', { t: px(1.4) });
+  for (const [x, y] of [[73, 119], [77, 123], [71, 125], [104, 120], [108, 124], [101, 125]]) c.dot(...T([x, y]), 'p', k >= 1 ? 1 : 0);
+  // the flews: the upper lip drapes over both mouth corners (the bulldog sag)
+  const flews = () => {
+    c.stroke(Cv([[82, 119], [72, 120], [63, 123]]), 'p', { on: 'head', t: px(1.3) });
+    c.stroke(Cv([[97, 120], [112, 122], [124, 126], [130, 130]]), 'p', { on: 'head', t: px(1.3) });
+  };
+  // the mouth: lopsided, the near corner higher and tucked into a deep crease
+  if (expr === 'grin') {
+    c.shape('mouth', B([[62, 123, 1], [80, 132], [96, 136], [113, 135], [129, 130, 1], [121, 139], [97, 147], [75, 138]]), 'W', { inner: 'K', lw });
+    for (let x = 72; x < 126; x += 8) c.stroke(Cv([[x, 124], [x, 133 + 5 * (1 - ((x - 96) / 33) ** 2)]]), 'H', { on: 'mouth' });
+    c.paint('mouth', B([[66, 131], [97, 143], [124, 134], [121, 139], [97, 147], [75, 138]]), 'H');
+    flews();
+  } else if (expr === 'laugh') {
+    c.shape('mouth', B([[61, 122, 1], [80, 131], [96, 135], [113, 133], [131, 127, 1], [128, 140], [115, 150], [96, 153], [78, 148], [66, 136]]), 'k', { inner: 'K', lw });
+    c.paint('mouth', B([[59, 121], [80, 131], [96, 135], [113, 133], [133, 126], [131, 133], [113, 139], [96, 141], [80, 137], [61, 129]]), 'W');
+    for (let x = 69; x < 128; x += 7) c.stroke(Cv([[x, 122], [x, 140 - 9 * ((x - 96) / 33) ** 2]]), 'H', { on: 'mouth', line: false });
+    c.paint('mouth', B([[76, 146], [88, 141], [104, 140], [116, 143], [122, 147], [108, 152], [90, 152]]), 'P');
+    c.paint('mouth', B([[88, 147], [104, 145], [113, 147], [106, 150], [92, 150]]), 'm');
+    c.stroke(Cv([[101, 144], [101, 151]]), 'p', { on: 'mouth' });
+    flews();
+  } else {
+    c.shape('mouth', E(95, 140, 7.5, 8.5), 'k', { inner: 'K', lw });
+    c.paint('mouth', E(95, 145, 5, 3), 'P');
   }
   return c.img;
 }

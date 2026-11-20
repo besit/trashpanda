@@ -183,3 +183,9 @@ Snapshots go to `art/history/<asset>/vNN/` (`tools/snapshot.mjs`).
 - **Drawn once, never stretched:** `src/ui/bake.ts` `baked()` / `bakedImage()` draw an atlas frame at a fractional scale into its own canvas texture once; the image then moves at scale 1 (vignette decor, hoardings, the Parkside van and generator). The planter has a native 1.5x frame, `planter_l`. Cutscene decor rows wrap on their own span.
 - **Title:** menu taps need a visible menu (and no page, not leaving); `startNaming` refuses a second box. `go()` opens `openPause(this, 'controls', true)` once (`PauseData.first` swaps its footer to RIDE).
 - **Touch:** `TOP_BTN_Y` (31) for MAP / pause, under the score; Explore's points pop moves under them on touch.
+
+## M4.7 additions
+- **Portraits:** `tools/sprites/portraits.mjs` was redrawn. Dog Fjord's points are written in the 3D render's coordinates and pass through one scale (`DSC`). His head outline's control points were traced from the 3D silhouette, which is a guide only, so no 3D pixels reach the output. Small sizes (k < 0.8) raise the near eye so it clears the nose at 112 x 100. `draw2d.mjs` gained `tube()`, a tapered curved limb with round ends and an optional width function.
+- **Loop tooling** (gitignored, in `tools/scratch/piter/`): `render.mjs` draws the comparison sheet (`--sdf` adds the old 3D row), and `evolution.mjs` builds the strip of every `art/history/portraits_2d` version.
+- **Controls page:** desktop rows at 12 px from y 42, the notes at 148 / 158 on a dark band.
+- **Tall VERSUS poster:** Dog Fjord sits on the bottom bar (H - 110), so the VS badge clears his eyes.

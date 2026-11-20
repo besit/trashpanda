@@ -37,6 +37,22 @@ export function curve(pts, steps = 10) {
   out.push(pts[n - 1].slice(0, 2));
   return out;
 }
+/**
+ * a tapered tube along an open smooth curve (a tail, a limb): width w0 at the start to w1 at the end, round caps.
+ * w0 may instead be a function of t (0 at the start, 1 at the end) giving the width, for a tube that swells
+ */
+export function tube(pts, w0, w1 = w0, steps = 10) {
+  const wf = typeof w0 === 'function' ? w0 : (t) => w0 + (w1 - w0) * t;
+  const c = curve(pts, steps), n = c.length, L = [], R = [], dir = [];
+  for (let i = 0; i < n; i++) {
+    const a = c[Math.max(0, i - 1)], b = c[Math.min(n - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1;
+    const w = wf(i / (n - 1)) / 2, nx = -dy / l, ny = dx / l;
+    dir.push([dx / l, dy / l, nx, ny]);
+    L.push([c[i][0] + nx * w, c[i][1] + ny * w]); R.push([c[i][0] - nx * w, c[i][1] - ny * w]);
+  }
+  const cap = (i, w, s) => { const [dx, dy, nx, ny] = dir[i], out = []; for (let k = 1; k < 8; k++) { const f = (k / 8) * Math.PI; out.push([c[i][0] + (nx * Math.cos(f) + dx * Math.sin(f)) * w * s, c[i][1] + (ny * Math.cos(f) + dy * Math.sin(f)) * w * s]); } return out; };
+  return [...L, ...cap(n - 1, wf(1) / 2, 1), ...R.reverse(), ...cap(0, wf(0) / 2, -1)];
+}
 /** an ellipse (optionally turned by `rot` radians) as a polygon */
 export function ell(cx, cy, rx, ry, rot = 0, n = 40) {
   const c = Math.cos(rot), s = Math.sin(rot);

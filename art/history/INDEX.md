@@ -532,6 +532,78 @@ v01: pedestrians (9 variants incl. kid and dog walker), 4 directions, SDF + 32-d
 
 ## portraits_2d
 
+### portraits_2d v10
+
+2026-11-20
+
+M4.7 iteration 09: 1-px gap between eye and nose at 112
+
+![portraits_2d v10](portraits_2d/v10/preview.png)
+
+### portraits_2d v09
+
+2026-11-20
+
+M4.7 iteration 08 (final): dog lip-pad edge as a tapered sliver (no gum bar), left outer fold removed, lit wedge starts at the brow line; comments tidied
+
+![portraits_2d v09](portraits_2d/v09/preview.png)
+
+### portraits_2d v08
+
+2026-11-20
+
+M4.7 iteration 07: dog ears as 45-degree points at the top corners, split-face seam removed, one strong right muzzle/jowl fold; raccoon thorn notches removed
+
+![portraits_2d v08](portraits_2d/v08/preview.png)
+
+### portraits_2d v07
+
+2026-11-20
+
+M4.7 iteration 06: dog compact pompadour on the crown, ears folded forward at the top corners, muzzle volume in flat shapes; raccoon polish (arm light edge, wider cast shadow, fur notches)
+
+![portraits_2d v07](portraits_2d/v07/preview.png)
+
+### portraits_2d v06
+
+2026-11-20
+
+M4.7 iteration 05: dog hair as the top of the dome (one convex head+hair outline, ~148 tall), jowl weight from flat P shapes and folds; raccoon chunky tapered arms, bigger fist, broader tail arc, shoulder creases
+
+![portraits_2d v06](portraits_2d/v06/preview.png)
+
+### portraits_2d v05
+
+2026-11-20
+
+M4.7 iteration 04: dog head outline traced from the 3D silhouette, sideburn wedges, lit wedge; raccoon hand-on-hip triangle, lowered shoulders, shorter near arm, bushy tapered tail
+
+![portraits_2d v05](portraits_2d/v05/preview.png)
+
+### portraits_2d v04
+
+2026-11-20
+
+M4.7 iteration 03: raccoon bust narrower than the head inside the frame, outlined tube arms, ringed tail, grey jaw, knuckle fist; dog organic head outline running up into the hair, flat heavy patch lid
+
+![portraits_2d v04](portraits_2d/v04/preview.png)
+
+### portraits_2d v03
+
+2026-11-20
+
+M4.7 iteration 02: dog pompadour + wink/lid smug grin + flews, no muzzle oval, heavier jaw, angular rose ears; raccoon shoulders, separate arms, chest patch, lower nose, eyes off the mask
+
+![portraits_2d v03](portraits_2d/v03/preview.png)
+
+### portraits_2d v02
+
+2026-11-20
+
+M4.7 iteration 01: re-proportioned to the 3D busts (raccoon head centred + short snout, dog bell head + cap hair + rose ears), flat cel shading
+
+![portraits_2d v02](portraits_2d/v02/preview.png)
+
 ### portraits_2d v01
 
 2026-11-19

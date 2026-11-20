@@ -132,9 +132,12 @@ export class PauseScene extends Phaser.Scene {
       const rows: [string, string][] = [['LEFT THUMB', 'RIDE (STICK APPEARS)'], ['YELLOW', 'BOOST (HOLD)'], ['GREEN', 'HOP / JUMP'], ['BLUE', 'DASH'], ['RED', 'BELL / TALK / PUMP'], ['MAP / II', 'MAP / PAUSE']];
       rows.forEach(([k, v], i) => { this.root.add(text(this, cx - 8, 48 + i * 14, k, 'font_outline', 0).setOrigin(1, 0).setTint(0xfff08a)); this.root.add(text(this, cx + 8, 48 + i * 14, v, 'font_outline', 0)); });
     } else {
-      CONTROLS_KEYS.forEach(([k, v], i) => { this.root.add(text(this, cx - 8, 46 + i * 13, k, 'font_outline', 0).setOrigin(1, 0).setTint(0xfff08a)); this.root.add(text(this, cx + 8, 46 + i * 13, v, 'font_outline', 0)); });
-      this.root.add(text(this, cx, 146, 'IN MISSIONS: E SWINGS THE PUMP (3-HIT COMBO),', 'font').setTint(0xc9c5d1));
-      this.root.add(text(this, cx, 156, 'Q DASHES THROUGH RATS, JUMP ON THEIR HEADS.', 'font').setTint(0xc9c5d1));
+      // M4.7 (Ivan: overlapping text): 8 rows at 12 px end at ~135, clear of the missions note at 148
+      CONTROLS_KEYS.forEach(([k, v], i) => { this.root.add(text(this, cx - 8, 42 + i * 12, k, 'font_outline', 0).setOrigin(1, 0).setTint(0xfff08a)); this.root.add(text(this, cx + 8, 42 + i * 12, v, 'font_outline', 0)); });
+      // a dark band under the small notes so the ride behind the page doesn't show through the letters
+      this.root.add(this.add.rectangle(0, 141, GAME_W, 51, 0x16121f, 0.86).setOrigin(0));
+      this.root.add(text(this, cx, 148, 'IN MISSIONS: E SWINGS THE PUMP (3-HIT COMBO),', 'font').setTint(0xc9c5d1));
+      this.root.add(text(this, cx, 158, 'Q DASHES THROUGH RATS, JUMP ON THEIR HEADS.', 'font').setTint(0xc9c5d1));
       this.root.add(text(this, cx, 174, CONTROLS_ALT, 'font').setTint(0x9793a6));
       this.root.add(text(this, cx, 184, CONTROLS_PAD, 'font').setTint(0x9793a6));
     }
