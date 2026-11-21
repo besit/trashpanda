@@ -346,6 +346,24 @@ Original 5x7 uppercase font: plain, outline, shadow, 2x outline (titles).
 
 ![font v01](font/v01/preview.png)
 
+## heroes
+
+### heroes v02
+
+2026-11-21
+
+M4.10: palettes remade without the green-screen spill (no green slots left)
+
+![heroes v02](heroes/v02/preview.png)
+
+### heroes v01
+
+2026-11-21
+
+M4.10: the raccoon and Dog Fjord from their Gemini masters, pixel to pixel on locked 48-colour palettes
+
+![heroes v01](heroes/v01/preview.png)
+
 ## highpark
 
 ### highpark v03

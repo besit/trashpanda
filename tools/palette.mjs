@@ -1,6 +1,10 @@
 // Master palette for Trash Panda: Right of Way.
 // One character per colour so sprites can be authored as text grids.
 // '.' and ' ' are transparent.
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 export const PALETTE = {
   // outlines + neutrals (cool, slightly purple to avoid flat black)
   K: '#16121f', // outline
@@ -32,35 +36,19 @@ export const PALETTE = {
   z: '#ff7a59', d: '#ffbf7a', D: '#ffe3a8',
   // teal (bike share / accents)
   f: '#1f6f74', F: '#35b2a6',
-  // ---- M4.8 portrait ramps (additive; hue-shifted: shadows lean blue-violet, lights lean warm) ----
-  // raccoon fur, cool blue-grey, 9 steps dark -> light
-  0: '#1c1a2a', 1: '#29283c', 2: '#3a3a53', 3: '#4f516b', 4: '#686c85', 5: '#8589a0', 6: '#a4a8ba', 7: '#c6c8d3', 8: '#e4e3e6',
-  // raccoon fur, warm taupe (an alternative coat), 9 steps dark -> light (@ # $ I % & J * +)
-  '@': '#241a27', '#': '#36293a', $: '#4d3c4a', I: '#655058', '%': '#7f6866', '&': '#9a8378', J: '#b39e8f', '*': '#cbb9a8', '+': '#e2d6c4',
-  // Dog Fjord's skin: steps between the existing pinks (= deepest crease, ? between p and P, ^ between P and m, ~ between m and M)
-  '=': '#5f2339', '?': '#b8495b', '^': '#ee837e', '~': '#ffbcaa',
-  // amber eyes: dark rim, warm mid, bright amber, the lit lower iris
-  '<': '#4d2914', '>': '#a35a1e', '{': '#e39a35', '}': '#ffd98c',
-  // bandana red mid step, pump yellow deep shadow, teal deep + light
-  '[': '#a51e2b', '|': '#a14e14', ':': '#123f47', ';': '#86e3cf',
-  // suit navy steps, warm metal shine
-  ',': '#101a38', '_': '#3a64ad', '`': '#fff9e8',
-  // round 02: a chestnut ramp for Dog Fjord's patch (deep, dark, base, lit), a dusty pink-grey for inner ears
-  '(': '#43201a', ')': '#6e3422', '!': '#9c4f2c', '"': '#c8743f', "'": '#6f4a55', '-': '#9a6f78',
-  // round 05/06: Dog Fjord's skin in hue-shifted planes: a clear warm pink-peach light, a highlight with a whisper of
-  // ochre, a clean pink mid, a pink side plane, a rosy-red terminator, a cool mauve core shadow, a deep mauve crease, a
-  // cool bounce light
-  '/': '#ffbaa4', '¢': '#ffdac4', Q: '#f79d97', '£': '#e3868b', 9: '#e86e78', '§': '#a65f78', '¤': '#73405b', '°': '#c88c9e',
-  // M4.9: the yellow pump's ramp gets a warm ochre step between o (its shadow) and y (its base)
-  '¥': '#ea9526',
-  // M4.9 round 03: hue-shifted portrait keys: the coat's cool violet-brown shadows, a warm terminator glow and a warm
-  // light; a cool lilac shadow for cream fur; Dog Fjord's cool mauve shadow plane; the suit's blue-violet shadow and
-  // warm light; a neutral grey-lilac rim of reflected light
-  'µ': '#4f3c56', '¶': '#6e5272', '©': '#a8765e', '®': '#d2b08a', '²': '#a49aae', '³': '#b06a8c', '¹': '#232566', '¼': '#5a78b8', '½': '#b4b6d2',
-  // round 04: the coat's shadow pulled back toward the coat (a warm violet-brown plane and core); Dog's far side as a
-  // rose-mauve shadow, 1.5 value groups below his lit pink
-  'ª': '#7a5f66', 'º': '#584452', '»': '#c27585',
 };
+
+// ---- M4.10: the hero characters' locked palettes (48 colours each), made once from their first AI master by
+// tools/hero.mjs and kept in tools/palettes/<character>.json. Keys: the raccoon U+0100 onward, Dog Fjord U+0180 onward.
+const HERO_KEY_START = { raccoon: 0x100, dog: 0x180 };
+const here = path.dirname(fileURLToPath(import.meta.url));
+for (const [character, start] of Object.entries(HERO_KEY_START)) {
+  const file = path.join(here, 'palettes', `${character}.json`);
+  if (!fs.existsSync(file)) continue;
+  JSON.parse(fs.readFileSync(file, 'utf8')).colours.forEach((hex, i) => { PALETTE[String.fromCharCode(start + i)] = hex; });
+}
+/** the palette key of a hero character's colour number i */
+export const heroKey = (character, i) => String.fromCharCode(HERO_KEY_START[character] + i);
 
 export const KEYS = Object.keys(PALETTE);
 export function hexToRgb(hex) {

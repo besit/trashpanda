@@ -8,6 +8,7 @@
 //   curling out behind; red bandana, teal pump, a cycling cap. The pump is built on one straight axis.
 // - Dog Fjord, a cartoon bulldog (never a real person's likeness): M4.7 iteration 04's head and ears, a wide crescent
 //   grin with two lower canines, the smug heavy-lidded patch eye, sunk into broad navy shoulders, the gold car tie.
+import '../palette_legacy.mjs'; // M4.10: this drawing uses the legacy portrait colours
 import { Canvas, blob, curve, ell, bar, tube, tufted } from '../lib/draw2d.mjs';
 
 export const GW = 232, GH = 208; // the design grid (the posters' portrait size at k = 1)

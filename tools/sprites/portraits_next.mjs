@@ -17,6 +17,7 @@
 // Raccoon: the near arm is the coat turning (a lit top edge, a cast shadow on the bib), the paw a grip on the barrel.
 // Dog Fjord: a cartoon bulldog, never a real person's likeness; one far-side shadow plane wrapping under the jowls; grin,
 // laugh and shock lit the same way.
+import '../palette_legacy.mjs'; // M4.10: this drawing uses the legacy portrait colours
 import { Canvas, blob, curve, ell, bar, tube, tufted } from '../lib/draw2d.mjs';
 import '../lib/light2d.mjs';
 import { dome, cap } from '../lib/light2d.mjs';

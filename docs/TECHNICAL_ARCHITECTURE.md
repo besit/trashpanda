@@ -230,3 +230,8 @@ Snapshots go to `art/history/<asset>/vNN/` (`tools/snapshot.mjs`).
 ## M4.10 additions
 - **`raster.mjs`:** `registerColors({ key: '#hex' })` adds colours at run time under new single-character keys and refuses to redefine an existing one. `pixelcheck.mjs` looks colours up live, so it knows them too.
 - **`docs/PIXEL_ART_RECIPE.md`:** the pixel-art recipe from the raccoon style study.
+- **Hero images from AI masters:** `node tools/hero.mjs <master> <character> <name> [--new-palette 48]`.
+  - It samples the master's ~4 px blocks onto a clean grid, keys out the #00FF00 background and removes green spill near it, then maps each pixel to the character's locked palette (nearest in OKLab). Code is in `tools/lib/hero.mjs`.
+  - `--new-palette` makes and locks `tools/palettes/<character>.json`, and refuses if one already exists.
+  - Output goes to `art/heroes/<character>_<name>.png`. `tools/sprites/heroes.mjs` loads it as a palette-key Img (`heroImage`, `heroesPreview`).
+- **Palette:** `tools/palette.mjs` is the 49 game colours plus the hero palettes, registered from `tools/palettes/*.json` (raccoon keys from U+0100, Dog Fjord from U+0180; `heroKey(character, i)`). The 60 code-drawn-portrait colours live in `tools/palette_legacy.mjs`, which `tools/sprites/portraits.mjs` and `portraits_next.mjs` import.

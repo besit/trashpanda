@@ -930,3 +930,23 @@ Ivan on the M4.9 preview: "I am not in love with how it looks, but it seems bett
 - **A strong outer line carries the poster read; inner lines make things look "assembled".** A rim of light belongs inside the outline.
 - **The expression has to be made of shapes to read at real size.** ref 4's open grin was the only one that did.
 
+## 2026-11-21: hero images from AI masters, on locked palettes
+
+Ivan wasn't happy with the code-drawn study results and generated the two characters with Gemini, in a pixel-art style, on a flat green background. The plan he chose: Gemini makes the master images, and they're converted into true pixel art and composed with the game's own assets.
+
+![](reviews/m410/heroes_sheet.png)
+
+### The conversion, and what we learned on the way
+- **A master is not true pixel art.** Its "pixels" are soft blocks of about 4 screen pixels with JPEG smudges. Sampling the median of each block's inner pixels rebuilds a clean grid (about 255 x 255), at the same pixel size as the old poster portraits.
+- **My first pass added the splotches Ivan saw.** A crude 32-colour reduction plus an over-eager stray-pixel cleanup made noise that wasn't in the source. A smoothing "polish" pass made it worse: washed-out skin, lost line work.
+- **Pixel to pixel was the answer.** Every source pixel maps to its nearest colour, measured in OKLab (a perceptual colour space). On the game's 49 colours the dog speckled, because his smooth shading fell between game colours. On his own 48 colours it was practically identical to the source. 24 looked the same, 16 started losing the eye patch's brown, 12 was too few. Ivan picked 48.
+- **The green screen leaked into the outline** and took about 4 palette slots per character as dark greens. Pixels within 2 of the background now lose any green dominance, and both palettes were remade with no green left.
+
+### The palette
+- The game palette is back to its original **49** colours. The **60** colours added for the code-drawn portraits (M4.8 and M4.9) moved to `tools/palette_legacy.mjs`, which only the old portrait code loads, so it and the art history still render.
+- Each character has a **locked 48-colour palette** (`tools/palettes/<character>.json`), made once from its first master. Every later image of that character maps onto the same colours, so the palette doesn't grow with each new pose and he looks the same everywhere. Both are registered in `tools/palette.mjs` under their own key ranges: **145** colours in all.
+- **Performance:** colour count doesn't affect the game at run time, since the GPU stores every texture at full colour. The poster atlas stays well under the 256 colours an 8-bit PNG allows.
+
+### Checks
+The game is unchanged: all 60 built asset files are byte-identical before and after (the posters still use the old portraits until Ivan's green light). 21 unit tests pass, and the type check passes.
+
