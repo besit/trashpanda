@@ -996,6 +996,96 @@ First pass: hand-painted head grid + procedural bike, IK legs, trash-can-lid att
 
 ![raccoon_side v01](raccoon_side/v01/preview.png)
 
+## raccoon_style_detailed
+
+### raccoon_style_detailed v02
+
+2026-11-21
+
+M4.10 detailed pass 2: focal-order fur, 52 colours, hand-designed snout/nose/paw/forearm shadows
+
+![raccoon_style_detailed v02](raccoon_style_detailed/v02/preview.png)
+
+### raccoon_style_detailed v01
+
+2026-11-21
+
+M4.10 detailed pass 1: long ramps + value-space fur clusters, knit, chrome, gauge dial
+
+![raccoon_style_detailed v01](raccoon_style_detailed/v01/preview.png)
+
+## raccoon_style_free
+
+### raccoon_style_free v02
+
+2026-11-21
+
+M4.10 free pass 2: the synthesis, hand-designed shapes on one shared indigo shadow palette, strong outer line, gripping paw, material pump
+
+![raccoon_style_free v02](raccoon_style_free/v02/preview.png)
+
+### raccoon_style_free v01
+
+2026-11-20
+
+M4.10 free pass 1: Streetlamp & Neon, warm sodium key, cyan neon rim, one shared indigo shadow family
+
+![raccoon_style_free v01](raccoon_style_free/v01/preview.png)
+
+## raccoon_style_naive
+
+### raccoon_style_naive v02
+
+2026-11-21
+
+M4.10 naive pass 2: 11 colours, hand-drawn arm and gripping paw, snout underside shadow carries the mouth, jaw plane, 2px shadow-side outline
+
+![raccoon_style_naive v02](raccoon_style_naive/v02/preview.png)
+
+### raccoon_style_naive v01
+
+2026-11-20
+
+M4.10 naive pass 1: 13 colours, one plum outline, two tones per material, one shadow shape per mass
+
+![raccoon_style_naive v01](raccoon_style_naive/v01/preview.png)
+
+## raccoon_style_ref03
+
+### raccoon_style_ref03 v02
+
+2026-11-21
+
+M4.10 ref03 pass 2: hand-drawn grip, snout cylinder, clumps by focal order, solid mask, one shadow family
+
+![raccoon_style_ref03 v02](raccoon_style_ref03/v02/preview.png)
+
+### raccoon_style_ref03 v01
+
+2026-11-21
+
+M4.10 ref03 pass 1: strand-field fur in the light, warped marking edges, ref03 eyes, knit ribs, 38-colour hue-shifted palette
+
+![raccoon_style_ref03 v01](raccoon_style_ref03/v01/preview.png)
+
+## raccoon_style_ref04
+
+### raccoon_style_ref04 v02
+
+2026-11-21
+
+M4.10 ref04 pass 2: designed cel shadows, minimal inner lines, chibi head and muzzle, bigger eyes
+
+![raccoon_style_ref04 v02](raccoon_style_ref04/v02/preview.png)
+
+### raccoon_style_ref04 v01
+
+2026-11-20
+
+M4.10 ref04 pass 1: cartoon sprite, 2px dark line, 3-tone cel ramps, big sly eyes, toothy grin
+
+![raccoon_style_ref04 v01](raccoon_style_ref04/v01/preview.png)
+
 ## raccoon_top
 
 ### raccoon_top v03

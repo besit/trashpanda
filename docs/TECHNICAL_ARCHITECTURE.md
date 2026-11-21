@@ -226,3 +226,7 @@ Snapshots go to `art/history/<asset>/vNN/` (`tools/snapshot.mjs`).
 - **`tools/sprites/portraits_next.mjs`:** the M4.9 portraits, kept out of the build until Ivan's green light. Same exports as `portraits.mjs`.
 - **Palette:** new portrait keys (`¥ µ ¶ © ® ² ³ ¹ ¼ ½ ª º »`), added only.
 - **Third-party notices:** `tools/lib/THIRD_PARTY.md` has the MIT notices for codixel (commit 604a9dc) and pxl (commit c1bea5c).
+
+## M4.10 additions
+- **`raster.mjs`:** `registerColors({ key: '#hex' })` adds colours at run time under new single-character keys and refuses to redefine an existing one. `pixelcheck.mjs` looks colours up live, so it knows them too.
+- **`docs/PIXEL_ART_RECIPE.md`:** the pixel-art recipe from the raccoon style study.

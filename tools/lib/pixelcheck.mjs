@@ -8,7 +8,8 @@
 import { PNG } from 'pngjs';
 import { PALETTE, hexToRgb } from '../palette.mjs';
 
-const RGB = Object.fromEntries(Object.entries(PALETTE).map(([k, v]) => [k, hexToRgb(v)]));
+// looked up live, so colours added with raster.mjs registerColors() are known too
+const RGB = new Proxy({}, { get: (_, k) => (typeof k === 'string' && PALETTE[k] ? hexToRgb(PALETTE[k]) : undefined) });
 const lumOf = (c) => { const v = RGB[c]; return v ? 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2] : 0; };
 const N8 = [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]];
 function rgbToHsl([r, g, b]) {

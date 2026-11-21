@@ -6,6 +6,17 @@ import { PALETTE, hexToRgb } from '../palette.mjs';
 import { encodePNG8 } from './png8.mjs';
 
 const RGB = Object.fromEntries(Object.entries(PALETTE).map(([k, v]) => [k, hexToRgb(v)]));
+/**
+ * M4.10: extra colours for one piece of art, registered at run time under NEW single-character keys (a style study
+ * keeps its own palette without editing tools/palette.mjs). An existing key may not be redefined.
+ */
+export function registerColors(map) {
+  for (const [k, v] of Object.entries(map)) {
+    if ([...k].length !== 1) throw new Error(`colour key must be one character: '${k}'`);
+    if (k in PALETTE && PALETTE[k] !== v) throw new Error(`colour key '${k}' already means ${PALETTE[k]}`);
+    PALETTE[k] = v; RGB[k] = hexToRgb(v);
+  }
+}
 const T = null; // transparent
 
 function splitRows(str) {

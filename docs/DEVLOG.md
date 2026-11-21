@@ -903,3 +903,30 @@ New agents (a painter and a critic) and a new brief, built around Ivan's note: s
 ### Not done yet
 The game still uses the M4.8 portraits until Ivan's green light. Then `portraits_next.mjs` replaces `portraits.mjs`, every poster is re-checked at full size (the raccoon's pose changes back to a bust) along with the intro cutscene, and it ships.
 
+## 2026-11-20: M4.10 (study), the raccoon in five styles, and the recipe
+
+Ivan on the M4.9 preview: "I am not in love with how it looks, but it seems better... I want to understand what is the recipe for the best pixel-art possible. Can you try and redraw the current state of him in a couple of techniques / styles?" He asked for five: ref 3 polished to the max, ref 4's style, the most naive, the most detailed, and a freestyle. Each got a try, a critique and another pass. The review doc is [docs/reviews/M4.10.md](reviews/M4.10.md), and the recipe is [docs/PIXEL_ART_RECIPE.md](PIXEL_ART_RECIPE.md).
+
+### How it ran
+- **Five painter agents worked in parallel,** one per style, each in its own folder (`tools/scratch/piter4/<style>/`).
+  - To keep them from colliding on the shared palette, `raster.mjs` gained `registerColors()`: each style registers its own colours at run time under its own block of Unicode keys (Greek, Cyrillic, Hiragana, Katakana).
+  - Each style has its own history: `art/history/raccoon_style_<style>/`.
+- **One critic reviewed all five** after each pass. Halfway through, the freestyle painter was given the critic's synthesis to build.
+- **The usage limit stopped two painters partway through pass 1.** They were resumed with their work intact.
+
+![](reviews/m410/compare_pass2.png)
+
+| Style | ref 3 | ref 4 | naive | detailed | freestyle (synthesis) |
+|---|---|---|---|---|---|
+| Shared scale, pass 1 | 5.5 | 5.5 | 5.0 | 4.5 | 4.5 |
+| Shared scale, pass 2 | 6.0 | 6.5 | 5.5 | 5.0 | 7.0 |
+| Colours | 37 | 28 | 11 | 52 | 36 |
+
+### What it showed
+- **The drawing underneath limited every style, not the technique.** All five inherited the same weak construction: the arm a bent tube around a triangle of chest, a paw sitting on the pump, faceted snout planes. Texture hid it, contrast exposed it, outlines traced it.
+- **Hand-drawn shadow shapes beat computed shading cut into tones.** That cutting is what produced the facets, slivers and checkered rings. The painters who switched to drawn shapes gained 1 to 2.5 points; those who kept the pipeline and improved texture gained half a point to a point.
+- **More detail is not more quality.** The 73-colour version read as felt at real size. Detail has to follow the focal order: the face first, then the edges where light or colour changes, then the prop.
+- **One shared shadow family across all materials** (the freestyle painter's idea) makes the figure one object under one light. It was adopted by two other styles.
+- **A strong outer line carries the poster read; inner lines make things look "assembled".** A rim of light belongs inside the outline.
+- **The expression has to be made of shapes to read at real size.** ref 4's open grin was the only one that did.
+
