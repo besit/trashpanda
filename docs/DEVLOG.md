@@ -1070,3 +1070,5 @@ Ivan's notes on M4.13: the VERSUS dog's white edge wasn't fully gone, the tall s
 
 ### Leaderboard
 A read-only query after Ivan published the rules: still only the old 3-letter names. No run has finished since the rules changed.
+
+**Ivan's picks:** the M4.12 side-view raccoon stays in the game; the alternative is kept in `tools/sprites/raccoon_side3.mjs` (and `art/history/raccoon_side_alt/v01`). M4.13 and M4.14 pushed.
