@@ -4,11 +4,17 @@
 // more dog: longer muzzle, bigger nose, whisker spots, droopier flews.
 import { sd, scene, render, orthoCam, smin, pitchInv, norm } from '../lib/sdf.mjs';
 import { Img } from '../lib/raster.mjs';
+import { heroKey } from '../palette.mjs';
+
+// M4.12 (Ivan: "the dog could use a better look now referencing the large scale artwork"): the hero image's colours,
+// a navy suit, a red tie, grey swept hair and his own pinks
+const hk = (i) => heroKey('dog', i);
+const NAVY = { dark: hk(9), shade: hk(11), mid: hk(15), light: hk(19) }, TIE = { mid: hk(28), hi: hk(33) };
 
 export const FW = 112, FH = 100;
 
-const PINK = ['p', 'P', 'P', 'm', 'M'];
-const PINK_LIGHT = ['P', 'm', 'M', 'M'];
+const PINK = [hk(27), hk(30), hk(36), hk(40), hk(43)];
+const PINK_LIGHT = [hk(36), hk(40), hk(43), hk(45)];
 
 // approximate front surface y of an ellipsoid at (x, z) for painting features
 function surfY(c, r, x, z) {
@@ -65,7 +71,7 @@ function model(expr) {
         if (Math.abs(dx) < 5.5 && Math.abs(z - bz) < 1.25) return 'k';
       }
       // bull-terrier eye patch (a darker splodge around his left eye) - the strongest "dog" cue
-      { const dx = x - 9.5, dz = z - 56; const wob = Math.sin(Math.atan2(dz, dx) * 3) * 1.1; if (Math.hypot(dx * 0.9, dz * 1.05) < 7.8 + wob) return Math.hypot(dx * 0.9, dz * 1.05) > 6.6 + wob ? 'x' : 'X'; }
+      { const dx = x - 9.5, dz = z - 56; const wob = Math.sin(Math.atan2(dz, dx) * 3) * 1.1; if (Math.hypot(dx * 0.9, dz * 1.05) < 7.8 + wob) return Math.hypot(dx * 0.9, dz * 1.05) > 6.6 + wob ? hk(21) : [hk(21), hk(24), hk(26), hk(26)]; } // M4.12: the hero's solid brown patch
       // forehead worry wrinkles
       if (Math.abs(x) < 7 && (Math.abs(z - 66) < 0.45 || Math.abs(z - 69) < 0.45)) return 'p';
       return null;
@@ -115,11 +121,11 @@ function model(expr) {
   for (const s of [-1, 1]) {
     const base = [19 * s, 3, 65];
     const tilt = -0.62 * s;
-    objs.push({ d: (p) => sd.cone(base, 8.5, 22)(pitchInv(p, tilt, base)), m: { ramp: ['p', 'P', 'm', 'M'] } });
+    objs.push({ d: (p) => sd.cone(base, 8.5, 22)(pitchInv(p, tilt, base)), m: { ramp: [hk(30), hk(36), hk(40), hk(43)] } });
     objs.push({ d: (p) => sd.cone([base[0], 6.4, base[2] + 2], 4.6, 15)(pitchInv(p, tilt, base)), m: { ramp: ['v', 'p', 'P'] } });
   }
   // swept-back white hair: a big combed coif with a forward swoop and side wings
-  const HAIR = { ramp: ['G', 'h', 'H', 'W', 'W'], fn: (p) => ((Math.round(p[0] * 0.55 + p[1] * 0.25) % 3 === 0 && p[2] > 70) ? 'h' : null) };
+  const HAIR = { ramp: [hk(22), hk(29), hk(32), hk(37), hk(39)], fn: (p) => ((Math.round(p[0] * 0.55 + p[1] * 0.25) % 3 === 0 && p[2] > 70) ? hk(29) : null) };
   objs.push({ d: (p) => {
     let d = sd.ellipsoid([0, -4, 73], [18, 16, 8.5])(p);
     d = smin(d, sd.ellipsoid([4, 8, 78.5], [15, 10, 6.5])(p), 4);   // the big swoop
@@ -159,22 +165,23 @@ export function dogFjordStanding(expr = 'grin', podium = false) {
   // v03 (Ivan, M3: "separate his arms and torso by using different shades, instead of one diagonal
   // shadow"): the torso is one mid tone with a thin shade on its far edge; the arms are a darker tone with
   // a light edge along the top of the sleeve and a dark seam where they meet the torso.
-  img.poly([[cx - 14, by + 4], [cx - 11, by], [cx + 11, by], [cx + 14, by + 4], [cx + 12, by + 22], [cx - 12, by + 22]], 'G');
-  img.line(cx - 12, by + 3, cx - 11, by + 21, 'g'); img.line(cx - 11, by + 1, cx + 10, by + 1, 'h'); // far-edge shade, shoulder light
+  img.poly([[cx - 14, by + 4], [cx - 11, by], [cx + 11, by], [cx + 14, by + 4], [cx + 12, by + 22], [cx - 12, by + 22]], NAVY.mid);
+  img.line(cx - 12, by + 3, cx - 11, by + 21, NAVY.shade); img.line(cx - 11, by + 1, cx + 10, by + 1, NAVY.light); // far-edge shade, shoulder light
   // shirt V + lapels + tie
   img.poly([[cx - 5, by], [cx + 5, by], [cx, by + 10]], 'W');
-  img.line(cx - 5, by, cx - 1, by + 12, 'g'); img.line(cx + 5, by, cx + 1, by + 12, 'g'); // lapels
-  img.rect(cx - 1, by + 1, 2, 11, 'V'); img.set(cx - 1, by + 3, 'Z'); img.set(cx, by + 6, 'Z'); img.set(cx - 1, by + 9, 'Z');
-  img.set(cx + 3, by + 15, 'h'); img.set(cx + 3, by + 19, 'h'); // buttons
+  img.line(cx - 5, by, cx - 1, by + 12, NAVY.dark); img.line(cx + 5, by, cx + 1, by + 12, NAVY.dark); // lapels
+  // the red tie: a knot at the collar, hanging straight
+  img.rect(cx - 1, by + 1, 2, 2, TIE.hi); img.rect(cx - 1, by + 3, 2, 9, TIE.mid); img.set(cx, by + 12, TIE.mid); img.vline(cx - 1, by + 4, by + 10, TIE.hi);
+  img.set(cx + 3, by + 15, NAVY.light); img.set(cx + 3, by + 19, NAVY.light); // buttons
   // arms + paws
   for (const sgn of [-1, 1]) {
-    img.poly([[cx + sgn * 14, by + 3], [cx + sgn * 18, by + 18], [cx + sgn * 14, by + 19], [cx + sgn * 11, by + 7]], 'k');
-    img.line(cx + sgn * 14, by + 3, cx + sgn * 17, by + 16, sgn > 0 ? 'g' : 'G'); // sleeve edge catching the light
+    img.poly([[cx + sgn * 14, by + 3], [cx + sgn * 18, by + 18], [cx + sgn * 14, by + 19], [cx + sgn * 11, by + 7]], NAVY.shade);
+    img.line(cx + sgn * 14, by + 3, cx + sgn * 17, by + 16, sgn > 0 ? NAVY.mid : NAVY.light); // sleeve edge catching the light
     img.line(cx + sgn * 11, by + 7, cx + sgn * 14, by + 18, 'K');                  // the seam against the torso
   }
-  img.ellipse(cx - 15, by + 20, 2, 2, 'P'); img.ellipse(cx + 15, by + 20, 2, 2, 'P');
+  img.ellipse(cx - 15, by + 20, 2, 2, hk(38)); img.ellipse(cx + 15, by + 20, 2, 2, hk(38));
   // legs + shoes
-  img.rect(cx - 7, by + 22, 5, 9, 'k'); img.rect(cx + 2, by + 22, 5, 9, 'k');
+  img.rect(cx - 7, by + 22, 5, 9, NAVY.dark); img.rect(cx + 2, by + 22, 5, 9, NAVY.dark);
   img.rect(cx - 9, by + 30, 7, 3, 'K'); img.rect(cx + 2, by + 30, 7, 3, 'K'); img.set(cx - 8, by + 30, 'g'); img.set(cx + 3, by + 30, 'g');
   img.outline('K');
   img.blit(head, 0, -2);

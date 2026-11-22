@@ -967,3 +967,27 @@ Ivan generated more Gemini images (a new bust, the bike, Dog Fjord laughing and 
 ### Numbers
 68 browser tests and 21 unit tests pass. The generated assets are 1683 KB, up from 1574 KB.
 
+
+## 2026-11-21: M4.12 (local preview): Ivan's picks, a Toronto sunset, and the in-game sprites in the hero look
+
+**Ivan's notes on M4.11:**
+- R1A, D1A, A3B and the faces Rest1 / Happy1 / Angry1 / Shock2.
+- A Toronto skyline behind the sunset poster.
+- More of the raccoon in the bosses poster's cell.
+- The higher-resolution portraits, yes (but not the double-size raccoon faces).
+- TRASH PANDA instead of THE RACCOON on VERSUS.
+- Then: "What do you think about updating the in-game sprites now?", followed by "let's do a pass of new sprites to see if it works better in the game".
+
+**What failed:**
+- **D1A's raised fist** kept four fingers through 14 ComfyUI tries with two different prompts. Qwen-Image-Edit draws a fist the way it knows a fist. Erasing one knuckle line in the master by hand took one small script (`tools/scratch/comfy/fist.mjs`) and reads correctly at poster size.
+- **The sunset's old skyline** was there all along, but tinted the same purple as the sky, so it was invisible.
+- **The first new skyline** read as a generic city: needle-thin towers, all the same. Drawing the towers wider than life and clumping the financial district made it read as Toronto.
+- **The top-down raccoon's mask** didn't show after recolouring. The two big cream eye spheres covered it at 32 px. The fix was to paint the mask onto the head's surface and shrink the eyes to glints.
+- **The first side-view pass:** the pump crossed the back of his head, and the arm hid the bandana. The fix was to tilt the pump behind the shoulder and draw the bandana last.
+
+**Decisions:**
+- **Sprites stay the same size, with the same frames and animations.** Only the look changes, so no gameplay or hitbox changes.
+- **The sprites use the heroes' palette colours** (already in the game palette), so a sprite and its portrait share exact colours.
+- **The pizza basket is gone** (the hero's bike has none). Asked Ivan whether he wants it back.
+
+![](reviews/m412/sprites/before_after.png)

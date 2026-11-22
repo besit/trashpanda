@@ -1,5 +1,6 @@
 // Side-view raccoon on bicycle (facing right). Frames are composed from layers.
 import { Img } from '../lib/raster.mjs';
+import { heroKey } from '../palette.mjs';
 
 export const FW = 56, FH = 44;
 const SHIFT = 8; // room for the tail (and, mirrored, for the pump swing)
@@ -7,32 +8,40 @@ const TOP = 8;   // headroom for the raised pump
 export const PIVOT_Y = (34 + TOP) / FH;
 const GROUND = 34;
 
+// M4.12 (Ivan: "we have a raccoon that is grey instead of our brownish one in big images"): the hero images' look,
+// in the hero raccoon's own colours: warm brown fur, a dark mask, cream brows and muzzle, the red bandana, the yellow
+// pump on his back, a satchel and boots. Same frame, pivot and animations as before (gameplay is unchanged).
+const hk = (i) => heroKey('raccoon', i);
+export const FUR = { mask: hk(8), dark: hk(14), mid2: hk(19), mid: hk(24), light: hk(32), pale: hk(36), cream: hk(46), creamLo: hk(42) };
+const BAND = { lo: hk(21), mid: hk(25), hi: hk(30) };
+const HEAD_MAP = { d: FUR.dark, f: FUR.mid, l: FUR.light, p: FUR.pale, m: FUR.mask, c: FUR.cream, s: FUR.creamLo, n: 'K', e: 'W' };
+
 // Head painted without outline (outline added for whole body later). Faces right.
 const HEAD = `
-.h....h.......
-hGg..hGg......
-GGGGGGGGG.....
-GGGGWWWWWW....
-GkkkkWWkkkW...
-GkkkkWKkkWWW..
-GkkkkkkkWWWWKK
-GGWWWWWWWWWWK.
-.GhWWWWWWWWh..
-..GhhhhhhhG...
+.f.....f.......
+fpf...fpf......
+dfffffffff.....
+dffccccccf.....
+dfmmmmssmmm....
+dfmmemmmmccc...
+dfmmmmmmcccccnn
+dffscccccccccn.
+.dfpssccccccp..
+..dfppppppppf..
 `;
 
 // Head when hit: eyes squeezed (> <)
 const HEAD_HURT = `
-.h....h.......
-hGg..hGg......
-GGGGGGGGG.....
-GGGGGWWWWW....
-GkkkkkkkkkW...
-GkkkWWkkkWWW..
-GkkkkWkkWWWWKK
-GGWWWWWWWWWWK.
-.GhWWkkkWWWh..
-..GhhhhhhhG...
+.f.....f.......
+fpf...fpf......
+dfffffffff.....
+dffccccccf.....
+dfmmmmmmmmm....
+dfmmmcmmmccc...
+dfmmmmcmcccccnn
+dffscccccccccn.
+.dfpsmmmmcccp..
+..dfppppppppf..
 `;
 
 function ik(hx, hy, fx, fy, l1, l2, bend = 1) {
@@ -91,16 +100,6 @@ function bike(img, phase, pedal, { lift = 0 } = {}) {
   img.line(HT[0] - 1, HT[1] - 4, HT[0] - 4, HT[1] - 5, 'H');
   img.set(HT[0] - 5, HT[1] - 5, 'k'); img.set(HT[0] - 6, HT[1] - 5, 'k');
   img.set(HT[0] + 1, HT[1] - 5, 'y'); img.set(HT[0] + 1, HT[1] - 6, 'Y');
-  // front basket with pizza slice
-  const bx = HT[0] + 2, by = HT[1] - 4;
-  img.rect(bx, by, 8, 6, 'X');
-  for (let i = 0; i < 8; i += 2) img.vline(bx + i, by + 1, by + 5, 'x');
-  img.hline(bx, bx + 7, by + 3, 'x');
-  img.hline(bx - 1, bx + 8, by, 'j');
-  img.poly([[bx + 2, by], [bx + 6, by - 4], [bx + 7, by]], 'y');
-  img.hline(bx + 5, bx + 7, by - 3, 'X'); img.set(bx + 6, by - 4, 'X');
-  img.set(bx + 4, by - 1, 'R'); img.set(bx + 6, by - 2, 'R');
-  img.line(bx - 1, by, bx - 1, by + 6, 'K'); img.line(bx + 8, by, bx + 8, by + 6, 'K'); img.hline(bx - 1, bx + 8, by + 6, 'K');
   // pedals
   const ang = (pedal * Math.PI) / 2;
   const p1 = [BB[0] + Math.cos(ang) * 4, BB[1] + Math.sin(ang) * 4];
@@ -117,18 +116,19 @@ function tail(img, sway, flare = 0) {
     pts.push([x, y, 3.4 - t * 1.0 + Math.sin(t * Math.PI) * 0.8]);
   }
   pts.forEach(([x, y, r], i) => {
-    const band = Math.floor(i / 2.2) % 2 === 0 ? 'h' : 'g';
-    img.circle(Math.round(x), Math.round(y), Math.round(r), i >= pts.length - 2 ? 'k' : band);
+    const band = Math.floor(i / 2.2) % 2 === 0 ? FUR.light : FUR.dark;
+    img.circle(Math.round(x), Math.round(y), Math.round(r), i >= pts.length - 2 ? FUR.mask : band);
   });
 }
 
 function leg(img, hip, foot, near) {
   const knee = ik(hip[0], hip[1], foot[0], foot[1], 7, 7, -1);
-  const c1 = near ? 'G' : 'g', c2 = near ? 'G' : 'g';
+  const c1 = near ? FUR.mid : FUR.mid2, c2 = near ? FUR.mid : FUR.mid2;
   img.thick(hip[0], hip[1], knee[0], knee[1], c1, near ? 3 : 2);
   img.thick(knee[0], knee[1], foot[0], foot[1], c2, 2);
-  img.rect(Math.round(foot[0]) - 1, Math.round(foot[1]), 3, 1, 'k');
-  img.set(Math.round(foot[0]), Math.round(foot[1]) - 1, 'k');
+  // boots
+  img.rect(Math.round(foot[0]) - 1, Math.round(foot[1]) - 1, 4, 2, near ? 'x' : 'w');
+  img.hline(Math.round(foot[0]) - 1, Math.round(foot[0]) + 2, Math.round(foot[1]) + 1, 'w');
 }
 
 /**
@@ -151,24 +151,34 @@ export function raccoonFrame(pose = {}) {
   back.outline('K');
 
   tail(body, sway, lean > 1 ? 1 : 0);
-  // torso
   const sx = 23 + lean, sy = 9 + bob;
-  body.poly([[hip[0] - 4, hip[1] + 2], [hip[0] - 2, hip[1] - 4], [sx - 3, sy - 2], [sx + 2, sy - 1], [sx + 2, sy + 3], [hip[0] + 4, hip[1] + 2]], 'G');
-  body.poly([[hip[0] + 1, hip[1] + 1], [sx - 1, sy + 3], [sx + 2, sy + 3], [hip[0] + 4, hip[1] + 2]], 'h');
+  // the yellow pump on his back (when he isn't swinging it): barrel up behind the shoulder, T-handle on top, the hose
+  if (attack === 0) {
+    const a = [hip[0] - 2, hip[1] + 1], b = [sx - 8, sy - 5];
+    body.thick(a[0], a[1], b[0], b[1], 'o', 3); body.thick(a[0] - 1, a[1], b[0] - 1, b[1], 'y', 2); body.line(a[0] - 1, a[1], b[0] - 1, b[1], 'Y');
+    body.line(b[0] - 3, b[1] + 1, b[0] + 1, b[1] - 3, 'K'); body.set(b[0] + 1, b[1] + 1, 'g');
+    for (let t = 0; t < Math.PI * 1.2; t += 0.3) body.set(Math.round(a[0] - 2 - Math.sin(t) * 2), Math.round(a[1] + 1 + t * 1.2), 'K');
+  }
+  // torso
+  body.poly([[hip[0] - 4, hip[1] + 2], [hip[0] - 2, hip[1] - 4], [sx - 3, sy - 2], [sx + 2, sy - 1], [sx + 2, sy + 3], [hip[0] + 4, hip[1] + 2]], FUR.mid);
+  body.poly([[hip[0] + 1, hip[1] + 1], [sx - 1, sy + 3], [sx + 2, sy + 3], [hip[0] + 4, hip[1] + 2]], FUR.pale);
+  // the satchel strap across the chest and the bag at the hip
+  body.line(sx + 1, sy, hip[0] - 2, hip[1], 'w');
+  body.rect(hip[0] - 4, hip[1] - 1, 5, 4, 'x'); body.hline(hip[0] - 4, hip[0], hip[1] - 1, 'X'); body.set(hip[0] - 2, hip[1] + 1, 'j');
   // head
-  const head = Img.fromGrid(hurt ? HEAD_HURT : HEAD);
+  const head = Img.fromGrid(hurt ? HEAD_HURT : HEAD, HEAD_MAP);
   body.blit(head, sx - 4, sy - 9);
   // near arm to grips (or swinging the bike pump)
   if (attack === 0) {
-    body.thick(sx, sy + 2, geo.HT[0] - 5, geo.HT[1] - 5, 'G', 2);
-    body.rect(geo.HT[0] - 6, geo.HT[1] - 6, 2, 2, 'k');
+    body.thick(sx, sy + 2, geo.HT[0] - 5, geo.HT[1] - 5, FUR.mid, 2);
+    body.rect(geo.HT[0] - 6, geo.HT[1] - 6, 2, 2, FUR.mask);
   } else {
     // bike pump swung like a bat (v03, per Ivan: reads better than the lid at this scale).
     // Bright red barrel, black T-handle at the striking end, hose loop at the grip, white swoosh on the swing.
     const poses = [null, { h: [-1, -1], d: [-0.75, -0.66] }, { h: [5, -2], d: [0.55, -0.83] }, { h: [6, 3], d: [0.92, 0.38] }];
     const { h, d } = poses[attack];
     const hx = sx + h[0], hy = sy + h[1];
-    body.thick(sx, sy + 2, hx, hy, 'G', 2);
+    body.thick(sx, sy + 2, hx, hy, FUR.mid, 2);
     const dl = Math.hypot(d[0], d[1]), dx = d[0] / dl, dy = d[1] / dl, px = -dy, py = dx;
     const L = 11;
     for (let i = 0; i <= L; i++) {
@@ -186,10 +196,15 @@ export function raccoonFrame(pose = {}) {
     // swoosh arc on the big swing
     if (attack === 2) for (let a = -1.9; a < 0.2; a += 0.1) { const r = L + 3; swoosh.push([Math.round(hx + Math.cos(a) * r), Math.round(hy + Math.sin(a) * r), a > -0.4 ? 'H' : 'W']); swoosh.push([Math.round(hx + Math.cos(a) * (r - 1)), Math.round(hy + Math.sin(a) * (r - 1)), a > -1 ? 'H' : 'W']); }
   }
+  // the red bandana: a triangle under the chin, its knot's tails flying behind the neck
+  body.poly([[sx - 3, sy + 1], [sx + 6, sy + 1], [sx + 3, sy + 6]], BAND.mid);
+  body.hline(sx - 3, sx + 5, sy + 1, BAND.hi); body.set(sx + 3, sy + 5, BAND.lo); body.set(sx + 2, sy + 4, BAND.lo); body.set(sx + 4, sy + 3, BAND.lo);
+  const fl = [-1, 0, 1, 2, 1][Math.round(sway) + 2] ?? 0;
+  body.set(sx - 4, sy, BAND.mid); body.set(sx - 5, sy + fl * 0.5, BAND.mid); body.set(sx - 6, sy + fl, BAND.hi); body.set(sx - 5, sy + 1 + fl * 0.5, BAND.lo);
   // near leg
   leg(body, [hip[0] + 1, hip[1] + 1], tuck ? [geo.BB[0] + 4, geo.BB[1] - 5] : geo.p1, true);
   body.outline('K');
-  body.rim('G', 'h', 'up');
+  body.rim(FUR.mid, FUR.light, 'up');
 
   const out = new Img(FW, FH);
   out.blit(back, 0, 0);

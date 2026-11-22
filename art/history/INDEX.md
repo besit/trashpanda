@@ -210,6 +210,22 @@ First pass portrait (grin / laugh / shock). SDF: pear head (skull+jowls smooth-u
 
 ## dogfjord_inworld
 
+### dogfjord_inworld v05
+
+2026-11-22
+
+M4.12: the hero's navy suit, red tie, grey hair, his pinks, a solid brown eye patch
+
+![dogfjord_inworld v05](dogfjord_inworld/v05/preview.png)
+
+### dogfjord_inworld v04
+
+2026-11-22
+
+before M4.12: grey suit, purple tie
+
+![dogfjord_inworld v04](dogfjord_inworld/v04/preview.png)
+
 ### dogfjord_inworld v03
 
 2026-11-12
@@ -998,6 +1014,22 @@ First pass props: trees, sapling, streetlight, TTC stop, post-and-ring bike stan
 
 ## raccoon_side
 
+### raccoon_side v06
+
+2026-11-22
+
+M4.12: the hero look: brown fur, dark mask, cream muzzle, red bandana, yellow pump on his back, satchel, boots (no pizza basket)
+
+![raccoon_side v06](raccoon_side/v06/preview.png)
+
+### raccoon_side v05
+
+2026-11-22
+
+before M4.12: the grey raccoon with the pizza basket (pre-hero look)
+
+![raccoon_side v05](raccoon_side/v05/preview.png)
+
 ### raccoon_side v04
 
 2026-11-12
@@ -1121,6 +1153,22 @@ M4.10 ref04 pass 1: cartoon sprite, 2px dark line, 3-tone cel ramps, big sly eye
 ![raccoon_style_ref04 v01](raccoon_style_ref04/v01/preview.png)
 
 ## raccoon_top
+
+### raccoon_top v05
+
+2026-11-22
+
+M4.12: the hero's colours, bandana, pump on his back, satchel; the mask painted on, small eye glints
+
+![raccoon_top v05](raccoon_top/v05/preview.png)
+
+### raccoon_top v04
+
+2026-11-22
+
+before M4.12: the grey top-down raccoon
+
+![raccoon_top v04](raccoon_top/v04/preview.png)
 
 ### raccoon_top v03
 
