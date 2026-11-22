@@ -619,7 +619,7 @@ export class ActionScene extends Phaser.Scene {
     const kind = bk === 'foreman' ? 'foreman' : bk === 'megarat' ? 'megarat' : 'bureaucrat';
     if (kind === 'bureaucrat') {
       // Dog Fjord watches from his podium on the sidewalk (Ivan: "where was Dog Fjord?")
-      this.dogFjord = this.add.image(l.left + 70, STREET_Y + 10, 'chars', 'dfs_pod').setOrigin(0.5, 0.97).setDepth(20);
+      this.dogFjord = this.add.image(l.left + 70, STREET_Y + 10, 'chars', 'dfs_pod').setOrigin(0.5, 0.97).setDepth(20).setFlipX(true); // M4.13: the new sprite faces left; turn him to the fight
       this.time.delayedCall(400, () => { if (this.dogFjord) { floatText(this, l.left + GAME_W / 2, this.dogFjord.y - 84, 'GET HIM, PAPERWORK!', 'font_red', 0xffffff, 1400); sfx.laugh(); this.dogFjord.setFrame('dfs_podlaugh'); this.time.delayedCall(1500, () => this.dogFjord?.setFrame('dfs_pod')); } });
     }
     this.boss = new Boss(this, l.left + GAME_W - 90, this.groundY, {

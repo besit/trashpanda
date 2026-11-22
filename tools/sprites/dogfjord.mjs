@@ -4,7 +4,9 @@
 // more dog: longer muzzle, bigger nose, whisker spots, droopier flews.
 import { sd, scene, render, orthoCam, smin, pitchInv, norm } from '../lib/sdf.mjs';
 import { Img } from '../lib/raster.mjs';
-import { heroKey } from '../palette.mjs';
+import { heroKey, PALETTE, hexToRgb } from '../palette.mjs';
+import { heroImage } from './heroes.mjs';
+import { oklab } from '../lib/hero.mjs';
 
 // M4.12 (Ivan: "the dog could use a better look now referencing the large scale artwork"): the hero image's colours,
 // a navy suit, a red tie, grey swept hair and his own pinks
@@ -148,47 +150,41 @@ export function dogFjordFrames() {
 }
 
 /**
- * In-world Dog Fjord (side vignettes + map): the same head model rendered small on a tiny suited body.
- * Big-head proportions are the joke. ~44 x 64.
+ * In-world Dog Fjord (side vignettes, the podium, the posters), 60 x 80, feet on row 77.
+ * M4.13 (Ivan: "redraw the Dog Fjord from scratch using our current hero artworks as reference"): the hero full-body
+ * (and a laughing take of it from ComfyUI) brought down to 72 px on his locked palette by tools/heroes-build.mjs, then
+ * cleaned like a pixel artist would: lone pixels that are only a near-tone of their neighbours go (the downscale's
+ * speckle; the eye glints and teeth stay, they're far from their neighbours' tone), and the game's black outline goes
+ * round him like every other sprite. He stands in 3/4 view facing left (flip him when he talks to someone on his left).
  */
-export function dogFjordStanding(expr = 'grin', podium = false) {
-  // v02 (Ivan: "upper torso looks weird"): the head model is clipped at the jowls so the portrait's own
-  // shoulders + tie don't show, and a proper little suit is drawn under it: shoulders as wide as the
-  // jowls, lapels, white shirt V, the purple dotted tie, arms with pink paws, short legs.
-  const W = 60, H = 80;
-  const raw = scene(model(expr));
-  const clipped = (p) => { const r = raw(p); return p[2] < 25 ? [Math.max(r[0], 25 - p[2]), r[1]] : r; };
-  const head = render(clipped, { w: W, h: 54, cx: W / 2 + 1, cy: 54, cam: orthoCam([-0.32, -1, -0.12]), light: norm([-0.55, 0.7, 0.75]), ambient: 0.2, scale: 0.44 });
-  const img = new Img(W, H);
-  const cx = Math.round(W / 2), by = 44;
-  // jacket: rounded shoulders tapering to the waist
-  // v03 (Ivan, M3: "separate his arms and torso by using different shades, instead of one diagonal
-  // shadow"): the torso is one mid tone with a thin shade on its far edge; the arms are a darker tone with
-  // a light edge along the top of the sleeve and a dark seam where they meet the torso.
-  img.poly([[cx - 14, by + 4], [cx - 11, by], [cx + 11, by], [cx + 14, by + 4], [cx + 12, by + 22], [cx - 12, by + 22]], NAVY.mid);
-  img.line(cx - 12, by + 3, cx - 11, by + 21, NAVY.shade); img.line(cx - 11, by + 1, cx + 10, by + 1, NAVY.light); // far-edge shade, shoulder light
-  // shirt V + lapels + tie
-  img.poly([[cx - 5, by], [cx + 5, by], [cx, by + 10]], 'W');
-  img.line(cx - 5, by, cx - 1, by + 12, NAVY.dark); img.line(cx + 5, by, cx + 1, by + 12, NAVY.dark); // lapels
-  // the red tie: a knot at the collar, hanging straight
-  img.rect(cx - 1, by + 1, 2, 2, TIE.hi); img.rect(cx - 1, by + 3, 2, 9, TIE.mid); img.set(cx, by + 12, TIE.mid); img.vline(cx - 1, by + 4, by + 10, TIE.hi);
-  img.set(cx + 3, by + 15, NAVY.light); img.set(cx + 3, by + 19, NAVY.light); // buttons
-  // arms + paws
-  for (const sgn of [-1, 1]) {
-    img.poly([[cx + sgn * 14, by + 3], [cx + sgn * 18, by + 18], [cx + sgn * 14, by + 19], [cx + sgn * 11, by + 7]], NAVY.shade);
-    img.line(cx + sgn * 14, by + 3, cx + sgn * 17, by + 16, sgn > 0 ? NAVY.mid : NAVY.light); // sleeve edge catching the light
-    img.line(cx + sgn * 11, by + 7, cx + sgn * 14, by + 18, 'K');                  // the seam against the torso
+const LAB = new Map();
+const lab = (k) => { if (!LAB.has(k)) LAB.set(k, oklab(hexToRgb(PALETTE[k]))); return LAB.get(k); };
+const near = (a, b) => { const p = lab(a), q = lab(b); return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]) < 0.09; };
+function despeckle(src) {
+  const out = src.clone();
+  for (let y = 0; y < src.h; y++) for (let x = 0; x < src.w; x++) {
+    const c = src.get(x, y); if (!c) continue;
+    const ns = [src.get(x - 1, y), src.get(x + 1, y), src.get(x, y - 1), src.get(x, y + 1)];
+    if (ns.includes(c) || ns.some((n) => !n)) continue; // part of a run, or on the edge
+    const counts = {}; for (const n of ns) counts[n] = (counts[n] || 0) + 1;
+    const [best, k] = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+    if (k >= 3 && near(c, best)) out.set(x, y, best);
   }
-  img.ellipse(cx - 15, by + 20, 2, 2, hk(38)); img.ellipse(cx + 15, by + 20, 2, 2, hk(38));
-  // legs + shoes
-  img.rect(cx - 7, by + 22, 5, 9, NAVY.dark); img.rect(cx + 2, by + 22, 5, 9, NAVY.dark);
-  img.rect(cx - 9, by + 30, 7, 3, 'K'); img.rect(cx + 2, by + 30, 7, 3, 'K'); img.set(cx - 8, by + 30, 'g'); img.set(cx + 3, by + 30, 'g');
+  return out;
+}
+export function dogFjordStanding(expr = 'grin', podium = false) {
+  const W = 60, H = 80;
+  const fig = despeckle(heroImage('dog', expr === 'laugh' ? 'dfs_laugh' : 'dfs_grin'));
+  const img = new Img(W, H);
+  img.blit(fig, Math.round((W - fig.w) / 2), 77 - fig.h);
   img.outline('K');
-  img.blit(head, 0, -2);
   if (podium) {
-    img.rect(cx - 15, 58, 30, 20, 'v'); img.rect(cx - 14, 59, 28, 18, 'V'); img.hline(cx - 15, cx + 14, 58, 'Z');
-    img.rect(cx - 7, 63, 14, 7, 'W'); img.rect(cx - 5, 65, 10, 3, 'V'); // the DF crest
-    img.vline(cx + 8, 50, 58, 'g'); img.rect(cx + 7, 48, 3, 3, 'G'); // microphone
+    // the purple podium in front of him, its DF crest, the microphone on the side he faces
+    const cx = Math.round(W / 2), pod = new Img(W, H);
+    pod.rect(cx - 16, 56, 32, 22, 'v'); pod.rect(cx - 15, 57, 30, 20, 'V'); pod.hline(cx - 16, cx + 15, 56, 'Z');
+    pod.rect(cx - 7, 62, 14, 7, 'W'); pod.rect(cx - 5, 64, 10, 3, 'V'); // the DF crest
+    pod.vline(cx - 10, 47, 56, 'g'); pod.rect(cx - 11, 45, 3, 3, 'G'); // microphone
+    pod.outline('K'); img.blit(pod, 0, 0);
   }
   img.pivot = { x: 0.5, y: (H - 2) / H };
   return img;

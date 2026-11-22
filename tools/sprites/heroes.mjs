@@ -13,8 +13,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../a
 const keyOf = new Map(Object.entries(PALETTE).map(([k, hex]) => [hex.toLowerCase(), k]));
 const hex = (r, g, b) => '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('');
 
-export function heroImage(character, name) {
-  const p = PNG.sync.read(fs.readFileSync(path.join(root, `${character}_${name}.png`)));
+export function heroImage(character, name, dir = root) {
+  const p = PNG.sync.read(fs.readFileSync(path.join(dir, `${character}_${name}.png`)));
   const img = new Img(p.width, p.height);
   for (let i = 0; i < p.width * p.height; i++) {
     if (p.data[i * 4 + 3] < 128) continue;
@@ -24,6 +24,9 @@ export function heroImage(character, name) {
   }
   return img;
 }
+/** M4.13: a whole scene made by tools/scene.mjs (art/scenes/<scene>_<name>.png), e.g. sceneImage('sunset', 'wide') */
+export const sceneImage = (scene, name) => heroImage(scene, name, path.join(root, '../scenes'));
+export function sunsetScenePreview() { return { frames: [sceneImage('sunset', 'wide'), sceneImage('sunset', 'tall')], cols: 2 }; }
 /** every hero image in art/heroes, for the art history */
 export function heroesPreview() {
   const names = fs.readdirSync(root).filter((f) => /^(raccoon|dog)_.+\.png$/.test(f)).sort();

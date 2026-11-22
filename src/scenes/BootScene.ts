@@ -17,6 +17,8 @@ export interface Manifest {
   shareCyclists?: string[];
   /** M4.4: the share posters' art (portraits, emblem, ribbon), loaded when the share screen first opens */
   posters?: { png: string; json: string };
+  /** M4.13: whole poster backgrounds (the sunset's lagoon), loaded with the posters */
+  posterBg?: { png: string; json: string };
 }
 
 /** Loads the manifest, then every asset it lists, then builds fonts + animations. */

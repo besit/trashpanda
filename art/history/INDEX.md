@@ -210,6 +210,14 @@ First pass portrait (grin / laugh / shock). SDF: pear head (skull+jowls smooth-u
 
 ## dogfjord_inworld
 
+### dogfjord_inworld v06
+
+2026-11-22
+
+M4.13 (Ivan: redraw from the hero artworks): the hero full-body and a ComfyUI laughing take, downscaled to 72 px on his palette, despeckled, black outline; 3/4 view facing left
+
+![dogfjord_inworld v06](dogfjord_inworld/v06/preview.png)
+
 ### dogfjord_inworld v05
 
 2026-11-22
@@ -363,6 +371,14 @@ Original 5x7 uppercase font: plain, outline, shadow, 2x outline (titles).
 ![font v01](font/v01/preview.png)
 
 ## heroes
+
+### heroes v05
+
+2026-11-22
+
+M4.13: dog_vs from Ivan's fixed-fist Gemini image (fringe removed), stand_md, side_src, dfs_grin/dfs_laugh; bust_sm/stand_sm gone
+
+![heroes v05](heroes/v05/preview.png)
 
 ### heroes v04
 
@@ -1014,6 +1030,14 @@ First pass props: trees, sapling, streetlight, TTC stop, post-and-ring bike stan
 
 ## raccoon_side
 
+### raccoon_side v07
+
+2026-11-22
+
+M4.13: red fork (Ivan); the swing: darker arm with a paw round the pump's grip, wind-up hand further back, bandana stays on top
+
+![raccoon_side v07](raccoon_side/v07/preview.png)
+
 ### raccoon_side v06
 
 2026-11-22
@@ -1061,6 +1085,16 @@ Frame widened to 48 (tail no longer clipped), 2px eye with pupil for expression.
 First pass: hand-painted head grid + procedural bike, IK legs, trash-can-lid attack. Known issues: tail clipped at left edge, small eye, thin legs.
 
 ![raccoon_side v01](raccoon_side/v01/preview.png)
+
+## raccoon_side_hero
+
+### raccoon_side_hero v01
+
+2026-11-22
+
+M4.13 (Ivan: a pass over the side view raccoon): the rider cut from the hero bike image at 40 px, the bike, legs, tail sway and pump swing drawn in code; 56x52 frame
+
+![raccoon_side_hero v01](raccoon_side_hero/v01/preview.png)
 
 ## raccoon_style_detailed
 
@@ -1345,6 +1379,16 @@ M2.1 (Ivan): the raised crosswalk now runs across the whole road with its bars a
 M2 side-view mission props: signal pole with a TSP call box (red / green / priority white bar), RAT EXPRESS van, the SUV Rat (driver found by locating the glass band; first pass sat on the roof), the Bureaucrat's desk + DENIED stamp, the stolen speed camera, build stakes, speed hump, raised crosswalk, curb extension.
 
 ![side_props v01](side_props/v01/preview.png)
+
+## sunset_scene
+
+### sunset_scene v01
+
+2026-11-22
+
+M4.13 (Ivan's reference): the Toronto Islands lagoon, his Gemini image with its raccoon removed (ComfyUI), on its own 48 colours
+
+![sunset_scene v01](sunset_scene/v01/preview.png)
 
 ## tiles
 

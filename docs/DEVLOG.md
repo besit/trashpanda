@@ -991,3 +991,48 @@ Ivan generated more Gemini images (a new bust, the bike, Dog Fjord laughing and 
 - **The pizza basket is gone** (the hero's bike has none). Asked Ivan whether he wants it back.
 
 ![](reviews/m412/sprites/before_after.png)
+
+---
+
+## 2026-11-22: M4.13 (local preview): poster fixes, Dog Fjord and the side-view raccoon from the hero art
+
+M4.12 went live on Ivan's go (tag `m4.12`). His notes on it, worked through: [review](reviews/M4.13.md).
+
+### Posters
+- **VERSUS:**
+  - The new dog master was on white, not green. A flood fill from the borders turned it green.
+  - **Failure:** the first pass left the soft blend between the white and the dark outline, and the palette turned it into a white halo (Ivan saw it at once).
+  - **Fix:** three passes that also key light, grey pixels touching the background. Hair and fist survive because they are either saturated or not on the edge.
+- **Sunset:**
+  - The racing road toward the skyline fought the raccoon riding sideways. Ivan made a Gemini reference: the islands lagoon, the skyline in the sun.
+  - **Decision:** convert his image rather than redraw it in code, since it is his design and it converts well.
+  - ComfyUI (Qwen-Image-Edit) removed its raccoon on all three seeds. `tools/scene.mjs` (new) samples a whole scene, with no green key because leaves would vanish, onto its own locked 48 colours (`tools/palettes/sunset.json`, keys from U+0200).
+  - The tall poster is a 1:1 crop around the sun. The scene is in its own atlas, loaded lazily with the posters.
+  - Second note: the raccoon moved to the left third on the wide poster.
+- **Bosses (wide):**
+  - The smaller bust cut the pump at the sides, so the first try was the whole standing raccoon, small.
+  - Ivan wanted a portrait instead: the standing pose at 180 px, cropped from the top.
+- The procedural Toronto skyline from M4.12 left the atlas. The module stays.
+
+### Dog Fjord in the world
+- **Before:** the old 3D-rendered head on a hand-drawn suit.
+- **Now:** the hero full-body at 72 px on his palette, plus a laughing take of the same master from ComfyUI.
+  - **Problem:** that take had a dark green ground shadow the key would miss. Green-dominant pixels were flattened first.
+- **Cleanup:** a despeckle that only removes a lone pixel when it's a near-tone of its neighbours (OKLab < 0.09), so eye glints and teeth stay. Then the game's black outline.
+  - **Failure:** the podium frames briefly had a 2-px outline (outline run twice). The podium is now its own outlined layer.
+- **Facing:** he's in 3/4 view facing left, so he's flipped in the three places he stands left of the raccoon.
+
+### The side-view raccoon
+- **The M4.12 sprite:** the fork is red now. The swing had two problems:
+  - the arm was the torso's colour, so it vanished
+  - moving the bandana under the arm shattered it, because the shoulder sits where the bandana is
+
+  The bandana now stays on top, the arm has a darker underside, a paw closes round the grip, and the wind-up hand is further back.
+- **The new pass (Ivan's ask):**
+  - **Checked first:** the hero bike image straight down to sprite height. It has character, but can't pedal, and its 1-px bike breaks up.
+  - **So, a hybrid** (`tools/sprites/raccoon_side2.mjs`): the rider is cut from the 40-px downscale at the saddle and the grips. Code draws the bike, legs, tail sway and swing, with joints read off an ASCII dump of the downscale.
+  - **The frame:** the hero is upright, so it grew to 56 x 52. SidePlayer's origin and hitbox offset moved by the same rows, so the hitbox stands where it did.
+  - **First render:** soft (no outline) with stick legs. Fixed with an outline, thick thighs and visible boots.
+- **High scores:** Ivan asked whether 10-letter names show.
+  - A read of the live online top list: every name has 3 letters, even after M4.5. The Firestore rules were never republished, so long names are refused and fall back to their first three letters.
+  - Ivan has to publish the rules in `docs/LEADERBOARD.md` from the Firebase console.

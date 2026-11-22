@@ -31,9 +31,10 @@ export class SidePlayer {
   dead = false;
 
   constructor(private scene: Phaser.Scene, x: number, y: number) {
-    this.sprite = scene.physics.add.sprite(x, y, 'chars', 'rs_0').setOrigin(0.5, 42 / 44);
+    // M4.13: the hero-proportioned sprite (tools/sprites/raccoon_side2.mjs): 56 x 52, the wheels' bottom on row 51
+    this.sprite = scene.physics.add.sprite(x, y, 'chars', 'rs_0').setOrigin(0.5, 51 / 52);
     const b = this.sprite.body as Phaser.Physics.Arcade.Body;
-    b.setSize(22, 16).setOffset(17, 26);
+    b.setSize(22, 16).setOffset(17, 35); // the same box over the bike as before, the frame is 9 rows taller above it
     b.setMaxVelocityY(600);
     this.sprite.play('rs_idle');
     this.sprite.setDepth(100);

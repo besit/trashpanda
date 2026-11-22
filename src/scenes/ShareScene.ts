@@ -72,6 +72,7 @@ export class ShareScene extends Phaser.Scene {
     // the posters' own art (portraits, emblem, ribbon): loaded the first time the share screen opens
     const m = this.registry.get('manifest') as Manifest | undefined;
     if (m?.posters && !this.textures.exists('posters')) this.load.atlas('posters', m.posters.png, m.posters.json);
+    if (m?.posterBg && !this.textures.exists('posters_bg')) this.load.atlas('posters_bg', m.posterBg.png, m.posterBg.json);
   }
 
   create() {
@@ -338,44 +339,20 @@ export class ShareScene extends Phaser.Scene {
         fill(0x16121f, 0, H - 28, W, 28, 0.85); words(`${numsWide}   ${LINK}`, W / 2, H - 20, SMALL, 0xc9c5d1);
       }
     } else if (P === 'sunset') {
-      // an arcade racer's sunset: the road (a protected bike lane on each side) runs to the horizon, the sun sets over
-      // the lake behind the skyline, and the raccoon rides off into it
-      sky('sky_dusk');
-      const hz = tall ? 360 : 200;
-      gfx((g) => {
-        // the sun: bands of colour, its lower half cut by widening gaps
-        const r = tall ? 112 : 100, cols = [0xfff08a, 0xffe3a8, 0xffbf7a, 0xff9a2e, 0xff7a59, 0xd9646f];
-        for (let y = -r; y < 0; y++) {
-          const w = Math.sqrt(r * r - y * y), band = Math.floor(((y + r) / r) * cols.length);
-          const gapEvery = y > -r * 0.45 ? Math.max(3, Math.round(10 + (y / r) * 14)) : 999;
-          if ((y + r) % gapEvery === gapEvery - 1) continue;
-          g.fillStyle(cols[Math.min(cols.length - 1, band)]).fillRect(W / 2 - w, hz + y, w * 2, 1);
-        }
-      });
-      // M4.12 (Ivan: "change the bg to Toronto skyline"): the skyline from the lake in silhouette against the sun
-      hi(tall ? 'pr_toronto_t' : 'pr_toronto_w', 0, hz - 5, { ox: 0 });
-      fill(0x25529b, 0, hz - 6, W, 8); fill(0x3a88cf, 0, hz - 6, W, 2);
-      gfx((g) => {
-        // the road, row by row: alternating rumble strips and verge make the speed (the classic racer trick)
-        for (let y = hz + 2; y < H; y++) {
-          const t = (y - hz) / (H - hz), half = 6 + t * W * 0.62, c = W / 2 + (1 - t) * (1 - t) * 20;
-          const ph = Math.floor(14 / (t + 0.05)) % 2 === 0;
-          g.fillStyle(ph ? 0x2a6e38 : 0x173f2b).fillRect(0, y, W, 1);
-          g.fillStyle(ph ? 0xf6f2e9 : 0xd42a24).fillRect(c - half - half * 0.1, y, half * 2.2, 1);
-          g.fillStyle(0x55a144).fillRect(c - half, y, half * 2, 1);                                 // the bike lanes
-          g.fillStyle(0xc9c5d1).fillRect(c - half * 0.74, y, half * 1.48, 1);                       // their curbs
-          g.fillStyle(0x363644).fillRect(c - half * 0.7, y, half * 1.4, 1);                         // the road
-          if (ph) g.fillStyle(0xf6f2e9).fillRect(c - Math.max(1, half * 0.03), y, Math.max(2, half * 0.06), 1);
-        }
-      });
-      hi('pr_racc_bike', W / 2 - (tall ? 0 : 20), H - (tall ? 116 : 64)); // M4.10: the hero image on his bike
+      // M4.13 (Ivan's reference: "a road that goes towards the skyline while the raccoon is riding sideways"): the
+      // lagoon on the Toronto Islands, the skyline small in the setting sun across the water, trees framing it, and the
+      // raccoon riding along the path in front of the low wall. The scene is Ivan's Gemini image (its raccoon removed
+      // with ComfyUI) turned into pixel art on its own 48 colours (tools/scene.mjs); the raccoon is the hero image.
+      hi(tall ? 'pb_sunset_t' : 'pb_sunset_w', 0, 0, { atlas: 'posters_bg', ox: 0, oy: 0 });
+      // on the path, just below the wall; wide: on the left third (Ivan), riding toward the sun
+      hi('pr_racc_bike', tall ? W / 2 + 40 : Math.round(W * 0.28), tall ? H - 104 : H - 62);
       if (tall) {
         fill(0x16121f, 0, 0, W, 132, 0.6);
         words('TRASH PANDA', W / 2, 16, BIG, 0xfff08a); words('RIGHT OF WAY', W / 2, 58, MID, 0xff6347); words(head, W / 2, 96, MID);
         fill(0x16121f, 0, H - 110, W, 110, 0.75);
         words(`BIKE NETWORK ${st.net}/${NETWORK_TOTAL}   SCORE ${st.score}`, W / 2, H - 100, SMALL, 0x9bd35a);
         words('PLAY FREE', W / 2, H - 76, MID, 0xfff08a); words(LINK, W / 2, H - 46, SMALL, 0xc9c5d1);
-      } else standardWords(0.94);
+      } else standardWords(0.75);
     } else if (P === 'bosses') {
       // a boss-select screen: the hero in the middle, the bosses around; the beaten ones lit, the rest in shadow
       fill(0x162750, 0, 0, W, H);
@@ -392,9 +369,9 @@ export class ShareScene extends Phaser.Scene {
         if (!inHero) spots.push([c, r]);
       }
       frameCell(hero, true);
-      // M4.10: the hero bust, cropped from the top (his head) to the cell; M4.12 (Ivan): a smaller one, so more of him fits
-      // (the tall poster's cell is two rows high: the standing raccoon fills it)
-      const heroFrame = tall ? 'pr_racc_stand' : 'pr_racc_bust_sm';
+      // the standing raccoon (M4.13, Ivan: the bust cut the pump at the sides): the wide cell crops his top part into a
+      // portrait, the tall cell (two rows high) fits the whole of him
+      const heroFrame = tall ? 'pr_racc_stand' : 'pr_racc_stand_md';
       const bf = this.textures.getFrame('posters', heroFrame), pw = bf?.width ?? 1, ph = bf?.height ?? 1;
       const showH = Math.min(hero.h, ph), showW = Math.min(hero.w, pw);
       hi(heroFrame, hero.x + hero.w / 2, hero.y + hero.h, { crop: [Math.floor((pw - showW) / 2), 0, Math.floor(showW), Math.floor(showH)] });

@@ -44,7 +44,7 @@ dffscccccccccn.
 ..dfppppppppf..
 `;
 
-function ik(hx, hy, fx, fy, l1, l2, bend = 1) {
+export function ik(hx, hy, fx, fy, l1, l2, bend = 1) {
   const dx = fx - hx, dy = fy - hy;
   let d = Math.hypot(dx, dy);
   d = Math.min(d, l1 + l2 - 0.01);
@@ -55,7 +55,7 @@ function ik(hx, hy, fx, fy, l1, l2, bend = 1) {
   return [hx + Math.cos(ang) * l1, hy + Math.sin(ang) * l1];
 }
 
-function wheel(img, cx, cy, phase) {
+export function wheel(img, cx, cy, phase) {
   img.circle(cx, cy, 7, 'K');
   img.circle(cx, cy, 6, 'k');
   img.circle(cx, cy, 5, 'H', false);
@@ -83,9 +83,9 @@ function bike(img, phase, pedal, { lift = 0 } = {}) {
   const tube = (a, b) => { img.thick(a[0], a[1] + 1, b[0], b[1] + 1, 'r', 2); img.thick(a[0], a[1], b[0], b[1], 'R', 2); };
   tube(R, S); tube(R, BB); tube(BB, S); tube(S, HT); tube(BB, HB);
   img.line(S[0] + 1, S[1], HT[0] - 1, HT[1], 'q');
-  // fork
-  img.thick(HT[0], HT[1], F[0], F[1], 'G', 2);
-  img.line(HT[0] + 1, HT[1], F[0] + 1, F[1], 'H');
+  // fork: red like the frame (M4.13, Ivan: the hero bike's fork is red, not grey)
+  img.thick(HT[0], HT[1] + 1, F[0], F[1] + 1, 'r', 2);
+  img.thick(HT[0], HT[1], F[0], F[1], 'R', 2);
   // chainring
   img.circle(BB[0], BB[1], 3, 'K');
   img.circle(BB[0], BB[1], 2, 'h');
@@ -168,17 +168,25 @@ export function raccoonFrame(pose = {}) {
   // head
   const head = Img.fromGrid(hurt ? HEAD_HURT : HEAD, HEAD_MAP);
   body.blit(head, sx - 4, sy - 9);
-  // near arm to grips (or swinging the bike pump)
+  const bandana = () => {
+    // the red bandana: a triangle under the chin, its knot's tails flying behind the neck
+    body.poly([[sx - 3, sy + 1], [sx + 6, sy + 1], [sx + 3, sy + 6]], BAND.mid);
+    body.hline(sx - 3, sx + 5, sy + 1, BAND.hi); body.set(sx + 3, sy + 5, BAND.lo); body.set(sx + 2, sy + 4, BAND.lo); body.set(sx + 4, sy + 3, BAND.lo);
+    const fl = [-1, 0, 1, 2, 1][Math.round(sway) + 2] ?? 0;
+    body.set(sx - 4, sy, BAND.mid); body.set(sx - 5, sy + fl * 0.5, BAND.mid); body.set(sx - 6, sy + fl, BAND.hi); body.set(sx - 5, sy + 1 + fl * 0.5, BAND.lo);
+  };
+  // near arm to grips (or swinging the bike pump). M4.13 (Ivan: the attack too): when he swings, the arm has a darker
+  // underside so it reads against the torso, and a dark paw closes round the pump's grip; the bandana on top (the arm
+  // comes out from under it)
   if (attack === 0) {
     body.thick(sx, sy + 2, geo.HT[0] - 5, geo.HT[1] - 5, FUR.mid, 2);
     body.rect(geo.HT[0] - 6, geo.HT[1] - 6, 2, 2, FUR.mask);
   } else {
     // bike pump swung like a bat (v03, per Ivan: reads better than the lid at this scale).
     // Bright red barrel, black T-handle at the striking end, hose loop at the grip, white swoosh on the swing.
-    const poses = [null, { h: [-1, -1], d: [-0.75, -0.66] }, { h: [5, -2], d: [0.55, -0.83] }, { h: [6, 3], d: [0.92, 0.38] }];
+    const poses = [null, { h: [-4, -2], d: [-0.75, -0.66] }, { h: [5, -2], d: [0.55, -0.83] }, { h: [6, 3], d: [0.92, 0.38] }];
     const { h, d } = poses[attack];
     const hx = sx + h[0], hy = sy + h[1];
-    body.thick(sx, sy + 2, hx, hy, FUR.mid, 2);
     const dl = Math.hypot(d[0], d[1]), dx = d[0] / dl, dy = d[1] / dl, px = -dy, py = dx;
     const L = 11;
     for (let i = 0; i <= L; i++) {
@@ -193,14 +201,13 @@ export function raccoonFrame(pose = {}) {
     body.set(Math.round(tx - dx), Math.round(ty - dy), 'g');
     // hose loop hanging from the grip end
     for (let a = 0; a < Math.PI * 1.4; a += 0.35) body.set(Math.round(hx - dx * 2 + Math.cos(a + 1) * 2.5), Math.round(hy - dy * 2 + 2 + Math.sin(a + 1) * 2), 'K');
+    // the arm on top of the pump: shoulder to paw, darker underside, the paw round the grip
+    body.thick(sx, sy + 3, hx, hy + 1, FUR.mid2, 2); body.line(sx, sy + 2, hx, hy, FUR.mid);
+    body.rect(Math.round(hx) - 1, Math.round(hy) - 1, 2, 2, FUR.mask); body.set(Math.round(hx), Math.round(hy) - 1, FUR.dark);
     // swoosh arc on the big swing
     if (attack === 2) for (let a = -1.9; a < 0.2; a += 0.1) { const r = L + 3; swoosh.push([Math.round(hx + Math.cos(a) * r), Math.round(hy + Math.sin(a) * r), a > -0.4 ? 'H' : 'W']); swoosh.push([Math.round(hx + Math.cos(a) * (r - 1)), Math.round(hy + Math.sin(a) * (r - 1)), a > -1 ? 'H' : 'W']); }
   }
-  // the red bandana: a triangle under the chin, its knot's tails flying behind the neck
-  body.poly([[sx - 3, sy + 1], [sx + 6, sy + 1], [sx + 3, sy + 6]], BAND.mid);
-  body.hline(sx - 3, sx + 5, sy + 1, BAND.hi); body.set(sx + 3, sy + 5, BAND.lo); body.set(sx + 2, sy + 4, BAND.lo); body.set(sx + 4, sy + 3, BAND.lo);
-  const fl = [-1, 0, 1, 2, 1][Math.round(sway) + 2] ?? 0;
-  body.set(sx - 4, sy, BAND.mid); body.set(sx - 5, sy + fl * 0.5, BAND.mid); body.set(sx - 6, sy + fl, BAND.hi); body.set(sx - 5, sy + 1 + fl * 0.5, BAND.lo);
+  bandana();
   // near leg
   leg(body, [hip[0] + 1, hip[1] + 1], tuck ? [geo.BB[0] + 4, geo.BB[1] - 5] : geo.p1, true);
   body.outline('K');

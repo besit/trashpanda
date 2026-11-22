@@ -3,14 +3,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { Img, save } from './lib/raster.mjs';
 import { packAtlas, packTileset } from './lib/pack.mjs';
-import { raccoonSideFrames, appIcon, PIVOT_Y as RS_PIVOT_Y } from './sprites/raccoon_side.mjs';
+import { raccoonSideFrames, appIcon, PIVOT_Y as RS_PIVOT_Y } from './sprites/raccoon_side2.mjs'; // M4.13: the hero-proportioned rider (raccoon_side.mjs: the M4.12 one)
 import { raccoonTopFrame, DIRS } from './sprites/raccoon_top.mjs';
 import { ratAnims, RAT_VARIANTS, bureaucratAnims, foremanAnims, megaRatAnims, BOSS_FH, MEGA_FW, ratTopFrame } from './sprites/rats.mjs';
 import * as M4 from './sprites/m4.mjs';
 import * as M43 from './sprites/m43.mjs';
 import * as PO from './sprites/posters.mjs';
-import { torontoSunset } from './sprites/toronto_sunset.mjs';
-import { heroImage } from './sprites/heroes.mjs'; // M4.10: the hero images (AI masters -> pixel art on locked palettes)
+import { heroImage, sceneImage } from './sprites/heroes.mjs'; // M4.10: the hero images (AI masters -> pixel art on locked palettes)
 import { dogFjordStanding } from './sprites/dogfjord.mjs';
 import { PED_VARIANTS, CYC_VARIANTS, PED_DIRS, pedFrame, cycFrame, cycSideFrame, PED_FW, PED_FH, PED_OX, PED_OY } from './sprites/people.mjs';
 import { buildTiles } from './sprites/tiles.mjs';
@@ -296,17 +295,17 @@ font('font_red', 'q', 'outline', 'K', 2);
   const po = [
     // M4.10: the heroes, from AI masters (tools/heroes-build.mjs -> art/heroes/): 1 art pixel = 1 poster pixel
     ...[['pr_racc_stand', 'raccoon', 'stand'], ['pr_dog_stand', 'dog', 'stand'], ['pr_racc_vs', 'raccoon', 'vs'], ['pr_dog_vs', 'dog', 'vs'],
-      ['pr_racc_bust', 'raccoon', 'bust'], ['pr_racc_bust_sm', 'raccoon', 'bust_sm'], ['pr_racc_angry', 'raccoon', 'angry_bust'], ['pr_dog_bust', 'dog', 'bust'],
+      ['pr_racc_bust', 'raccoon', 'bust'], ['pr_racc_stand_md', 'raccoon', 'stand_md'], ['pr_racc_angry', 'raccoon', 'angry_bust'], ['pr_dog_bust', 'dog', 'bust'],
       ['pr_dog_laugh', 'dog', 'laugh_bust'], ['pr_dog_angry', 'dog', 'angry_bust'], ['pr_racc_bike', 'raccoon', 'bike']].map(([name, c, n]) => ({ name, img: heroImage(c, n) })),
-    // M4.12: the sunset poster's Toronto skyline (the CN Tower crosses the sun on the tall one)
-    { name: 'pr_toronto_w', img: torontoSunset(768, 530, 104, 384) },
-    { name: 'pr_toronto_t', img: torontoSunset(432, 270, 210, 216) },
     { name: 'pr_ribbon_s', img: PO.ribbon(400) },
     { name: 'pr_wheel', img: PO.wheelEmblem(92) },
     { name: 'pr_wheel_s', img: PO.wheelEmblem(74) },
     { name: 'pr_ribbon', img: PO.ribbon(520) },
   ];
   manifest.posters = { ...packAtlas(po, path.join(OUT, 'posters')), png: 'gen/posters.png', json: 'gen/posters.json' };
+  // M4.13: whole poster backgrounds (AI scenes -> pixel art, tools/scene.mjs): their own atlas, loaded with the posters
+  const bg = [{ name: 'pb_sunset_w', img: sceneImage('sunset', 'wide') }, { name: 'pb_sunset_t', img: sceneImage('sunset', 'tall') }];
+  manifest.posterBg = { ...packAtlas(bg, path.join(OUT, 'posters_bg'), 2048), png: 'gen/posters_bg.png', json: 'gen/posters_bg.json' };
 }
 fs.writeFileSync(path.join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 1));
 const size = fs.readdirSync(OUT).reduce((s, f) => s + fs.statSync(path.join(OUT, f)).size, 0);
