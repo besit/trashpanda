@@ -348,6 +348,22 @@ Original 5x7 uppercase font: plain, outline, shadow, 2x outline (titles).
 
 ## heroes
 
+### heroes v04
+
+2026-11-22
+
+M4.12: R1A, D1A with a three-finger fist, Happy1 + Shock2, HD dog portraits (200 px), a smaller bust, the large faces kept
+
+![heroes v04](heroes/v04/preview.png)
+
+### heroes v03
+
+2026-11-22
+
+M4.11: the hero set in the game (R1b, D1c, A3b, faces rest1 / happy2-s3 / angry1 / shock1)
+
+![heroes v03](heroes/v03/preview.png)
+
 ### heroes v02
 
 2026-11-21
@@ -1339,6 +1355,16 @@ v02: N-S road lanes with centre line + stop bars, north parking lane, park lawn,
 First tile set: asphalt variants, lane markings, embedded streetcar tracks (E-W, N-S, crossing), sidewalks, curbs, zebras, painted + protected bike lanes, parking, grass, park path, laneway, tree pit.
 
 ![tiles v01](tiles/v01/preview.png)
+
+## toronto_sunset
+
+### toronto_sunset v01
+
+2026-11-22
+
+M4.12: Toronto from the lake against the sunset (CN Tower, Rogers Centre, the financial district)
+
+![toronto_sunset v01](toronto_sunset/v01/preview.png)
 
 ## vehicles
 

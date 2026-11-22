@@ -9,6 +9,7 @@ import { ratAnims, RAT_VARIANTS, bureaucratAnims, foremanAnims, megaRatAnims, BO
 import * as M4 from './sprites/m4.mjs';
 import * as M43 from './sprites/m43.mjs';
 import * as PO from './sprites/posters.mjs';
+import { torontoSunset } from './sprites/toronto_sunset.mjs';
 import { heroImage } from './sprites/heroes.mjs'; // M4.10: the hero images (AI masters -> pixel art on locked palettes)
 import { dogFjordStanding } from './sprites/dogfjord.mjs';
 import { PED_VARIANTS, CYC_VARIANTS, PED_DIRS, pedFrame, cycFrame, cycSideFrame, PED_FW, PED_FH, PED_OX, PED_OY } from './sprites/people.mjs';
@@ -295,8 +296,11 @@ font('font_red', 'q', 'outline', 'K', 2);
   const po = [
     // M4.10: the heroes, from AI masters (tools/heroes-build.mjs -> art/heroes/): 1 art pixel = 1 poster pixel
     ...[['pr_racc_stand', 'raccoon', 'stand'], ['pr_dog_stand', 'dog', 'stand'], ['pr_racc_vs', 'raccoon', 'vs'], ['pr_dog_vs', 'dog', 'vs'],
-      ['pr_racc_bust', 'raccoon', 'bust'], ['pr_racc_angry', 'raccoon', 'angry_bust'], ['pr_dog_bust', 'dog', 'bust'],
+      ['pr_racc_bust', 'raccoon', 'bust'], ['pr_racc_bust_sm', 'raccoon', 'bust_sm'], ['pr_racc_angry', 'raccoon', 'angry_bust'], ['pr_dog_bust', 'dog', 'bust'],
       ['pr_dog_laugh', 'dog', 'laugh_bust'], ['pr_dog_angry', 'dog', 'angry_bust'], ['pr_racc_bike', 'raccoon', 'bike']].map(([name, c, n]) => ({ name, img: heroImage(c, n) })),
+    // M4.12: the sunset poster's Toronto skyline (the CN Tower crosses the sun on the tall one)
+    { name: 'pr_toronto_w', img: torontoSunset(768, 530, 104, 384) },
+    { name: 'pr_toronto_t', img: torontoSunset(432, 270, 210, 216) },
     { name: 'pr_ribbon_s', img: PO.ribbon(400) },
     { name: 'pr_wheel', img: PO.wheelEmblem(92) },
     { name: 'pr_wheel_s', img: PO.wheelEmblem(74) },

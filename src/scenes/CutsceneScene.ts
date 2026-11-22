@@ -198,7 +198,7 @@ export class CutsceneScene extends Phaser.Scene {
         if (s.action === 'rise') {
           // giant villain close-up rising from the bottom of the frame
           this.portrait?.destroy();
-          this.portrait = this.add.image(GAME_W / 2, GAME_H + 220, 'chars', `df_${s.expr}`).setOrigin(0.5, 1).setScale(2).setDepth(150);
+          this.portrait = this.add.image(GAME_W / 2, GAME_H + 220, 'chars', `df_${s.expr}`).setOrigin(0.5, 1).setDepth(150); // M4.12 (Ivan): the high-resolution hero image, 1 art pixel = 1 game pixel
           this.tweens.add({ targets: this.portrait, y: GAME_H + 4, duration: 1000, ease: 'Cubic.easeOut' });
           await this.wait(1000);
         } else if (s.action === 'set') {
@@ -226,10 +226,10 @@ export class CutsceneScene extends Phaser.Scene {
         const head = s.who === 'TRASH PANDA' && this.textures.get('chars').has(`rc_${s.rexpr ?? 'rest'}`)
           ? this.add.image(12, by > GAME_H / 2 ? by + 1 : by + bh - 1, 'chars', `rc_${s.rexpr ?? 'rest'}`).setOrigin(0, by > GAME_H / 2 ? 1 : 0).setDepth(299) : null;
         if (head) { const y = head.y; head.setY(y + (by > GAME_H / 2 ? 10 : -10)).setAlpha(0); this.tweens.add({ targets: head, y, alpha: 1, duration: 160, ease: 'Cubic.easeOut' }); }
-        const bob = this.portrait && s.who === VILLAIN ? this.tweens.add({ targets: this.portrait, scaleY: 2.04, duration: 90, yoyo: true, repeat: -1 })
+        const bob = this.portrait && s.who === VILLAIN ? this.tweens.add({ targets: this.portrait, scaleY: 1.02, duration: 90, yoyo: true, repeat: -1 })
           : head ? this.tweens.add({ targets: head, scaleY: 1.03, duration: 110, yoyo: true, repeat: -1 }) : null;
         await this.typewrite(t, this.sub(s.text), true);
-        bob?.stop(); this.portrait?.setScale(2); head?.setScale(1);
+        bob?.stop(); this.portrait?.setScale(1); head?.setScale(1);
         const arrow = text(this, GAME_W - 18, by + bh - 8, '>', 'font_outline').setDepth(301);
         this.tweens.add({ targets: arrow, x: GAME_W - 15, duration: 300, yoyo: true, repeat: -1 });
         await this.waitForConfirm(5000);

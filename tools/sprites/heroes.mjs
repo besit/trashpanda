@@ -1,7 +1,7 @@
 // M4.10: the hero images, made from AI-generated masters (Gemini) by tools/hero.mjs: true pixel art on each character's
 // locked 48-colour palette (tools/palettes/<character>.json, registered in tools/palette.mjs). The masters stay out of
 // the repo (reference/ is private); the converted pixels live in art/heroes/<character>_<name>.png.
-// heroImage('raccoon', 'master') returns an Img with palette keys, like every other sprite.
+// heroImage('raccoon', 'stand') returns an Img with palette keys, like every other sprite.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,6 +24,8 @@ export function heroImage(character, name) {
   }
   return img;
 }
-export const raccoonHero = () => heroImage('raccoon', 'master');
-export const dogHero = () => heroImage('dog', 'master');
-export function heroesPreview() { return { frames: [raccoonHero(), dogHero()], cols: 2 }; }
+/** every hero image in art/heroes, for the art history */
+export function heroesPreview() {
+  const names = fs.readdirSync(root).filter((f) => /^(raccoon|dog)_.+\.png$/.test(f)).sort();
+  return { frames: names.map((f) => { const [, c, n] = f.match(/^(raccoon|dog)_(.+)\.png$/); return heroImage(c, n); }), cols: 6 };
+}

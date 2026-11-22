@@ -290,7 +290,7 @@ export class ShareScene extends Phaser.Scene {
       if (tall) {
         hi('pr_racc_vs', 6, 392, { ox: 0 });
         hi('pr_dog_vs', W + 4, H - 110, { ox: 1 });
-        words('THE RACCOON', W - 16, 146, MID, 0xfff08a, W, 1, true);
+        words('TRASH PANDA', W - 16, 146, MID, 0xfff08a, W, 1, true); // M4.12 (Ivan): his name, not THE RACCOON
         words('DOG FJORD', 16, H - 142, MID, 0xffa199, W, 0, true);
         // VS in the empty corner between them: right of the raccoon's claw, above the dog's fist
         gfx((g) => starburst(g, W - 96, 318, 56, 36, 14));
@@ -303,7 +303,7 @@ export class ShareScene extends Phaser.Scene {
       } else {
         hi('pr_racc_vs', 44, 84 + 252, { ox: 0 });
         hi('pr_dog_vs', W - 28, H - 52, { ox: 1 });
-        words('THE RACCOON', 18, H - 92, MID, 0xfff08a, W, 0, true);
+        words('TRASH PANDA', 18, H - 92, MID, 0xfff08a, W, 0, true);
         words('DOG FJORD', W - 18, 98, MID, 0xffa199, W, 1, true);
         gfx((g) => starburst(g, W / 2, H * 0.5 + 4, 64, 40, 14));
         words('VS', W / 2, H * 0.5 - 36, [['font_big', 4]], 0xfff08a);
@@ -352,7 +352,8 @@ export class ShareScene extends Phaser.Scene {
           g.fillStyle(cols[Math.min(cols.length - 1, band)]).fillRect(W / 2 - w, hz + y, w * 2, 1);
         }
       });
-      loBand('skyline_dusk', hz / S - 34, 0x7d47a8);
+      // M4.12 (Ivan: "change the bg to Toronto skyline"): the skyline from the lake in silhouette against the sun
+      hi(tall ? 'pr_toronto_t' : 'pr_toronto_w', 0, hz - 5, { ox: 0 });
       fill(0x25529b, 0, hz - 6, W, 8); fill(0x3a88cf, 0, hz - 6, W, 2);
       gfx((g) => {
         // the road, row by row: alternating rumble strips and verge make the speed (the classic racer trick)
@@ -391,10 +392,12 @@ export class ShareScene extends Phaser.Scene {
         if (!inHero) spots.push([c, r]);
       }
       frameCell(hero, true);
-      // M4.10: the hero bust, cropped from the top (his head) to the cell
-      const bf = this.textures.getFrame('posters', 'pr_racc_bust'), pw = bf?.width ?? 1, ph = bf?.height ?? 1;
+      // M4.10: the hero bust, cropped from the top (his head) to the cell; M4.12 (Ivan): a smaller one, so more of him fits
+      // (the tall poster's cell is two rows high: the standing raccoon fills it)
+      const heroFrame = tall ? 'pr_racc_stand' : 'pr_racc_bust_sm';
+      const bf = this.textures.getFrame('posters', heroFrame), pw = bf?.width ?? 1, ph = bf?.height ?? 1;
       const showH = Math.min(hero.h, ph), showW = Math.min(hero.w, pw);
-      hi('pr_racc_bust', hero.x + hero.w / 2, hero.y + hero.h, { crop: [Math.floor((pw - showW) / 2), 0, Math.floor(showW), Math.floor(showH)] });
+      hi(heroFrame, hero.x + hero.w / 2, hero.y + hero.h, { crop: [Math.floor((pw - showW) / 2), 0, Math.floor(showW), Math.floor(showH)] });
       words('YOU', hero.x + 6, hero.y + 4, [['font_outline', 2], ['font_outline', 1]], 0xfff08a, hero.w, 0);
       const done = ctx.state.completedMissions;
       const list = [...BOSSES.map(([m, atlas, frame, name]) => ({ beaten: done.includes(m), atlas, frame, name })), { beaten: !!ctx.state.flags.ended, atlas: 'posters', frame: 'pr_dog_bust', name: 'DOG FJORD' }];
