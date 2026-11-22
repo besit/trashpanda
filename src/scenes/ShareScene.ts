@@ -284,32 +284,29 @@ export class ShareScene extends Phaser.Scene {
         if (tall) g.fillPoints([{ x: 0, y: H * 0.58 - 5 }, { x: W, y: H * 0.42 - 5 }, { x: W, y: H * 0.42 + 5 }, { x: 0, y: H * 0.58 + 5 }], true);
         else g.fillPoints([{ x: W * 0.56 - 6, y: 0 }, { x: W * 0.56 + 6, y: 0 }, { x: W * 0.44 + 6, y: H }, { x: W * 0.44 - 6, y: H }], true);
       };
-      // M4.5 (Ivan: the raccoon "looks like he is cut off"): on the tall poster the purple half is painted over
-      // him, so the slash cuts his body off cleanly instead of the picture's own bottom edge
+      // M4.10 (Ivan: "really angry versions... the raccoon top left and the dog bottom right, they should look at each
+      // other... and reach at each other"): the hero images' VERSUS poses, both whole on top of the split
+      gfx((g) => split(g));
       if (tall) {
-        gfx((g) => split(g, 'red'));
-        // M4.8: the standing raccoon's head is high in his frame; he sits lower and further left (the slash cuts him at
-        // the thighs, clear of VS) and his name moves to the right, off his cap
-        hi('pr_racc_smirk', -30, H * 0.5 + 64, { ox: 0 });
-        gfx((g) => split(g, 'rest'));
-        hi('pr_dog_laugh', W + 12, H - 110, { ox: 1 }); // M4.7: the redrawn head is taller; he sits on the bottom bar so VS stays above his eyes
+        hi('pr_racc_vs', 6, 392, { ox: 0 });
+        hi('pr_dog_vs', W + 4, H - 110, { ox: 1 });
         words('THE RACCOON', W - 16, 146, MID, 0xfff08a, W, 1, true);
-        words('DOG FJORD', W - 16, H - 142, MID, 0xffa199, W, 1, true);
-        gfx((g) => starburst(g, W / 2, H * 0.5, 64, 40, 14));
-        words('VS', W / 2, H * 0.5 - 40, [['font_big', 5]], 0xfff08a);
+        words('DOG FJORD', 16, H - 142, MID, 0xffa199, W, 0, true);
+        // VS in the empty corner between them: right of the raccoon's claw, above the dog's fist
+        gfx((g) => starburst(g, W - 96, 318, 56, 36, 14));
+        words('VS', W - 96, 282, [['font_big', 4]], 0xfff08a);
         fill(0x16121f, 0, 0, W, 132, 0.8);
         words('TRASH PANDA', W / 2, 16, BIG, 0xfff08a); words('RIGHT OF WAY', W / 2, 58, MID, 0xff6347); words(head, W / 2, 96, MID);
         fill(0x16121f, 0, H - 110, W, 110, 0.8);
         words(`LIVABILITY ${st.liv}/100   SCORE ${st.score}`, W / 2, H - 100, SMALL, 0x9bd35a);
         words('PLAY FREE', W / 2, H - 76, MID, 0xfff08a); words(LINK, W / 2, H - 46, SMALL, 0xc9c5d1);
       } else {
-        gfx((g) => split(g));
-        hi('pr_racc_smirk', -6, H - 52, { ox: 0 }); // M4.6: the 2D raccoon's pump handle stays inside the poster
-        hi('pr_dog_laugh', W + 18, H - 52, { ox: 1 });
+        hi('pr_racc_vs', 44, 84 + 252, { ox: 0 });
+        hi('pr_dog_vs', W - 28, H - 52, { ox: 1 });
         words('THE RACCOON', 18, H - 92, MID, 0xfff08a, W, 0, true);
-        words('DOG FJORD', W - 18, H - 92, MID, 0xffa199, W, 1, true);
-        gfx((g) => starburst(g, W / 2, H * 0.5, 70, 44, 14));
-        words('VS', W / 2, H * 0.5 - 44, [['font_big', 5]], 0xfff08a);
+        words('DOG FJORD', W - 18, 98, MID, 0xffa199, W, 1, true);
+        gfx((g) => starburst(g, W / 2, H * 0.5 + 4, 64, 40, 14));
+        words('VS', W / 2, H * 0.5 - 36, [['font_big', 4]], 0xfff08a);
         fill(0x16121f, 0, 0, W, 84, 0.8);
         words('TRASH PANDA: RIGHT OF WAY', W / 2, 10, BIG, 0xfff08a); words(head, W / 2, 52, MID);
         fill(0x16121f, 0, H - 52, W, 52, 0.85);
@@ -322,9 +319,11 @@ export class ShareScene extends Phaser.Scene {
       const ey = tall ? 330 : 200;
       gfx((g) => { g.fillStyle(0xfff08a, 0.25).fillCircle(W / 2, ey, tall ? 205 : 164); g.fillStyle(0xfff08a, 0.18).fillCircle(W / 2, ey, tall ? 228 : 182); });
       hi(tall ? 'pr_wheel' : 'pr_wheel_s', W / 2, ey, { k: 2, oy: 0.5 });
-      hi(tall ? 'pr_racc_smirk' : 'pr_racc_small', W / 2 + 6, ey + (tall ? 72 : 52));
       const rib = tall ? 'pr_ribbon_s' : 'pr_ribbon';
       const ry = ey + (tall ? 92 : 62);
+      // M4.10: the standing hero's upper body (Ivan: "crop him for when he is in a circle"); the ribbon hides the cut
+      const rf = this.textures.getFrame('posters', 'pr_racc_stand');
+      if (rf) { const ch = tall ? 190 : 170; hi('pr_racc_stand', W / 2 + 4, ry + 16, { crop: [0, 0, rf.width, ch] }); }
       hi(rib, W / 2, ry, { oy: 0 });
       words('TRASH PANDA', W / 2, ry + 3, [['font_big', 2]], 0xfff6c8);
       words('RIGHT OF WAY', W / 2, ry + (tall ? 54 : 50), [['font_outline', 2]], 0xff6347, W, 0.5, true);
@@ -368,7 +367,7 @@ export class ShareScene extends Phaser.Scene {
           if (ph) g.fillStyle(0xf6f2e9).fillRect(c - Math.max(1, half * 0.03), y, Math.max(2, half * 0.06), 1);
         }
       });
-      hi('pr_racc_ride', W / 2 - (tall ? 10 : 30), H - (tall ? 200 : 80), { k: 2 });
+      hi('pr_racc_bike', W / 2 - (tall ? 0 : 20), H - (tall ? 116 : 64)); // M4.10: the hero image on his bike
       if (tall) {
         fill(0x16121f, 0, 0, W, 132, 0.6);
         words('TRASH PANDA', W / 2, 16, BIG, 0xfff08a); words('RIGHT OF WAY', W / 2, 58, MID, 0xff6347); words(head, W / 2, 96, MID);
@@ -392,12 +391,13 @@ export class ShareScene extends Phaser.Scene {
         if (!inHero) spots.push([c, r]);
       }
       frameCell(hero, true);
-      const pk = 1, pw = 232, ph = 208;
-      const showH = Math.min(hero.h, ph * pk), showW = Math.min(hero.w, pw * pk);
-      hi('pr_racc_small', hero.x + hero.w / 2, hero.y + hero.h, { k: pk, crop: [Math.floor((pw - showW) / 2), Math.min(6, ph - showH), /* M4.8: the standing raccoon's cap is near the top */ Math.floor(showW), Math.floor(showH)] });
+      // M4.10: the hero bust, cropped from the top (his head) to the cell
+      const bf = this.textures.getFrame('posters', 'pr_racc_bust'), pw = bf?.width ?? 1, ph = bf?.height ?? 1;
+      const showH = Math.min(hero.h, ph), showW = Math.min(hero.w, pw);
+      hi('pr_racc_bust', hero.x + hero.w / 2, hero.y + hero.h, { crop: [Math.floor((pw - showW) / 2), 0, Math.floor(showW), Math.floor(showH)] });
       words('YOU', hero.x + 6, hero.y + 4, [['font_outline', 2], ['font_outline', 1]], 0xfff08a, hero.w, 0);
       const done = ctx.state.completedMissions;
-      const list = [...BOSSES.map(([m, atlas, frame, name]) => ({ beaten: done.includes(m), atlas, frame, name })), { beaten: !!ctx.state.flags.ended, atlas: 'posters', frame: 'pr_dog_small', name: 'DOG FJORD' }];
+      const list = [...BOSSES.map(([m, atlas, frame, name]) => ({ beaten: done.includes(m), atlas, frame, name })), { beaten: !!ctx.state.flags.ended, atlas: 'posters', frame: 'pr_dog_bust', name: 'DOG FJORD' }];
       list.forEach((b, i) => {
         const [c, r] = spots[i]; const box = cell(c, r);
         frameCell(box, b.beaten);
@@ -406,7 +406,7 @@ export class ShareScene extends Phaser.Scene {
         // whole-number sizes only; bigger than the cell: cropped around the middle (the head for the tall ones)
         const room = box.h - 16, k = Math.max(1, Math.floor(Math.min(box.w / src.width, room / src.height)));
         const sw = Math.min(src.width, box.w / k), sh = Math.min(src.height, room / k);
-        hi(b.frame, box.x + box.w / 2, box.y + box.h - 14, { atlas: b.atlas, k, crop: [Math.floor((src.width - sw) / 2), b.atlas === 'posters' ? Math.min(40, Math.floor(src.height - sh)) : 0, Math.floor(sw), Math.floor(sh)], tint: b.beaten ? undefined : 0x16121f });
+        hi(b.frame, box.x + box.w / 2, box.y + box.h - 14, { atlas: b.atlas, k, crop: [Math.floor((src.width - sw) / 2), 0 /* M4.10: the hero busts start at the top of the head */, Math.floor(sw), Math.floor(sh)], tint: b.beaten ? undefined : 0x16121f });
         words(b.beaten ? b.name : '???', box.x + box.w / 2, box.y + box.h - 12, [['font', 1]], b.beaten ? 0xfff08a : 0x9793a6, box.w);
         if (b.beaten) words('BEATEN', box.x + box.w - 4, box.y + 4, [['font', 1]], 0x9bd35a, box.w, 1);
       });
@@ -424,10 +424,10 @@ export class ShareScene extends Phaser.Scene {
       sky('sky_dusk');
       fill(0x16121f, 0, 0, W, H, 0.35);
       loBand('skyline_dusk', SKYLINE_Y + off + 10, 0x9a86c8); loBand('facades_dt', FRONT_Y.king + off, 0x8c80b8); street('street_plain');
-      hi('pr_dog_laugh', W - (tall ? -20 : 40), (tall ? 420 : 404), { ox: 1, alpha: 0.82 }); // M4.8: up 50 on tall, so the standing raccoon's head clears his mouth
+      hi('pr_dog_laugh', W - (tall ? 0 : 40), (tall ? 400 : 380), { ox: 1, alpha: 0.82 }); // M4.10: the hero image, laughing
       const rats = ['rat_basic_0', 'rat_construction_0', 'rat_lobbyist_0', 'rat_traffic_0', 'rat_barrier_0'];
       rats.forEach((f, i) => loPut(f, (tall ? cx + 6 : cx + 40) + i * (tall ? 20 : 34), GROUND_Y + off + (i % 2) * 6, 1, true));
-      hi('pr_racc_smirk', tall ? -34 : 0, tall ? H - 150 : H - 60, { ox: 0 }); // M4.5: Ivan liked the smirk (the yell looked odd)
+      hi('pr_racc_stand', tall ? 4 : 16, tall ? H - 150 : H - 60, { ox: 0 }); // M4.10: the standing hero
       if (tall) {
         fill(0x16121f, 0, 0, W, 132, 0.75);
         words('TRASH PANDA', W / 2, 16, BIG, 0xfff08a); words('TAKE BACK THE STREETS', W / 2, 58, MID, 0xff6347); words(head, W / 2, 96, MID);
@@ -464,7 +464,7 @@ export class ShareScene extends Phaser.Scene {
         words(line, W / 2, t0 + i * lh2, MID, r.you ? 0xffffff : RAIN[i % RAIN.length]);
       });
       if (!shown.length) words('NO SCORES YET: BE THE FIRST', W / 2, t0 + 20, MID, 0xc9c5d1);
-      if (tall && shown.length <= 5) hi('pr_racc_small', W / 2 + 6, H - 176);
+      if (tall && shown.length <= 4) hi('pr_racc_bust', W / 2 + 6, H - 176); // M4.10: the hero bust
       if (tall) {
         words(`LIVABILITY ${st.liv}/100`, W / 2, H - 150, MID, 0x9bd35a);
         words('PLAY FREE', W / 2, H - 92, MID, 0xfff08a); words(LINK, W / 2, H - 62, SMALL, 0xc9c5d1);

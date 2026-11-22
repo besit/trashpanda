@@ -9,7 +9,7 @@ import { ratAnims, RAT_VARIANTS, bureaucratAnims, foremanAnims, megaRatAnims, BO
 import * as M4 from './sprites/m4.mjs';
 import * as M43 from './sprites/m43.mjs';
 import * as PO from './sprites/posters.mjs';
-import { raccoonPortrait2d, dogPortrait2d, GW as PORTRAIT_W } from './sprites/portraits.mjs';
+import { heroImage } from './sprites/heroes.mjs'; // M4.10: the hero images (AI masters -> pixel art on locked palettes)
 import { dogFjordStanding } from './sprites/dogfjord.mjs';
 import { PED_VARIANTS, CYC_VARIANTS, PED_DIRS, pedFrame, cycFrame, cycSideFrame, PED_FW, PED_FH, PED_OX, PED_OY } from './sprites/people.mjs';
 import { buildTiles } from './sprites/tiles.mjs';
@@ -74,8 +74,10 @@ const chars = [];
   ma.frames.forEach((f, i) => chars.push({ name: `rat_megarat_${i}`, img: f }));
   for (const [k, a] of Object.entries(ma.anims)) manifest.anims[`rat_megarat_${k}`] = { frames: Array.from({ length: a.count }, (_, i) => `rat_megarat_${a.start + i}`), rate: a.rate, loop: a.loop };
   manifest.pivots.rat_megarat = { x: 0.47, y: (MEGA_FW - 1) / MEGA_FW };
-  // M4.6 (Ivan): the dialogue portrait is the 2D drawing too (112 x 100, shown at 2x)
-  for (const e of ['grin', 'laugh', 'shock']) chars.push({ name: `df_${e}`, img: dogPortrait2d(e, 112 / PORTRAIT_W) });
+  // M4.10: the dialogue portraits are the hero images (1 art pixel = 1 game pixel, shown at 2x like the old ones):
+  // Dog Fjord's close-ups (df_) and, new, the raccoon's talking heads (rc_)
+  for (const e of ['grin', 'laugh', 'shock', 'angry']) chars.push({ name: `df_${e}`, img: heroImage('dog', `df_${e}`) });
+  for (const e of ['rest', 'happy', 'angry', 'shock']) chars.push({ name: `rc_${e}`, img: heroImage('raccoon', `rc_${e}`) });
   // in-world Dog Fjord (side vignettes)
   for (const [n, e, pod] of [['dfs_grin', 'grin', false], ['dfs_laugh', 'laugh', false], ['dfs_pod', 'grin', true], ['dfs_podlaugh', 'laugh', true]]) {
     const im = dogFjordStanding(e, pod); chars.push({ name: n, img: im }); manifest.pivots[n] = im.pivot;
@@ -291,13 +293,11 @@ font('font_red', 'q', 'outline', 'K', 2);
 // atlas, loaded the first time the share screen opens
 {
   const po = [
-    // M4.6 (Ivan: "pure 2d pixel art"): the hero portraits are 2D drawings now (tools/sprites/portraits.mjs)
-    { name: 'pr_racc_smirk', img: raccoonPortrait2d('smirk', 1.5) },
-    ...['grin', 'laugh'].map((e) => ({ name: `pr_dog_${e}`, img: dogPortrait2d(e, 1.5) })),
-    { name: 'pr_racc_small', img: raccoonPortrait2d('smirk', 1) },
-    { name: 'pr_dog_small', img: dogPortrait2d('grin', 1) },
+    // M4.10: the heroes, from AI masters (tools/heroes-build.mjs -> art/heroes/): 1 art pixel = 1 poster pixel
+    ...[['pr_racc_stand', 'raccoon', 'stand'], ['pr_dog_stand', 'dog', 'stand'], ['pr_racc_vs', 'raccoon', 'vs'], ['pr_dog_vs', 'dog', 'vs'],
+      ['pr_racc_bust', 'raccoon', 'bust'], ['pr_racc_angry', 'raccoon', 'angry_bust'], ['pr_dog_bust', 'dog', 'bust'],
+      ['pr_dog_laugh', 'dog', 'laugh_bust'], ['pr_dog_angry', 'dog', 'angry_bust'], ['pr_racc_bike', 'raccoon', 'bike']].map(([name, c, n]) => ({ name, img: heroImage(c, n) })),
     { name: 'pr_ribbon_s', img: PO.ribbon(400) },
-    { name: 'pr_racc_ride', img: PO.raccoonRidingAway(0) },
     { name: 'pr_wheel', img: PO.wheelEmblem(92) },
     { name: 'pr_wheel_s', img: PO.wheelEmblem(74) },
     { name: 'pr_ribbon', img: PO.ribbon(520) },

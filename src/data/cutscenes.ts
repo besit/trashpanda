@@ -1,6 +1,8 @@
 // Cutscene timelines (data). Interpreted by CutsceneScene.
 // Coordinates for actors are in a 384-wide "stage" that is centred on wider screens.
-export type Expr = 'grin' | 'laugh' | 'shock';
+export type Expr = 'grin' | 'laugh' | 'shock' | 'angry';
+/** M4.10: the raccoon's talking-head expressions (rc_ frames), shown beside his lines */
+export type RExpr = 'rest' | 'happy' | 'angry' | 'shock';
 export type Step =
   | { t: 'bg'; sky: 'day' | 'dusk' }
   /** pan: tracking speed in px/s (facades, street, furniture and world actors scroll together); parked: curb parking */
@@ -12,7 +14,7 @@ export type Step =
   | { t: 'music'; song: 'main' | 'dogfjord' | 'action' | 'improve' | 'none' }
   | { t: 'sfx'; name: 'laugh' | 'rumble' | 'bell' | 'construction' | 'ding' | 'streetcarBell' | 'carHonk' | 'squeak' | 'hurt' | 'signal' | 'stamp' | 'brake' | 'splash' | 'hammer' }
   | { t: 'portrait'; expr: Expr; action: 'rise' | 'set' | 'drop' }
-  | { t: 'say'; who: string; text: string; expr?: Expr }
+  | { t: 'say'; who: string; text: string; expr?: Expr; rexpr?: RExpr }
   | { t: 'shake'; ms?: number }
   | { t: 'wait'; ms: number }
   | { t: 'title'; text: string; sub?: string }
@@ -123,8 +125,8 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'actor', id: 'tp', frame: 'rs_2', anim: 'rs_ride', x: -30, y: GROUND + 2, depth: 70 },
     { t: 'move', id: 'tp', x: 90, ms: 1000, ease: 'Cubic.easeOut', wait: true, anim: 'rs_idle' },
     { t: 'sfx', name: 'bell' },
-    { t: 'say', who: 'TRASH PANDA', text: 'NOPE. WHAT QUEEN NEEDS IS A BIKE LANE. A REAL ONE, WITH A CURB.' },
-    { t: 'say', who: 'TRASH PANDA', text: 'CLEAR OUT THE RATS, AND THE CITY CAN BUILD IT.' },
+    { t: 'say', who: 'TRASH PANDA', text: 'NOPE. WHAT QUEEN NEEDS IS A BIKE LANE. A REAL ONE, WITH A CURB.', rexpr: 'rest' },
+    { t: 'say', who: 'TRASH PANDA', text: 'CLEAR OUT THE RATS, AND THE CITY CAN BUILD IT.', rexpr: 'angry' },
   ],
 
   // ---- The Bike Lane War: after ----
@@ -173,8 +175,8 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'actor', id: 'tp', frame: 'rs_2', anim: 'rs_ride', x: -30, y: BIKELANE, depth: 90 },
     { t: 'move', id: 'tp', x: 170, ms: 1100, ease: 'Cubic.easeOut', wait: true, anim: 'rs_idle' },
     { t: 'sfx', name: 'bell' },
-    { t: 'say', who: 'TRASH PANDA', text: 'BACKWARDS. THE LIGHT SHOULD WAIT FOR THE STREETCAR.' },
-    { t: 'say', who: 'TRASH PANDA', text: 'STAY CLOSE, 501. I\'LL CLEAR THE WAY.' },
+    { t: 'say', who: 'TRASH PANDA', text: 'BACKWARDS. THE LIGHT SHOULD WAIT FOR THE STREETCAR.', rexpr: 'rest' },
+    { t: 'say', who: 'TRASH PANDA', text: 'STAY CLOSE, 501. I\'LL CLEAR THE WAY.', rexpr: 'happy' },
   ],
 
   // ---- Let the Streetcar Through: after ----
@@ -229,8 +231,8 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'actor', id: 'tp', frame: 'rs_2', anim: 'rs_ride', x: -30, y: GROUND + 10, depth: 90 },
     { t: 'move', id: 'tp', x: 110, ms: 1000, ease: 'Cubic.easeOut', wait: true, anim: 'rs_idle' },
     { t: 'sfx', name: 'bell' },
-    { t: 'say', who: 'TRASH PANDA', text: 'ONE STREETCAR CARRIES A CROWD. THESE CARS CARRY ONE PERSON EACH.' },
-    { t: 'say', who: 'TRASH PANDA', text: 'THROUGH TRAFFIC, OFF KING. STARTING WITH YOU, PAPERWORK.' },
+    { t: 'say', who: 'TRASH PANDA', text: 'ONE STREETCAR CARRIES A CROWD. THESE CARS CARRY ONE PERSON EACH.', rexpr: 'rest' },
+    { t: 'say', who: 'TRASH PANDA', text: 'THROUGH TRAFFIC, OFF KING. STARTING WITH YOU, PAPERWORK.', rexpr: 'angry' },
   ],
 
   // ---- King of the Street: after ----
@@ -310,8 +312,8 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'actor', id: 'tp', frame: 'rs_2', anim: 'rs_ride', x: -30, y: GROUND + 2, depth: 90 },
     { t: 'move', id: 'tp', x: 150, ms: 1000, ease: 'Cubic.easeOut', wait: true, anim: 'rs_idle' },
     { t: 'sfx', name: 'bell' },
-    { t: 'say', who: 'TRASH PANDA', text: 'THEY\'RE HEADED FOR THE POND. I\'VE SEEN THIS ONE BEFORE.' },
-    { t: 'say', who: 'TRASH PANDA', text: 'CATCH THEM. THEN FIX THIS STREET SO IT\'S SLOW BY DESIGN.' },
+    { t: 'say', who: 'TRASH PANDA', text: 'THEY\'RE HEADED FOR THE POND. I\'VE SEEN THIS ONE BEFORE.', rexpr: 'shock' },
+    { t: 'say', who: 'TRASH PANDA', text: 'CATCH THEM. THEN FIX THIS STREET SO IT\'S SLOW BY DESIGN.', rexpr: 'angry' },
   ],
 
   // ---- Slow Down, Dog: after ----
@@ -365,7 +367,7 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'actor', id: 'tp', frame: 'rs_2', anim: 'rs_ride', x: -30, y: GROUND + 2, depth: 90 },
     { t: 'move', id: 'tp', x: 60, ms: 900, ease: 'Cubic.easeOut', wait: true, anim: 'rs_idle' },
     { t: 'sfx', name: 'bell' },
-    { t: 'say', who: 'TRASH PANDA', text: 'A WHOLE PARK FITS IN HERE. TIME TO DEPAVE.' },
+    { t: 'say', who: 'TRASH PANDA', text: 'A WHOLE PARK FITS IN HERE. TIME TO DEPAVE.', rexpr: 'happy' },
   ],
 
   // ---- The Great Parking Lot: after (M3) ----
@@ -417,8 +419,8 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'actor', id: 'tp', frame: 'rs_2', anim: 'rs_ride', x: -30, y: BIKELANE, depth: 65, flip: false }, // behind the machine (Ivan, M3.1)
     { t: 'move', id: 'tp', x: 300, ms: 1200, ease: 'Cubic.easeOut', wait: true, anim: 'rs_idle' },
     { t: 'sfx', name: 'bell' },
-    { t: 'say', who: 'TRASH PANDA', text: 'ONE RACCOON CAN\'T STOP THAT. A STREET FULL OF RIDERS CAN.' },
-    { t: 'say', who: 'TRASH PANDA', text: 'RING YOUR BELLS, BLOOR. WE RIDE TOGETHER.' },
+    { t: 'say', who: 'TRASH PANDA', text: 'ONE RACCOON CAN\'T STOP THAT. A STREET FULL OF RIDERS CAN.', rexpr: 'rest' },
+    { t: 'say', who: 'TRASH PANDA', text: 'RING YOUR BELLS, BLOOR. WE RIDE TOGETHER.', rexpr: 'happy' },
   ],
 
   // ---- The Lane Eater: after (M3): the protest ride ----
@@ -474,7 +476,7 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'actor', id: 'tp', frame: 'rs_2', anim: 'rs_ride', x: -30, y: GROUND + 4, depth: 90 },
     { t: 'move', id: 'tp', x: 70, ms: 900, ease: 'Cubic.easeOut', wait: true, anim: 'rs_idle' },
     { t: 'sfx', name: 'bell' },
-    { t: 'say', who: 'TRASH PANDA', text: 'THE LAKE ISN\'T FOR SALE. THOSE FENCES ARE COMING DOWN.' },
+    { t: 'say', who: 'TRASH PANDA', text: 'THE LAKE ISN\'T FOR SALE. THOSE FENCES ARE COMING DOWN.', rexpr: 'angry' },
   ],
 
   // ---- The Waterfront Heist: after (M3) ----
@@ -577,8 +579,8 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'actor', id: 'tp', frame: 'rs_2', anim: 'rs_ride', x: -30, y: GROUND + 4, depth: 90 },
     { t: 'move', id: 'tp', x: 90, ms: 1000, ease: 'Cubic.easeOut', wait: true, anim: 'rs_idle' },
     { t: 'sfx', name: 'bell' },
-    { t: 'say', who: 'TRASH PANDA', text: "A LAW ISN'T A RUNWAY. AND THIS PARK ISN'T YOURS." },
-    { t: 'say', who: 'TRASH PANDA', text: 'PULL THE STAKES. GROUND THE JETS.' },
+    { t: 'say', who: 'TRASH PANDA', text: "A LAW ISN'T A RUNWAY. AND THIS PARK ISN'T YOURS.", rexpr: 'angry' },
+    { t: 'say', who: 'TRASH PANDA', text: 'PULL THE STAKES. GROUND THE JETS.', rexpr: 'angry' },
   ],
 
   // ---- Grounded (M3.4): after ----
@@ -619,13 +621,13 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'actor', id: 'tp', frame: 'rs_2', anim: 'rs_ride', x: -30, y: GROUND + 2, depth: 90 },
     { t: 'move', id: 'tp', x: 50, ms: 900, ease: 'Cubic.easeOut', wait: true, anim: 'rs_idle' },
     { t: 'sfx', name: 'bell' },
-    { t: 'say', who: 'TRASH PANDA', text: 'EVER RIDDEN A BIKE BUS? IT RUNS LIKE A SCHOOL BUS, ON BIKES: A SET ROUTE, STOPS ALONG THE WAY.' },
-    { t: 'say', who: 'TRASH PANDA', text: 'KIDS WAIT AT THE STOPS. A GROWN-UP LEADS. EVERYONE RIDES TO SCHOOL TOGETHER.' },
+    { t: 'say', who: 'TRASH PANDA', text: 'EVER RIDDEN A BIKE BUS? IT RUNS LIKE A SCHOOL BUS, ON BIKES: A SET ROUTE, STOPS ALONG THE WAY.', rexpr: 'happy' },
+    { t: 'say', who: 'TRASH PANDA', text: 'KIDS WAIT AT THE STOPS. A GROWN-UP LEADS. EVERYONE RIDES TO SCHOOL TOGETHER.', rexpr: 'happy' },
     { t: 'music', song: 'dogfjord' },
     { t: 'actor', id: 'df', frame: 'dfs_laugh', x: 300, y: SIDEWALK + 6, depth: 49, world: true },
     { t: 'sfx', name: 'laugh' },
     { t: 'say', who: VILLAIN, text: 'CHILDREN? ON BIKES? IN THE BIKE LANE? THAT LANE IS FOR DROP-OFF PARKING!' },
-    { t: 'say', who: 'TRASH PANDA', text: 'NINE KIDS, FOUR STOPS, ONE BELL. RING THE SUVS OUT OF THE LANE. LET\'S RIDE.' },
+    { t: 'say', who: 'TRASH PANDA', text: 'NINE KIDS, FOUR STOPS, ONE BELL. RING THE SUVS OUT OF THE LANE. LET\'S RIDE.', rexpr: 'happy' },
   ],
 
   // ---- The Bike Bus (M4.1): after ----
@@ -664,13 +666,13 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'actor', id: 'tp', frame: 'rs_2', anim: 'rs_ride', x: -30, y: GROUND + 2, depth: 90 },
     { t: 'move', id: 'tp', x: 60, ms: 900, ease: 'Cubic.easeOut', wait: true, anim: 'rs_idle' },
     { t: 'sfx', name: 'bell' },
-    { t: 'say', who: 'TRASH PANDA', text: 'BIKE SHARE: TAKE A BIKE FROM ONE DOCK, LEAVE IT AT ANOTHER. TO THE SUBWAY, TO WORK, TO THE PARK.' },
-    { t: 'say', who: 'TRASH PANDA', text: 'IT ONLY WORKS IF THERE\'S A DOCK NEAR YOU. DOWNTOWN HAS GAPS. I BROUGHT A TRAILER OF DOCKS.' },
+    { t: 'say', who: 'TRASH PANDA', text: 'BIKE SHARE: TAKE A BIKE FROM ONE DOCK, LEAVE IT AT ANOTHER. TO THE SUBWAY, TO WORK, TO THE PARK.', rexpr: 'happy' },
+    { t: 'say', who: 'TRASH PANDA', text: 'IT ONLY WORKS IF THERE\'S A DOCK NEAR YOU. DOWNTOWN HAS GAPS. I BROUGHT A TRAILER OF DOCKS.', rexpr: 'rest' },
     { t: 'music', song: 'dogfjord' },
     { t: 'actor', id: 'df', frame: 'dfs_laugh', x: 300, y: SIDEWALK + 6, depth: 49, world: true },
     { t: 'sfx', name: 'laugh' },
     { t: 'say', who: VILLAIN, text: 'DOCKS? ON MY SIDEWALKS? THAT\'S CLUTTER! MY CREW WILL CART EVERY ONE OF THEM AWAY.' },
-    { t: 'say', who: 'TRASH PANDA', text: 'SIX GAPS. STOP AT EACH ONE TO SET A DOCK DOWN, AND RING THE CRATE RATS OFF THEM. GO!' },
+    { t: 'say', who: 'TRASH PANDA', text: 'SIX GAPS. STOP AT EACH ONE TO SET A DOCK DOWN, AND RING THE CRATE RATS OFF THEM. GO!', rexpr: 'happy' },
   ],
 
   // ---- Dock Drop (M4.3): after ----
@@ -723,8 +725,8 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'actor', id: 'tp', frame: 'rs_2', anim: 'rs_ride', x: -30, y: GROUND + 2, depth: 90 },
     { t: 'move', id: 'tp', x: 70, ms: 1000, ease: 'Cubic.easeOut', wait: true, anim: 'rs_idle' },
     { t: 'sfx', name: 'bell' },
-    { t: 'say', who: 'TRASH PANDA', text: "THOSE EXHIBITS BELONG TO EVERY KID IN THIS CITY. NOT TO A MOVING SALE." },
-    { t: 'say', who: 'TRASH PANDA', text: 'PAST THE GUARDS. GET THE EXHIBITS BACK. THEN WE TALK TO THE WRECKER.' },
+    { t: 'say', who: 'TRASH PANDA', text: "THOSE EXHIBITS BELONG TO EVERY KID IN THIS CITY. NOT TO A MOVING SALE.", rexpr: 'angry' },
+    { t: 'say', who: 'TRASH PANDA', text: 'PAST THE GUARDS. GET THE EXHIBITS BACK. THEN WE TALK TO THE WRECKER.', rexpr: 'rest' },
   ],
 
   // ---- Save the Science (M4): after ----
@@ -779,8 +781,8 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'actor', id: 'tp', frame: 'rs_2', anim: 'rs_ride', x: -30, y: GROUND + 2, depth: 90 },
     { t: 'move', id: 'tp', x: 80, ms: 1000, ease: 'Cubic.easeOut', wait: true, anim: 'rs_idle' },
     { t: 'sfx', name: 'bell' },
-    { t: 'say', who: 'TRASH PANDA', text: 'FIFTEEN STATIONS. A CITY WAITED TEN YEARS FOR THEM.' },
-    { t: 'say', who: 'TRASH PANDA', text: 'ENOUGH STAMPS. HAND ME THE RAILS.' },
+    { t: 'say', who: 'TRASH PANDA', text: 'FIFTEEN STATIONS. A CITY WAITED TEN YEARS FOR THEM.', rexpr: 'rest' },
+    { t: 'say', who: 'TRASH PANDA', text: 'ENOUGH STAMPS. HAND ME THE RAILS.', rexpr: 'angry' },
   ],
 
   // ---- Finish the Line (M4): after ----
@@ -843,8 +845,8 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'actor', id: 'tp', frame: 'rs_2', anim: 'rs_ride', x: -30, y: GROUND + 2, depth: 90 },
     { t: 'move', id: 'tp', x: 90, ms: 1000, ease: 'Cubic.easeOut', wait: true, anim: 'rs_idle' },
     { t: 'sfx', name: 'bell' },
-    { t: 'say', who: 'TRASH PANDA', text: 'EVERY LANE HE ADDED FILLED UP. THIS ONE COMES DOWN.' },
-    { t: 'say', who: 'TRASH PANDA', text: "THE LAKE IS RIGHT THERE. LET'S GO SEE IT." },
+    { t: 'say', who: 'TRASH PANDA', text: 'EVERY LANE HE ADDED FILLED UP. THIS ONE COMES DOWN.', rexpr: 'rest' },
+    { t: 'say', who: 'TRASH PANDA', text: "THE LAKE IS RIGHT THERE. LET'S GO SEE IT.", rexpr: 'happy' },
   ],
 
   // ---- Death by Highway (M4): after ----

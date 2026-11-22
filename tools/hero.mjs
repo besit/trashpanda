@@ -6,12 +6,15 @@
 //     otherwise         map onto the character's locked palette (tools/palettes/<character>.json)
 //   writes art/heroes/<character>_<image-name>.png (1x, cropped to the figure, palette colours only) and a 4x preview
 //   in tools/scratch/heroes/. A .jpg master is decoded with ffmpeg.
+//     --height N        resample so the figure is N art pixels tall (a chosen pixel size, the same for every image)
+//     --block B         instead: keep the generator's own pixel grid (blocks of B screen pixels)
+//     --match <image>   match this image's tones to a reference of the same character before palette mapping
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { PNG } from 'pngjs';
-import { sampleGrid, keyGreen, makePalette, mapToPalette, bounds, indexPNG, toHex } from './lib/hero.mjs';
+import { sampleGrid, sampleToHeight, matchTones, keyGreen, makePalette, mapToPalette, bounds, indexPNG, toHex } from './lib/hero.mjs';
 
 const argv = process.argv.slice(2), opt = {}, pos = [];
 for (let i = 0; i < argv.length; i++) { if (argv[i].startsWith('--')) opt[argv[i].slice(2)] = argv[++i]; else pos.push(argv[i]); }
@@ -23,7 +26,11 @@ if (!/\.png$/i.test(master)) {
   const r = spawnSync('ffmpeg', ['-loglevel', 'error', '-y', '-i', master, file]);
   if (r.status !== 0) { console.error('could not decode the master (needs ffmpeg for .jpg):', String(r.stderr)); process.exit(1); }
 }
-const grid = keyGreen(sampleGrid(PNG.sync.read(fs.readFileSync(file)), Number(opt.block || 4)));
+const decode = (f) => { if (/\.png$/i.test(f)) return PNG.sync.read(fs.readFileSync(f)); const t = path.join(os.tmpdir(), `hero_${process.pid}_${path.basename(f)}.png`); const r = spawnSync('ffmpeg', ['-loglevel', 'error', '-y', '-i', f, t]); if (r.status !== 0) throw new Error('ffmpeg failed on ' + f); return PNG.sync.read(fs.readFileSync(t)); };
+const sample = (png) => (opt.height ? sampleToHeight(png, Number(opt.height)) : sampleGrid(png, Number(opt.block || 4)));
+const grid = keyGreen(sample(PNG.sync.read(fs.readFileSync(file))));
+// colour consistency: match this generation's tones to a reference image of the same character (e.g. its master)
+if (opt.match) { matchTones(grid, keyGreen(sample(decode(opt.match)))); console.log('tones matched to', path.basename(opt.match)); }
 const palFile = path.resolve('tools/palettes', `${character}.json`);
 let palette;
 if (opt['new-palette']) {

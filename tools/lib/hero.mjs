@@ -52,6 +52,45 @@ export function sampleGrid(png, block = 4, phase = null) {
   return { w, h, rgb, phase: [phx, phy] };
 }
 
+/**
+ * resample at a CHOSEN pixel size: the figure (the non-green pixels) becomes `height` art pixels tall, whatever pixel
+ * size the generator happened to draw at. Each art pixel takes the median of the central part of its source cell, so
+ * edges stay crisp (no blur). Returns the same shape as sampleGrid.
+ */
+export function sampleToHeight(png, height, margin = 2) {
+  const W = png.width, H = png.height, at = (x, y) => (y * W + x) * 4;
+  const green = (i) => { const r = png.data[i], g = png.data[i + 1], b = png.data[i + 2]; return g > 120 && g > r * 1.45 && g > b * 1.45; };
+  let x0 = W, y0 = H, x1 = -1, y1 = -1;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (!green(at(x, y))) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+  const cell = (y1 - y0 + 1) / height;
+  const w = Math.ceil((x1 - x0 + 1) / cell) + 2 * margin, h = height + 2 * margin, rgb = [];
+  for (let gy = 0; gy < h; gy++) for (let gx = 0; gx < w; gx++) {
+    const sx = x0 + (gx - margin) * cell, sy = y0 + (gy - margin) * cell, cs = [];
+    for (let y = Math.floor(sy + cell * 0.2); y < sy + cell * 0.8; y++) for (let x = Math.floor(sx + cell * 0.2); x < sx + cell * 0.8; x++) {
+      if (x < 0 || y < 0 || x >= W || y >= H) { cs.push([0, 255, 0]); continue; }
+      const i = at(x, y); cs.push([png.data[i], png.data[i + 1], png.data[i + 2]]);
+    }
+    if (!cs.length) cs.push([0, 255, 0]);
+    // the most common kind wins: if most of the cell is background it stays background
+    const bg = cs.filter(([r, g, b]) => g > 120 && g > r * 1.45 && g > b * 1.45).length;
+    if (bg * 2 > cs.length) { rgb.push([0, 255, 0]); continue; }
+    const fg = cs.filter(([r, g, b]) => !(g > 120 && g > r * 1.45 && g > b * 1.45));
+    rgb.push([0, 1, 2].map((c) => fg.map((v) => v[c]).sort((p, q) => p - q)[fg.length >> 1]));
+  }
+  return { w, h, rgb, phase: [x0, y0], cell };
+}
+
+/**
+ * colour consistency: shift a new generation's tones to match a reference (the character's master): per OKLab channel,
+ * the new image's mean and spread are moved onto the reference's. Then palette mapping uses the palette the same way.
+ */
+export function matchTones(grid, refGrid) {
+  const stats = (g) => { const ls = g.rgb.filter(Boolean).map(oklab), n = ls.length, m = [0, 1, 2].map((c) => ls.reduce((s, l) => s + l[c], 0) / n); return { m, sd: [0, 1, 2].map((c) => Math.sqrt(ls.reduce((s, l) => s + (l[c] - m[c]) ** 2, 0) / n) || 1e-6) }; };
+  const a = stats(grid), b = stats(refGrid);
+  grid.rgb = grid.rgb.map((c) => { if (!c) return null; const l = oklab(c); return fromOklab(l.map((v, k) => (v - a.m[k]) * Math.min(1.5, b.sd[k] / a.sd[k]) + b.m[k])); }); // mean and spread per channel (a too-saturated image is calmed down)
+  return grid;
+}
+
 // ---------- 2 key ----------
 /** marks the green background transparent (null) and removes green spill from the edge pixels; in place */
 export function keyGreen(grid) {

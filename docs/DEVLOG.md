@@ -950,3 +950,20 @@ Ivan wasn't happy with the code-drawn study results and generated the two charac
 ### Checks
 The game is unchanged: all 60 built asset files are byte-identical before and after (the posters still use the old portraits until Ivan's green light). 21 unit tests pass, and the type check passes.
 
+## 2026-11-21: M4.11 (local preview), the hero images in the game
+
+Ivan generated more Gemini images (a new bust, the bike, Dog Fjord laughing and shocked) and picked from ComfyUI generations: the short-hose standing raccoon, the angry VERSUS pair, the angry busts, Dog Fjord full body. He asked for raccoon faces without the pump, a trial of higher-resolution portraits, and the game and cutscenes updated. The review doc is [docs/reviews/M4.11.md](reviews/M4.11.md).
+
+### What worked, what didn't
+- **ComfyUI with Qwen-Image-Edit, driven over its API, made most of the new art** in 5 to 15 seconds per image, with no one in the loop. Pose changes need an empty starting canvas; the standard edit template starts from the reference image and locks its composition, which is why Ivan's attempts kept the pose.
+  - **One reference image per run.** With the raccoon and the dog both attached, it drew the dog every time.
+  - **Small fixes work as edits:** a shorter hose, a straight tie, four fingers on each hand. Each needed 3 or 4 seeds to get one clean result.
+  - **Ask for the action itself.** Asked for a "fighting pose", the raccoon stood still with an angry face. Asked to leap and reach toward the dog, it moved.
+- **The palette made from one master missed colours.** The tail's dark warm brown mapped onto the bandana's dark red. Remaking each palette from six masters fixed it.
+- **A generation can drift warm.** The VERSUS raccoon's tones are matched to the standing pose's (mean and spread per OKLab channel) before palette mapping.
+- **A chosen figure height per image keeps the pair matched,** whatever pixel size the generator drew at.
+- **The raccoon gets a talking head:** 4 expressions, one picked per line. It sits beside the dialogue box, not over the scene.
+
+### Numbers
+68 browser tests and 21 unit tests pass. The generated assets are 1683 KB, up from 1574 KB.
+

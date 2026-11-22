@@ -222,13 +222,18 @@ export class CutsceneScene extends Phaser.Scene {
         box.fillStyle(0x16121f, 0.92).fillRect(8, by, GAME_W - 16, bh).lineStyle(1, villain ? 0xd9646f : 0x9bd35a).strokeRect(8, by, GAME_W - 16, bh);
         const name = text(this, 16, by + 4, s.who, 'font', 0).setDepth(301).setTint(villain ? 0xff6347 : 0x9bd35a);
         const t = text(this, 16, by + 16, '', 'font_outline', 0).setDepth(301).setMaxWidth(GAME_W - 34);
-        const bob = this.portrait && s.who === VILLAIN ? this.tweens.add({ targets: this.portrait, scaleY: 2.04, duration: 90, yoyo: true, repeat: -1 }) : null;
+        // M4.10: the raccoon's talking head (the hero image) sits on the box's left edge while he speaks
+        const head = s.who === 'TRASH PANDA' && this.textures.get('chars').has(`rc_${s.rexpr ?? 'rest'}`)
+          ? this.add.image(12, by > GAME_H / 2 ? by + 1 : by + bh - 1, 'chars', `rc_${s.rexpr ?? 'rest'}`).setOrigin(0, by > GAME_H / 2 ? 1 : 0).setDepth(299) : null;
+        if (head) { const y = head.y; head.setY(y + (by > GAME_H / 2 ? 10 : -10)).setAlpha(0); this.tweens.add({ targets: head, y, alpha: 1, duration: 160, ease: 'Cubic.easeOut' }); }
+        const bob = this.portrait && s.who === VILLAIN ? this.tweens.add({ targets: this.portrait, scaleY: 2.04, duration: 90, yoyo: true, repeat: -1 })
+          : head ? this.tweens.add({ targets: head, scaleY: 1.03, duration: 110, yoyo: true, repeat: -1 }) : null;
         await this.typewrite(t, this.sub(s.text), true);
-        bob?.stop(); this.portrait?.setScale(2);
+        bob?.stop(); this.portrait?.setScale(2); head?.setScale(1);
         const arrow = text(this, GAME_W - 18, by + bh - 8, '>', 'font_outline').setDepth(301);
         this.tweens.add({ targets: arrow, x: GAME_W - 15, duration: 300, yoyo: true, repeat: -1 });
         await this.waitForConfirm(5000);
-        box.destroy(); name.destroy(); t.destroy(); arrow.destroy();
+        box.destroy(); name.destroy(); t.destroy(); arrow.destroy(); head?.destroy();
         break;
       }
       case 'title': {
