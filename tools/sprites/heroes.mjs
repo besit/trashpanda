@@ -27,6 +27,8 @@ export function heroImage(character, name, dir = root) {
 /** M4.13: a whole scene made by tools/scene.mjs (art/scenes/<scene>_<name>.png), e.g. sceneImage('sunset', 'wide') */
 export const sceneImage = (scene, name) => heroImage(scene, name, path.join(root, '../scenes'));
 export function sunsetScenePreview() { return { frames: [sceneImage('sunset', 'wide'), sceneImage('sunset', 'tall')], cols: 2 }; }
+/** M4.14: the title poster's skyline (Ivan's reference, emblem and words removed) */
+export function titleScenePreview() { return { frames: [sceneImage('title', 'wide'), sceneImage('title', 'tall')], cols: 2 }; }
 /** every hero image in art/heroes, for the art history */
 export function heroesPreview() {
   const names = fs.readdirSync(root).filter((f) => /^(raccoon|dog)_.+\.png$/.test(f)).sort();

@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { Img, save } from './lib/raster.mjs';
 import { packAtlas, packTileset } from './lib/pack.mjs';
-import { raccoonSideFrames, appIcon, PIVOT_Y as RS_PIVOT_Y } from './sprites/raccoon_side2.mjs'; // M4.13: the hero-proportioned rider (raccoon_side.mjs: the M4.12 one)
+import { raccoonSideFrames, appIcon, PIVOT_Y as RS_PIVOT_Y } from './sprites/raccoon_side.mjs'; // M4.14 (Ivan): back to the M4.12 rider (raccoon_side2.mjs: M4.13's hero-proportioned one; raccoon_side3.mjs: the M4.14 alternative)
 import { raccoonTopFrame, DIRS } from './sprites/raccoon_top.mjs';
 import { ratAnims, RAT_VARIANTS, bureaucratAnims, foremanAnims, megaRatAnims, BOSS_FH, MEGA_FW, ratTopFrame } from './sprites/rats.mjs';
 import * as M4 from './sprites/m4.mjs';
@@ -304,7 +304,8 @@ font('font_red', 'q', 'outline', 'K', 2);
   ];
   manifest.posters = { ...packAtlas(po, path.join(OUT, 'posters')), png: 'gen/posters.png', json: 'gen/posters.json' };
   // M4.13: whole poster backgrounds (AI scenes -> pixel art, tools/scene.mjs): their own atlas, loaded with the posters
-  const bg = [{ name: 'pb_sunset_w', img: sceneImage('sunset', 'wide') }, { name: 'pb_sunset_t', img: sceneImage('sunset', 'tall') }];
+  // M4.14: the title poster's skyline too (Ivan's reference, its emblem and words removed with ComfyUI)
+  const bg = [['pb_sunset_w', 'sunset', 'wide'], ['pb_sunset_t', 'sunset', 'tall'], ['pb_title_w', 'title', 'wide'], ['pb_title_t', 'title', 'tall']].map(([name, sc, n]) => ({ name, img: sceneImage(sc, n) }));
   manifest.posterBg = { ...packAtlas(bg, path.join(OUT, 'posters_bg'), 2048), png: 'gen/posters_bg.png', json: 'gen/posters_bg.json' };
 }
 fs.writeFileSync(path.join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 1));

@@ -19,13 +19,14 @@ import { wantsTouch } from '../input/TouchControls';
 import { DIFFICULTY, HighScores, fmtScore, type Difficulty } from '../core/Score';
 import { fetchTop, leaderboardEnabled } from '../core/Leaderboard';
 import { fullscreenSupported, isInstalled } from '../core/fullscreen';
+import { riderPivotY } from '../action/SidePlayer';
 
 /** M4.5: a name of up to 10 letters / digits (it was 3 initials) */
 export const NAME_MAX = 10;
 const NAME_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const SLOT_W = 14;
 
-export const VERSION_LABEL = 'M4.13 PREVIEW';
+export const VERSION_LABEL = 'M4.14 PREVIEW';
 
 /** M3.3 (Ivan): after a debug mission or vignette, come back to a REPLAY / BACK TO THE LIST / MAIN MENU menu */
 export interface Replay { kind: 'mission' | 'vignette'; id: string }
@@ -57,7 +58,7 @@ export class TitleScene extends Phaser.Scene {
       new ScrollLayer(this, 'facades_qw', FRONT_Y.queen, 1, 0, 0, 0xc8a8d8), // M4.1 (Ivan): the front row moves with the sidewalk
       new ScrollLayer(this, 'street_paint', STREET_Y, 1, 0, 0, 0xd0b8d8),
     ];
-    this.rider = this.add.sprite(-40, GROUND_Y + 4, 'chars', 'rs_2').setOrigin(0.5, 42 / 44).play('rs_ride');
+    this.rider = this.add.sprite(-40, GROUND_Y + 4, 'chars', 'rs_2').setOrigin(0.5, riderPivotY(this)).play('rs_ride');
     this.tweens.add({ targets: this.rider, x: GAME_W + 60, duration: 7000, repeat: -1, repeatDelay: 1500 });
 
     // logo

@@ -372,6 +372,14 @@ Original 5x7 uppercase font: plain, outline, shadow, 2x outline (titles).
 
 ## heroes
 
+### heroes v06
+
+2026-11-22
+
+M4.14: Dog Fjord's VERSUS from Ivan's green-screen regeneration (no pale edge); the bosses portrait zoomed in (stand_md 180 -> 230)
+
+![heroes v06](heroes/v06/preview.png)
+
 ### heroes v05
 
 2026-11-22
@@ -1086,6 +1094,16 @@ First pass: hand-painted head grid + procedural bike, IK legs, trash-can-lid att
 
 ![raccoon_side v01](raccoon_side/v01/preview.png)
 
+## raccoon_side_alt
+
+### raccoon_side_alt v01
+
+2026-11-22
+
+M4.14 (Ivan: the hero-proportioned M4.13 rider looked worse; try another from scratch, cheating the proportions): the M4.12 build drawn with more care: bigger head with a visible eye, lit ears, three-tone fur, gloves, ringed tail lit on top, a lit frame and toothed chainring
+
+![raccoon_side_alt v01](raccoon_side_alt/v01/preview.png)
+
 ## raccoon_side_hero
 
 ### raccoon_side_hero v01
@@ -1382,6 +1400,14 @@ M2 side-view mission props: signal pole with a TSP call box (red / green / prior
 
 ## sunset_scene
 
+### sunset_scene v02
+
+2026-11-22
+
+M4.14 (Ivan: the tall one looked enlarged and blurred): a real tall composition from ComfyUI (sun centred, the sky above), sampled down 2x on the sunset palette
+
+![sunset_scene v02](sunset_scene/v02/preview.png)
+
 ### sunset_scene v01
 
 2026-11-22
@@ -1447,6 +1473,16 @@ v02: N-S road lanes with centre line + stop bars, north parking lane, park lawn,
 First tile set: asphalt variants, lane markings, embedded streetcar tracks (E-W, N-S, crossing), sidewalks, curbs, zebras, painted + protected bike lanes, parking, grass, park path, laneway, tree pit.
 
 ![tiles v01](tiles/v01/preview.png)
+
+## title_scene
+
+### title_scene v01
+
+2026-11-22
+
+M4.14 (Ivan: the title poster's buildings floated): the skyline across the lake from Ivan's reference, emblem and words removed with ComfyUI; tall: a ComfyUI tall recomposition; own 48 colours
+
+![title_scene v01](title_scene/v01/preview.png)
 
 ## toronto_sunset
 

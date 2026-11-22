@@ -21,7 +21,8 @@ import { STREET_Y, GROUND_Y, FRONT_Y, BACKROW_Y, SKYLINE_Y } from '../ui/sideLay
 import { InputManager } from '../input/InputManager';
 import type { Manifest } from './BootScene';
 
-export interface ShareSceneData { from: string; mission?: string; poster?: string; portrait?: boolean }
+/** preview: the link-preview image (M4.14): the title poster with only the name, RIGHT OF WAY and the link */
+export interface ShareSceneData { from: string; mission?: string; poster?: string; portrait?: boolean; preview?: boolean }
 
 export const GAME_URL = 'https://besit.github.io/trashpanda/';
 /** M4.4: the classics first (VS screen, title screen, boss select, high scores...), then the street scenes */
@@ -51,6 +52,7 @@ export class ShareScene extends Phaser.Scene {
   private mission?: string;
   private poster = 0;
   private portrait = false;
+  private preview = false;
   private rt?: Phaser.GameObjects.RenderTexture;
   private file?: File;
   private fileUrl?: string;
@@ -65,7 +67,7 @@ export class ShareScene extends Phaser.Scene {
 
   init(data: ShareSceneData) {
     this.from = data.from; this.mission = data.mission; this.file = undefined;
-    this.poster = Math.max(0, POSTERS.indexOf((data.poster ?? '') as Poster)); this.portrait = !!data.portrait;
+    this.poster = Math.max(0, POSTERS.indexOf((data.poster ?? '') as Poster)); this.portrait = !!data.portrait; this.preview = !!data.preview;
   }
 
   preload() {
@@ -315,9 +317,12 @@ export class ShareScene extends Phaser.Scene {
       }
     } else if (P === 'title') {
       // a 16-bit title screen: the hero bursting out of a big emblem (a bike wheel), the name on a ribbon, PRESS START
-      sky('sky_day');
-      loBand('skyline_day', SKYLINE_Y + (tall ? 150 : 0), 0xc9e4ff);
-      const ey = tall ? 330 : 200;
+      // M4.14 (Ivan: "the buildings are floating... add details to make the skyline more interesting. This one should
+      // be our hero poster for the game preview"): the skyline across the lake from Ivan's reference (the CN Tower, the
+      // dome, the towers, the shore and the water), its emblem and words removed with ComfyUI, made pixel art on its
+      // own 48 colours. The link preview (`preview`) shows only the name, RIGHT OF WAY and the link.
+      hi(tall ? 'pb_title_t' : 'pb_title_w', 0, 0, { atlas: 'posters_bg', ox: 0, oy: 0 });
+      const ey = tall ? 330 : this.preview ? 196 : 200;
       gfx((g) => { g.fillStyle(0xfff08a, 0.25).fillCircle(W / 2, ey, tall ? 205 : 164); g.fillStyle(0xfff08a, 0.18).fillCircle(W / 2, ey, tall ? 228 : 182); });
       hi(tall ? 'pr_wheel' : 'pr_wheel_s', W / 2, ey, { k: 2, oy: 0.5 });
       const rib = tall ? 'pr_ribbon_s' : 'pr_ribbon';
@@ -328,8 +333,11 @@ export class ShareScene extends Phaser.Scene {
       hi(rib, W / 2, ry, { oy: 0 });
       words('TRASH PANDA', W / 2, ry + 3, [['font_big', 2]], 0xfff6c8);
       words('RIGHT OF WAY', W / 2, ry + (tall ? 54 : 50), [['font_outline', 2]], 0xff6347, W, 0.5, true);
-      words('PRESS START', W / 2, ry + (tall ? 104 : 86), [['font_outline', 2]], 0xfff08a, W, 0.5, true);
-      if (tall) {
+      if (this.preview) {
+        // the link preview: nothing but the name, RIGHT OF WAY and where to play
+        words(LINK, W / 2, tall ? H - 60 : H - 34, SMALL, 0xffffff, W, 0.5, true);
+      } else words('PRESS START', W / 2, ry + (tall ? 104 : 86), [['font_outline', 2]], 0xfff08a, W, 0.5, true);
+      if (this.preview) { /* no stats */ } else if (tall) {
         fill(0x16121f, 0, 0, W, 64, 0.75); words(head, W / 2, 20, MID);
         fill(0x16121f, 0, H - 112, W, 112, 0.8);
         words(`LIVABILITY ${st.liv}/100   SCORE ${st.score}`, W / 2, H - 100, SMALL, 0x9bd35a);
@@ -345,13 +353,15 @@ export class ShareScene extends Phaser.Scene {
       // with ComfyUI) turned into pixel art on its own 48 colours (tools/scene.mjs); the raccoon is the hero image.
       hi(tall ? 'pb_sunset_t' : 'pb_sunset_w', 0, 0, { atlas: 'posters_bg', ox: 0, oy: 0 });
       // on the path, just below the wall; wide: on the left third (Ivan), riding toward the sun
-      hi('pr_racc_bike', tall ? W / 2 + 40 : Math.round(W * 0.28), tall ? H - 104 : H - 62);
+      // M4.14 (Ivan: the tall one looked enlarged and blurred): its own tall composition from ComfyUI (the sun centred,
+      // the sky above it), sampled down 2x like the wide one. All the words go in the empty sky, so the path and the
+      // raccoon at the bottom stay clear
+      hi('pr_racc_bike', tall ? W / 2 : Math.round(W * 0.28), tall ? H - 22 : H - 62);
       if (tall) {
-        fill(0x16121f, 0, 0, W, 132, 0.6);
-        words('TRASH PANDA', W / 2, 16, BIG, 0xfff08a); words('RIGHT OF WAY', W / 2, 58, MID, 0xff6347); words(head, W / 2, 96, MID);
-        fill(0x16121f, 0, H - 110, W, 110, 0.75);
-        words(`BIKE NETWORK ${st.net}/${NETWORK_TOTAL}   SCORE ${st.score}`, W / 2, H - 100, SMALL, 0x9bd35a);
-        words('PLAY FREE', W / 2, H - 76, MID, 0xfff08a); words(LINK, W / 2, H - 46, SMALL, 0xc9c5d1);
+        fill(0x16121f, 0, 0, W, 212, 0.6);
+        words('TRASH PANDA', W / 2, 14, BIG, 0xfff08a); words('RIGHT OF WAY', W / 2, 54, MID, 0xff6347); words(head, W / 2, 88, MID);
+        words(`BIKE NETWORK ${st.net}/${NETWORK_TOTAL}   SCORE ${st.score}`, W / 2, 120, SMALL, 0x9bd35a);
+        words('PLAY FREE', W / 2, 148, MID, 0xfff08a); words(LINK, W / 2, 180, SMALL, 0xc9c5d1);
       } else standardWords(0.75);
     } else if (P === 'bosses') {
       // a boss-select screen: the hero in the middle, the bosses around; the beaten ones lit, the rest in shadow

@@ -13,13 +13,13 @@ export const HEROES = [
   ['raccoon', 'stand', `${C}raccoon_stand.png`, 250],
   ['dog', 'stand', `${C}dog_full.png`, 250],
   ['raccoon', 'vs', `${C}raccoon_vs.png`, 250, `${C}raccoon_stand.png`], // a warmer generation: tones matched to the standing pose
-  ['dog', 'vs', `${C}dog_vs2.png`, 250], // M4.13: Ivan's Gemini redraw of D1A with a proper fist (white background keyed to green)
+  ['dog', 'vs', `${G}th0j9mth0j9mth0j.jpg`, 250], // M4.14: Ivan's Gemini redraw of D1A with a proper fist, regenerated on green (the white one left a pale edge)
   ['raccoon', 'bust', `${G}15qpmo15qpmo15qp.jpg`, 220],
   ['raccoon', 'angry_bust', `${C}raccoon_angry_bust.png`, 220],
   ['dog', 'bust', `${G}x9yb3zx9yb3zx9yb.jpg`, 220],
   ['dog', 'laugh_bust', `${G}bhrm7rbhrm7rbhrm.jpg`, 220],
   ['dog', 'angry_bust', `${C}dog_angry.png`, 220],
-  ['raccoon', 'stand_md', `${C}raccoon_stand.png`, 180], // M4.13 (Ivan): the bosses poster's wide cell shows his top part, a portrait from the standing pose
+  ['raccoon', 'stand_md', `${C}raccoon_stand.png`, 230], // M4.13 (Ivan): the bosses poster's wide cell shows his top part, a portrait from the standing pose; M4.14: zoomed in (180 -> 230)
   ['raccoon', 'bike', `${G}fthwv8fthwv8fthw.jpg`, 220],
   // ----- in-world sprites: 1 art pixel = 1 game pixel (M4.13, Ivan: Dog Fjord redrawn from the hero artworks) -----
   ['raccoon', 'side_src', `${G}fthwv8fthwv8fthw.jpg`, 40], // the mission sprite's rider (tools/sprites/raccoon_side2.mjs cuts him from it)

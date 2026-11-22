@@ -17,6 +17,7 @@ import { sfx } from '../audio/sfx';
 import { CREDITS_LINES, CREDIT_LINKS } from '../data/villain';
 import { wantsTouch } from '../input/TouchControls';
 import { MISSIONS } from '../data/missions';
+import { riderPivotY } from '../action/SidePlayer';
 
 export class EndingScene extends Phaser.Scene {
   private input2!: InputManager;
@@ -43,7 +44,7 @@ export class EndingScene extends Phaser.Scene {
       new ScrollLayer(this, 'facades_qw', FRONT_Y.queen, 1, 0, 0, 0xc8a8d8), // M4.1 (Ivan): the front row moves with the sidewalk
       new ScrollLayer(this, 'street_protected', STREET_Y, 1, 0, 0, 0xd0b8d8),
     ];
-    const rider = this.add.sprite(GAME_W / 2, GROUND_Y + 4, 'chars', 'rs_2').setOrigin(0.5, 42 / 44).play('rs_ride');
+    const rider = this.add.sprite(GAME_W / 2, GROUND_Y + 4, 'chars', 'rs_2').setOrigin(0.5, riderPivotY(this)).play('rs_ride');
     this.tweens.add({ targets: rider, y: GROUND_Y + 3, duration: 400, yoyo: true, repeat: -1 });
     this.add.rectangle(0, 0, GAME_W, GAME_H, 0x16121f, 0.55).setOrigin(0).setDepth(5);
     music.play(SONG_MAIN, { bpm: 126 });

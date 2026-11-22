@@ -1036,3 +1036,37 @@ M4.12 went live on Ivan's go (tag `m4.12`). His notes on it, worked through: [re
 - **High scores:** Ivan asked whether 10-letter names show.
   - A read of the live online top list: every name has 3 letters, even after M4.5. The Firestore rules were never republished, so long names are refused and fall back to their first three letters.
   - Ivan has to publish the rules in `docs/LEADERBOARD.md` from the Firebase console.
+
+## 2026-11-22: M4.14 (local preview): Ivan's M4.13 notes, the title poster as the link preview, another side-view raccoon
+
+Ivan's notes on M4.13: the VERSUS dog's white edge wasn't fully gone, the tall sunset looked enlarged and blurred, the bosses portrait could zoom in, and the hero-proportioned side raccoon was worse than M4.12 ("too detailed or the proportions seem weird"). Dog Fjord: good. The rats stay. He published the leaderboard rules. The title poster's buildings floated: it should get a detailed skyline from his new reference and become the game's link preview, with only the name, RIGHT OF WAY and the link.
+
+![the link preview](reviews/m414/posters/00_link_preview.png)
+
+### Posters
+- **VERSUS:** his green-screen regeneration of the dog goes straight through the hero pipeline. The white-to-green conversion is gone, and so is the pale edge it left.
+- **Sunset (tall):** the M4.13 tall was a 1:1 crop of the master, so it was the AI image itself, not pixel art.
+  - ComfyUI recomposed the lagoon as a tall picture from an empty 864 x 1536 latent. Seed 2 (sun centred, the CN Tower in it) is sampled down 2x on the locked sunset palette.
+  - Every word moved into the sky, so the raccoon rides the path at the bottom.
+- **Title:** ComfyUI removed the wheel, raccoon, ribbon and words from Ivan's reference. All three seeds worked, but the top and bottom bars stayed, so they're cropped.
+  - **Failure:** padding the sky by repeating one row smeared its dither, and the CN Tower's spire, into vertical streaks. The pad is now a flat sky colour (the commonest colour of the top rows).
+  - The scene has its own palette (`tools/palettes/title.json`, keys from U+0280).
+  - The tall one is a ComfyUI tall recomposition. Its skyline came out small, so the crop is 1.5x tighter.
+- **The link preview:** a `preview` flag on the share scene draws the title poster with only the three things Ivan named.
+  - `tools/og.mjs` renders it in the dev server and writes `public/og.png` (1536 x 864, 204 KB).
+  - `index.html` gained og: and twitter: tags.
+- **Bosses (wide):** the portrait is the standing pose at 230 px instead of 180.
+
+### The side-view raccoon
+- **Back to M4.12** in the game. The rider's pivot now comes from the asset manifest (SidePlayer, the title and the ending), so any side sprite drops in.
+  - This also fixes M4.13's title and ending riders, which still used the old 44-row pivot on the 52-row frame.
+- **The alternative** (`tools/sprites/raccoon_side3.mjs`): the M4.12 build drawn again with more care. The changes:
+  - the head: bigger (17 x 13), a 2 x 2 eye with the pupil in front inside the mask band, ears with a lit inside
+  - fur in three tones, and gloves
+  - five clear tail rings, lit on top
+  - a lit tyre, frame highlights and a toothed chainring
+- **Failure on its first render:** outlining the bike layer filled the transparent wheel interiors black. The wheels draw their own tyre, so the bike isn't outlined (it wasn't in M4.12 either).
+- **Also removed:** the chest strap and the long bandana tails, because they turned the neck into a red-brown smear.
+
+### Leaderboard
+A read-only query after Ivan published the rules: still only the old 3-letter names. No run has finished since the rules changed.

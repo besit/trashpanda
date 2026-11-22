@@ -5,6 +5,9 @@ import type { InputManager } from '../input/InputManager';
 import { sfx } from '../audio/sfx';
 import { puff } from '../ui/fx';
 
+/** M4.14: where the rider stands in his frame comes from the asset manifest (whichever side sprite is built) */
+export function riderPivotY(scene: Phaser.Scene) { return (scene.registry.get('manifest') as { pivots?: Record<string, { y: number }> } | undefined)?.pivots?.rs?.y ?? 42 / 44; }
+
 export const SIDE = {
   accel: 700, airAccel: 480, friction: 620, maxSpeed: 132, boostSpeed: 205,
   jumpVel: 330, jumpCut: 0.45, coyote: 0.1, buffer: 0.12, gravity: 1000,
@@ -31,10 +34,12 @@ export class SidePlayer {
   dead = false;
 
   constructor(private scene: Phaser.Scene, x: number, y: number) {
-    // M4.13: the hero-proportioned sprite (tools/sprites/raccoon_side2.mjs): 56 x 52, the wheels' bottom on row 51
-    this.sprite = scene.physics.add.sprite(x, y, 'chars', 'rs_0').setOrigin(0.5, 51 / 52);
+    // M4.14: the pivot (the wheels' bottom row) from the manifest, so any side sprite can be built in
+    this.sprite = scene.physics.add.sprite(x, y, 'chars', 'rs_0');
+    const py = riderPivotY(scene);
+    this.sprite.setOrigin(0.5, py);
     const b = this.sprite.body as Phaser.Physics.Arcade.Body;
-    b.setSize(22, 16).setOffset(17, 35); // the same box over the bike as before, the frame is 9 rows taller above it
+    b.setSize(22, 16).setOffset(17, Math.round(py * this.sprite.height) - 16); // the same box over the bike, whatever the frame's height
     b.setMaxVelocityY(600);
     this.sprite.play('rs_idle');
     this.sprite.setDepth(100);

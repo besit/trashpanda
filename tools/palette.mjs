@@ -40,8 +40,8 @@ export const PALETTE = {
 
 // ---- M4.10: the hero characters' locked palettes (48 colours each), made once from their first AI master by
 // tools/hero.mjs and kept in tools/palettes/<character>.json. Keys: the raccoon U+0100 onward, Dog Fjord U+0180 onward.
-// M4.13: scenes too (tools/scene.mjs): the sunset poster's lagoon U+0200 onward.
-const HERO_KEY_START = { raccoon: 0x100, dog: 0x180, sunset: 0x200 };
+// M4.13: scenes too (tools/scene.mjs): the sunset poster's lagoon U+0200 onward; M4.14: the title poster's skyline U+0280.
+const HERO_KEY_START = { raccoon: 0x100, dog: 0x180, sunset: 0x200, title: 0x280 };
 const here = path.dirname(fileURLToPath(import.meta.url));
 for (const [character, start] of Object.entries(HERO_KEY_START)) {
   const file = path.join(here, 'palettes', `${character}.json`);
