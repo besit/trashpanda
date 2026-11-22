@@ -1072,3 +1072,22 @@ Ivan's notes on M4.13: the VERSUS dog's white edge wasn't fully gone, the tall s
 A read-only query after Ivan published the rules: still only the old 3-letter names. No run has finished since the rules changed.
 
 **Ivan's picks:** the M4.12 side-view raccoon stays in the game; the alternative is kept in `tools/sprites/raccoon_side3.mjs` (and `art/history/raccoon_side_alt/v01`). M4.13 and M4.14 pushed.
+
+## 2026-11-22: M4.15 (local preview): districts open as their missions appear, and Ivan's first play-through notes
+Ivan is playing the game mission by mission. His first notes:
+
+- **Districts open gradually.** `districtOpen()` (src/data/missions.ts): a district is open when one of its missions has appeared (prerequisites met) or been played. Queen West, where the game and the first mission start, is always open.
+  - So at the start only Queen West is open. Ivan wrote "besides downtown", but the first mission is on Queen West. After the Bike Lane War, High Park and Downtown open. After King of the Street, the East End and the Waterfront open.
+  - At a closed district's edge the street just ends at the map's edge, and a two-line note says why. Its street sign is grey and doesn't bob.
+  - After a mission that opens a district: "NOW OPEN: ...".
+  - On the city map a closed district is drawn in grey, with "CLOSED FOR NOW" beside its name and no bike network. Its links from the neighbours are grey.
+  - A new unit test walks the missions in order and checks that each open district can be reached through open ones, and that each mission's district is open when it appears.
+- **The raccoon's talking head bobbed from its top** when the text box was at the top of the screen (side-view cutscenes). It now always scales from its bottom.
+- **The DVP cars flashed in the top-left corner** for one frame when they spawned: they were created at (0, 0) and only placed on the next update. They now start hidden.
+  - Checked by counting visible cars at (0, 0) at every `prerender` in hw_before: 8 frames with the old code, 0 now.
+- **The Parkside Drive marker** moved to the left (park) side of the street, on the sidewalk below the speed-camera stump. On the city map the street's name moved further down, so the marker isn't on top of it.
+
+| | |
+|---|---|
+| ![](reviews/m415/01_edge_closed.png) | ![](reviews/m415/03_map_closed.png) |
+| ![](reviews/m415/04_parkside_marker.png) | ![](reviews/m415/05_map_highpark_open.png) |

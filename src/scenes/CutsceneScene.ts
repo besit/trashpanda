@@ -224,7 +224,9 @@ export class CutsceneScene extends Phaser.Scene {
         const t = text(this, 16, by + 16, '', 'font_outline', 0).setDepth(301).setMaxWidth(GAME_W - 34);
         // M4.10: the raccoon's talking head (the hero image) sits on the box's left edge while he speaks
         const head = s.who === 'TRASH PANDA' && this.textures.get('chars').has(`rc_${s.rexpr ?? 'rest'}`)
-          ? this.add.image(12, by > GAME_H / 2 ? by + 1 : by + bh - 1, 'chars', `rc_${s.rexpr ?? 'rest'}`).setOrigin(0, by > GAME_H / 2 ? 1 : 0).setDepth(299) : null;
+          ? this.add.image(12, by > GAME_H / 2 ? by + 1 : by + bh - 1, 'chars', `rc_${s.rexpr ?? 'rest'}`).setOrigin(0, 1).setDepth(299) : null;
+        // M4.15 (Ivan): the talking bob pivots at the head's bottom, also when it hangs under a box at the top
+        if (head && by <= GAME_H / 2) head.y += head.height;
         if (head) { const y = head.y; head.setY(y + (by > GAME_H / 2 ? 10 : -10)).setAlpha(0); this.tweens.add({ targets: head, y, alpha: 1, duration: 160, ease: 'Cubic.easeOut' }); }
         const bob = this.portrait && s.who === VILLAIN ? this.tweens.add({ targets: this.portrait, scaleY: 1.02, duration: 90, yoyo: true, repeat: -1 })
           : head ? this.tweens.add({ targets: head, scaleY: 1.03, duration: 110, yoyo: true, repeat: -1 }) : null;
@@ -364,7 +366,8 @@ export class CutsceneScene extends Phaser.Scene {
   private addDvpCar(lane: number, d: number) {
     if (!this.dvp) return;
     const kind = CAR_KINDS[Math.floor(Math.random() * CAR_KINDS.length)];
-    const s = this.add.image(0, 0, 'world', `dvp_${kind}_0`).setDepth(2);
+    // M4.15 (Ivan: new cars flashed in the top left corner): hidden until updateDvp first places it
+    const s = this.add.image(0, 0, 'world', `dvp_${kind}_0`).setDepth(2).setVisible(false);
     this.dvp.cars.push({ s, lane, d, kind });
   }
 

@@ -11,8 +11,8 @@ import { livability } from '../core/Livability';
 import { networkPatches, networkLabel, missionNetwork } from '../data/network';
 import { completeMission } from '../core/GameState';
 import { UPGRADES } from '../data/upgrades';
-import { MISSIONS, missionAvailable } from '../data/missions';
-import { DISTRICTS } from '../data/districts';
+import { MISSIONS, missionAvailable, districtOpen } from '../data/missions';
+import { DISTRICTS, DISTRICT_ORDER } from '../data/districts';
 import { text, iris, floatText, shake, bellRing, blinds, wrapLines } from '../ui/fx';
 /** payoff headline: centred between the HUD (top left) and the info box (bottom), M3.1 */
 const BANNER_Y = 104;
@@ -45,6 +45,8 @@ export class ExploreScene extends Phaser.Scene {
   private hud!: Hud;
   private markers: { id: string; x: number; y: number; g: Phaser.GameObjects.Container; done: boolean }[] = [];
   private toasts: Phaser.GameObjects.BitmapText[] = [];
+  /** M4.15: when the "closed for now" note at a closed district's edge may show again */
+  private closedToastAt = 0;
   private shownLiv = 60;
   private busy = false;
   private near: { kind: 'mission' | 'landmark'; id: string; replay?: boolean } | null = null;
@@ -81,6 +83,7 @@ export class ExploreScene extends Phaser.Scene {
     const data = this.data0;
     this.busy = false;
     this.toasts = [];
+    this.closedToastAt = 0;
     this.input2 = new InputManager(this);
     const md = this.cache.json.get(`map_${this.district}`) as MapData;
     this.map = new CityMap(this, md);
@@ -188,15 +191,17 @@ export class ExploreScene extends Phaser.Scene {
       const key = `${e.side}${e.to}${exitSpan(e)[0]}`;
       if (seen.has(key)) continue; seen.add(key);
       const name = DISTRICTS[e.to]?.name ?? e.to.toUpperCase();
+      // M4.15: a closed district's sign is grey and still
+      const open = districtOpen(e.to, ctx.state.completedMissions), tint = open ? 0xfff08a : 0x9793a6;
       if (e.side === 'n' || e.side === 's') {
         const cx = (e.x0! + e.x1!) / 2, y = e.side === 'n' ? 10 : this.map.heightPx - 10;
-        const t = text(this, cx, y, e.side === 'n' ? `^ ${name}` : `v ${name}`, 'font_outline', 0.5).setOrigin(0.5, 0.5).setDepth(y + 60).setTint(0xfff08a);
-        this.tweens.add({ targets: t, y: y + (e.side === 'n' ? -3 : 3), duration: 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        const t = text(this, cx, y, e.side === 'n' ? `^ ${name}` : `v ${name}`, 'font_outline', 0.5).setOrigin(0.5, 0.5).setDepth(y + 60).setTint(tint);
+        if (open) this.tweens.add({ targets: t, y: y + (e.side === 'n' ? -3 : 3), duration: 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         continue;
       }
       const x = e.side === 'w' ? 6 : this.map.widthPx - 6;
-      const t = text(this, x, e.y0! + 12, e.side === 'w' ? `< ${name}` : `${name} >`, 'font_outline', e.side === 'w' ? 0 : 1).setOrigin(e.side === 'w' ? 0 : 1, 0.5).setDepth(e.y0! + 40).setTint(0xfff08a);
-      this.tweens.add({ targets: t, x: x + (e.side === 'w' ? -3 : 3), duration: 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      const t = text(this, x, e.y0! + 12, e.side === 'w' ? `< ${name}` : `${name} >`, 'font_outline', e.side === 'w' ? 0 : 1).setOrigin(e.side === 'w' ? 0 : 1, 0.5).setDepth(e.y0! + 40).setTint(tint);
+      if (open) this.tweens.add({ targets: t, x: x + (e.side === 'w' ? -3 : 3), duration: 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
   }
 
@@ -468,7 +473,11 @@ export class ExploreScene extends Phaser.Scene {
   private nextHint(done: string) {
     const open = Object.values(MISSIONS).filter((m) => !ctx.state.completedMissions.includes(m.id) && missionAvailable(m.id, ctx.state.completedMissions));
     if (!open.length) { this.toast('EVERY MISSION SO FAR: FIXED!\nMORE OF THE CITY OPENS SOON.', 5000); return; }
-    if (done === 'bike_lane_war') { this.toast('NEW MISSIONS!\nQUEEN WEST, HIGH PARK (WEST) + DOWNTOWN (EAST)', 5500); return; }
+    if (done === 'bike_lane_war') { this.toast('NEW MISSIONS IN QUEEN WEST.\nNOW OPEN: HIGH PARK (WEST), DOWNTOWN (EAST)', 5500); return; }
+    // M4.15: the districts this mission opened
+    const before = ctx.state.completedMissions.filter((x) => x !== done);
+    const opened = DISTRICT_ORDER.filter((d) => districtOpen(d, ctx.state.completedMissions) && !districtOpen(d, before));
+    if (opened.length) { this.toast(`NOW OPEN: ${opened.map((d) => DISTRICTS[d].name).join(' + ')}\n${open.length} MISSION${open.length > 1 ? 'S' : ''} LEFT`, 5000); return; }
     const where = open.map((m) => DISTRICTS[m.district]?.name ?? m.district).filter((v, i, a) => a.indexOf(v) === i).join(', ');
     this.toast(`${open.length} MISSION${open.length > 1 ? 'S' : ''} LEFT: ${where}`, 4500);
   }
@@ -582,7 +591,13 @@ export class ExploreScene extends Phaser.Scene {
         if (along < lo || along > hi) continue;
         const m = this.input2, W = this.map.widthPx, H = this.map.heightPx;
         if ((e.side === 'w' && px < 8 && m.moveX < -0.2) || (e.side === 'e' && px > W - 8 && m.moveX > 0.2)
-          || (e.side === 'n' && py < 10 && m.moveY < -0.2) || (e.side === 's' && py > H - 10 && m.moveY > 0.2)) { void this.goDistrict(e); break; }
+          || (e.side === 'n' && py < 10 && m.moveY < -0.2) || (e.side === 's' && py > H - 10 && m.moveY > 0.2)) {
+          // M4.15 (Ivan): a district opens once a mission appears there; until then its streets end at the map's edge
+          if (districtOpen(e.to, ctx.state.completedMissions)) void this.goDistrict(e);
+          else if (this.time.now > this.closedToastAt) { this.closedToastAt = this.time.now + 5000; sfx.move(); this.toast(`${DISTRICTS[e.to]?.name ?? e.to.toUpperCase()} IS CLOSED FOR NOW.
+IT OPENS WHEN A MISSION APPEARS THERE.`, 2600); }
+          break;
+        }
       }
     }
     // what's nearby: a mission marker or a landmark

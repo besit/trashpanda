@@ -233,7 +233,8 @@ export function generateHighPark() {
   const CAMY = 39;
   D.tprop('speedcam_cut', PS - 1, CAMY, 10, 14, { tag: 'camstump' });
   D.landmarks.push({ id: 'speedcam', x: (PS - 1) * TS + 10, y: CAMY * TS - 6, label: 'PARKSIDE SPEED CAMERA', fact: 'CUT DOWN 7 TIMES IN\nLESS THAN A YEAR. ONCE\nDUMPED IN A PARK POND.' });
-  D.markers.push({ id: 'slow_down_dog', x: (PS + 4) * TS + 8, y: 42 * TS, label: 'SLOW DOWN, DOG' });
+  // M4.15 (Ivan): on the park side of Parkside (left), below the camera stump and between two park lamps
+  D.markers.push({ id: 'slow_down_dog', x: (PS - 1) * TS + 10, y: 49 * TS + 8, label: 'SLOW DOWN, DOG' });
 
   // ---------- buildings east of the park ----------
   const bricks = ['red', 'buff', 'darkred', 'red', 'cream', 'grey', 'lilac'];
@@ -345,7 +346,7 @@ export function generateHighPark() {
     { text: 'BLOOR ST W', x: 28 * TS, y: (BLOOR + 2) * TS },
     { text: 'THE QUEENSWAY', x: 30 * TS, y: (QUEEN + 2) * TS },
     { text: 'QUEEN ST W', x: 101 * TS, y: (QUEEN + 2) * TS },
-    { text: 'PARKSIDE DR', x: (PS + 2) * TS, y: 50 * TS, vertical: true },
+    { text: 'PARKSIDE DR', x: (PS + 2) * TS, y: 70 * TS, vertical: true }, // M4.15: below the mission marker,
     { text: 'RONCESVALLES', x: (RX + 2) * TS, y: 50 * TS, vertical: true },
     { text: 'HIGH PARK', x: U(0.62) * TS, y: V(0.14) * TS, kind: 'park' },
     { text: 'GRENADIER POND', x: U(0.24) * TS, y: V(0.85) * TS, kind: 'landmark' },

@@ -344,6 +344,13 @@ export function missionAvailable(id: string, completed: string[]) {
   return !!m && (m.requires ?? []).every((r) => completed.includes(r));
 }
 
+/** M4.15 (Ivan: "make districts open gradually"): where the game starts; the only district open before the first mission */
+export const START_DISTRICT: DistrictId = 'queenwest';
+/** A district is open once one of its missions has appeared (prerequisites met) or been played; the start district always is. */
+export function districtOpen(id: string, completed: string[]) {
+  return id === START_DISTRICT || Object.values(MISSIONS).some((m) => m.district === id && (completed.includes(m.id) || missionAvailable(m.id, completed)));
+}
+
 // M4.1 (Ivan): THE BIKE BUS (East End), the first mission played on the map: lead a bike bus along its route,
 // stop for the kids at each stop, ring the SUVs out of the bike lane, reach the school before the bell.
 // What a bike bus is, and the School Street it earns: URBAN_RESEARCH section 24.

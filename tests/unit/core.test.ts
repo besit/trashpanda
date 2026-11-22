@@ -108,6 +108,20 @@ describe('M2: districts, missions, saves', async () => {
     expect(missionAvailable('streetcar_through', [])).toBe(false);
     for (const id of ['streetcar_through', 'king_of_street', 'slow_down_dog']) expect(missionAvailable(id, ['bike_lane_war'])).toBe(true);
   });
+  it('M4.15: districts open as their missions appear, and every open district can be reached through open ones', async () => {
+    const { districtOpen, missionOrder, START_DISTRICT } = await import('../../src/data/missions');
+    const openAt = (done: string[]) => Object.keys(DISTRICTS).filter((d) => districtOpen(d, done)).sort();
+    expect(openAt([])).toEqual([START_DISTRICT]);
+    expect(openAt(['bike_lane_war'])).toEqual(['downtown', 'highpark', 'queenwest']);
+    const done: string[] = [];
+    for (const id of [...missionOrder(), '']) {
+      const open = new Set(openAt(done)), seen = new Set([START_DISTRICT]), todo = [START_DISTRICT];
+      while (todo.length) for (const e of load(todo.pop()!).exits ?? []) if (open.has(e.to) && !seen.has(e.to)) { seen.add(e.to); todo.push(e.to); }
+      expect([...seen].sort(), `after ${done.length} missions`).toEqual([...open].sort());
+      if (id) { expect(open.has(MISSIONS[id].district), id).toBe(true); done.push(id); }
+    }
+    expect(openAt(done)).toEqual(Object.keys(DISTRICTS).sort());
+  });
   it('streets continue across district edges (matched by name, on the opposite edge, or around a corner)', () => {
     // M3.2: High Park's south edge meets the Waterfront's WEST end (the trail), so a connection may turn a
     // corner; it still has to come back by the same street name

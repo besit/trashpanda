@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { DIFFICULTY, fmtScore } from '../core/Score';
 import { DISTRICTS } from '../data/districts';
-import { MISSIONS, missionAvailable } from '../data/missions';
+import { MISSIONS, missionAvailable, districtOpen } from '../data/missions';
 import { GAME_W, GAME_H } from '../config';
 import { InputManager, CONTROLS_KEYS, CONTROLS_ALT, CONTROLS_PAD, touchState } from '../input/InputManager';
 import { wantsTouch } from '../input/TouchControls';
@@ -160,7 +160,11 @@ export class PauseScene extends Phaser.Scene {
     const live = view === here && this.info ? this.info.map : null;
     const md = (live?.data ?? this.cache.json.get(`map_${view}`)) as MapData | undefined;
     // M4.2 (Ivan): the district's name; its neighbours are marked outside the map's edges, where they connect
-    this.root.add(text(this, 8, 7, DISTRICTS[view]?.name ?? 'TORONTO', 'font_outline', 0).setOrigin(0, 0.5).setTint(0xfff08a));
+    // M4.15 (Ivan: "the maps should be grayed out when the district is not available")
+    const closed = !districtOpen(view, ctx.state.completedMissions);
+    const title = text(this, 8, 7, DISTRICTS[view]?.name ?? 'TORONTO', 'font_outline', 0).setOrigin(0, 0.5).setTint(closed ? 0x9793a6 : 0xfff08a);
+    this.root.add(title);
+    if (closed) this.root.add(text(this, title.x + title.width + 8, 7, 'CLOSED FOR NOW', 'font', 0).setOrigin(0, 0.5).setTint(0x9793a6));
     this.root.add(text(this, GAME_W - 34, 7, `YOU: ${DISTRICTS[here]?.name ?? ''}`, 'font', 1).setOrigin(1, 0.5).setTint(0x9793a6));
     this.mapLinks = []; // M4.3 (review): the old district's links died with its root container
     if (!md) {
@@ -203,6 +207,12 @@ export class PauseScene extends Phaser.Scene {
       c.fillStyle = '#16121f'; c.fillRect(b.x / ts, b.y / ts, b.w / ts, b.d / ts);
       c.fillStyle = b.mapColor ?? '#8a7f94'; c.fillRect(b.x / ts + 0.15, b.y / ts + 0.15, b.w / ts - 0.3, b.d / ts - 0.3);
     }
+    if (closed) {
+      // a closed district: grey and dimmed
+      const im = c.getImageData(0, 0, md.width, md.height), a = im.data;
+      for (let o = 0; o < a.length; o += 4) { const l = Math.round((a[o] * 0.3 + a[o + 1] * 0.59 + a[o + 2] * 0.11) * 0.55 + 18); a[o] = a[o + 1] = a[o + 2] = l; }
+      c.putImageData(im, 0, 0);
+    }
     tex.refresh();
     // M4.2 (Ivan: "all maps large"): scaled to fill the space between the title and the footer, whatever its size
     const M = 10, top = 14 + M, bottom = GAME_H - 21 - M; // M4.3: two footer rows (the network's legend + the tally)
@@ -218,7 +228,7 @@ export class PauseScene extends Phaser.Scene {
     // M4.3: the bike network over the streets: protected green, slow yellow, today's painted lanes thin grey
     const done = new Set(networkDone(ctx.state.completedMissions).map((n) => n.id));
     const net = this.add.graphics();
-    for (const n of md.network ?? []) {
+    for (const n of closed ? [] : md.network ?? []) {
       const on = done.has(n.id);
       if (!on && !n.painted) continue;
       const col = !on ? 0xc9c5d1 : n.kind === 'protected' ? NET_GREEN : NET_YELLOW, lw = on ? 3 : 1;
@@ -234,7 +244,7 @@ export class PauseScene extends Phaser.Scene {
     const placed: Phaser.Geom.Rectangle[] = [];
     const inFrame = new Phaser.Geom.Rectangle(x0 + 1, y0 + 1, w - 2, h - 2);
     for (const l of [...(md.labels ?? []).filter((l) => !l.kind), ...(md.labels ?? []).filter((l) => l.kind === 'park')]) {
-      const t = text(this, x0 + l.x * this.mapRect.s, y0 + l.y * this.mapRect.s, l.text, 'font').setTint(l.kind === 'park' ? 0xfff08a : 0xf6f2e9);
+      const t = text(this, x0 + l.x * this.mapRect.s, y0 + l.y * this.mapRect.s, l.text, 'font').setTint(closed ? 0x9793a6 : l.kind === 'park' ? 0xfff08a : 0xf6f2e9);
       if (l.vertical) t.setAngle(-90);
       // nudged inside the frame if it hangs over an edge
       let r = t.getBounds();
@@ -269,7 +279,7 @@ export class PauseScene extends Phaser.Scene {
       else if (g.side === 's') t.setPosition(pos, y0 + h + 8);
       else if (g.side === 'w') t.setPosition(x0 - 9, pos).setAngle(-90);
       else t.setPosition(x0 + w + 9, pos).setAngle(90);
-      t.setTint(open ? 0xfff08a : 0x9bd35a);
+      t.setTint(!districtOpen(g.to, ctx.state.completedMissions) ? 0x9793a6 : open ? 0xfff08a : 0x9bd35a);
       this.root.add(t);
       this.mapLinks.push({ side: g.side, to: g.to, n: g.n, t });
     }
