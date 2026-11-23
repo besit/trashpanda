@@ -2,14 +2,19 @@
 // On screen: a big bouncing arrow and a pulsing ring over the target (below it, pointing up, when above would cover
 // the HUD lines). Off screen: a big arrow at the screen's edge with a word saying what's there.
 import Phaser from 'phaser';
-import { GAME_W } from '../config';
+import { GAME_W, GAME_H } from '../config';
+import { wantsTouch } from '../input/TouchControls';
 import { text } from '../ui/fx';
 
-/** M4.3: the map missions' status lines sit in a dark box under the livability HUD (they ran into it, and the map
- *  behind made them hard to read); nothing else may be drawn above HUD_BOTTOM */
-export const HUD_Y = 60, HUD_BOTTOM = 86;
-/** ...and the toast at the bottom starts here (GAME_H - this) */
-const TOAST_GAP = 54;
+/** M4.3: the map missions' status lines sit in a dark box (the map behind made them hard to read).
+ *  M4.16 (Ivan: "right at the center of the screen making it hard to play"): the box is at the bottom of the screen
+ *  now; nothing else may be drawn above HUD_BOTTOM (the livability HUD) */
+export const HUD_BOTTOM = 58;
+/** the status box's height from the bottom edge, and the edge arrows stay above it and the toast over it */
+export const STATUS_GAP = 34;
+const TOAST_GAP = STATUS_GAP + 20;
+/** on a touch screen the action buttons fill the bottom right: the box keeps left of them */
+const TOUCH_BUTTONS_W = 96;
 
 export interface GuideTarget { x: number; y: number; color: number; word: string }
 
@@ -67,14 +72,18 @@ export class MissionHud {
   private last = '';
   constructor(scene: Phaser.Scene) {
     this.box = scene.add.graphics().setScrollFactor(0).setDepth(20009);
-    this.t = text(scene, GAME_W / 2, HUD_Y + 3, '', 'font_outline').setOrigin(0.5, 0).setScrollFactor(0).setDepth(20010).setCenterAlign();
+    this.t = text(scene, GAME_W / 2, GAME_H, '', 'font_outline').setOrigin(0.5, 1).setScrollFactor(0).setDepth(20010).setCenterAlign();
   }
+  private size = '';
   set(str: string, tint: number) {
-    this.t.setTint(tint).setX(GAME_W / 2);
-    if (str === this.last) return;
-    this.last = str; this.t.setText(str);
-    const w = this.t.width + 14, h = this.t.height + 7;
-    this.box.clear().fillStyle(0x16121f, 0.88).fillRoundedRect(GAME_W / 2 - w / 2, HUD_Y, w, h, 3).lineStyle(1, 0x69657a).strokeRoundedRect(GAME_W / 2 - w / 2, HUD_Y, w, h, 3);
+    // the space it may use: the screen's width, less the touch buttons (GAME_W/GAME_H change when the window resizes)
+    const x0 = 6, x1 = GAME_W - (wantsTouch() ? TOUCH_BUTTONS_W : 6), cx = Math.round((x0 + x1) / 2), size = `${GAME_W}x${GAME_H}`;
+    this.t.setTint(tint);
+    if (str === this.last && size === this.size) return;
+    this.last = str; this.size = size;
+    this.t.setMaxWidth(x1 - x0 - 14).setText(str).setPosition(cx, GAME_H - 7);
+    const w = this.t.width + 14, h = this.t.height + 7, y = GAME_H - 4 - h;
+    this.box.clear().fillStyle(0x16121f, 0.88).fillRoundedRect(cx - w / 2, y, w, h, 3).lineStyle(1, 0x69657a).strokeRoundedRect(cx - w / 2, y, w, h, 3);
   }
   setVisible(v: boolean) { this.t.setVisible(v); this.box.setVisible(v); }
   destroy() { this.t.destroy(); this.box.destroy(); }

@@ -148,6 +148,8 @@ test('east along Queens Quay reaches the East End at the bottom of Leslie, and s
   const errors = errorsOf(page);
   await page.goto('./?debug&scene=Explore');
   await page.waitForFunction(() => (window as unknown as W).__TP?.scene === 'Explore', null, { timeout: 15_000 });
+  // M4.15: districts open as their missions appear; these two missions open all five
+  await page.evaluate(() => (window as unknown as W).__TP!.state.completedMissions.push('bike_lane_war', 'king_of_street'));
   const go = async (d: string) => { await page.evaluate((dd) => (window as unknown as W).__TP!.goto(dd), d); await page.waitForFunction((dd) => (window as unknown as W).__TP?.district === dd, d); await page.waitForTimeout(900); };
   await go('waterfront');
   await page.evaluate(() => (window as unknown as W).__TP!.teleport(117 * 16, 52 * 16 + 24));

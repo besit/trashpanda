@@ -1091,3 +1091,26 @@ Ivan is playing the game mission by mission. His first notes:
 |---|---|
 | ![](reviews/m415/01_edge_closed.png) | ![](reviews/m415/03_map_closed.png) |
 | ![](reviews/m415/04_parkside_marker.png) | ![](reviews/m415/05_map_highpark_open.png) |
+
+## 2026-11-23: M4.15 pushed; M4.16 (local preview): Ivan's notes on the Dock Drop, the Bike Bus and the Megamart boss
+M4.15 went live (tag `m4.15`) on Ivan's go.
+
+- **The map missions' status box moved to the bottom of the screen.** In the Dock Drop and the Bike Bus it used to sit under the livability HUD, just above the raccoon: "right at the center of the screen making it hard to play".
+  - On a touch screen it's centred in the space left of the action buttons, and it wraps if that's too narrow.
+  - The opening hint (the toast) sits above the box while a map mission runs.
+  - The guide's edge arrows stay above it.
+- **Dock Drop vignette:** the pedestrian walked in place at x 120. They now walk along the sidewalk across the shot.
+- **Bike Bus and Dock Drop vignettes:** the riders started at x -10 to -40, which is on screen on a wide phone. Cutscene x is measured in a 384-wide frame centred on screens up to 480 wide, so off screen starts below -78. They also stopped at x 340 to 470, so on a wide screen they stopped in the shot and pedalled in place.
+  - Now everyone starts below -90 and rides out past 480.
+- **The bike share blurb** no longer says "THE GAME'S BIKES ARE UNBRANDED" (the bikes still are; URBAN_RESEARCH keeps the note).
+- **The Monster SUV fight has rats** (Ivan: "a little too easy"): two when it rolls in, two more at half health and two at a quarter, from both sides. They die with the SUV.
+
+**Failure, found while testing:** the browser tests run against `dist/` (vite preview), and I hadn't rebuilt. So M4.15's "68 passed" was measured on the M4.14 build.
+- With a fresh build, three tests that ride between districts on a new save failed. The district locks are doing their job; the tests needed a save with missions done. They now push two missions first.
+- New tests: the closed edge and the grey map (m415.spec), the status box at the bottom, the Megamart rats.
+- 71 browser tests now pass on a fresh build.
+
+| | |
+|---|---|
+| ![](reviews/m416/01_dock_drop.png) | ![](reviews/m416/02_dock_drop_phone.png) |
+| ![](reviews/m416/04_dock_after_walk.png) | ![](reviews/m416/06_bus_after_end.png) |

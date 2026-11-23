@@ -97,6 +97,8 @@ test('Waterfront: riding west on Lake Shore or Queens Quay leads to High Park', 
   const errors = errorsOf(page);
   await page.goto('./?debug&scene=Explore');
   await sceneIs(page, 'Explore');
+  // M4.15: districts open as their missions appear; these two missions open all five
+  await page.evaluate(() => (window as unknown as W).__TP!.state.completedMissions.push('bike_lane_war', 'king_of_street'));
   await page.evaluate(() => (window as unknown as W).__TP!.goto('waterfront'));
   await page.waitForFunction(() => (window as unknown as W).__TP?.district === 'waterfront', null, { timeout: 15_000 });
   await page.waitForTimeout(800);

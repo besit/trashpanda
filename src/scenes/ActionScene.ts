@@ -50,6 +50,8 @@ export class ActionScene extends Phaser.Scene {
   private lobbyTip = false;
   private depaveDone = false;
   private monster?: MonsterSuv;
+  /** M4.16 (Ivan: the Megamart boss "feels a little too easy"): rat waves sent so far in the Monster SUV fight */
+  private monsterWaves = 0;
   private digger?: SpaDigger;
   /** M3.4: mission 11's boss, and the suitcases Baggage Rats (and the tug) roll along the ground */
   private tug?: JetTug;
@@ -159,7 +161,7 @@ export class ActionScene extends Phaser.Scene {
     this.depavePre = a.depave && !this.atCheckpoint ? new DepaveSpots(this, a.depave, this.arenaLeftAt(a.depave.at), this.groundY) : undefined;
     this.buildPre = a.build ? new BuildSpots(this, a.build, this.arenaLeftAt(a.build.at), this.groundY) : undefined;
     this.peloton = undefined; this.eater = undefined; this.scrolling = false; this.ambushIdx = 0; this.autoX = 0;
-    this.depave = undefined; this.depaveDone = false; this.monster = undefined; this.digger = undefined; this.tug = undefined; this.cases = [];
+    this.depave = undefined; this.depaveDone = false; this.monster = undefined; this.monsterWaves = 0; this.digger = undefined; this.tug = undefined; this.cases = [];
     this.patrols = []; this.crates = []; this.wrecker = undefined; this.mech = undefined;
     if (a.autoscroll) {
       this.peloton = new Peloton(this, a.autoscroll.riders, this.groundY);
@@ -864,6 +866,13 @@ export class ActionScene extends Phaser.Scene {
       const m = this.monster;
       m.update(dt, px);
       if (m.alive) {
+        // M4.16: Megamart's rats join in: two when it rolls in, two more at half its health, two at a quarter
+        const wave = m.hp <= m.maxHp / 4 ? 3 : m.hp <= m.maxHp / 2 ? 2 : 1, L = this.lock;
+        if (wave > this.monsterWaves && L) {
+          const kinds: RatKind[][] = [[], ['basic', 'traffic'], ['construction', 'basic'], ['traffic', 'construction']];
+          this.monsterWaves = wave;
+          this.time.delayedCall(wave === 1 ? 1500 : 300, () => kinds[wave].forEach((k, i) => this.time.delayedCall(i * 600, () => { if (this.lock && m.alive) this.spawnRat(k, i % 2 ? this.lock.left + GAME_W + 10 : this.lock.left - 10); })));
+        }
         const mr = m.rect();
         if (this.landingOn(pRect, m.roofY(), mr.x + 6, mr.right - 6, m)) {
           if (m.hit({ x: 0, y: 0, w: 0, h: 0, dmg: 1, kb: 0, id: 7700 + Math.floor(this.time.now / 150) }, 'stomp')) { this.stompStar(); this.player.bounce(); hitStop(this, 70); }

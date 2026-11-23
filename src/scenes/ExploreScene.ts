@@ -21,7 +21,7 @@ import { award, awardOnce, fmtScore } from '../core/Score';
 import { rankByTimeLeft, recordRank, rankLine } from '../core/Rank';
 import { BikeBus } from '../explore/BikeBus';
 import { DockDrop } from '../explore/DockDrop';
-import type { MapMission } from '../explore/guide';
+import { STATUS_GAP, type MapMission } from '../explore/guide';
 import { submitRun } from '../core/Leaderboard';
 import { music } from '../audio/Sequencer';
 import { SONG_MAIN, SONG_IMPROVE, SONG_WIN } from '../audio/songs';
@@ -314,7 +314,8 @@ export class ExploreScene extends Phaser.Scene {
 
   private toast(msg: string, ms = 4200) {
     this.toasts.forEach((t) => t.destroy());
-    const t = text(this, GAME_W / 2, GAME_H - 38, msg, 'font_outline').setScrollFactor(0).setDepth(20002).setAlpha(0).setCenterAlign().setMaxWidth(GAME_W - 20);
+    // M4.16: during a map mission its status box has the bottom of the screen, so the toast sits above it
+    const t = text(this, GAME_W / 2, GAME_H - 38 - (this.em ? STATUS_GAP - 4 : 0), msg, 'font_outline').setScrollFactor(0).setDepth(20002).setAlpha(0).setCenterAlign().setMaxWidth(GAME_W - 20);
     this.toasts = [t];
     this.tweens.add({ targets: t, alpha: 1, duration: 250, hold: ms, yoyo: true, onComplete: () => t.destroy() });
   }

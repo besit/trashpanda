@@ -75,6 +75,27 @@ test('a boss slides in from beyond the screen edge; the Monster SUV bounces you 
   expect(errors).toEqual([]);
 });
 
+test('M4.16: Megamart rats join the Monster SUV fight: when it rolls in, at half health and at a quarter', async ({ page }) => {
+  const errors = errorsOf(page);
+  await page.goto('./?debug&scene=Action&mission=great_parking_lot');
+  await actionReady(page);
+  await toBoss(page, 1980);
+  await page.keyboard.down('d'); await page.waitForTimeout(250); await page.keyboard.up('d');
+  await page.waitForFunction(() => (window as unknown as W).__TP!.monster?.(), null, { timeout: 15_000 });
+  const ratsNow = () => page.evaluate(() => (window as unknown as W).__TP!.rats());
+  const killRats = () => page.evaluate(() => (window as unknown as W).__TP!.killAll());
+  await page.waitForTimeout(2800);
+  expect(await ratsNow()).toBe(2);
+  await killRats(); await page.waitForTimeout(2000);
+  expect(await ratsNow()).toBe(0); // no more until it's hurt
+  await page.evaluate(() => { (window as unknown as W).__TP!.monster().hp = 7; }); await page.waitForTimeout(1600);
+  expect(await ratsNow()).toBe(2);
+  await killRats();
+  await page.evaluate(() => { (window as unknown as W).__TP!.monster().hp = 3; }); await page.waitForTimeout(1600);
+  expect(await ratsNow()).toBe(2);
+  expect(errors).toEqual([]);
+});
+
 test('the Wrecker: drives, hoists, drops, gets stuck, hauls, winds up and swings; the truck is safe to stand by', async ({ page }) => {
   const errors = errorsOf(page);
   await page.goto('./?debug&scene=Action&mission=save_the_science');

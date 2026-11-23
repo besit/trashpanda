@@ -66,6 +66,8 @@ test('connections: Queen West south -> the Waterfront on Strachan; High Park sou
   const errors = errorsOf(page);
   await page.goto('./?debug&scene=Explore');
   await page.waitForFunction(() => (window as unknown as W).__TP?.scene === 'Explore', null, { timeout: 15_000 });
+  // M4.15: districts open as their missions appear; these two missions open all five
+  await page.evaluate(() => (window as unknown as W).__TP!.state.completedMissions.push('bike_lane_war', 'king_of_street'));
   const ride = async (from: string, x: number, y: number, key: string, to: string) => {
     await page.evaluate((d) => (window as unknown as W).__TP!.goto(d), from);
     await page.waitForFunction((d) => (window as unknown as W).__TP?.district === d, from);
