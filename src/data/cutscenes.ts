@@ -599,7 +599,7 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'move', id: 'b1', x: 440, ms: 4200 },
     { t: 'wait', ms: 2400 },
     { t: 'clear' },
-    { t: 'caption', text: 'OTTAWA SAID NO TO JETS.', y: 22, hold: 700 },
+    { t: 'caption', text: 'OTTAWA SAID NO TO JETS, FOR NOW.', y: 22, hold: 700 }, // M4.18: Bill 110 still stands
     { t: 'caption', text: 'THE PARK STAYED A PARK.', y: 40, font: 'font_big', hold: 2200 },
     { t: 'sfx', name: 'bell' },
     { t: 'wait', ms: 400 },

@@ -109,7 +109,7 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
 
 **GAME EFFECT:** Livability +4 (cycling +14, safety +8, walking +2, less car dependence +4). The game abstraction says nothing about real-world magnitudes. End-of-game stat: +2 protected bike lanes.
 
-**In-game blurb (must stay sourced):** "IN A TORONTO + VANCOUVER STUDY, SEPARATED CYCLE TRACKS HAD ABOUT 1/9 THE INJURY RISK OF BUSY STREETS WITH PARKED CARS." (Teschke 2012)
+**In-game blurb (must stay sourced):** "IN A TORONTO + VANCOUVER STUDY, SEPARATED CYCLE TRACKS HAD ABOUT 1/9 THE ODDS OF INJURY OF BUSY STREETS WITH PARKED CARS." (Teschke 2012)
 
 **Tone note:** The game is satire and the antagonist is fictional. Dog Fjord is a cartoon and not a depiction of any real person. The real-world dispute is live, so the game shows the evidence and lets the visual payoff carry the argument rather than making claims about real individuals.
 
@@ -144,7 +144,7 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
 
 **STILL TO RESEARCH (🟡):** international ASE evidence (e.g. systematic reviews); whether the replacement fund's measures (speed humps, curb extensions) have comparable evidence; and the injury link between speed and pedestrian fatality risk, from an authoritative source.
 
-**CLAIM USED IN GAME (blurb):** "TORONTO SCHOOL-ZONE CAMERAS CUT SPEEDING 45%... AND IT CAME BACK WHEN THEY WENT. HUMPS AND RAISED CROSSINGS DON'T GO AWAY." The first two sentences are the SickKids/TMU findings; the third is a design statement, not a statistic. 🟡 (audit, 2026-11-23) The third sentence implies humps are a like-for-like substitute, which this file hasn't shown (see STILL TO RESEARCH); a softer wording is proposed to Ivan.
+**CLAIM USED IN GAME (blurb):** "TORONTO SCHOOL-ZONE CAMERAS CUT SPEEDING 45%... AND IT CAME BACK WHEN THEY WENT. HUMPS AND RAISED CROSSINGS KEEP WORKING WITHOUT TICKETS." The first two sentences are the SickKids/TMU findings; the third is a design statement, not a statistic. 🟡 (audit, 2026-11-23) The third sentence implies humps are a like-for-like substitute, which this file hasn't shown (see STILL TO RESEARCH); M4.18: now "HUMPS AND RAISED CROSSINGS KEEP WORKING WITHOUT TICKETS." (Ivan's call).
 
 **GAME IMPLEMENTATION (built in M2):** see §16. Upgrade *School zone, slowed by design*: Safety +12, Walking +5, Livability +3.
 
@@ -164,7 +164,7 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
 
 **CRITICISMS / NUANCE:** TSP works best where it's applied widely and alongside other fixes (stop consolidation, turn restrictions, all-door boarding). Side-street delay can rise at busy crossings. The game's escort shows the mechanism (the light waits for the streetcar) and doesn't claim a route-wide speed-up.
 
-**GAME IMPLEMENTATION:** *Let the Streetcar Through* (main 2, Queen West). The 501 rolls along behind you. You pump signal call boxes to grant priority (the white transit bar), move a double-parked van and a left-turner off the tracks, and swat away the cones rats drop on the rails. Delay counts against the schedule. **Map payoff:** streetcars on Queen no longer stop at red lights and run a little faster; transit-bar signal heads and detector loops appear at Ossington and Bellwoods. 🟡 (audit, 2026-11-23) Real TSP extends greens and shortens reds; it doesn't remove every red. The map's "never stops" is a game exaggeration, flagged to Ivan.
+**GAME IMPLEMENTATION:** *Let the Streetcar Through* (main 2, Queen West). The 501 rolls along behind you. You pump signal call boxes to grant priority (the white transit bar), move a double-parked van and a left-turner off the tracks, and swat away the cones rats drop on the rails. Delay counts against the schedule. **Map payoff:** streetcars on Queen no longer stop at red lights and run a little faster; transit-bar signal heads and detector loops appear at Ossington and Bellwoods. 🟡 (audit, 2026-11-23) Real TSP extends greens and shortens reds; it doesn't remove every red. The map's "never stops" is a game exaggeration; Ivan kept it (M4.18).
 
 ---
 
@@ -342,6 +342,8 @@ Sources: [CBC, lease details (Oct 2024)](https://www.cbc.ca/lite/story/1.7341585
 
 Mission 5 dramatizes the Bloor bike lanes' removal fight. All facts it uses are in §1: the pilot's +49% cycling, permanence in 2017, the TCAT economic study, the Court of Appeal ruling (August 14, 2026), and removal work starting in October 2026. The headline "THE PELOTON FILLS BLOOR. THE BIKE LANES STAY." is the **game's fantasy outcome**, not a prediction.
 
+**BLURB (M4.18, after the audit):** "AFTER BLOOR GOT BIKE LANES IN 2016, CYCLING ON IT ROSE 49%, AND BUSINESSES HELD UP: SPENDING GREW ABOUT AS MUCH AS ON THE DANFORTH, WHICH GOT NO LANES." It used to say the study "found more economic activity along the street, not less", which read as the lane causing it.
+
 ---
 
 ## 20. Waterfront + East End landmarks (plaques) ✅ checked 2026-11-23
@@ -389,9 +391,9 @@ Fiction, labelled as such in the game: the MEGA SPA and its excavator (the Pink 
 
 **Little Norway Park:** the site of *Little Norway*, the Royal Norwegian Air Force's exiled training base in the Second World War. A 3,000-pound boulder from Norway was unveiled as its monument by Crown Prince Harald on **September 18, 1976**; the park opened in **1986** and was dedicated by King Olav V on **November 20, 1987**. It has a ball diamond, a soccer pitch, playgrounds, a wading pool and a totem pole. [Little Norway Park (Wikipedia)](https://en.wikipedia.org/wiki/Little_Norway_Park). *Plaque:* "A ROYAL NORWEGIAN AIR FORCE CAMP IN WWII. A PARK SINCE 1986, ACROSS FROM THE AIRPORT."
 
-**FICTION LABEL:** the survey stakes through the park, the Jet Tug and "Air Fjord" are Dog Fjord's. In reality the province said it would not develop the park. The upgrade blurb says so: "THE STAKES ARE FICTION. BUT IN 2026 ONTARIO PASSED A LAW TO TAKE OVER THE ISLAND AIRPORT FOR JETS, AND IN JULY OTTAWA, WHICH HAS THE FINAL SAY, SAID NO: SAFETY WORK ONLY." Source line in the game: Transport Canada (Minister Steven MacKinnon, July 2026), as reported by CBC, Global News and The Canadian Press.
+**FICTION LABEL:** the survey stakes through the park, the Jet Tug and "Air Fjord" are Dog Fjord's. In reality the province said it would not develop the park. The upgrade blurb says so: "THE STAKES ARE FICTION. BUT IN 2026 ONTARIO PASSED A LAW TO TAKE THE CITY'S PLACE AT THE ISLAND AIRPORT AND PUSHED FOR JETS. IN JULY OTTAWA, WHICH HAS THE FINAL SAY, SAID NO FOR NOW: SAFETY WORK ONLY." Source line in the game: Transport Canada (Minister Steven MacKinnon, July 2026), as reported by CBC, Global News and The Canadian Press.
 
-**GAME IMPLEMENTATION:** *Grounded* (main 11, Waterfront, after *The Waterfront Heist*). Beats: a wave with **Baggage Rats** (they roll suitcases along the ground: jump them), a locked arena of four **survey stakes** to pump out of the ground while **Barrier Rats** (a ROAD CLOSED board that blocks hits from the front; they turn slowly) defend them, a mixed wave, then the **Jet Tug**: a baggage tug towing a private jet across the park. Its jet blast blows you back without hurting; it hurts on contact while it taxis; it stops to refuel at the edge, when the tug can be pumped; the cabin can be stomped any time; below half health it taxis faster and rolls a suitcase at you at each stop. **Map:** Little Norway Park on the quay across from the island airport, staked out; the payoff removes the stakes and adds trees, a bench and a picnic table. **Vignettes:** turboprops land quietly in the background; the after-caption reads "OTTAWA SAID NO TO JETS. THE PARK STAYED A PARK."
+**GAME IMPLEMENTATION:** *Grounded* (main 11, Waterfront, after *The Waterfront Heist*). Beats: a wave with **Baggage Rats** (they roll suitcases along the ground: jump them), a locked arena of four **survey stakes** to pump out of the ground while **Barrier Rats** (a ROAD CLOSED board that blocks hits from the front; they turn slowly) defend them, a mixed wave, then the **Jet Tug**: a baggage tug towing a private jet across the park. Its jet blast blows you back without hurting; it hurts on contact while it taxis; it stops to refuel at the edge, when the tug can be pumped; the cabin can be stomped any time; below half health it taxis faster and rolls a suitcase at you at each stop. **Map:** Little Norway Park on the quay across from the island airport, staked out; the payoff removes the stakes and adds trees, a bench and a picnic table. **Vignettes:** turboprops land quietly in the background; the after-caption reads "OTTAWA SAID NO TO JETS, FOR NOW. THE PARK STAYED A PARK."
 
 ## 24. Bike buses + School Streets ✅ checked 2026-11-16
 
@@ -444,7 +446,7 @@ Ivan ran this file past an outside AI audit (ChatGPT). Each point was checked ag
 - **Removed:** the unsupported "only public building closed over RAAC" (§5).
 - **Not confirmed, noted as such:** the regulation number O. Reg. 327/26 (§1); a Supreme Court docket number and a November 20 filing (not used); the parking appeal's narrowing (§6).
 - **Disagreed:** the audit said High Park's 2023 closures weren't in place. The City's own pages say West Road and parts of Colborne Lodge Drive were closed to cars seven days a week in 2023 (§17).
-- **Flagged for Ivan (in-game text or behaviour):** these wait for his call, see `docs/reviews/M4.18.md`:
+- **Flagged for Ivan (in-game text or behaviour):** he approved the first four (M4.18) and kept the streetcar behaviour; see `docs/reviews/M4.18.md`:
   - the Teschke "1/9" wording
   - the Lane Eater's economic line
   - the speed-camera blurb's last sentence

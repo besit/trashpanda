@@ -1174,3 +1174,5 @@ M4.15 went live (tag `m4.15`) on Ivan's go.
   - The index now lists all 26 sections with one review date.
 - **Five possible game-text changes** (Lane Eater economics, the island airport, the speed-camera line, "1/9 the odds", TSP on the map) wait for Ivan's call in `docs/reviews/M4.18.md`.
 - Tests: 74 browser + 22 unit pass on a fresh build.
+
+**Ivan's picks:** the first four text changes applied (the Lane Eater economics line, the island airport text + "OTTAWA SAID NO TO JETS, FOR NOW.", "HUMPS AND RAISED CROSSINGS KEEP WORKING WITHOUT TICKETS.", "1/9 THE ODDS OF INJURY"); the streetcars keep running through reds. M4.15-M4.18 pushed.

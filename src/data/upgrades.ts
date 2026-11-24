@@ -51,7 +51,7 @@ export const UPGRADES: Record<string, Upgrade> = {
     categories: { cycling: 14, safety: 8, walking: 2, carDependence: 4 },
     mapPatches: ['queen_protected_lanes'],
     headline: 'QUEEN GETS PROTECTED BIKE LANES',
-    blurb: 'IN A TORONTO + VANCOUVER STUDY, SEPARATED CYCLE TRACKS HAD ABOUT 1/9 THE INJURY RISK OF BUSY STREETS WITH PARKED CARS.',
+    blurb: 'IN A TORONTO + VANCOUVER STUDY, SEPARATED CYCLE TRACKS HAD ABOUT 1/9 THE ODDS OF INJURY OF BUSY STREETS WITH PARKED CARS.',
     source: 'TESCHKE ET AL. 2012, AMERICAN JOURNAL OF PUBLIC HEALTH 102(12)',
     stat: { key: 'bikeLanes', amount: 2 },
   },
@@ -88,7 +88,7 @@ export const UPGRADES: Record<string, Upgrade> = {
     mapPatches: ['parkside_calming'],
     // game fiction (Ivan, M2 review): in the game the camera ban is lifted; in reality it stands (URBAN_RESEARCH §2)
     headline: 'THE CAMERA BAN IS LIFTED. PARKSIDE IS SLOW BY DESIGN.',
-    blurb: 'TORONTO SCHOOL-ZONE CAMERAS CUT SPEEDING 45%... AND IT CAME BACK WHEN THEY WENT. HUMPS AND RAISED CROSSINGS DON\'T GO AWAY.',
+    blurb: 'TORONTO SCHOOL-ZONE CAMERAS CUT SPEEDING 45%... AND IT CAME BACK WHEN THEY WENT. HUMPS AND RAISED CROSSINGS KEEP WORKING WITHOUT TICKETS.',
     source: 'SICKKIDS + TORONTO METROPOLITAN UNIVERSITY, INJURY PREVENTION (2025)',
     stat: { key: 'protectedIntersections', amount: 1 },
   },
@@ -180,7 +180,7 @@ export const UPGRADES: Record<string, Upgrade> = {
     mapPatches: ['quiet_airport'],
     headline: 'NO JETS. LITTLE NORWAY PARK STAYS A PARK.',
     // the stakes are fiction; the outcome is real (URBAN_RESEARCH section 23)
-    blurb: 'THE STAKES ARE FICTION. BUT IN 2026 ONTARIO PASSED A LAW TO TAKE OVER THE ISLAND AIRPORT FOR JETS, AND IN JULY OTTAWA, WHICH HAS THE FINAL SAY, SAID NO: SAFETY WORK ONLY.',
+    blurb: 'THE STAKES ARE FICTION. BUT IN 2026 ONTARIO PASSED A LAW TO TAKE THE CITY\'S PLACE AT THE ISLAND AIRPORT AND PUSHED FOR JETS. IN JULY OTTAWA, WHICH HAS THE FINAL SAY, SAID NO FOR NOW: SAFETY WORK ONLY.',
     source: 'TRANSPORT CANADA (MINISTER STEVEN MACKINNON, JULY 2026), AS REPORTED BY CBC, GLOBAL NEWS AND THE CANADIAN PRESS',
     stat: { key: 'parksCreated', amount: 1 },
   },
@@ -193,7 +193,7 @@ export const UPGRADES: Record<string, Upgrade> = {
     mapPatches: ['bloor_lanes_kept'],
     // game fiction: in 2026 the province is removing Bloor's lanes (URBAN_RESEARCH §1, §19)
     headline: 'THE PELOTON FILLS BLOOR. THE BIKE LANES STAY.',
-    blurb: 'AFTER BLOOR GOT BIKE LANES IN 2016, CYCLING ON IT ROSE 49%, AND A STUDY FOUND MORE ECONOMIC ACTIVITY ALONG THE STREET, NOT LESS.',
+    blurb: 'AFTER BLOOR GOT BIKE LANES IN 2016, CYCLING ON IT ROSE 49%, AND BUSINESSES HELD UP: SPENDING GREW ABOUT AS MUCH AS ON THE DANFORTH, WHICH GOT NO LANES.',
     source: 'CITY OF TORONTO 2017 BLOOR PILOT EVALUATION; TCAT BLOOR ECONOMIC IMPACT STUDY (2019)',
     stat: { key: 'bikeLanes', amount: 2 },
   },
