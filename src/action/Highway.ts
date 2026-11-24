@@ -55,7 +55,7 @@ export class HighwayMech {
     const stage = this.hp <= this.maxHp / 3 ? 2 : this.hp <= (this.maxHp * 2) / 3 ? 1 : 0;
     if (stage > this.lanes && this.alive && this.hp > 0) {
       this.lanes = stage;
-      floatText(this.scene, this.img.x - 40, this.groundY - 176, 'ANOTHER LANE!', 'font_red', 0xffffff, 1000); sfx.laugh();
+      floatTextInView(this.scene, this.img.x, this.groundY - 52, 'ANOTHER LANE!', 'font_red', 0xffffff, 1000); sfx.laugh();
       this.hooks.lane(this.lanes === 1 ? this.bounds.left + 150 : this.bounds.left + 60);
     }
     if (this.hp <= 0) this.die();
@@ -65,11 +65,12 @@ export class HighwayMech {
     this.state = 'dead';
     this.clearWarn(); this.waves.forEach((w) => w.destroy()); this.waves = [];
     sfx.rumble(); shake(this.scene, 600, 0.016);
-    floatText(this.scene, this.img.x - 40, this.groundY - 176, 'NO MORE LANES.', 'font_big', 0xffffff, 1600);
+    // 1.0: these two were drawn at the very top of the screen (groundY - 176 = 0), under the HUD: now in front of its legs
+    floatTextInView(this.scene, this.img.x, this.groundY - 52, 'NO MORE LANES.', 'font_big', 0xffffff, 1600).setDepth(2990);
     this.scene.tweens.add({ targets: this.img, angle: -8, y: this.groundY + 60, alpha: 0, duration: 1800, delay: 400, ease: 'Quad.easeIn' });
     for (let i = 0; i < 8; i++) this.scene.time.delayedCall(i * 160, () => puff(this.scene, this.img.x + (Math.random() - 0.5) * 120, this.groundY - 40 - Math.random() * 100, 0xa39c8b, 8, 30, 106));
   }
-  private telegraph(msg: string) { this.clearWarn(); this.warn = this.scene.add.bitmapText(this.img.x, this.groundY - 176, 'font_outline', msg).setOrigin(0.5).setTint(0xff6347).setDepth(200); }
+  private telegraph(msg: string) { this.clearWarn(); this.warn = this.scene.add.bitmapText(this.img.x, this.groundY - 122, 'font_outline', msg).setOrigin(0.5).setTint(0xff6347).setDepth(200); }
   private clearWarn() { this.warn?.destroy(); this.warn = undefined; }
 
   private fling(px: number, i: number) {
@@ -96,7 +97,7 @@ export class HighwayMech {
     }
     if (!this.alive) return;
     this.t -= dt;
-    if (this.warn) this.warn.setPosition(this.img.x, Math.round(this.groundY - 176 - Math.sin(this.t * 20)));
+    if (this.warn) this.warn.setPosition(this.img.x, Math.round(this.groundY - 122 - Math.sin(this.t * 20)));
     switch (this.state) {
       case 'intro': if (this.t <= 0) { this.state = 'wind'; this.t = 0.9 / this.rage; this.telegraph('!'); } break;
       case 'walk': { // M4.1: it lumbers toward you between attacks, so both slabs matter

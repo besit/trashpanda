@@ -85,7 +85,7 @@ export function floatTextInView(scene: Phaser.Scene, x: number, y: number, str: 
   const t = text(scene, 0, 0, str, font).setTint(tint);
   if (str.includes('\n')) t.setCenterAlign();
   const w = Math.ceil(t.width) + 10, h = Math.ceil(t.height) + 6;
-  const bg = scene.add.graphics().fillStyle(0x16121f, 0.72).fillRoundedRect(-w / 2, -h / 2, w, h, 3);
+  const bg = scene.add.graphics().fillStyle(0x16121f, 0.88).fillRoundedRect(-w / 2, -h / 2, w, h, 3); // 1.0: dark enough that a sign behind doesn't read through
   const cam = scene.cameras.main, half = w / 2 + 4;
   const c = scene.add.container(Phaser.Math.Clamp(x, cam.scrollX + half, cam.scrollX + cam.width - half), y, [bg, t]).setDepth(9000);
   scene.tweens.add({ targets: c, y: y - 18, alpha: 0, delay: hold, duration: 800, ease: 'Cubic.easeOut', onComplete: () => c.destroy() });

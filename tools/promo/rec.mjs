@@ -81,6 +81,23 @@ const INIT = `(() => {
   };
 })();`;
 
+// what's happening, in a line: the scenes, Dog Fjord's portrait, the words on screen, the raccoon's health and the
+// boss's. Every change is marked in the shot (marks.txt), so the edit can find the moments.
+const SNAP = () => {
+  const g = window.__TP_GAME; if (!g) return '';
+  const on = ['Explore', 'Action', 'Cutscene'].filter((k) => g.scene.isActive(k));
+  const words = (sc) => sc.children.list.filter((o) => typeof o.text === 'string' && o.visible && o.alpha > 0.05 && o.text.length > 2 && o.text !== 'ESC: SKIP').map((o) => o.text.replace(/\n/g, ' / ')).join(' | ');
+  const cs = g.scene.getScene('Cutscene'), ex = g.scene.getScene('Explore'), ac = g.scene.getScene('Action');
+  let out = on.join('+');
+  if (on.includes('Cutscene')) out += (cs.portrait ? ' [DOG FJORD]' : '') + ' ' + words(cs).slice(0, 120);
+  else if (on.includes('Explore')) out += (ex.plaqueObj?.active ? ' [PLAQUE]' : '') + ' ' + (ex.toasts ?? []).filter((t) => t.active).map((t) => t.text.replace(/\n/g, ' / ')).join(' ').slice(0, 90);
+  if (on.includes('Action') && ac.player) {
+    const b = ac.boss ?? ac.monster ?? ac.wrecker ?? ac.mech;
+    out += ` hp ${ac.player.hp}` + (b ? ` boss ${Math.max(0, b.hp)}` : '');
+  }
+  return out;
+};
+
 export class Rec {
   constructor(page, name) { this.page = page; this.name = name; this.shots = []; this.shot = null; this.n = 0; }
 
@@ -91,7 +108,7 @@ export class Rec {
     page.on('console', (m) => { if (m.type() === 'error') console.log('console:', m.text().slice(0, 200)); });
     await page.addInitScript(INIT);
     const r = new Rec(page, name);
-    r.browser = browser;
+    r.browser = browser; Rec.current = r;
     rmSync(`${OUT}/${name}`, { recursive: true, force: true });
     mkdirSync(`${OUT}/${name}`, { recursive: true });
     return r;
@@ -103,6 +120,10 @@ export class Rec {
     try { a = await this.page.evaluate(() => window.__recFrame()); } catch (e) {
       if (this.shot || !/context was destroyed|navigation/.test(String(e))) throw e;
       await new Promise((res) => setTimeout(res, 200)); return; // the page reloaded (the dev server): keep stepping
+    }
+    if (this.shot && this.watch && this.n % 6 === 0) {
+      const w = await this.page.evaluate(SNAP).catch(() => '');
+      if (w !== this.lastSnap) { this.lastSnap = w; this.mark(w); }
     }
     if (this.shot) {
       const png = await this.page.evaluate(() => window.__recPng());
@@ -130,7 +151,9 @@ export class Rec {
   async press(k, s = 0.1) { await this.page.keyboard.down(k); await this.frames(3); await this.page.keyboard.up(k); await this.sec(s); }
   js(fn, arg) { return this.page.evaluate(fn, arg); }
 
-  start(name) { const dir = `${OUT}/${this.name}/${String(this.shots.length).padStart(2, '0')}_${name}`; mkdirSync(dir, { recursive: true }); this.shot = { name, dir, frames: 0, a0: 0, a1: 0 }; console.log(`  shot ${name}`); }
+  start(name) { const dir = `${OUT}/${this.name}/${String(this.shots.length).padStart(2, '0')}_${name}`; mkdirSync(dir, { recursive: true }); this.shot = { name, dir, frames: 0, a0: 0, a1: 0, marks: [] }; this.lastSnap = null; console.log(`  shot ${name}`); }
+  /** a note at this frame of the shot (what happened when: for picking the cuts) */
+  mark(s) { if (!this.shot) return; this.shot.marks.push({ t: +(this.shot.frames / 60).toFixed(2), s }); }
   stop() { if (this.shot) { this.shots.push(this.shot); console.log(`    ${this.shot.frames} frames`); } this.shot = null; }
 
   /** the title screen with a save; ENTER twice = start (sound on) + CONTINUE */
@@ -148,6 +171,13 @@ export class Rec {
     await this.js(() => window.setInterval(() => { const c = window.__TP_GAME.scene.getScene('Cutscene'); if (c?.sys.isActive()) c.children.list.forEach((x) => { if (x.text === 'ESC: SKIP') x.setVisible(false); }); }, 30));
   }
 
+  /** the shot list and every shot's marks (also written when a shoot fails, to see where) */
+  writeMarks() {
+    if (this.shot) { this.shots.push(this.shot); this.shot = null; }
+    writeFileSync(`${OUT}/${this.name}/shots.json`, JSON.stringify(this.shots.map(({ name, dir, frames, marks }) => ({ name, dir, frames, marks })), null, 1));
+    writeFileSync(`${OUT}/${this.name}/marks.txt`, this.shots.map((s) => `== ${s.name} (${(s.frames / 60).toFixed(1)} s)\n` + s.marks.map((m) => `${m.t.toFixed(2).padStart(7)}  ${m.s}`).join('\n')).join('\n'));
+  }
+
   /** save the shots' audio and the shot list */
   async finish() {
     this.stop();
@@ -155,22 +185,32 @@ export class Rec {
       const b64 = await this.page.evaluate(([a, b]) => window.__recAudio(a, b), [s.a0, s.a1]);
       writeFileSync(`${s.dir}/audio.f32`, Buffer.from(b64, 'base64'));
     }
-    writeFileSync(`${OUT}/${this.name}/shots.json`, JSON.stringify(this.shots.map(({ name, dir, frames }) => ({ name, dir, frames })), null, 1));
+    this.writeMarks();
     await this.browser.close();
   }
 }
 
 export const save = (o = {}) => ({ version: 4, upgrades: [], completedMissions: [], flags: { sawIntro: true, exploreHint: true, visited_downtown: true, visited_highpark: true, visited_eastend: true, visited_waterfront: true }, ratsDefeated: 40, playTimeMs: 0, lives: 3, ridersRallied: 0, difficulty: 'normal', score: 0, name: 'RAC', runId: 'promo', ranks: {}, player: { scene: 'explore', district: 'queenwest', x: -1, y: -1 }, ...o });
 
-/** side view: ride right, face and swing at the nearest enemy, hop now and then. Hits don't hurt. */
+/** the raccoon takes its hits (knocked back, flashing, health down) but a hit that would cost a life leaves it on its
+ *  last heart instead: the promo bot mustn't lose a life and restart the mission */
+export const SURVIVE = () => {
+  const p = window.__TP?.player;
+  if (!p || p.__safe) return;
+  p.__safe = true;
+  const h = p.hurt.bind(p);
+  p.hurt = (x, d) => { const r = h(x, d); if (p.hp <= 0) { p.hp = 1; p.dead = false; } return r; };
+};
+
+/** side view: ride right, face and swing at the nearest enemy, hop now and then. It takes hits (see SURVIVE). */
 export async function brawl(r, maxS, opts = {}) {
   const page = r.page;
-  let held = null;
+  let held = null, hes = 0;
   const setDir = async (k) => { if (held === k) return; if (held) await page.keyboard.up(held); held = k; if (k) await page.keyboard.down(k); };
   for (let t = 0; t < maxS * 60; t += 5) {
     const s = await page.evaluate(() => {
       const tp = window.__TP; if (!tp || typeof tp.state !== 'function') return null;
-      const p = tp.player; if (p && !p.__god) { p.__god = true; p.hurt = () => false; }
+      const p = tp.player; if (p && !p.__safe) { p.__safe = true; const h = p.hurt.bind(p); p.hurt = (x, d) => { const r = h(x, d); if (p.hp <= 0) { p.hp = 1; p.dead = false; } return r; }; }
       const st = tp.state(); if (st.finished) return { done: true };
       const all = [...(st.rats ?? [])];
       for (const k of ['bossX']) if (st[k] != null) all.push(st[k]);
@@ -180,13 +220,16 @@ export async function brawl(r, maxS, opts = {}) {
       // only what's on screen: a rat stuck off the edge mustn't hold the raccoon back
       const vw = window.__TP_GAME.scale.width;
       const targets = all.filter((x) => x > st.camX - 4 && x < st.camX + vw + 4);
-      return { x: st.x, targets, frozen: st.frozen, lock: st.lock };
+      return { x: st.x, targets, frozen: st.frozen, lock: st.lock, hp: p?.hp ?? 5, chase: st.chase === 'run' };
     });
     if (s?.done) break;
     if (opts.until && (await page.evaluate(opts.until))) break;
     if (!s || s.frozen) { await setDir(null); await r.frames(5); continue; }
     const near = s.targets.length ? s.targets.reduce((a, b) => (Math.abs(b - s.x) < Math.abs(a - s.x) ? b : a)) : null;
     const d = near == null ? 999 : near - s.x;
+    // sloppy: now and then the raccoon hesitates next to an enemy and takes the hit (never below 2 hearts)
+    if (opts.sloppy && !s.chase && hes <= 0 && near != null && Math.abs(d) < 40 && s.hp > 2 && Math.random() < opts.sloppy) hes = 40 + Math.floor(Math.random() * 30);
+    if (hes > 0) { hes -= 5; await setDir(null); await r.frames(4); continue; }
     if (near != null && Math.abs(d) < (opts.reach ?? 30)) {
       await setDir(d > 0 ? 'd' : 'a'); await r.frames(1); await setDir(null);
       await page.keyboard.down('e'); await r.frames(2); await page.keyboard.up('e');

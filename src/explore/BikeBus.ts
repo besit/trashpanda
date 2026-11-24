@@ -5,7 +5,7 @@
 import Phaser from 'phaser';
 import { text, floatText } from '../ui/fx';
 import { sfx } from '../audio/sfx';
-import { drawGuide, MissionHud, type MapMission } from './guide';
+import { drawGuide, MissionHud, HUD_BOTTOM, type MapMission } from './guide';
 
 export interface BikeBusStep { kind: 'stop' | 'block' | 'school'; x: number; y: number; kids?: number; key?: string }
 export interface BikeBusDef { start: [number, number]; steps: BikeBusStep[] }
@@ -59,16 +59,17 @@ export class BikeBus implements MapMission {
   get target() { return this.def.steps[this.step]; }
 
   /** E near an SUV in the bike lane: it moves off */
-  bell(x: number, y: number) {
+  bell(x: number, y: number): boolean {
     const s = this.target;
-    if (this.state !== 'ride' || s?.kind !== 'block' || Phaser.Math.Distance.Between(x, y, s.x, s.y) > BELL_R) return;
+    if (this.state !== 'ride' || s?.kind !== 'block' || Phaser.Math.Distance.Between(x, y, s.x, s.y) > BELL_R) return false;
     const b = this.blocks.get(this.step)!;
     sfx.carHonk();
-    floatText(this.scene, s.x, s.y - 26, Math.random() < 0.5 ? 'OOPS! MOVING!' : 'JUST DROPPING OFF!', 'font_outline', 0xffffff, 700);
+    floatText(this.scene, s.x, this.belowHud(s.y - 26), Math.random() < 0.5 ? 'OOPS! MOVING!' : 'JUST DROPPING OFF!', 'font_outline', 0xffffff, 700);
     b.zone.destroy();
     this.scene.tweens.add({ targets: b.img, x: s.x + 260, alpha: 0, duration: 1600, ease: 'Quad.easeIn', onComplete: () => b.img.destroy() });
-    floatText(this.scene, s.x, s.y - 44, 'BIKE LANE CLEAR!', 'font_outline', 0x9bd35a, 900);
+    floatText(this.scene, s.x, this.belowHud(s.y - 26) - 14, 'BIKE LANE CLEAR!', 'font_outline', 0x9bd35a, 900);
     this.step++;
+    return true;
   }
 
   update(dtMs: number, px: number, py: number) {
@@ -141,6 +142,8 @@ export class BikeBus implements MapMission {
   }
 
   route() { return this.def.steps.slice(this.step).map((s, i) => ({ x: s.x, y: s.y, kind: s.kind, next: i === 0 })); }
+  /** 1.0: a word over the street keeps below the livability HUD (BIKE LANE CLEAR! slid under it) */
+  private belowHud(y: number) { return Math.max(y, this.scene.cameras.main.worldView.y + HUD_BOTTOM + 22); }
   intro(touch: boolean) { return touch ? 'STOP BESIDE THE KIDS AT EVERY STOP.\nRED (BELL) AT THE SUVS IN THE BIKE LANE.' : 'STOP BESIDE THE KIDS AT EVERY STOP.\nE (BELL) AT THE SUVS IN THE BIKE LANE.'; }
   lateCard(): [string, string] { return ['THE BELL RANG!', `THE BIKE BUS WAS LATE (${this.kids}/${this.total} KIDS).\nBACK TO THE FIRST STOP!`]; }
   winCard(): [string, string] { return ['ON TIME!', `KIDS: ${this.kids}/${this.total}   ${Math.ceil(this.t)} S TO THE BELL`]; }

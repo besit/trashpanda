@@ -315,7 +315,10 @@ export class ExploreScene extends Phaser.Scene {
   private toast(msg: string, ms = 4200) {
     this.toasts.forEach((t) => t.destroy());
     // M4.16: during a map mission its status box has the bottom of the screen, so the toast sits above it
-    const t = text(this, GAME_W / 2, GAME_H - 38 - (this.em ? STATUS_GAP - 4 : 0), msg, 'font_outline').setScrollFactor(0).setDepth(20002).setAlpha(0).setCenterAlign().setMaxWidth(GAME_W - 20);
+    // 1.0: anchored by its bottom edge, above the E: prompt line (a four-line easter egg ran onto the prompt);
+    // and one bottom message at a time: a toast puts away an open plaque
+    this.plaqueObj?.destroy(); this.plaqueObj = undefined;
+    const t = text(this, GAME_W / 2, GAME_H - 24 - (this.em ? STATUS_GAP - 4 : 0), msg, 'font_outline').setOrigin(0.5, 1).setScrollFactor(0).setDepth(20002).setAlpha(0).setCenterAlign().setMaxWidth(GAME_W - 20);
     this.toasts = [t];
     this.tweens.add({ targets: t, alpha: 1, duration: 250, hold: ms, yoyo: true, onComplete: () => t.destroy() });
   }
@@ -323,6 +326,7 @@ export class ExploreScene extends Phaser.Scene {
   /** A bronze plaque: short centred lines, sized to fit any view width. */
   private plaque(lines: string[]) {
     this.plaqueObj?.destroy();
+    this.toasts.forEach((t) => t.destroy()); this.toasts = []; // 1.0: the plaque takes the bottom of the screen
     const w = Math.min(GAME_W - 24, Math.max(...lines.map((l) => l.length)) * 6 + 24), h = lines.length * 11 + 14;
     const c = this.add.container(GAME_W / 2, GAME_H - 30 - h / 2).setScrollFactor(0).setDepth(20003).setAlpha(0);
     const g = this.add.graphics();
@@ -357,12 +361,15 @@ export class ExploreScene extends Phaser.Scene {
     const axis = mission?.focusAxis ?? 'x';
     let dur = 0;
     let banner: Phaser.GameObjects.BitmapText;
+    // 1.0: the headline on a dark band (it sat on a mission marker's label as the camera swept the street)
+    let band: Phaser.GameObjects.Graphics | undefined;
+    const fitBand = () => { band ??= this.add.graphics().setScrollFactor(0).setDepth(20004); const b = banner.getBounds(); band.clear().fillStyle(0x16121f, 0.82).fillRoundedRect(b.x - 8, b.y - 4, b.width + 16, b.height + 8, 4); };
     if (axis === 'x') {
       const focusY = mission?.focusY ?? this.player.y;
       const startX = Phaser.Math.Clamp(mission?.focusX ?? this.player.x - 200, GAME_W / 2, this.map.widthPx - GAME_W / 2);
       cam.pan(startX, focusY, 600, 'Sine.easeInOut');
       await this.wait(700);
-      banner = text(this, GAME_W / 2, BANNER_Y, 'THE CITY IS CHANGING...', 'font_big').setScrollFactor(0).setDepth(20005);
+      banner = text(this, GAME_W / 2, BANNER_Y, 'THE CITY IS CHANGING...', 'font_big').setScrollFactor(0).setDepth(20005); fitBand();
       music.play(SONG_IMPROVE);
       for (const p of this.payoffPatches(mission)) dur = Math.max(dur, this.map.applyImprovement(p, true, startX - GAME_W / 2));
       cam.pan(startX + 420, focusY, Math.max(1400, dur * 0.6), 'Sine.easeInOut');
@@ -370,7 +377,7 @@ export class ExploreScene extends Phaser.Scene {
       const fx = mission?.focusX ?? this.player.x, startY = Phaser.Math.Clamp(mission?.focusY ?? this.player.y - 150, GAME_H / 2, this.map.heightPx - GAME_H / 2);
       cam.pan(fx, startY, 600, 'Sine.easeInOut');
       await this.wait(700);
-      banner = text(this, GAME_W / 2, BANNER_Y, 'THE CITY IS CHANGING...', 'font_big').setScrollFactor(0).setDepth(20005);
+      banner = text(this, GAME_W / 2, BANNER_Y, 'THE CITY IS CHANGING...', 'font_big').setScrollFactor(0).setDepth(20005); fitBand();
       music.play(SONG_IMPROVE);
       for (const p of this.payoffPatches(mission)) dur = Math.max(dur, this.map.applyImprovement(p, true, startY - GAME_H / 2, 'y'));
       cam.pan(fx, startY + 360, Math.max(1400, dur * 0.7), 'Sine.easeInOut');
@@ -382,6 +389,7 @@ export class ExploreScene extends Phaser.Scene {
     // the headline, wrapped onto lines that fit, big font scaled down if a word is still too wide
     banner.setText(up?.headline ?? up?.name ?? 'IMPROVED!').setMaxWidth(Math.round((GAME_W - 24) / 1)).setCenterAlign().setScale(1);
     if (banner.width > GAME_W - 16) banner.setScale((GAME_W - 16) / banner.width);
+    fitBand();
     shake(this, 150, 0.004);
     sfx.ding();
     const o = { v: before };
@@ -390,7 +398,7 @@ export class ExploreScene extends Phaser.Scene {
     await this.wait(1300);
     // the evidence: in a box at the bottom; it stays until you press a key (and pages if it's long)
     await this.infoBox(up?.name ?? 'IMPROVED!', up?.blurb ?? '', up?.source, missionId);
-    banner.destroy();
+    banner.destroy(); band?.destroy();
     cam.pan(this.player.x, this.player.y, 600, 'Sine.easeInOut');
     await this.wait(650);
     cam.startFollow(this.player.sprite, true, 0.12, 0.12);
@@ -518,7 +526,9 @@ export class ExploreScene extends Phaser.Scene {
     const head = (msg: string, sub: string) => {
       const t = text(this, GAME_W / 2, 66, msg, 'font_big').setScrollFactor(0).setDepth(20030);
       t.setScale(0.1); this.tweens.add({ targets: t, scale: 1, duration: 300, ease: 'Back.easeOut' });
-      text(this, GAME_W / 2, 84, sub, 'font_outline').setOrigin(0.5, 0).setScrollFactor(0).setDepth(20030).setCenterAlign();
+      const st = text(this, GAME_W / 2, 84, sub, 'font_outline').setOrigin(0.5, 0).setScrollFactor(0).setDepth(20030).setCenterAlign();
+      // 1.0: on a dark band, like the side-view result cards (it sat on the street's shop signs)
+      this.add.graphics().setScrollFactor(0).setDepth(20029).fillStyle(0x16121f, 0.86).fillRect(0, 66 - t.height / 2 - 6, GAME_W, st.y + st.height + 6 - (66 - t.height / 2 - 6));
     };
     if (!won) {
       music.stop(); sfx.hurt();
@@ -623,8 +633,8 @@ IT OPENS WHEN A MISSION APPEARS THERE.`, 2600); }
         sfx.bell();
         const [vx, vy] = DIR_V[this.player.dir];
         bellRing(this, this.player.x + vx * 7, this.player.y + vy * 3 - 14 - this.player.z, this.player.y + 3);
-        this.crowd.bell(this.player.x, this.player.y);
-        this.em?.bell(this.player.x, this.player.y);
+        // 1.0: a bell for the mission (an SUV, the clutter crew) isn't answered by the street: their words landed on each other
+        if (!this.em?.bell(this.player.x, this.player.y)) this.crowd.bell(this.player.x, this.player.y);
       }
     }
     // stamina bar under the player when boosting / recovering

@@ -53,7 +53,8 @@ export interface MapMission {
   t: number;
   readonly solids?: Phaser.Physics.Arcade.StaticGroup;
   update(dtMs: number, px: number, py: number): void;
-  bell(x: number, y: number): void;
+  /** true when the bell was for the mission (then the people on the street don't answer it: text on text) */
+  bell(x: number, y: number): boolean;
   /** the city map's markers: what's still to do, the next one blinking */
   route(): { x: number; y: number; kind: string; next: boolean }[];
   /** the opening hint (2 lines) */

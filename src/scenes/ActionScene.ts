@@ -351,7 +351,7 @@ export class ActionScene extends Phaser.Scene {
     const t3 = fitText(text(this, GAME_W / 2, t2.y + t2.height + 6, hint, 'font_outline').setOrigin(0.5, 0).setScrollFactor(0).setDepth(1000).setTint(0xfff08a), GAME_W - 16, true);
     if (this.replay) t3.setText(`${t3.text}\nREPLAY: NO POINTS THIS TIME`);
     const top = 48 - (h1 * s1) / 2 - 8, bottom = t3.y + t3.height + 8;
-    const band = this.add.graphics().setScrollFactor(0).setDepth(999).fillStyle(0x16121f, 0.72).fillRect(0, top, GAME_W, bottom - top);
+    const band = this.add.graphics().setScrollFactor(0).setDepth(999).fillStyle(0x16121f, 0.92).fillRect(0, top, GAME_W, bottom - top); // 1.0: near opaque (a shop sign showed through: text on text)
     sfx.bell();
     await new Promise((r) => this.time.delayedCall(2600, r));
     t1.destroy(); t2.destroy(); t3.destroy(); band.destroy();
@@ -406,7 +406,7 @@ export class ActionScene extends Phaser.Scene {
     // M4.3: on its own dark band (it landed on the Megamart's signs: text on text)
     const h = this.hud.go.height * s + 8;
     this.goBand?.destroy();
-    this.goBand = this.add.graphics().setScrollFactor(0).setDepth(1999.5).fillStyle(0x16121f, 0.6).fillRect(0, this.hud.go.y - h / 2, GAME_W, h);
+    this.goBand = this.add.graphics().setScrollFactor(0).setDepth(1999.5).fillStyle(0x16121f, 0.9).fillRect(0, this.hud.go.y - h / 2, GAME_W, h);
     this.tweens.add({ targets: this.goBand, alpha: 0, delay: 900, duration: 300 });
   }
   /** M4.3: a dark band behind a result card (head + sub lines), so it never sits on lettering in the background */
@@ -779,7 +779,8 @@ export class ActionScene extends Phaser.Scene {
         const l = this.lockArena('boss', 0);
         this.mech = new HighwayMech(this, l.left + GAME_W - 88, this.groundY, { left: l.left, right: l.left + GAME_W }, {
           hurt: (fx) => { if (this.player.hurt(fx)) { shake(this, 150, 0.012); hitStop(this, 80); } },
-          lane: (x) => { this.oneWay(x, this.groundY - 52, 66, 'slabplat', true); this.say('A SLAB FELL! JUMP ON ITS DECK FROM THERE!', 0x9bd35a, 2200); },
+          // 1.0: the hint sits by the slab, not in the top box (that box covered the mech's ANOTHER LANE sign)
+          lane: (x) => { this.oneWay(x, this.groundY - 52, 66, 'slabplat', true); this.time.delayedCall(450, () => !this.finished && floatTextInView(this, x, this.groundY - 74, 'A SLAB FELL! JUMP ON IT,\nTHEN ONTO THE DECK!', 'font_outline', 0x9bd35a, 2200)); },
         });
         this.enterFromRight([this.mech.img]);
         this.flashGo('FINAL BOSS!'); music.play(SONG_BOSS);

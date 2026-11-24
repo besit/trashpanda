@@ -53,8 +53,9 @@ export class DockDrop implements MapMission {
   get gaps() { return this.spots.map((s) => ({ name: s.def.name, x: s.def.x, y: s.def.y, set: s.set })); }
   get crewCount() { return this.crews.filter((c) => c.state !== 'flee').length; }
 
-  bell(x: number, y: number) {
-    if (this.state !== 'ride') return;
+  bell(x: number, y: number): boolean {
+    if (this.state !== 'ride') return false;
+    let hit = false;
     for (const c of this.crews) {
       if (c.state === 'flee' || Phaser.Math.Distance.Between(x, y, c.s.x, c.s.y) > BELL_R) continue;
       // it drops the station and runs; the station goes back where it was set
@@ -62,8 +63,9 @@ export class DockDrop implements MapMission {
       if (c.state === 'haul' && c.spot.img) this.scene.tweens.add({ targets: c.spot.img, x: c.spot.def.x, y: c.spot.def.y, duration: 350, ease: 'Quad.easeOut', onUpdate: () => c.spot.img?.setDepth(c.spot.img.y) });
       c.state = 'flee'; c.t = 1.2;
       c.dir = this.away(c.s.x, c.s.y, x, y);
-      sfx.squeak();
+      sfx.squeak(); hit = true;
     }
+    return hit;
   }
 
   update(dtMs: number, px: number, py: number) {

@@ -15,6 +15,7 @@ const startBus = async (page: Page) => {
 };
 
 test('the Bike Bus: board every stop, bell the SUVs out of the lane, reach the school -> the debrief', async ({ page }) => {
+  test.slow(); // the East End is the heaviest district: under a full parallel run it needs more than 90 s
   const errors = errorsOf(page);
   await explore(page);
   await startBus(page);

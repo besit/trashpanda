@@ -64,10 +64,11 @@ No cookies. Since 1.0 the game counts plays and minutes played, anonymously. Eac
 No names and nothing typed. (The world leaderboard is separate: after each mission you win it gets the name you entered, your score, the difficulty and the missions done.) Browsers with Do Not Track or Global Privacy Control on aren't counted, nor are `?debug` sessions or automated browsers. Details and the database rules: [docs/LEADERBOARD.md](docs/LEADERBOARD.md).
 
 ## Promo videos
-`tools/promo/` records the trailers by playing the game in a headless browser, one 1/60 s frame at a time, with the synth's audio rendered in step. `tools/promo/cut.mjs` edits them into 1080p clips. Output goes to `promo/` (not committed):
+`tools/promo/` records the trailers by playing the game in a headless browser, one 1/60 s frame at a time, with the synth's audio rendered in step. A bot wanders the map (plaques, hidden hearts, easter eggs), plays the mission and takes its hits. Every change on screen is noted in `promo/raw/<shoot>/marks.txt`. `tools/promo/cut.mjs` edits the takes into 1080p clips from those marks, and `tools/promo/vertical.mjs` makes 1080x1920 versions that open on the rotate-your-phone screen. Output goes to `promo/` (not committed):
 
 ```bash
-npx vite --port 5180                       # in another terminal
-node tools/promo/missions.mjs bwl          # also: lot, sci, hw, title (the end card)
-node tools/promo/cut.mjs bwl lot sci hw
+npx vite build --outDir promo/dist && npx vite preview --outDir promo/dist --port 5181   # a build copy to record from
+PROMO_BASE=http://localhost:5181/trashpanda/ node tools/promo/missions.mjs bwl          # also: bus, sci, hw, title (the end card)
+node tools/promo/cut.mjs bwl bus sci hw
+PROMO_BASE=http://localhost:5181/trashpanda/ node tools/promo/vertical.mjs bwl bus sci hw
 ```

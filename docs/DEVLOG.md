@@ -1200,3 +1200,34 @@ M4.15 went live (tag `m4.15`) on Ivan's go.
   Boss shouts now use `floatTextInView`: kept on screen, on a dark panel, two lines when long.
 - **Post drafts** for Ivan's socials, r/TorontoBiking and r/toronto: `promo/POSTS.md` (not committed).
 - Tests: 26 unit + 77 browser pass on a fresh build (the Bike Bus test flaked once under load and passed on a rerun).
+
+## 2026-11-24: 1.0, second cut of the promo videos (Ivan's notes), vertical versions, more text-on-text fixes
+Ivan's notes on the first cut:
+- the openings were too long
+- he wanted a wander that shows the map has more in it: a landmark, a hidden heart, an easter egg
+- one Dog Fjord moment, full size
+- the raccoon should take hits, and the boss should end in one continuous take
+- one video should be the on-map mission
+- vertical versions too
+
+He asked: *"It looked like the bosses couldn't even hit you. Is it possible to play the game this way?"* No. That was the recorder: the first bot replaced the raccoon's `hurt()` with a no-op. The game never had that. Now the raccoon takes every hit (knockback, flashing, hearts lost), and only a hit that would cost a life leaves it on its last heart, so the bot never restarts a mission.
+
+- **The wander.** Each shoot gives the bot a list of steps: ride through waypoints, stop at a plaque and read it, ride over a hidden heart, ride into an easter egg, chase the white squirrel, ride off the edge into the next district. Every change on screen is written to `promo/raw/<shoot>/marks.txt` (scene, toast, plaque, Dog Fjord's portrait, hearts, boss health). `cut.mjs` edits are written against those marks (`'>> heart-1.8'`), so a re-take still cuts right.
+- **The bosses.**
+  - **Foreman Rat:** goes down for real in about 6-13 s.
+  - **Wrecker:** a few seconds of fighting, then it's set a few hits from the end, off camera, and the bot finishes it for real.
+  - **Highway Mech:** it only takes a stomp on its deck from a fallen slab, or a hit on its open vent. The first bot never managed either, which is why it was forced. The new one climbs onto the slab and jumps on the deck when the Mech walks over.
+
+  The video shows one continuous take from a little before the end.
+- **The Bike Bus** is the on-map video: Riverdale Park first, then the bot leads the bus. It slows beside the kids at each stop and rings the bell at each SUV (from closer: the first try rang 56.5 px away and the bell reaches 56).
+- **Vertical videos** (`tools/promo/vertical.mjs`): the game's own ROTATE YOUR DEVICE screen, rendered on a phone-sized page with its CSS animation stepped frame by frame and held sideways after one turn. Then the landscape video turned a quarter counter-clockwise, the way the icon turns.
+- **Recording from a build copy** (`promo/dist`, served by `vite preview`), so fixing the game no longer reloads a take halfway.
+- **Text on text the new footage found (fixed in the game):**
+  - **Toasts:** a four-line easter-egg toast ran onto the `E: READ THE PLAQUE` prompt. Toasts are now anchored by their bottom edge above it, and a plaque and a toast never show at once.
+  - **Mission cards and RIDE!/GO! bands:** these were see-through, so the SCIENCE CENTRE EXHIBITS and MEGAMART signs read through them. Now near opaque.
+  - **Rat bosses:** LANE OPEN! ran off the right edge and sat on the boss's +750. It's now on a panel, on screen and above the points.
+  - **Wrecker:** PERMIT REVOKED! sat on the building's sign and BROKEN DOWN! drew over the result card. Both are on panels now, and under the card.
+  - **Highway Mech:** ANOTHER LANE! and NO MORE LANES. were drawn at y = 0, under the HUD, so nobody ever saw them. They're now in front of its legs. The slab hint is next to the slab instead of over its ANOTHER LANE sign.
+  - **Map missions:** the ON TIME! card had no band, and BIKE LANE CLEAR! could slide under the livability HUD.
+  - **The bell:** a bell rung at an SUV or the clutter crew also set the pedestrians off ("MORNING!" on top of "JUST DROPPING OFF!"). A mission bell no longer gets an answer from the street.
+  - **The map payoff headline** is on a dark band (THE CITY IS CHANGING... sat on a mission marker's label).

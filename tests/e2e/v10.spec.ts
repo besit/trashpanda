@@ -76,3 +76,36 @@ test('1.0: a boss\'s shout stays on screen, on its own panel', async ({ page }) 
   expect(box!.x + box!.half).toBeLessThanOrEqual(box!.w);
   expect(errors).toEqual([]);
 });
+
+test('1.0: a long easter-egg message ends above the E: prompt, and reading a plaque puts it away', async ({ page }) => {
+  test.slow(); // the East End is the heaviest district: under a full parallel run it needs more than 90 s
+  const errors = errorsOf(page);
+  await page.goto('./?debug&scene=Explore');
+  await page.waitForFunction(() => (window as unknown as W).__TP?.scene === 'Explore', null, { timeout: 20_000 });
+  await page.evaluate(() => (window as unknown as { __TP: { goto: (d: string) => void } }).__TP.goto('eastend'));
+  await page.waitForFunction(() => { const tp = (window as unknown as W).__TP as any; return tp?.district === 'eastend' && !tp.busy(); }, null, { timeout: 20_000 });
+  await page.waitForTimeout(800);
+  // ride into the view from the hill (a four-line message), right beside Riverdale Park's plaque
+  // toasts stay up while the test measures (on a busy machine the 4.5 s one could be gone before it was read)
+  await page.evaluate(() => { const s = (window as unknown as W).__TP_GAME!.scene.getScene('Explore'); const orig = s.toast; s.toast = (msg: string) => orig.call(s, msg, 60_000); });
+  // (440, 130) is on the path, clear of the trees: a teleport into a tree gets pushed out of the spot on a slow frame
+  const eggShown = () => page.evaluate(() => (window as unknown as W).__TP_GAME!.scene.getScene('Explore').toasts.some((x: any) => x.active && x.text.includes('EASTER EGG')));
+  for (let i = 0; i < 20 && !(await eggShown()); i++) { await page.evaluate(() => (window as unknown as W).__TP!.teleport(440, 130)); await page.waitForTimeout(500); }
+  expect(await eggShown()).toBe(true);
+  await page.waitForTimeout(400);
+  const box = await page.evaluate(() => {
+    const s = (window as unknown as W).__TP_GAME!.scene.getScene('Explore');
+    const t = s.toasts.find((x: any) => x.active), pr = s.hud.prompt;
+    const tb = t.getBounds(), pb = pr.getBounds();
+    return { toast: t.text, tBottom: tb.bottom, pTop: pb.y, prompt: pr.text };
+  });
+  expect(box.toast).toContain('EASTER EGG');
+  expect(box.prompt).toContain('PLAQUE');
+  expect(box.tBottom).toBeLessThanOrEqual(box.pTop);
+  await page.screenshot({ path: 'test-results/v10-egg.png' });
+  await page.keyboard.press('e');
+  await page.waitForTimeout(400);
+  const after = await page.evaluate(() => { const s = (window as unknown as W).__TP_GAME!.scene.getScene('Explore'); return { toasts: s.toasts.filter((x: any) => x.active).length, plaque: !!s.plaqueObj?.active }; });
+  expect(after).toEqual({ toasts: 0, plaque: true });
+  expect(errors).toEqual([]);
+});

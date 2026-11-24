@@ -108,16 +108,14 @@ export class Wrecker {
   private shadow: Phaser.GameObjects.Ellipse;
   private waves: Shockwave[] = [];
   private hitThisSwing = false;
-  private msg?: Phaser.GameObjects.BitmapText;
+  private msg?: Phaser.GameObjects.Container;
   /** one message at a time over the crane (they used to stack: text on text) */
   private say(str: string, font: 'font' | 'font_outline' | 'font_red' | 'font_big', tint: number, hold: number, dy = 74) {
     if (this.msg?.active) { this.scene.tweens.killTweensOf(this.msg); this.msg.destroy(); }
-    this.msg = this.onScreen(floatText(this.scene, this.img.x - 20, this.groundY - dy, str, font, tint, hold));
-  }
-  /** M4.17: a message over the crane stays inside the view (PERMIT REVOKED ran off its right edge) */
-  private onScreen<T extends Phaser.GameObjects.BitmapText>(t: T): T {
-    const v = this.scene.cameras.main.worldView, half = t.width / 2 + 4;
-    return t.setX(Phaser.Math.Clamp(t.x, v.x + half, v.right - half));
+    // 1.0: on its own panel (PERMIT REVOKED! sat on the SCIENCE CENTRE EXHIBITS sign); once the boss is down it goes
+    // under the result card, which covers it instead of the two reading through each other
+    this.msg = floatTextInView(this.scene, this.img.x - 20, this.groundY - dy, str, font, tint, hold);
+    if (this.state === 'dead') this.msg.setDepth(2990);
   }
   constructor(private scene: Phaser.Scene, x: number, private groundY: number, private bounds: { left: number; right: number }) {
     this.img = scene.add.image(x, groundY + 4, 'world', 'wrecker').setOrigin(0.5, 104 / 108).setDepth(104);
@@ -182,7 +180,7 @@ export class Wrecker {
     sc.tweens.add({ targets: this, ang: 0, len: this.groundY - 11 - this.pivot().y, duration: 420, delay: 900, ease: 'Bounce.easeOut' });
     sc.time.delayedCall(1150, () => {
       sfx.hammer(); shake(sc, 260, 0.014); this.dust(this.pivot().x, this.groundY - 4, 0xc9b88f, 12, 26);
-      this.onScreen(floatText(sc, x, this.groundY - 70, 'BROKEN DOWN!', 'font_outline', 0xff9a2e, 1200));
+      this.say('BROKEN DOWN!', 'font_outline', 0xff9a2e, 700, 70);
       this.img.setTint(0x8a8597);
       sc.tweens.add({ targets: this.img, y: this.img.y + 4, angle: 2, duration: 380, ease: 'Bounce.easeOut' });
     });

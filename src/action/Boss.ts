@@ -97,7 +97,8 @@ export class Boss {
     this.body.checkCollision.none = true;
     shake(this.scene, 400, 0.012);
     sfx.squeak(); sfx.stamp();
-    floatText(this.scene, this.sprite.x, this.groundY - 80, this.def.outro, 'font_big', 0xffffff, 1400);
+    // 1.0: on screen (LANE OPEN! ran off the right edge) and above the boss's points (it sat on its +750)
+    floatTextInView(this.scene, this.sprite.x, this.groundY - 124, this.def.outro, 'font_big', 0xffffff, 1400).setDepth(2990); // under the result card
     this.scene.tweens.add({ targets: this.sprite, angle: 720, alpha: 0, duration: 1200, onComplete: () => this.sprite.destroy() });
     const px = this.props[0]?.x ?? this.sprite.x;
     for (let i = 0; i < 4; i++) this.scene.time.delayedCall(i * 150, () => puff(this.scene, px + (Math.random() - 0.5) * 40, this.groundY - 20, this.def.debris, 8, 30, 95));
