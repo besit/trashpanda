@@ -10,6 +10,13 @@ This is the evidence base for every civic improvement in *Trash Panda: Right of 
 - M3.3: every upgrade names its source in the game (`source` in `src/data/upgrades.ts`), on the results card and under ABOUT > SOURCES. The links are here; the game shows names, because opening web pages from a fullscreen phone game is awkward.
 - The Livability numbers in the game are **game abstractions**, not measurements. The game does not claim to rank real cities.
 
+**Release check (2026-11-23):** every claim the game shows (upgrade blurbs, plaques, captions) was reread against this file, and the ones that can change were searched again. Results:
+- Still true, nothing newer found: the speed-camera ban (§2), the Ontario Line's cost and schedule (§8, nothing after August 2026), the Science Centre's interim site and 2029 date (§5), Ottawa's no to jets at the island airport (§23, nothing after early August 2026).
+- Updated: the bike-lane fight (§1: the Supreme Court leave application, and how much has been removed).
+- Changed in the game: the Gardiner payoff (§9: the deck stays as a park; new sources).
+- Fixed: the CN Tower plaque (§20: the 2007 record was "tallest free-standing structure", not "tallest tower").
+- Verified: the 🟡 plaques in §18 and §20.
+
 Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (more research before content ships) · ⬜ not started
 
 | # | Intervention | Mission | Status |
@@ -32,7 +39,7 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
 | 16 | The Parkside Drive speed camera | Slow Down, Dog + High Park plaque | ✅ |
 | 24 | Bike buses + School Streets | The Bike Bus (M4.1, East End, on the map) | ✅ for the game's claims |
 | 17 | High Park flavour (Howards, car-free roads, capybaras) | High Park map | ✅ |
-| 18 | Downtown + Roncesvalles landmark plaques | Downtown / High Park maps | 🟡 |
+| 18 | Downtown + Roncesvalles landmark plaques | Downtown / High Park maps | ✅ (2026-11-23) |
 | 21 | M3.1 landmarks (Don Jail, Riverdale bridge, Sundial Folly, Ripley's, Rogers Centre, ferry terminal, Cinesphere, island airport, 510 route) | East End / Waterfront maps, mission 8 | ✅ (see §21) |
 | 23 | The island airport, jets and Little Norway Park (2026) | *Grounded* (main 11, M3.4) | ✅ (see §23) |
 
@@ -49,7 +56,8 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
   - April 2025: an injunction paused removals.
   - **July 30, 2025:** the Ontario Superior Court (Justice Schabas) found the removal provisions violated s.7 of the Charter (security of the person).
   - **August 14, 2026:** the **Ontario Court of Appeal unanimously overturned** that ruling, holding that the trial judge had effectively created a right to bike lanes.
-  - **October 2026:** removal work began on a stretch of Bloor West in Etobicoke, with protests and arrests. Cycle Toronto and others applied for leave to appeal to the Supreme Court of Canada. As of writing, no decision on leave has been reported.
+  - **October 2026:** removal work began on a stretch of Bloor West in Etobicoke, with protests and arrests. Cycle Toronto and two co-applicants applied for leave to appeal to the Supreme Court of Canada (mid-October). Asking for leave doesn't stop the removals, and the applicants hadn't sought a stay; a decision on leave typically takes about five months.
+  - **November 2026 (checked 2026-11-23):** no decision on leave reported. A Cycle Toronto op-ed said **1.2 km** of the targeted lanes were gone and work on University, Yonge and Bloor could resume as early as spring 2027. [CBC: cyclists ask the Supreme Court](https://www.cbc.ca/news/canada/toronto/supreme-court-bicycle-lanes-9.7378765); [Globe and Mail](https://www.theglobeandmail.com/canada/toronto/article-supreme-court-toronto-bike-lanes/); [Canadian Cycling Magazine](https://cyclingmagazine.ca/sections/news/toronto-bike-lane-advocates-take-fight-to-supreme-court/). The game's text says only what had happened by October 2026 (§19), so nothing in the game changes.
 
   - **September 2026:** the province issued an RFP to restore motor-vehicle lanes on Bloor, Yonge, University Avenue, Queen's Park and Avenue Road, and to identify where lanes could be retained or reconfigured. **Dundas Street West is not on the list** (checked at Ivan's question during the M0 review: the removal fight belongs on Bloor, i.e. the High Park district, not Dundas). [insauga, Sep 1 2026](https://www.insauga.com/bike-lanes-to-be-removed-on-major-toronto-streets/); [The Eyeopener, Oct 2026](https://theeyeopener.com/2026/10/province-continues-removal-of-bike-lanes-amid-backlash-from-protestors-cyclists/)
 
@@ -103,6 +111,7 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
   - The province said 37 municipalities had cameras, and it set up a fund for alternatives (speed bumps, signage, curb extensions, education).
   - School-bus stop-arm cameras remain legal.
   - 🟡 Reports disagree on whether Royal Assent was October 30 or November 3, 2025. Confirm against the Legislative Assembly record before stating a date in game.
+  - **Checked 2026-11-23:** the ban stands. The province's alternatives fund is $210 million; Toronto got a one-time ~$30 million top-up for the crossing guards the fines used to pay for; some councils want the cameras back. No reversal found. [Toronto's crossing-guard top-up](https://ca.news.yahoo.com/toronto-receive-29m-top-crossing-090000787.html); [the "banniversary"](https://ca.news.yahoo.com/speed-camera-banniversary-ottawa-calling-212216300.html)
 
   Sources: [City of Toronto ASE page](https://www.toronto.ca/services-payments/streets-parking-transportation/road-safety/vision-zero/safety-initiatives/automated-speed-enforcement/); [CP24, Nov 14 2025](https://www.cp24.com/local/toronto/2025/11/14/speed-enforcement-cameras-officially-banned-across-ontario/); [TorontoToday](https://www.torontotoday.ca/ontario-news/ontario-tables-bill-to-ban-speed-cameras-premier-calls-them-cash-grabs-11372120); [CARSP commentary](https://carsp.ca/en/news/carsp-news/evaluating-the-decision-to-ban-automated-speed-enforcement-in-ontario/)
 
@@ -187,12 +196,14 @@ Status legend: ✅ researched (enough for the game's claims) · 🟡 partial (mo
 
 - **Toronto's decision:** on **June 11, 2015** City Council voted **24–21** for the "hybrid" option, keeping and rebuilding the elevated Gardiner East between Jarvis and the DVP; the removal-and-boulevard option failed 19–26. In March 2016 council endorsed the Hybrid 3 design. [CP24](https://www.cp24.com/mobile/news/council-votes-in-favour-of-hybrid-option-for-eastern-gardiner-1.2417368); [blogTO](https://blogto.com/city/2015/06/toronto_votes_for_hybrid_option_on_east_gardiner); [CBC](https://amp.cbc.ca/news/canada/toronto/hybrid-gardiner-expressway-imagined-3-ways-by-city-staff-1.3231461). The Gardiner and the DVP were later uploaded to the province under the Toronto–Ontario deal. [CBC](https://www.cbc.ca/news/canada/toronto/costs-dvp-gardiner-ontario-1.7010542).
 - **Seoul, Cheonggyecheon:** Seoul removed **5.8 km** of elevated highway (and surface lanes) to restore the Cheonggyecheon stream. A peer-reviewed study in *Transport Policy* (2012) concluded that, nine years on, "the anxiety about additional traffic problems due to the associated decrease in road capacity was unfounded". An OECD review of the monitoring found most former traffic did not reappear on nearby streets; people shifted departure times and used the Metro more. [Transport Policy abstract (ScienceDirect)](https://www.sciencedirect.com/science/article/abs/pii/S0967070X12000108); [Global Designing Cities Initiative](https://globaldesigningcities.org/publication/global-street-design-guide/streets/special-conditions/elevated-structure-removal/case-study-cheonggyecheon-seoul-korea/). 🟡 The OECD summary is secondary; the study's abstract is the primary claim used.
+- **A park on a highway deck: Seoullo 7017** (M4.17, checked 2026-11-23). Seoul turned the Seoul Station overpass, a highway flyover from **1970**, into an elevated garden walk that opened on **May 20, 2017** (design by MVRDV). Its length is given as 983 m to 1,042 m depending on the source, so the game says "1 KM". The closure year is also reported differently (2009 or 2015), so the game doesn't use it. The name: "70" for 1970, "17" for 2017 and its 17 walkways. [Seoullo 7017 (Wikipedia)](https://en.wikipedia.org/wiki/Seoullo_7017); [Seoul Solution: opening on May 20](https://seoulsolution.kr/en/node/6745); [World-Architects](https://www.world-architects.com/en/architecture-news/headlines/seoul-opens-its-own-high-line); [Structurae](https://structurae.net/en/structures/seoullo-7017).
+- **The Bentway, under the Gardiner:** its first phase opened on **January 6, 2018** with a 220 m figure-eight skating trail around the deck's piers by Fort York, funded by a $25 million donation from Judy and Wil Matthews; it has been a public space for programs and events since. [The Bentway (Wikipedia)](https://en.wikipedia.org/wiki/The_Bentway); [CP24](https://www.cp24.com/news/bentway-skate-trail-officially-opens-underneath-gardiner-expressway-1.3748396); [Waterfront Toronto](https://www.waterfrontoronto.ca/our-projects/bentway-project-under-gardiner).
 - **Elsewhere (not used in game text):** a review of 70+ road-capacity reductions found on average about a quarter of the traffic "disappeared" (secondary summary, unverified). Rochester's Inner Loop East (2014–2017) shows rising population and property values; traffic findings are only suggestive. San Francisco's Embarcadero boulevard carries a share of the old freeway's trips (a secondary figure, unverified). [Rochester (UC eScholarship)](https://escholarship.org/content/qt3v1245pc/qt3v1245pc.pdf); [RPA](https://rpa.org/reports/reimagining-the-bqe).
 - **Induced demand (the intro's joke, §14):** Duranton & Turner (2011).
 
-**FICTION LABEL:** the game takes the whole deck down. The blurb says what Toronto actually chose ("IN 2015 TORONTO VOTED 24-21 TO KEEP ITS EAST END") next to the Seoul evidence.
+**FICTION LABEL (M4.17, Ivan: "I want the pillars to stay, but they would have a park rather than a highway"):** the game keeps the piers and turns the deck into a park. The blurb opens by calling that fiction and says what Toronto actually chose, then gives the two real precedents: "THE PARK ON THE DECK IS FICTION: IN 2015 TORONTO VOTED 24-21 TO KEEP ITS EAST END FOR CARS. BUT IN 2017 SEOUL TURNED A 1970 HIGHWAY OVERPASS INTO A 1 KM GARDEN WALK, AND UNDER THE GARDINER THE BENTWAY HAS BEEN PUBLIC SPACE SINCE 2018." (Until M4.17 the game took the whole deck down and cited Cheonggyecheon; that evidence stays above, no longer in game text.)
 
-**GAME IMPLEMENTATION:** *Death by Highway* (main 10, Waterfront, unlocks last). The "...another lane?" scene: Dog Fjord adds lanes to the highway shot twice and it never moves. Three waves under the deck, then **the Highway Mech**, a walking stretch of expressway with a highway sign for a head: it stomps (shockwaves), flings cars from its claw, then overheats with its chest vent glowing (pump it); jump onto its deck from the slabs it drops at 2/3 and 1/3 health ("ANOTHER LANE!"). **Map payoff:** the deck and its piers are gone; Lake Shore gets protected bike lanes and a linear park of trees and benches. Then Dog Fjord concedes, and the report card and the credits roll.
+**GAME IMPLEMENTATION:** *Death by Highway* (main 10, Waterfront, unlocks last). The "...another lane?" scene: Dog Fjord adds lanes to the highway shot twice and it never moves. Three waves under the deck, then **the Highway Mech**, a walking stretch of expressway with a highway sign for a head: it stomps (shockwaves), flings cars from its claw, then overheats with its chest vent glowing (pump it); jump onto its deck from the slabs it drops at 2/3 and 1/3 health ("ANOTHER LANE!"). **Map payoff (M4.17):** the cars leave the deck and it becomes a park (lawn, a path, trees, planters, a bench) on the same piers; Lake Shore gets protected bike lanes, and the sidewalk under the deck gets lawn and benches. The after-vignette shows the deck from the side with trees along its railing: "THE PILLARS STAYED. THE CARS DIDN'T." / "A PARK IN THE SKY." Then Dog Fjord concedes, and the report card and the credits roll.
 
 
 ---
@@ -255,9 +266,9 @@ Sources: [CP24, Sept 7 2025](https://www.cp24.com/local/toronto/2025/09/07/toron
 
 ---
 
-## 18. Downtown + Roncesvalles landmarks (plaques) 🟡
+## 18. Downtown + Roncesvalles landmarks (plaques) ✅ checked 2026-11-23
 
-These are well-known facts used on plaques. They have not yet been checked against a primary source this session, so verify before they're quoted outside the game:
+Checked for the release (sources below the list):
 - **Toronto City Hall** (Viljo Revell) opened in **1965**. The Nathan Phillips Square pool becomes a skating rink in winter, and three concrete Freedom Arches span it.
 - **Old City Hall** (E. J. Lennox) opened in **1899**.
 - **299 Queen St W** (the CHUM-City building) has a news van bursting out of its wall at Queen + John.
@@ -265,6 +276,8 @@ These are well-known facts used on plaques. They have not yet been checked again
 - **The Jamie Bell Adventure Playground** in High Park was destroyed by fire in 2012 and rebuilt by community volunteers (M2.1 plaque).
 - **The Grenadier Cafe** sits at the bottom of West Road (from the City's High Park map).
 - **Graffiti Alley** (Rush Lane) runs south of Queen, west of Spadina. It moved here from the Queen West map after Ivan's M1 note.
+
+Sources: City Hall formally opened **September 13, 1965**; Old City Hall officially opened **September 18, 1899** ([Toronto City Hall (Wikipedia)](https://en.wikipedia.org/wiki/Toronto_City_Hall); [City of Toronto: tours + points of interest](https://www.toronto.ca/services-payments/venues-facilities-bookings/booking-city-facilities/city-hall/tours-points-of-interest/); [The Canadian Encyclopedia: Old City Hall](https://thecanadianencyclopedia.ca/en/article/toronto-feature-old-city-hall)). The Revue was built 1911–12 and opened in **1912** ([Revue Cinema (Wikipedia)](https://en.wikipedia.org/wiki/Revue_Cinema); [Revue Cinema: history](https://revuecinema.ca/history/)). The Jamie Bell castle burned in an arson on **March 17, 2012** and was rebuilt with donated materials and volunteers ([CTV: community rallies](https://toronto.ctvnews.ca/community-rallies-to-rebuild-torched-playground-1.787060); [CTV: opening delayed](https://toronto.ctvnews.ca/opening-delayed-as-torched-playground-gets-final-touches-1.869496)). 299 Queen W's van and the Grenadier Cafe are descriptions, not dated claims.
 
 ---
 
@@ -306,13 +319,13 @@ Mission 5 dramatizes the Bloor bike lanes' removal fight. All facts it uses are 
 
 ---
 
-## 20. Waterfront + East End landmarks (plaques) 🟡
+## 20. Waterfront + East End landmarks (plaques) ✅ checked 2026-11-23
 
-Well-known facts used on M3 plaques, not yet checked against a primary source this session:
-- **The CN Tower** opened in **1976**, is **553 m** tall, and was the world's tallest freestanding structure (tower) until 2007.
+- **The CN Tower** opened in **1976** and is **553 m** tall. It was the world's tallest **free-standing structure** from 1975 until the Burj Khalifa passed it in September 2007; it stayed the tallest **tower** until the Canton Tower (2009 or 2010, sources differ). **Fixed in M4.17:** the plaque said "THE WORLD'S TALLEST TOWER UNTIL 2007"; it now says "THE WORLD'S TALLEST FREE-STANDING STRUCTURE UNTIL 2007". [CN Tower (Wikipedia)](https://en.wikipedia.org/wiki/CN_Tower); [Britannica](https://www.britannica.com/topic/CN-Tower); [The Canadian Encyclopedia](https://thecanadianencyclopedia.ca/en/article/cn-tower).
 - **Sugar Beach** (Canada's Sugar Beach): pink umbrellas beside the Redpath sugar refinery.
-- **The Queen St bridge over the Don** carries Eldon Garnet's 1996 inscription "THIS RIVER I STEP IN IS NOT THE RIVER I STAND IN".
-- **The Broadview Hotel** at Queen + Broadview dates from the 1890s.
+- **The Queen St bridge over the Don** (the Queen Street Viaduct, 1911) carries Eldon Garnet's **1996** public art: "this river I step in is not the river I stand in", lettered across it (after Heraclitus), with a clock whose hands were removed in 2010. [Queen Street Viaduct (Wikipedia)](https://en.wikipedia.org/wiki/Queen_Street_Viaduct); [ACO Toronto](https://acotoronto.ca/building.php?ID=2897).
+- **The Broadview Hotel** at Queen + Broadview: built as Dingman's Hall in **1891–93** (sources differ on the year), a hotel from 1907/08, restored in 2017. "SINCE THE 1890S" covers the range. [Broadview Hotel (Wikipedia)](https://en.wikipedia.org/wiki/Broadview_Hotel_(Toronto)); [Heritage Toronto](https://www.heritagetoronto.org/explore-learn/heritage-toronto-awards-architecture/broadview-hotel-toronto-architecture).
+- **Sugar Beach** and **Riverdale Park East** are descriptions, not dated claims.
 - **Riverdale Park East**: known for its skyline view.
 
 ## 21. M3.1 landmarks (plaques + map) ✅ checked 2026-11-12

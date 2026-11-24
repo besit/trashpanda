@@ -22,7 +22,7 @@ export class Chase {
   x: number;
   hp: number;
   readonly maxHp: number;
-  state: 'run' | 'caught' | 'splash' = 'run';
+  state: 'wait' | 'run' | 'caught' | 'splash' = 'run';
   private tauntT = 2;
   private staggerT = 0;
   private lastHit = -1;
@@ -40,8 +40,12 @@ export class Chase {
     });
   }
 
-  constructor(private scene: Phaser.Scene, private def: ChaseDef, startX: number, private groundY: number) {
-    this.x = startX + def.lead;
+  /** M4.17 (Ivan: the rats with the ball "shouldn't just spawn at the screen... we catch up with them, so they appear from the
+   *  side of the screen as we go. Then they start running away"): with aheadX they start there (off screen, ahead),
+   *  ambling, until the raccoon has them on screen; then they bolt and onSpot runs */
+  constructor(private scene: Phaser.Scene, private def: ChaseDef, startX: number, private groundY: number, aheadX?: number, private onSpot?: () => void) {
+    this.x = aheadX ?? startX + def.lead;
+    if (aheadX !== undefined) this.state = 'wait';
     this.maxHp = def.hp ?? 8; this.hp = this.maxHp;
     for (let i = 0; i < 2; i++) this.rats.push(scene.add.sprite(0, groundY, 'chars', 'rat_basic_0').setOrigin(15 / 32, 31 / 32).setDepth(92).play('rat_basic_walk'));
     // the real camera, tipped over on its side and carried (same sprite as on the map + in the vignette);
@@ -77,8 +81,17 @@ export class Chase {
   }
 
   update(dtMs: number, player: { x: number; body: Phaser.Physics.Arcade.Body; onGround: boolean }, hits: Hitbox[]): 'run' | 'caught' | 'splash' {
-    if (this.state !== 'run') return this.state;
     const dt = dtMs / 1000;
+    if (this.state === 'wait') {
+      // ambling toward the truck, unaware, until the raccoon is close enough to have them well on screen
+      this.x += this.def.speed * 0.3 * dt; this.place();
+      if (this.rearX - player.x < 120 || this.x > this.def.pondAt - 260) { // (or they're nearly at the truck anyway)
+        this.state = 'run'; sfx.squeak();
+        this.onSpot?.();
+      }
+      return 'run';
+    }
+    if (this.state !== 'run') return this.state;
     this.staggerT -= dt;
     const gap = this.rearX - player.x;
     const sp = this.staggerT > 0 ? this.def.speed * 0.35 : this.def.speed * (gap < 70 ? 1.05 : gap > 260 ? 0.85 : 1);

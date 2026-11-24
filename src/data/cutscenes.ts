@@ -718,7 +718,8 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'music', song: 'dogfjord' },
     { t: 'actor', id: 'r1', frame: 'rat_guard_0', anim: 'rat_guard_walk', x: 440, y: GROUND, flip: true, depth: 50, world: true },
     { t: 'actor', id: 'r2', frame: 'rat_basic_0', anim: 'rat_basic_walk', x: 480, y: GROUND, flip: true, depth: 51, world: true, sign: 'MOVING\nSALE' },
-    { t: 'actor', id: 'vdg', frame: 'vandegraaff', atlas: 'world', x: 500, y: GROUND - 30, depth: 52, world: true, scale: 1.5 },
+    // M4.17 (Ivan): the ball goes behind the MOVING SALE sign (the sign sits at its rat's depth + 1 = 52)
+    { t: 'actor', id: 'vdg', frame: 'vandegraaff', atlas: 'world', x: 500, y: GROUND - 30, depth: 51.5, world: true, scale: 1.5 },
     { t: 'move', id: 'r1', x: 260, ms: 1700 },
     { t: 'move', id: 'r2', x: 320, ms: 1700 },
     { t: 'move', id: 'vdg', x: 340, ms: 1700, wait: true },
@@ -850,20 +851,21 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'actor', id: 'tp', frame: 'rs_2', anim: 'rs_ride', x: -30, y: GROUND + 2, depth: 90 },
     { t: 'move', id: 'tp', x: 90, ms: 1000, ease: 'Cubic.easeOut', wait: true, anim: 'rs_idle' },
     { t: 'sfx', name: 'bell' },
-    { t: 'say', who: 'TRASH PANDA', text: 'EVERY LANE HE ADDED FILLED UP. THIS ONE COMES DOWN.', rexpr: 'rest' },
+    { t: 'say', who: 'TRASH PANDA', text: 'EVERY LANE HE ADDED FILLED UP. THIS ONE GOES BACK TO PEOPLE.', rexpr: 'rest' },
     { t: 'say', who: 'TRASH PANDA', text: "THE LAKE IS RIGHT THERE. LET'S GO SEE IT.", rexpr: 'happy' },
   ],
 
   // ---- Death by Highway (M4): after ----
   hw_after: [
-    { t: 'side', sky: 'day', street: 'protected', bg: 'lake' },
+    // M4.17 (Ivan): the piers stay, and the deck is a park
+    { t: 'side', sky: 'day', street: 'protected', bg: 'gardinerpark' },
     { t: 'music', song: 'improve' },
     { t: 'actor', id: 'k1', frame: 'ped_kid_E_0', anim: 'ped_kid_E', x: -20, y: SIDEWALK, depth: 40, scale: 2 },
     { t: 'actor', id: 'k2', frame: 'ped_dog_E_0', anim: 'ped_dog_E', x: -80, y: SIDEWALK, depth: 40, scale: 2 },
     { t: 'actor', id: 'b1', frame: 'cys_c_0', anim: 'cys_c', x: -120, y: BIKELANE, depth: 60 },
     { t: 'actor', id: 'b2', frame: 'cys_a_0', anim: 'cys_a', x: -190, y: BIKELANE + 4, depth: 61 },
     { t: 'actor', id: 'sc', frame: 'streetcarside', atlas: 'world', x: -300, y: SC.protected, depth: 80 },
-    { t: 'caption', text: 'LAKE SHORE BOULEVARD. THE NEXT SUMMER.', y: 18, hold: 600 },
+    { t: 'caption', text: 'LAKE SHORE BOULEVARD. THE NEXT SUMMER.', y: 96, hold: 600 }, // M4.17: under the deck (the park fills the top)
     { t: 'move', id: 'k1', x: 240, ms: 5000 },
     { t: 'move', id: 'k2', x: 190, ms: 5000 },
     { t: 'move', id: 'b1', x: 440, ms: 4000 },
@@ -871,8 +873,8 @@ export const CUTSCENES: Record<string, Step[]> = {
     { t: 'move', id: 'sc', x: 640, ms: 7000 },
     { t: 'wait', ms: 2400 },
     { t: 'clear' },
-    { t: 'caption', text: 'THE DECK CAME DOWN.', y: 22, hold: 700 },
-    { t: 'caption', text: 'A BOULEVARD, A PARK, AND THE LAKE.', y: 40, font: 'font_big', hold: 2400 },
+    { t: 'caption', text: "THE PILLARS STAYED. THE CARS DIDN'T.", y: 94, hold: 700 },
+    { t: 'caption', text: 'A PARK IN THE SKY.', y: 110, font: 'font_big', hold: 2400 },
     { t: 'sfx', name: 'bell' },
     { t: 'wait', ms: 400 },
   ],

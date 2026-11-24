@@ -202,6 +202,40 @@ export function gardinerDeck() {
   img.pivot = { x: 0, y: (H - 1) / H };
   return img;
 }
+/** M4.17 (Ivan: "I want the pillars to stay, but they would have a park rather than a highway"): the deck after the
+ *  finale, a 32 px slice like gardinerDeck: the parapets and the fascia stay, the asphalt is a lawn with a path down
+ *  the middle; v 0 has a tree on the north side and a flower bed, v 1 a bench and a tree on the south side */
+export function gardinerPark(v = 0) {
+  const W = 32, H = 46, img = new Img(W, H);
+  // the lawn, lightly dithered
+  img.rect(0, 4, W, 33, 'E');
+  for (let y = 4; y < 37; y++) for (let x = 0; x < W; x++) if ((x * 7 + y * 3 + v * 5) % 11 === 0) img.set(x, y, 'l');
+  // the path (the old centre of the road), with a worn edge
+  img.rect(0, 16, W, 8, 'T'); img.hline(0, W - 1, 16, 't'); img.hline(0, W - 1, 23, 't');
+  for (let x = (v * 9) % 8; x < W; x += 8) img.set(x, 19, 't');
+  const tree = (cx, cy) => {
+    img.ellipse(cx + 2, cy + 4, 6, 3, 'e');                       // its shadow on the lawn
+    img.circle(cx, cy, 6, 'e'); img.circle(cx - 1, cy - 1, 5, 'E'); img.circle(cx - 2, cy - 2, 3, 'l'); img.set(cx - 3, cy - 3, 'L');
+  };
+  if (v === 0) {
+    tree(9, 9);
+    // a flower bed in a wooden box
+    img.rect(17, 27, 13, 7, 'x'); img.rect(18, 28, 11, 5, 'w');
+    for (let x = 18; x < 29; x++) for (let y = 28; y < 33; y++) if ((x + y * 2) % 3 === 0) img.set(x, y, ['P', 'Y', 'm', 'Z'][(x + y) % 4]); else img.set(x, y, 'l');
+  } else {
+    // a bench facing the path, and a lamp
+    img.rect(5, 9, 12, 2, 'X'); img.rect(5, 11, 12, 1, 'x'); img.set(6, 12, 'K'); img.set(15, 12, 'K');
+    img.rect(24, 6, 2, 2, 'K'); img.set(24, 6, 'Y');
+    tree(22, 30);
+  }
+  // the parapets stay (now a railing), and the deck's fascia
+  img.rect(0, 0, W, 3, 'H'); img.hline(0, W - 1, 3, 'G');
+  for (let x = 1; x < W; x += 4) img.set(x, 1, 'h');
+  img.rect(0, 37, W, 3, 'H'); for (let x = 3; x < W; x += 4) img.set(x, 38, 'h');
+  img.rect(0, 40, W, 6, 'h'); img.hline(0, W - 1, 45, 'G');
+  img.pivot = { x: 0, y: (H - 1) / H };
+  return img;
+}
 /** a Gardiner pier (bent): two columns + a cap beam, standing on the sidewalk between the streets */
 export function gardinerPier() {
   const W = 30, H = 34, img = new Img(W, H);
@@ -350,7 +384,7 @@ export function waterfrontSidePreview() {
   return { frames: [pinkDigger(0), pinkDigger(1), pinkDigger(2), islandsStrip().crop(380, 0, 330, 60), planeTurboprop(0), planeCessna(0), sandClod()], cols: 4 };
 }
 export function waterfront2Preview() {
-  return { frames: [cnTowerBuilding().img, domeBuilding().img, aquariumBuilding().img, ferryTerminalBuilding().img, ferryBoat(), sundialFolly(), podOP(), cinesphereOP(), gardinerDeck(), gardinerPier(), trackCurves(), marinaDock()], cols: 4 };
+  return { frames: [cnTowerBuilding().img, domeBuilding().img, aquariumBuilding().img, ferryTerminalBuilding().img, ferryBoat(), sundialFolly(), podOP(), cinesphereOP(), gardinerDeck(), gardinerPark(0), gardinerPark(1), gardinerPier(), trackCurves(), marinaDock()], cols: 4 };
 }
 
 /** M4.2: the 510's junction curves on their own (art history preview) */

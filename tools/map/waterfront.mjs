@@ -74,7 +74,7 @@ export function generateWaterfront() {
 
   // ---------- the Gardiner: a deck above Lake Shore, piers on the north sidewalk between the streets ----------
   for (let x = 0; x < W * TS; x += 32) D.prop('gardinerdeck', x, DECK_Y, { depth: 10000, tag: 'gardiner' });
-  for (let x = 2; x < W; x += 5) if (!streetCols.includes(x) && !streetCols.includes(x + 1)) D.tprop('gardinerpier', x, LAKESHORE - 3, 16, 8, { solidBox: [-12, -3, 24, 3], tag: 'gardiner' });
+  for (let x = 2; x < W; x += 5) if (!streetCols.includes(x) && !streetCols.includes(x + 1)) D.tprop('gardinerpier', x, LAKESHORE - 3, 16, 8, { solidBox: [-12, -3, 24, 3], tag: 'gardinerpier' }); // M4.17: the piers stay after the finale
 
   // ---------- north of the Gardiner ----------
   // the Union Station rail corridor along the top (the streets pass under it)
@@ -93,7 +93,7 @@ export function generateWaterfront() {
   D.addBuilding((SP + 5) * TS, 13 * TS, { w: 13 * TS, d: 120, floors: 1, seed: 1989, kind: 'dome' }, { base: (LAKESHORE - 7) * TS }, { graffiti: null });
   D.landmarks.push({ id: 'dome', x: (SP + 11) * TS, y: (LAKESHORE - 7) * TS + 4, label: 'ROGERS CENTRE (SKYDOME)', fact: 'OPENED IN 1989 WITH THE\nFIRST FULLY RETRACTABLE\nMOTORIZED ROOF.' });
   D.addBuilding(59 * TS, 6 * TS, { w: 6 * TS, d: 48, floors: 1, seed: 1976, kind: 'cntower', shaftH: 190, full: true }, { base: (LAKESHORE - 9) * TS }, { graffiti: null });
-  D.landmarks.push({ id: 'cntower', x: 62 * TS, y: (LAKESHORE - 9) * TS + 4, label: 'THE CN TOWER', fact: 'OPENED 1976. 553 M TALL.\nTHE WORLD\'S TALLEST\nTOWER UNTIL 2007.' });
+  D.landmarks.push({ id: 'cntower', x: 62 * TS, y: (LAKESHORE - 9) * TS + 4, label: 'THE CN TOWER', fact: 'OPENED 1976. 553 M TALL.\nTHE WORLD\'S TALLEST FREE-\nSTANDING STRUCTURE UNTIL 2007.' }); // M4.17: the 2007 record (Burj Khalifa) was "free-standing structure"; it stayed the tallest *tower* until 2009/10
   D.addBuilding(66 * TS, 9 * TS, { w: 9 * TS, d: 64, floors: 1, seed: 2013, kind: 'aquarium' }, { base: (LAKESHORE - 6) * TS }, { graffiti: null });
   D.landmarks.push({ id: 'aquarium', x: 70 * TS + 8, y: (LAKESHORE - 6) * TS + 4, label: 'RIPLEY\'S AQUARIUM', fact: 'OPENED IN 2013, AT THE\nFOOT OF THE CN TOWER.' });
   parkTree(77, UN - 2, 7, LAKESHORE - 6, 9);
@@ -236,14 +236,15 @@ export function generateWaterfront() {
   pub.addProps.push({ type: 'prop', key: 'bikering', x: 24 * TS, y: (QQ + 10) * TS }, { type: 'prop', key: 'bench', x: 21 * TS, y: (LAKE_Y + 10) * TS });
   // M3.4, mission 11's payoff: the stakes are gone, the park gets its trees and a bench back
   const quiet = { tiles: [], addProps: [{ type: 'prop', key: 'tree_c', x: 31 * TS + 8, y: (LAKE_Y + 5) * TS + 12, solid: 4 }, { type: 'prop', key: 'bench', x: 34 * TS, y: (LAKE_Y + 6) * TS + 2 }, { type: 'prop', key: 'picnic', x: 35 * TS + 8, y: (LAKE_Y + 4) * TS + 8, solid: 6 }], removeTag: 'stakes' };
-  // M4, the finale's payoff: the Gardiner comes down. Lake Shore gets protected bike lanes, its north sidewalk
-  // becomes a linear park, and the deck's traffic is gone
+  // M4, the finale's payoff: the deck's traffic is gone and Lake Shore gets protected bike lanes. M4.17 (Ivan: "I want
+  // the pillars to stay, but they would have a park rather than a highway"): the piers stay, the deck becomes a park
+  // (the game's version of Seoullo 7017, URBAN_RESEARCH section 9), and the sidewalk under it is lawn and benches
   const down = { tiles: [], addProps: [], removeTag: 'gardiner' };
+  for (let x = 0, i = 0; x < W * TS; x += 32, i++) down.addProps.push({ type: 'prop', key: `gardinerpark_${i % 2}`, x, y: DECK_Y, depth: 10000 });
   for (let x = 0; x < W; x++) {
     if (streetCols.includes(x)) continue;
     down.tiles.push([x, LAKESHORE, x % 7 === 3 ? 'bikelane_protected_n_stencil' : 'bikelane_protected_n'], [x, LAKESHORE + 3, x % 7 === 3 ? 'bikelane_protected_stencil' : 'bikelane_protected']);
     for (const y of [LAKESHORE - 3, LAKESHORE - 2]) down.tiles.push([x, y, `lawn${(x * 5 + y) % 3}`]);
-    if (x % 4 === 1) down.addProps.push({ type: 'prop', key: x % 8 === 1 ? 'tree_a' : 'tree_c', x: x * TS + 8, y: (LAKESHORE - 2) * TS + 12, solid: 4 });
     if (x % 9 === 5) down.addProps.push({ type: 'prop', key: 'bench', x: x * TS + 8, y: (LAKESHORE - 3) * TS + 12 });
   }
   // mission 6's payoff: the boards come down, the exhibits come back out (a pop-up by the lake: game fiction)

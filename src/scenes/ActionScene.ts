@@ -785,7 +785,8 @@ export class ActionScene extends Phaser.Scene {
         this.time.delayedCall(1500, () => this.say('JUMP THE SHOCKWAVES AND THE CARS!\nPUMP THE GLOWING VENT. STOMP ITS DECK!', 0xfff08a, 3600));
       }
       else if (a.build && !this.build && !this.buildDone && this.chaseDone && px > a.build.at) this.startBuild();
-      else if (a.chase?.startAt && !this.chase && !this.chaseDone && px > a.chase.startAt) { this.chase = new Chase(this, a.chase, px, this.groundY); this.flashGo('AFTER THEM!'); this.say('THEY\'VE GOT THE EXHIBITS!\nCATCH THEM BEFORE THE TRUCK!', 0xfff08a, 2400); }
+      // M4.17: the rats start off screen ahead; they bolt when the raccoon catches up with them
+      else if (a.chase?.startAt && !this.chase && !this.chaseDone && px > a.chase.startAt) this.chase = new Chase(this, a.chase, px, this.groundY, this.cameras.main.scrollX + GAME_W + 40, () => { this.flashGo('AFTER THEM!'); this.say('THEY\'VE GOT THE EXHIBITS!\nCATCH THEM BEFORE THE TRUCK!', 0xfff08a, 2400); });
       else if (a.boss?.kind === 'wrecker' && !this.wrecker && px > a.boss.at) {
         const l = this.lockArena('boss', 0);
         this.wrecker = new Wrecker(this, l.left + GAME_W - 70, this.groundY, { left: l.left, right: l.left + GAME_W });

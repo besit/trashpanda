@@ -10,7 +10,7 @@ import type { AutoScrollDef } from '../action/LaneEater';
 import type { DepaveDef } from '../action/ParkingLot';
 
 export type DistrictId = 'queenwest' | 'downtown' | 'waterfront' | 'highpark' | 'eastend';
-export type SideBg = 'queen' | 'king' | 'parkside' | 'bigbox' | 'lake' | 'science' | 'gardiner';
+export type SideBg = 'queen' | 'king' | 'parkside' | 'bigbox' | 'lake' | 'science' | 'gardiner' | 'gardinerpark';
 
 export interface Wave { at: number; rats: RatKind[]; suvs?: number }
 export interface MissionDef {
@@ -289,7 +289,7 @@ MISSIONS.death_by_highway = {
   focusY: 26 * 16,
   action: {
     bg: 'gardiner', street: 'plain', sky: 'dusk', length: 2650,
-    intro: 'THE LAST LANE. BRING THE GARDINER DOWN!',
+    intro: 'THE LAST LANE. TAKE THE GARDINER BACK!', // M4.17: the deck stays, as a park
     hint: ['JUMP THE SHOCKWAVES   PUMP THE VENT WHEN IT OVERHEATS', 'JUMP THE SHOCKWAVES   PUMP THE VENT WHEN IT GLOWS'],
     waves: [
       { at: 300, rats: ['traffic', 'construction', 'basic', 'barrier'] },

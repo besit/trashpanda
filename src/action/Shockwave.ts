@@ -7,9 +7,10 @@ export class Shockwave {
   private g: Phaser.GameObjects.Graphics;
   private dustT = 0;
   x: number;
-  constructor(private scene: Phaser.Scene, x: number, readonly dir: 1 | -1, private groundY: number, private speed = 180) {
+  /** depth: M4.17, the Wrecker's waves and their dust draw over everything in the world (Ivan) */
+  constructor(private scene: Phaser.Scene, x: number, readonly dir: 1 | -1, private groundY: number, private speed = 180, private depth = 97) {
     this.x = x;
-    this.g = scene.add.graphics().setDepth(97);
+    this.g = scene.add.graphics().setDepth(depth);
   }
   /** the part that hurts a raccoon on the ground */
   hits(pRect: Phaser.Geom.Rectangle, onGround: boolean) { return onGround && Math.abs(pRect.centerX - this.x) < 12 && pRect.bottom > this.groundY - 10; }
@@ -22,7 +23,7 @@ export class Shockwave {
     g.lineStyle(2, 0xfff08a, 0.9); g.beginPath(); g.arc(x, y, 6, Math.PI, 0, false); g.strokePath();
     g.fillStyle(0xa39c8b, 0.7).fillRect(x - 14, y - 2, 28, 2);
     this.dustT -= dt;
-    if (this.dustT <= 0) { this.dustT = 0.05; puff(this.scene, x - this.dir * 8, y - 3, 0xc9b88f, 2, 10, 96); }
+    if (this.dustT <= 0) { this.dustT = 0.05; puff(this.scene, x - this.dir * 8, y - 3, 0xc9b88f, 2, 10, this.depth - 1); }
   }
   destroy() { this.g.destroy(); }
 }

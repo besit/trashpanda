@@ -15,7 +15,7 @@ const BUCKET_DX = -110; // where the slammed bucket lands, from the origin (it f
 
 export class SpaDigger {
   readonly img: Phaser.GameObjects.Image;
-  readonly maxHp = 18;
+  readonly maxHp = 26; // M4.17 (Ivan: "the excavator can have more health"): was 18
   hp = this.maxHp;
   private state: State = 'intro';
   private t = 1.4;

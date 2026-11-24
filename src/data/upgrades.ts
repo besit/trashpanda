@@ -131,15 +131,16 @@ export const UPGRADES: Record<string, Upgrade> = {
   },
   gardiner_down: {
     id: 'gardiner_down',
-    name: 'THE GARDINER COMES DOWN',
+    name: 'THE GARDINER GOES GREEN',
     tree: 'autoDependence',
     livability: 5,
     categories: { carDependence: 12, greenPublic: 8, walking: 6, cycling: 4 },
     mapPatches: ['gardiner_down'],
-    headline: 'THE DECK COMES DOWN. THE LAKE COMES BACK.',
-    // game fiction: Toronto chose to rebuild the east Gardiner in 2016; the evidence is URBAN_RESEARCH section 9
-    blurb: 'THE GAME TEARS THE WHOLE DECK DOWN; IN 2015 TORONTO VOTED 24-21 TO KEEP ITS EAST END. BUT SEOUL REMOVED 5.8 KM OF ELEVATED HIGHWAY FOR A STREAM AND A PARK, AND NINE YEARS ON A STUDY FOUND THE FEARED JAMS NEVER CAME.',
-    source: 'TRANSPORT POLICY (2012) ON SEOUL\'S CHEONGGYECHEON; TORONTO CITY COUNCIL, GARDINER EAST VOTE (JUNE 11, 2015)',
+    headline: 'THE CARS ARE GONE. THE DECK IS A PARK.',
+    // M4.17 (Ivan): the piers stay, the deck becomes a park. Game fiction: Toronto chose to rebuild the east Gardiner;
+    // the precedents (Seoullo 7017, the Bentway) are URBAN_RESEARCH section 9
+    blurb: "THE PARK ON THE DECK IS FICTION: IN 2015 TORONTO VOTED 24-21 TO KEEP ITS EAST END FOR CARS. BUT IN 2017 SEOUL TURNED A 1970 HIGHWAY OVERPASS INTO A 1 KM GARDEN WALK, AND UNDER THE GARDINER THE BENTWAY HAS BEEN PUBLIC SPACE SINCE 2018.",
+    source: 'SEOUL METROPOLITAN GOVERNMENT, SEOULLO 7017 (MAY 2017); THE BENTWAY (JAN 2018); TORONTO CITY COUNCIL, GARDINER EAST VOTE (JUNE 11, 2015)',
     stat: { key: 'lanesRemoved', amount: 6 },
   },
   science_reopened: {

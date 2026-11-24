@@ -72,7 +72,10 @@ export class Patrol {
 type WState = 'intro' | 'drive' | 'hoist' | 'drop' | 'stuck' | 'haul' | 'windup' | 'swing' | 'dead';
 
 const STUCK_T = 3.0;  // the window: the ball is stuck in the ground, the crane can be hit
-const WARN_T = 0.8;   // the end of the window: it strains to pull the ball out (get away)
+const WARN_T = 0.8;
+const DUST_DEPTH = 900;
+/** M4.17 (Ivan: "the pendulum swing should be symmetrical"): the swing's half-angle either side of straight down */
+const SWING_A = 0.75;   // the end of the window: it strains to pull the ball out (get away)
 
 /**
  * M4.4 (Ivan: "I shouldn't be able to attack it, unless when it drops the ball. Then it should stop for some time
@@ -109,12 +112,18 @@ export class Wrecker {
   /** one message at a time over the crane (they used to stack: text on text) */
   private say(str: string, font: 'font' | 'font_outline' | 'font_red' | 'font_big', tint: number, hold: number, dy = 74) {
     if (this.msg?.active) { this.scene.tweens.killTweensOf(this.msg); this.msg.destroy(); }
-    this.msg = floatText(this.scene, this.img.x - 20, this.groundY - dy, str, font, tint, hold);
+    this.msg = this.onScreen(floatText(this.scene, this.img.x - 20, this.groundY - dy, str, font, tint, hold));
+  }
+  /** M4.17: a message over the crane stays inside the view (PERMIT REVOKED ran off its right edge) */
+  private onScreen<T extends Phaser.GameObjects.BitmapText>(t: T): T {
+    const v = this.scene.cameras.main.worldView, half = t.width / 2 + 4;
+    return t.setX(Phaser.Math.Clamp(t.x, v.x + half, v.right - half));
   }
   constructor(private scene: Phaser.Scene, x: number, private groundY: number, private bounds: { left: number; right: number }) {
     this.img = scene.add.image(x, groundY + 4, 'world', 'wrecker').setOrigin(0.5, 104 / 108).setDepth(104);
-    this.chain = scene.add.graphics().setDepth(103);
-    this.ball = scene.add.circle(0, 0, 11, 0x2a2536).setStrokeStyle(2, 0x16121f).setDepth(105);
+    // M4.17 (Ivan): the rope is drawn over the machine (it hung behind it), the ball over the rope
+    this.chain = scene.add.graphics().setDepth(106);
+    this.ball = scene.add.circle(0, 0, 11, 0x2a2536).setStrokeStyle(2, 0x16121f).setDepth(107);
     this.shadow = scene.add.ellipse(0, groundY + 1, 10, 3, 0x16121f, 0.5).setDepth(41).setVisible(false);
     floatText(scene, x - 40, groundY - 118, 'DEMOLITION PERMIT: APPROVED BY ME!', 'font_red', 0xffffff, 1400);
     sfx.construction();
@@ -124,6 +133,8 @@ export class Wrecker {
   get title() { return 'THE WRECKER'; }
   get phaseName() { return this.state; }
   private get rage() { return this.hp <= this.maxHp / 2 ? 1.25 : 1; }
+  /** M4.17 (Ivan): "the dust should also be drawn on top of everything" (in the world; the HUD and texts sit at 1000+) */
+  private dust(x: number, y: number, color: number, n: number, spread: number) { puff(this.scene, x, y, color, n, spread, DUST_DEPTH); }
   /** the boom tip the chain hangs from */
   private pivot() { return { x: this.img.x - 51, y: this.groundY - 100 }; } // the sheave at the boom's tip (see wrecker() in science.mjs)
   ballPos() { const p = this.pivot(); return { x: p.x - Math.sin(this.ang) * this.len, y: p.y + Math.cos(this.ang) * this.len }; }
@@ -149,7 +160,7 @@ export class Wrecker {
     }
     this.hp -= kind === 'stomp' ? 2 : h.dmg;
     this.img.setTintFill(0xffffff); this.scene.time.delayedCall(70, () => this.img.clearTint());
-    puff(this.scene, kind === 'stomp' ? this.img.x + 10 : this.img.x - 28, kind === 'stomp' ? this.groundY - 58 : this.groundY - 22, 0xfff08a, 6, 22, 110); sfx.clang();
+    this.dust(kind === 'stomp' ? this.img.x + 10 : this.img.x - 28, kind === 'stomp' ? this.groundY - 58 : this.groundY - 22, 0xfff08a, 6, 22); sfx.clang();
     if (this.hp <= 0) this.die();
     return true;
   }
@@ -159,8 +170,23 @@ export class Wrecker {
     this.shadow.setVisible(false); this.waves.forEach((w) => w.destroy()); this.waves = [];
     sfx.squeak(); shake(this.scene, 400, 0.012);
     this.say('PERMIT REVOKED!', 'font_big', 0xffffff, 1400, 120);
-    this.scene.tweens.add({ targets: this.ball, y: this.groundY - 10, duration: 500, ease: 'Bounce.easeOut' });
-    this.scene.tweens.add({ targets: this.img, x: this.img.x + 200, alpha: 0, duration: 1600, delay: 500, ease: 'Quad.easeIn', onComplete: () => { this.chain.clear(); this.ball.setVisible(false); } });
+    // M4.17 (Ivan: "it shouldn't leave the ball and drive away. Just break it down like other machines"): it breaks
+    // down where it stands, like the Spa Digger: pops and sparks, the ball crashes to the street on its chain, the
+    // crane sags and goes grey, and the wreck keeps smoking
+    const sc = this.scene, x = this.img.x, top = this.groundY - 96;
+    for (let i = 0; i < 6; i++) sc.time.delayedCall(i * 190, () => {
+      const px = x - 50 + (Math.random() - 0.5) * 110, py = top + Math.random() * 70;
+      this.dust(px, py, i % 2 ? 0xff9a2e : 0xfff08a, 8, 20); this.dust(px, py, 0x53515f, 5, 16);
+      sfx.clang(); shake(sc, 120, 0.008);
+    });
+    sc.tweens.add({ targets: this, ang: 0, len: this.groundY - 11 - this.pivot().y, duration: 420, delay: 900, ease: 'Bounce.easeOut' });
+    sc.time.delayedCall(1150, () => {
+      sfx.hammer(); shake(sc, 260, 0.014); this.dust(this.pivot().x, this.groundY - 4, 0xc9b88f, 12, 26);
+      this.onScreen(floatText(sc, x, this.groundY - 70, 'BROKEN DOWN!', 'font_outline', 0xff9a2e, 1200));
+      this.img.setTint(0x8a8597);
+      sc.tweens.add({ targets: this.img, y: this.img.y + 4, angle: 2, duration: 380, ease: 'Bounce.easeOut' });
+    });
+    sc.time.addEvent({ delay: 260, loop: true, callback: () => { if (this.img.active) this.dust(x - 28 + (Math.random() - 0.5) * 30, this.groundY - 50, 0x69657a, 1, 14); } });
   }
   /** true when the ball just hit the raccoon (once per swing / drop) */
   touches(pRect: Phaser.Geom.Rectangle) {
@@ -174,7 +200,7 @@ export class Wrecker {
   update(dtMs: number, px = 0) {
     const dt = dtMs / 1000;
     for (const w of [...this.waves]) { w.update(dt); if (w.x < this.bounds.left - 30 || w.x > this.bounds.right + 30) { w.destroy(); this.waves.splice(this.waves.indexOf(w), 1); } }
-    if (!this.alive) return;
+    if (!this.alive) { this.draw(); return; } // the wreck: the chain still hangs to the fallen ball
     this.t -= dt;
     switch (this.state) {
       case 'intro': if (this.t <= 0) { this.state = 'drive'; this.t = 1.6; sfx.boost(); } break;
@@ -200,8 +226,8 @@ export class Wrecker {
         if (this.len >= floor) {
           this.len = floor; this.state = 'stuck'; this.t = STUCK_T / this.rage; this.warned = false; this.shadow.setVisible(false);
           const b = this.ballPos();
-          shake(this.scene, 220, 0.014); sfx.hammer(); puff(this.scene, b.x, this.groundY - 4, 0xc9b88f, 12, 26, 106);
-          for (const d of [-1, 1] as const) this.waves.push(new Shockwave(this.scene, b.x + d * 14, d, this.groundY, 170 * this.rage));
+          shake(this.scene, 220, 0.014); sfx.hammer(); this.dust(b.x, this.groundY - 4, 0xc9b88f, 12, 26);
+          for (const d of [-1, 1] as const) this.waves.push(new Shockwave(this.scene, b.x + d * 14, d, this.groundY, 170 * this.rage, DUST_DEPTH));
           this.say(this.cycle < 2 ? 'STUCK! HIT IT NOW!' : 'STUCK!', 'font_outline', 0x9bd35a, 700);
         }
         break;
@@ -210,7 +236,7 @@ export class Wrecker {
         // the window: the crane shimmers; at the end it strains (shakes, steams) to pull the ball out
         const warn = this.t <= WARN_T;
         if (warn && !this.warned) { this.warned = true; this.img.clearTint(); sfx.brake(); this.say('GET CLEAR!', 'font_red', 0xffffff, 500); }
-        if (warn) { this.img.x += Math.sin(this.scene.time.now / 25) * 0.6; if (Math.random() < 0.5) puff(this.scene, this.img.x - 28 + (Math.random() - 0.5) * 30, this.groundY - 40, 0xc9c5d1, 1, 8, 104); }
+        if (warn) { this.img.x += Math.sin(this.scene.time.now / 25) * 0.6; if (Math.random() < 0.5) this.dust(this.img.x - 28 + (Math.random() - 0.5) * 30, this.groundY - 40, 0xc9c5d1, 1, 8); }
         else if (Math.floor(this.scene.time.now / 160) % 2 === 0) this.img.setTint(0xfff6c8); else this.img.clearTint();
         if (this.t <= 0) { this.img.clearTint(); this.state = 'haul'; this.t = 0.35; sfx.swing(); }
         break;
@@ -222,9 +248,9 @@ export class Wrecker {
         break;
       }
       case 'windup': {
-        // out to the far end of the arc, lengthening as it goes: always high over a standing raccoon
+        // out to the far end of the arc, lengthening as it goes
         const k = 1 - Math.max(0, this.t) / (0.75 / this.rage);
-        this.ang = 1.2 * k; this.len = 40 + 44 * k;
+        this.ang = SWING_A * k; this.len = 40 + 44 * k;
         if (this.t <= 0) { this.state = 'swing'; this.phase = Math.PI / 2; this.swings = 0; this.hitThisSwing = false; sfx.swing(); }
         break;
       }
@@ -232,8 +258,9 @@ export class Wrecker {
         // a pendulum on the full chain, from the high end: its low point sweeps the street in front of the truck
         const w = (2 * Math.PI) / (2.2 / this.rage);
         const prev = this.phase; this.phase += w * dt;
-        // one-sided: out over the street and back, never through its own cab (from -0.3 to 1.2 rad)
-        this.ang = 0.45 + 0.75 * Math.sin(this.phase);
+        // M4.17: symmetric about straight down, like a real pendulum (it was one-sided, -0.3 to 1.2 rad). The ball
+        // passes in front of the crane, and at its right end it stops short of the cab
+        this.ang = SWING_A * Math.sin(this.phase);
         // a half-swing ends at either end of the arc (phase = pi/2 + n*pi)
         const half = (ph: number) => Math.floor((ph - Math.PI / 2) / Math.PI);
         if (half(prev) !== half(this.phase)) { this.hitThisSwing = false; this.swings++; if (this.swings < 4) sfx.swing(); }
@@ -241,13 +268,16 @@ export class Wrecker {
         break;
       }
     }
-    // draw the chain + the ball
+    this.draw();
+    if (this.state === 'swing' && Math.abs(this.ang) > SWING_A - 0.12 && Math.random() < 0.3) { const b = this.ballPos(); this.dust(b.x, b.y + 8, 0xc9c5d1, 1, 6); }
+  }
+  /** the chain + the ball */
+  private draw() {
     const p = this.pivot(), b = this.ballPos();
     const g = this.chain.clear();
     g.lineStyle(2, 0x443f54).lineBetween(p.x, p.y, b.x, b.y);
     for (let i = 1; i < 6; i++) { const t = i / 6; g.fillStyle(0x69657a).fillRect(p.x + (b.x - p.x) * t - 1, p.y + (b.y - p.y) * t - 1, 2, 2); }
     this.ball.setPosition(b.x, b.y);
-    if (this.state === 'swing' && Math.abs(this.ang) > 1.05 && Math.random() < 0.3) puff(this.scene, b.x, b.y + 8, 0xc9c5d1, 1, 6, 104);
   }
   destroy() { this.chain.destroy(); this.ball.destroy(); this.img.destroy(); this.shadow.destroy(); this.waves.forEach((w) => w.destroy()); }
 }

@@ -1114,3 +1114,36 @@ M4.15 went live (tag `m4.15`) on Ivan's go.
 |---|---|
 | ![](reviews/m416/01_dock_drop.png) | ![](reviews/m416/02_dock_drop_phone.png) |
 | ![](reviews/m416/04_dock_after_walk.png) | ![](reviews/m416/06_bus_after_end.png) |
+
+## 2026-11-23: M4.17 (local preview): Ivan's notes on the spa, the Science Centre and the Gardiner; credits; the release fact check
+- **The Spa Digger** has 26 health instead of 18 (Ivan: "can have more health").
+- **Save the Science, the briefing:** the Van de Graaff ball was drawn over the MOVING SALE sign: the sign sits at its rat's depth + 1, which tied with the ball, and the ball was added later. The ball is now at 51.5.
+- **Save the Science, the chase:** the haulers used to appear in the middle of the screen. They now start just past the right edge, ambling toward the truck, and bolt (AFTER THEM!) once the raccoon is within 120 px. They also bolt if they get near the truck first.
+  - **Failure:** first try at 190 px: they bolted the moment they came on screen. A third text ("THE RACCOON! RUN!") made three lines at once, so it's gone.
+- **The Wrecker:**
+  - The chain draws over the crane (it was at 103, behind the crane's 104) and the ball over the chain.
+  - Its dust, its shockwaves and their dust draw at 900, over everything in the world; Shockwave got a depth parameter.
+  - The swing is symmetric about straight down, ±0.75 rad (it was -0.3 to 1.2). At the right end it stops short of the cab; the old "stand at the truck through a swing" test still passes.
+  - When beaten it breaks down where it stands, like the Spa Digger: pops and sparks, the ball crashes to the street on its chain, the crane sags and goes grey, and it keeps smoking. It used to drive off and leave the ball behind.
+  - Its messages are kept inside the view: PERMIT REVOKED and BROKEN DOWN ran off the right edge.
+- **Death by Highway: the piers stay, the deck is a park** (Ivan: "Do you think we can do that?"). There's a real precedent: Seoul's Seoullo 7017 (a 1970 overpass turned into a garden walk in 2017), and the Bentway under the Gardiner itself.
+  - Map: the `gardiner_down` patch removes only the deck (the piers are tagged apart now) and lays `gardinerpark_0/1` slices in its place: lawn, a path, trees, a flower bed, a bench, a lamp, the parapets as railings. The street trees under the deck are gone; the lawn and benches stay.
+  - Side view: `gardinerParkStrip` is the same deck 40 px lower with trees, planters and lamps behind a railing. hw_after uses it, with its captions moved under the deck: "THE PILLARS STAYED. THE CARS DIDN'T." / "A PARK IN THE SKY."
+  - **Failure:** the first strip was 180 px tall at the old deck height, so the park sat above the top of the screen. The deck now sits 40 px lower in a 140 px strip.
+  - Texts: THE GARDINER GOES GREEN, "THE CARS ARE GONE. THE DECK IS A PARK.", the mission intro "TAKE THE GARDINER BACK!", and the raccoon's "THIS ONE GOES BACK TO PEOPLE." The blurb opens by calling the park fiction.
+  - **Found on the way:** the cutscene scene never drew the Gardiner. hw_before's "UNDER THE GARDINER" played over Queen West's shops. Fixed.
+- **Credits and notices** (Ivan): the credits name Claude for the code, most of the pixel art, the music and the research, and Gemini + Qwen-Image-Edit (in ComfyUI) for the hero art. The old line claiming every sprite was generated from code is gone.
+  - "Anything invented is labelled as fiction" is now "We tried to back every fact... and to mark what we made up as fiction. If something isn't marked, that doesn't make it true: check the sources." Same in the README.
+- **The release fact check** (URBAN_RESEARCH, "Release check"):
+  - Every blurb, plaque and caption was reread against the file, and the time-sensitive claims searched again.
+  - Still true: the speed-camera ban, the Ontario Line's $34B and early-2030s schedule, the Science Centre's interim site and 2029 date, Ottawa's no to jets.
+  - Updated: the Supreme Court leave application on Bloor's lanes.
+  - **Fixed:** the CN Tower plaque. The 2007 record it lost was "tallest free-standing structure"; it stayed the tallest tower until 2009/10.
+  - Verified with sources: the last 🟡 plaques (City Hall 1965, Old City Hall 1899, the Revue 1912, the Jamie Bell fire 2012, the Queen St bridge inscription, the Broadview Hotel).
+- **Size:** the first load is about 730 KB (340 KB of boot art, 387 KB of gzipped JS), against the 2.5 MB budget; districts load their art when you ride in.
+- Tests: 74 browser tests (new: the haulers start off screen, the Wrecker's swing and breakdown, the Gardiner park) and 22 unit tests pass on a fresh build.
+
+| | |
+|---|---|
+| ![](reviews/m417/03_gardiner_before.png) | ![](reviews/m417/04_gardiner_after.png) |
+| ![](reviews/m417/05_hw_after.png) | ![](reviews/m417/02_wrecker.png) |

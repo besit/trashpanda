@@ -104,6 +104,32 @@ export function gardinerStrip(W = 768) {
   return img;
 }
 
+/** M4.17 (Ivan: the pillars stay, the deck is a park): the Gardiner from the side after the finale. The same deck and
+ *  piers as gardinerStrip, 40 px lower, with a park on top: trees and planters behind a railing,
+ *  lamps, and no traffic grime */
+export function gardinerParkStrip(W = 768) {
+  // the strip keeps gardinerStrip's 140 px height so it sits where that one does: the deck drops 40 px (the piers'
+  // lower part is cut off at the sidewalk), which puts the park on top inside the view
+  const TOP = 40, H = 140, img = new Img(W, H);
+  img.blit(gardinerStrip(W), 0, TOP);
+  // the drain grime goes: the underside is clean concrete now
+  for (let x = 20; x < W; x += 40) img.rect(x, TOP + 12, 12, 10, 'S');
+  // up on the deck: trees and planters every so often, lamps between, a railing in front
+  const r = rng(7017);
+  for (let x = 24; x < W; x += 64) {
+    const cx = x + r.int(-6, 6), h = r.int(22, 30);
+    img.rect(cx - 1, TOP - h + 12, 3, h - 10, 'x');                                  // the trunk
+    img.circle(cx, TOP - h + 8, 10, 'e'); img.circle(cx - 1, TOP - h + 7, 9, 'E'); img.circle(cx - 3, TOP - h + 4, 5, 'l'); img.set(cx - 5, TOP - h + 2, 'L');
+    img.rect(cx - 9, TOP - 6, 18, 6, 'x'); img.hline(cx - 9, cx + 8, TOP - 6, 'X');   // its planter box
+    const fx = x + 32;
+    img.rect(fx - 8, TOP - 5, 16, 5, 'x'); for (let i = -7; i < 8; i += 2) img.set(fx + i, TOP - 6, ['P', 'Y', 'm', 'Z'][(i + 8) % 4]);
+    img.vline(fx + 14, TOP - 20, TOP - 1, 'g'); img.rect(fx + 13, TOP - 22, 3, 2, 'Y');   // a lamp
+  }
+  // the railing along the deck's edge
+  img.hline(0, W - 1, TOP - 8, 'h'); for (let x = 0; x < W; x += 6) img.vline(x, TOP - 8, TOP - 1, 'G');
+  return img;
+}
+
 /** an orange-and-white construction barrel (the Mega Rat throws them; M4.1) 14x16 */
 export function barrel() {
   const W = 14, H = 16, img = new Img(W, H);
@@ -114,5 +140,5 @@ export function barrel() {
 }
 
 export function m4Preview() {
-  return { frames: [railSeg(0), railSeg(1), hoarding(), subwaySide(), slabPlatform(), barrel(), highwayMech(0), highwayMech(1), gardinerStrip().crop(0, 0, 384, 140)], cols: 4 };
+  return { frames: [railSeg(0), railSeg(1), hoarding(), subwaySide(), slabPlatform(), barrel(), highwayMech(0), highwayMech(1), gardinerStrip().crop(0, 0, 384, 140), gardinerParkStrip().crop(0, 0, 384, 140)], cols: 4 };
 }
