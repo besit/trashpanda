@@ -137,9 +137,10 @@ export const UPGRADES: Record<string, Upgrade> = {
     categories: { carDependence: 12, greenPublic: 8, walking: 6, cycling: 4 },
     mapPatches: ['gardiner_down'],
     headline: 'THE CARS ARE GONE. THE DECK IS A PARK.',
-    // M4.17 (Ivan): the piers stay, the deck becomes a park. Game fiction: Toronto chose to rebuild the east Gardiner;
+    // M4.17 (Ivan): the piers stay, the deck becomes a park. M4.18 (Ivan: "keep its east end" read as the East End
+    // neighbourhood): the vote names the stretch, Jarvis to the DVP. Game fiction: Toronto chose to rebuild the east Gardiner;
     // the precedents (Seoullo 7017, the Bentway) are URBAN_RESEARCH section 9
-    blurb: "THE PARK ON THE DECK IS FICTION: IN 2015 TORONTO VOTED 24-21 TO KEEP ITS EAST END FOR CARS. BUT IN 2017 SEOUL TURNED A 1970 HIGHWAY OVERPASS INTO A 1 KM GARDEN WALK, AND UNDER THE GARDINER THE BENTWAY HAS BEEN PUBLIC SPACE SINCE 2018.",
+    blurb: "THE PARK ON THE DECK IS FICTION. IN 2015 TORONTO VOTED 24-21 TO REBUILD THE GARDINER FROM JARVIS TO THE DON VALLEY PARKWAY, NOT TEAR IT DOWN. BUT IN 2017 SEOUL TURNED A 1970 HIGHWAY OVERPASS INTO A 1 KM GARDEN WALK, AND UNDER THE GARDINER THE BENTWAY HAS BEEN PUBLIC SPACE SINCE 2018.",
     source: 'SEOUL METROPOLITAN GOVERNMENT, SEOULLO 7017 (MAY 2017); THE BENTWAY (JAN 2018); TORONTO CITY COUNCIL, GARDINER EAST VOTE (JUNE 11, 2015)',
     stat: { key: 'lanesRemoved', amount: 6 },
   },

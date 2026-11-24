@@ -429,11 +429,13 @@ export class ExploreScene extends Phaser.Scene {
    */
   private infoBox(title: string, body: string, source?: string, shareMission?: string): Promise<void> {
     return new Promise((resolve) => {
-      const lines = wrapLines(this, 'font_outline', body, GAME_W - 36).filter((l) => l);
+      // M4.18: the lines stop short of the E > / TAP prompt in the bottom-right corner (a long third line ran under it)
+      const wrapW = GAME_W - 62;
+      const lines = wrapLines(this, 'font_outline', body, wrapW).filter((l) => l);
       const pages: string[][] = [];
       for (let i = 0; i < lines.length; i += 3) pages.push(lines.slice(i, i + 3));
       // M3.3 (Ivan): the claim's source, on its own page (the links are under ABOUT > SOURCES and in the docs)
-      if (source) pages.push(['SOURCE:', ...wrapLines(this, 'font_outline', source, GAME_W - 36).slice(0, 2)]);
+      if (source) pages.push(['SOURCE:', ...wrapLines(this, 'font_outline', source, wrapW).slice(0, 2)]);
       if (!pages.length) pages.push(['']);
       const h = 52, y = GAME_H - h - 6;
       const box = this.add.graphics().setScrollFactor(0).setDepth(20010);

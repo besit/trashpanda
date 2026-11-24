@@ -1147,3 +1147,30 @@ M4.15 went live (tag `m4.15`) on Ivan's go.
 |---|---|
 | ![](reviews/m417/03_gardiner_before.png) | ![](reviews/m417/04_gardiner_after.png) |
 | ![](reviews/m417/05_hw_after.png) | ![](reviews/m417/02_wrecker.png) |
+
+## 2026-11-23: M4.18 (local preview): the Gardiner wording, the credits, an outside audit of the research
+- **The Gardiner blurb** (Ivan: "keep its east end for cars" read as the East End neighbourhood, i.e. "keep the highway off the East End"). "Gardiner East" means the highway's eastern stretch, Jarvis to the DVP. The blurb now says "VOTED 24-21 TO REBUILD THE GARDINER FROM JARVIS TO THE DON VALLEY PARKWAY, NOT TEAR IT DOWN".
+- **ComfyUI** is no longer named in the credits, the notice or the README (Ivan: not relevant). Qwen-Image-Edit stays, credited to Alibaba.
+- **The mission card:** checking the longer blurb on screen showed the third line running under the "E >" prompt (a bug for any long line). Lines now wrap 26 px shorter.
+- **The outside audit** (Ivan ran URBAN_RESEARCH past ChatGPT). Every point was searched before it went in:
+  - Confirmed and added:
+    - Bill 56's Royal Assent (Nov 3, 2025)
+    - Bill 60 (Nov 27, 2025)
+    - the finished Bloor removal (Oct 30, 2026)
+    - the Bloor traffic numbers and the TCAT study's limits
+    - King St access and the spending figures' basis
+    - the Science Centre's $397M / $257M and its two cost bases
+    - Ontario Place's present values and the Oct 27, 2026 committee findings
+    - the Ontario Line cost basis
+    - Parkside "in principle" and stalled
+    - Bill 110 (June 2, 2026; vesting, not expropriation)
+    - the RESAs
+    - Bike Share 2024
+  - Removed: "the only public building closed over RAAC" (no source).
+  - Not confirmed: O. Reg. 327/26, an SCC docket and filing date, the parking appeal's narrowing. Noted as unconfirmed.
+  - **The audit got two things wrong:**
+    - It gave no date for Bill 60 (it's November 27, 2025).
+    - It said High Park's 2023 closures weren't in place, but the City's pages say they were.
+  - The index now lists all 26 sections with one review date.
+- **Five possible game-text changes** (Lane Eater economics, the island airport, the speed-camera line, "1/9 the odds", TSP on the map) wait for Ivan's call in `docs/reviews/M4.18.md`.
+- Tests: 74 browser + 22 unit pass on a fresh build.
