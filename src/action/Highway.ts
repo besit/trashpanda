@@ -55,7 +55,7 @@ export class HighwayMech {
     const stage = this.hp <= this.maxHp / 3 ? 2 : this.hp <= (this.maxHp * 2) / 3 ? 1 : 0;
     if (stage > this.lanes && this.alive && this.hp > 0) {
       this.lanes = stage;
-      floatTextInView(this.scene, this.img.x, this.groundY - 52, 'ANOTHER LANE!', 'font_red', 0xffffff, 1000); sfx.laugh();
+      floatTextInView(this.scene, this.img.x, this.groundY - 52, 'ANOTHER LANE!', 'font_red', 0xffffff, 700); sfx.laugh();
       this.hooks.lane(this.lanes === 1 ? this.bounds.left + 150 : this.bounds.left + 60);
     }
     if (this.hp <= 0) this.die();

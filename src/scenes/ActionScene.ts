@@ -780,7 +780,8 @@ export class ActionScene extends Phaser.Scene {
         this.mech = new HighwayMech(this, l.left + GAME_W - 88, this.groundY, { left: l.left, right: l.left + GAME_W }, {
           hurt: (fx) => { if (this.player.hurt(fx)) { shake(this, 150, 0.012); hitStop(this, 80); } },
           // 1.0: the hint sits by the slab, not in the top box (that box covered the mech's ANOTHER LANE sign)
-          lane: (x) => { this.oneWay(x, this.groundY - 52, 66, 'slabplat', true); this.time.delayedCall(450, () => !this.finished && floatTextInView(this, x, this.groundY - 74, 'A SLAB FELL! JUMP ON IT,\nTHEN ONTO THE DECK!', 'font_outline', 0x9bd35a, 2200)); },
+          lane: (x) => { this.oneWay(x, this.groundY - 52, 66, 'slabplat', true); // after the mech's ANOTHER LANE! has gone (they landed on each other)
+          this.time.delayedCall(1500, () => !this.finished && floatTextInView(this, x, this.groundY - 74, 'A SLAB FELL! JUMP ON IT,\nTHEN ONTO THE DECK!', 'font_outline', 0x9bd35a, 2200)); },
         });
         this.enterFromRight([this.mech.img]);
         this.flashGo('FINAL BOSS!'); music.play(SONG_BOSS);
@@ -788,7 +789,7 @@ export class ActionScene extends Phaser.Scene {
       }
       else if (a.build && !this.build && !this.buildDone && this.chaseDone && px > a.build.at) this.startBuild();
       // M4.17: the rats start off screen ahead; they bolt when the raccoon catches up with them
-      else if (a.chase?.startAt && !this.chase && !this.chaseDone && px > a.chase.startAt) this.chase = new Chase(this, a.chase, px, this.groundY, this.cameras.main.scrollX + GAME_W + 40, () => { this.flashGo('AFTER THEM!'); this.say('THEY\'VE GOT THE EXHIBITS!\nCATCH THEM BEFORE THE TRUCK!', 0xfff08a, 2400); });
+      else if (a.chase?.startAt && !this.chase && !this.chaseDone && px > a.chase.startAt) this.chase = new Chase(this, a.chase, px, this.groundY, this.cameras.main.scrollX + GAME_W + 40, () => { this.flashGo('AFTER THEM!'); this.time.delayedCall(1200, () => this.say('THEY\'VE GOT THE EXHIBITS!\nCATCH THEM BEFORE THE TRUCK!', 0xfff08a, 2400)); }); // 1.0: after AFTER THEM! fades (they landed on each other)
       else if (a.boss?.kind === 'wrecker' && !this.wrecker && px > a.boss.at) {
         const l = this.lockArena('boss', 0);
         this.wrecker = new Wrecker(this, l.left + GAME_W - 70, this.groundY, { left: l.left, right: l.left + GAME_W });

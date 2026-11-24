@@ -1,6 +1,6 @@
 // Vertical versions of the promo videos (1.0), for phone feeds (Reels, Shorts, TikTok):
 // the game's own "ROTATE YOUR DEVICE" screen first (rendered on a phone-sized page, its phone icon turning
-// clockwise), then the same landscape video turned a quarter counter-clockwise: turn the phone the way the icon
+// counter-clockwise), then the same landscape video turned a quarter clockwise: turn the phone the way the icon
 // turns and the game is the right way up, filling the screen.
 //   node tools/promo/vertical.mjs bwl bus sci hw    -> promo/trashpanda_<name>_vertical.mp4 (1080x1920, 60 fps)
 // Needs the dev server (npx vite --port 5180) or PROMO_BASE, and the landscape videos from tools/promo/cut.mjs.
@@ -22,6 +22,8 @@ export async function renderIntro() {
   const page = await browser.newPage({ viewport: { width: 360, height: 640 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
   await page.goto(BASE);
   await page.waitForFunction(() => window.__TP_GAME?.scene.isActive('Title'), null, { timeout: 30000 });
+  // Ivan: the video turns the other way (a quarter clockwise), so the icon turns counter-clockwise to match
+  await page.addStyleTag({ content: '#rotate .phone { animation-name: rotccw !important } @keyframes rotccw { 0%, 30% { transform: rotate(0) } 60%, 100% { transform: rotate(-90deg) } }' });
   await page.waitForTimeout(1500);
   const n = Math.round(INTRO_S * FPS);
   for (let i = 0; i < n; i++) {
@@ -40,7 +42,7 @@ export async function vertical(name) {
   const intro = await renderIntro();
   const src = `promo/trashpanda_${name}.mp4`;
   const rot = `${TMP}/${name}_rot.mkv`;
-  ff(['-i', src, '-vf', 'transpose=2,format=yuv420p', '-c:v', 'libx264', '-preset', 'fast', '-crf', '10', '-c:a', 'pcm_s16le', '-ar', '48000', '-ac', '2', rot]);
+  ff(['-i', src, '-vf', 'transpose=1,format=yuv420p', '-c:v', 'libx264', '-preset', 'fast', '-crf', '10', '-c:a', 'pcm_s16le', '-ar', '48000', '-ac', '2', rot]);
   const out = `promo/trashpanda_${name}_vertical.mp4`;
   ff(['-i', intro, '-i', rot, '-filter_complex', '[0:v][0:a][1:v][1:a]concat=n=2:v=1:a=1[v][a]', '-map', '[v]', '-map', '[a]',
     '-c:v', 'libx264', '-preset', 'slow', '-crf', '17', '-pix_fmt', 'yuv420p', '-r', String(FPS), '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', out]);

@@ -205,7 +205,7 @@ export const SURVIVE = () => {
 /** side view: ride right, face and swing at the nearest enemy, hop now and then. It takes hits (see SURVIVE). */
 export async function brawl(r, maxS, opts = {}) {
   const page = r.page;
-  let held = null, hes = 0;
+  let held = null, hes = 0, boosting = false;
   const setDir = async (k) => { if (held === k) return; if (held) await page.keyboard.up(held); held = k; if (k) await page.keyboard.down(k); };
   for (let t = 0; t < maxS * 60; t += 5) {
     const s = await page.evaluate(() => {
@@ -225,6 +225,8 @@ export async function brawl(r, maxS, opts = {}) {
     if (s?.done) break;
     if (opts.until && (await page.evaluate(opts.until))) break;
     if (!s || s.frozen) { await setDir(null); await r.frames(5); continue; }
+    // the exhibit haulers run for their truck: boost after them
+    if (s.chase !== boosting) { boosting = s.chase; if (boosting) await page.keyboard.down('Shift'); else await page.keyboard.up('Shift'); }
     const near = s.targets.length ? s.targets.reduce((a, b) => (Math.abs(b - s.x) < Math.abs(a - s.x) ? b : a)) : null;
     const d = near == null ? 999 : near - s.x;
     // sloppy: now and then the raccoon hesitates next to an enemy and takes the hit (never below 2 hearts)
@@ -244,4 +246,5 @@ export async function brawl(r, maxS, opts = {}) {
     await r.frames(4);
   }
   await setDir(null);
+  await page.keyboard.up('Shift');
 }

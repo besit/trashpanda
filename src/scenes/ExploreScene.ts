@@ -393,7 +393,8 @@ export class ExploreScene extends Phaser.Scene {
     shake(this, 150, 0.004);
     sfx.ding();
     const o = { v: before };
-    floatText(this, 63, 40, `+${after - before} LIVABILITY`, 'font_outline', 0x9bd35a).setScrollFactor(0).setDepth(20006);
+    // 1.0: top centre, clear of the HUD box (it floated over BIKE NETWORK and the meter: text on text)
+    floatText(this, GAME_W / 2, 30, `+${after - before} LIVABILITY`, 'font_outline', 0x9bd35a).setScrollFactor(0).setDepth(20006);
     this.tweens.add({ targets: o, v: after, duration: 1200, ease: 'Cubic.easeOut', onUpdate: () => { this.drawMeter(o.v); sfx.blip(); } });
     await this.wait(1300);
     // the evidence: in a box at the bottom; it stays until you press a key (and pages if it's long)

@@ -107,10 +107,11 @@ async function payoff(r, secs = 14) {
  */
 async function bossFight(r, b) {
   await brawl(r, 20, { until: b.here }); // ride on until it shows up
-  await (b.play ?? brawl)(r, b.warmS ?? 5, { until: b.dead, sloppy: 0.15 });
+  await (b.play ?? brawl)(r, b.warmS ?? 5, { until: b.dead });
   await r.js(b.weaken);
+  if (b.heal !== false) await r.js(() => { const p = window.__TP.player; p.hp = p.maxHp; });
   r.mark('>> END STARTS');
-  await (b.play ?? brawl)(r, b.maxS ?? 60, { until: b.dead, sloppy: 0.15 });
+  await (b.play ?? brawl)(r, b.maxS ?? 60, { until: b.dead });
   if (!(await r.js(b.dead))) { r.mark('>> FORCED'); console.log('    (boss forced)'); await r.js(b.force); }
   r.mark('>> boss down');
 }
@@ -151,6 +152,46 @@ async function playMech(r, maxS, opts = {}) {
   await setDir(null);
 }
 
+/** the Wrecker only takes hits on its engine while the ball is stuck in the street. It parks with the boom over you
+ *  and drops the ball where you stand: step out of the shadow, jump the drop's shockwave, pump the engine while it's
+ *  stuck, and keep clear while it swings */
+async function playWrecker(r, maxS, opts = {}) {
+  const page = r.page;
+  let held = null, last = '';
+  const setDir = async (k) => { if (held === k) return; if (held) await page.keyboard.up(held); held = k; if (k) await page.keyboard.down(k); };
+  const tap = async (k) => { await page.keyboard.down(k); await r.frames(2); await page.keyboard.up(k); };
+  for (let t = 0; t < maxS * 60; t += 4) {
+    if (opts.until && (await page.evaluate(opts.until))) break;
+    const s = await page.evaluate(() => {
+      const tp = window.__TP, w = tp.wrecker(), p = tp.player;
+      if (!w || !w.alive) return null;
+      const b = w.ballPos();
+      return { px: p.sprite.x, wx: w.img.x, st: w.state, bx: b.x, left: w.bounds.left, frozen: tp.state().frozen, rats: tp.state().rats ?? [] };
+    });
+    if (!s) break;
+    if (s.frozen) { await setDir(null); await r.frames(4); continue; }
+    const go = async (x, tol = 5) => setDir(Math.abs(x - s.px) <= tol ? null : x > s.px ? 'd' : 'a');
+    const near = s.rats.find((x) => Math.abs(x - s.px) < 26);
+    if (s.st === 'hoist' || s.st === 'drop') { // out of the shadow (the ball falls where we were): back off left
+      await go(Math.max(s.left + 16, s.bx - 62), 4);
+      if (s.st === 'drop' && last !== 'drop') await tap('q');
+    } else if (s.st === 'stuck') { // jump the shockwave as it lands, then pump the engine
+      if (last === 'drop') { await tap('Space'); await r.frames(14); }
+      const ex = s.wx - 24;
+      await go(ex, 6);
+      if (Math.abs(ex - s.px) <= 10) { await setDir('d'); await r.frames(1); await setDir(null); await tap('e'); }
+    } else if (s.st === 'haul' || s.st === 'windup' || s.st === 'swing') { // clear of the swing: well left of it, or
+      // when that's the arena's edge (cornered, the ball reaches you), past the cab on the far side of the truck
+      await go(s.bx - 120 >= s.left + 30 ? s.bx - 120 : s.wx + 40, 8);
+    } else if (near != null) { // a rat in the way: deal with it
+      await setDir(near > s.px ? 'd' : 'a'); await r.frames(1); await setDir(null); await tap('e');
+    } else { await setDir(null); }
+    last = s.st;
+    await r.frames(4);
+  }
+  await setDir(null);
+}
+
 /** a whole combat mission */
 export const CFG = {};
 async function mission(name, o) {
@@ -169,7 +210,7 @@ async function mission(name, o) {
   await r.js(SURVIVE);
   if (o.before) await o.before(r);
   r.start('action');
-  await brawl(r, o.actionS ?? 14, { sloppy: 0.25 });
+  await brawl(r, o.actionS ?? 14, { sloppy: o.sloppy ?? 0.08 });
   r.stop();
   await skipTo(r, o.bossAt);
   r.start('boss');
@@ -208,13 +249,13 @@ const SHOOTS = {
 // 1. THE BIKE LANE WAR. Trinity Bellwoods: a heart in the grass, the white squirrel, the gates' plaque, Queen St W.
 //    It's the second win, so Dog Fjord reacts after the debrief (fjord_1).
 CFG.bwl = {
-  district: 'queenwest', done: ['streetcar_through'], start: [520, 300],
+  district: 'queenwest', done: ['streetcar_through'], start: [520, 300], sloppy: 0,
   wander: [{ heart: [397, 312] }, [440, 380], [520, 470], { squirrel: 1 }, [660, 600], [690, 690], [760, 760], [832, 790], { plaque: [832, 836] }, [900, 842]],
   marker: [992, 840],
   actionS: 16, bossAt: 1380,
   boss: {
     here: () => !!window.__TP.boss(),
-    weaken: () => {}, // the Foreman goes down for real in a few seconds: the whole fight is one take
+    heal: false, weaken: () => {}, // the Foreman goes down for real in a few seconds: the whole fight is one take
     dead: () => !window.__TP.boss()?.alive,
     force: () => { const b = window.__TP.boss(); b.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 9, kb: 0, id: 777 }, b.sprite.x - 10); },
   },
@@ -225,14 +266,14 @@ SHOOTS.bwl = () => mission('bwl', CFG.bwl);
 //    into the waterfront, the Rogers Centre's plaque, Queens Quay. The sixth win: Dog Fjord's highway (fjord_3).
 CFG.sci = {
   district: 'downtown', done: ['bike_lane_war', 'streetcar_through', 'king_of_street', 'slow_down_dog', 'great_parking_lot'], start: [340, 948],
-  wander: [[286, 950], [286, 1060], [230, 1088], { egg: [150, 1088] }, { wait: 2.6 }, { heart: [32, 1092] }, { wait: 0.5 }, [150, 1088], [286, 1088], { boost: [[286, 1400]] },
+  wander: [[286, 950], [286, 1060], [230, 1088], { egg: [150, 1088] }, { heart: [32, 1092] }, { wait: 0.5 }, [150, 1088], [286, 1088], { boost: [[286, 1400]] },
     { exit: [266, 1700], to: 'waterfront' }, { boost: [[672, 120]] }, [700, 250], [700, 300], [740, 352], { plaque: [816, 356] }, [700, 380], { boost: [[680, 790]] }, [800, 810]],
   marker: [976, 808],
   before: (r) => skipTo(r, 1300), actionS: 14, bossAt: 2470,
   boss: {
-    warmS: 8,
+    play: playWrecker, warmS: 8, maxS: 45,
     here: () => !!window.__TP.wrecker(),
-    weaken: () => { const w = window.__TP.wrecker(); if (w) w.hp = Math.min(w.hp, 4); },
+    weaken: () => { const w = window.__TP.wrecker(); if (w) w.hp = Math.min(w.hp, 2); },
     dead: () => !window.__TP.wrecker()?.alive,
     force: () => { const w = window.__TP.wrecker(); w.state = 'stuck'; w.t = 9; w.hit({ x: 0, y: 0, w: 0, h: 0, dmg: 5, kb: 0, id: 779 }, 'pump'); },
   },
@@ -243,7 +284,7 @@ SHOOTS.sci = () => mission('sci', CFG.sci);
 //    easter egg), back up to Lake Shore under the Gardiner. Dog Fjord's "...another lane?" is in the briefing.
 CFG.hw = {
   district: 'waterfront', done: ALL, start: [690, 60],
-  wander: [[705, 100], { heart: [720, 128] }, [700, 160], [698, 340], [760, 366], { plaque: [992, 366] }, { boost: [[1200, 372], [1376, 380], [1376, 700], [1376, 960]] }, [1500, 985],
+  wander: [[705, 100], { heart: [720, 128] }, [700, 160], [700, 340], [880, 340], { plaque: [992, 338] }, { boost: [[1040, 372], [1200, 372], [1376, 380], [1376, 700], [1376, 960]] }, [1500, 985],
     { boost: [[1690, 985]] }, { egg: [1770, 1050] }, { wait: 0.6 }, { boost: [[1700, 990], [1700, 560]] }, [1560, 548]],
   marker: [1472, 550],
   actionS: 14, bossAt: 2050, payoffS: 18,

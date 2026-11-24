@@ -12,14 +12,13 @@ const CARD = ['title', '00', 0, 4.5];
 // '>> heart-1.8' is 1.8 s before the heart; '+3' after a start means 3 s long.
 export const EDITS = {
   // THE BIKE LANE WAR: Trinity Bellwoods (a heart, the white squirrel, the gates) -> Queen St W -> rats -> the Foreman
-  // Rat's last hits -> STREET CLEARED -> "now a kid can ride it" -> Dog Fjord -> Queen gets protected lanes
+  // Rat -> STREET CLEARED -> "now a kid can ride it" -> Dog Fjord -> Queen gets protected lanes
   bwl: [
     ['bwl', '00', '>> heart-1.8', '>> squirrel+2.6'],          // a heart in the grass; THE WHITE SQUIRREL!
     ['bwl', '00', '>> plaque-1.8', '+4.4'],                    // the gates: the plaque
-    ['bwl', '00', '>> START MISSION-1.6', '+1.3'],             // into THE BIKE LANE WAR's marker
-    ['bwl', '00', 'Action hp+0.5', '+2.6'],                    // the mission card
-    ['bwl', '01', 'Action hp 4-3.4', '+5.6'],                  // rats on Queen; two hits taken
-    ['bwl', '02', 'Action hp 3 boss 7-1.2', '>> boss down+3.4'], // the Foreman Rat's last hits, in one take; STREET CLEARED!
+    ['bwl', '00', '>> START MISSION-1.6', '>> START MISSION+0.85'],             // into THE BIKE LANE WAR's marker
+    ['bwl', '01', 1.6, '+5.6'],                                // rats on Queen
+    ['bwl', '02', 'Action hp 5 boss-0.8', '>> boss down+3.4'],   // the Foreman Rat, the whole fight in one take; STREET CLEARED!
     ['bwl', '02', 'Cutscene SAME STREET.-0.6', '+3.8'],        // same street, now a kid can ride it
     ['bwl', '02', 'Cutscene [DOG FJORD]-0.2', '+6.6'],         // Dog Fjord: a raccoon has been... fixing things
     ['bwl', '02', 'Explore+0.4', '+6.0'],                      // the map: Queen gets protected lanes
@@ -28,10 +27,9 @@ export const EDITS = {
   // THE BIKE BUS (on the map): Riverdale Park (the view from the hill, the footbridge, a heart by the Don Jail) ->
   // Broadview -> the bike bus: kids join at every stop, the bell moves the SUVs -> ON TIME -> Dog Fjord -> the map
   bus: [
-    ['bus', '00', '>> egg-1.0', '+3.4'],                       // the view from the hill (easter egg)
-    ['bus', '00', '>> plaque-0.8', '+3.0'],                    // the footbridge's plaque
+    ['bus', '00', '>> egg-1.0', '>> plaque+3.0'],              // the view from the hill (easter egg), on to the footbridge's plaque
     ['bus', '00', '>> heart-1.6', '+2.6'],                     // a heart by the Don Jail
-    ['bus', '00', '>> START MISSION-2.2', '+1.2'],             // down Broadview to THE BIKE BUS
+    ['bus', '00', '>> START MISSION-1.8', '>> START MISSION+0.85'],             // down Broadview to THE BIKE BUS
     ['bus', '00', '>> bus on+0.2', '>> stop 0+0.6'],           // the first stop: two kids join
     ['bus', '00', '>> bell 1-0.8', '+2.6'],                    // ring: the SUV moves out of the bike lane
     ['bus', '00', '>> stop 4-2.6', '>> bell 5+1.4'],           // more kids, another SUV
@@ -47,10 +45,9 @@ export const EDITS = {
   sci: [
     ['sci', '00', '>> egg-1.4', '>> heart+2.2'],               // Graffiti Alley (easter egg), a heart at its end
     ['sci', '00', '>> plaque-2.0', '+4.0'],                    // the Rogers Centre's plaque
-    ['sci', '00', '>> START MISSION-1.8', '+1.3'],             // Queens Quay, the marker
-    ['sci', '00', 'Action hp+0.5', '+2.6'],                    // the mission card
-    ['sci', '01', 'Action hp 4-3.6', '+5.6'],                  // after them! (hits taken)
-    ['sci', '02', 'Action hp 1 boss 3-1.4', '>> boss down+3.6'], // the Wrecker's last drops, in one take; SAVED!
+    ['sci', '00', '>> START MISSION-1.6', '>> START MISSION+0.85'],             // Queens Quay, the marker
+    ['sci', '01', 3.2, '+5.6'],                                 // after them!
+    ['sci', '02', '>> END STARTS+0.3', '>> boss down+3.6'],    // the Wrecker's last drops, in one take; SAVED!
     ['sci', '02', 'Cutscene [DOG FJORD] DOG FJORD | FINE-0.05', '+3.8'], // Dog Fjord: fine. if this city won't take another car lane...
     ['sci', '02', 'Cutscene [DOG FJORD] DOG FJORD | ...IT-0.3', '+4.4'], // ...IT WILL TAKE A HIGHWAY. FRA-HA-HA!
     ['sci', '02', 'Explore+0.4', '+6.0'],                      // the map: the boards come down
@@ -62,12 +59,11 @@ export const EDITS = {
     ['hw', '00', '>> heart-1.0', '+2.4'],                      // a heart by the Rogers Centre
     ['hw', '00', '>> plaque-1.6', '+3.8'],                     // the CN Tower's plaque
     ['hw', '00', '>> egg-1.6', '+3.6'],                        // Sugar Beach (easter egg)
-    ['hw', '00', '>> START MISSION-1.8', '+1.3'],              // Lake Shore under the Gardiner, the marker
+    ['hw', '00', '>> START MISSION-1.6', '>> START MISSION+0.85'],              // Lake Shore under the Gardiner, the marker
     ['hw', '00', 'Cutscene [DOG FJORD] DOG FJORD | SO I-0.3', '+4.2'], // what does Toronto need?
     ['hw', '00', 'Cutscene [DOG FJORD] DOG FJORD | ...ANO-1.4', '+4.0'], // ...ANOTHER LANE?
-    ['hw', '00', 'Action hp+0.5', '+2.6'],                     // DEATH BY HIGHWAY
     ['hw', '01', 'Action hp 4-3.0', '+5.4'],                   // rats under the Gardiner (hits taken)
-    ['hw', '02', 'Action hp 2 boss 4-1.5', '>> boss down+4.4'], // the Highway Mech's end, in one take; THE GARDINER IS DOWN!
+    ['hw', '02', '>> END STARTS+3.1', '>> boss down+4.4'],     // the Highway Mech's end, in one take; THE GARDINER IS DOWN!
     ['hw', '02', 'Cutscene THE PILLARS-0.4', '+4.0'],          // the pillars stayed, the cars didn't
     ['hw', '02', 'Explore+0.4', '+6.0'],                       // the map: a park in the sky
     CARD,
@@ -88,6 +84,20 @@ function at(shoot, prefix, spec, from) {
   return k.t + parseFloat(m[3] ?? '0');
 }
 
+// Ivan: "a fast skim through several screens with interesting stuff at the start, to catch the eye". Half-second
+// flashes from all four shoots over one continuous bit of the Highway Mech's music, then the video.
+const SKIM = [
+  ['hw', '02', 'Action hp 4 boss 4-0.25', '+0.5'],                     // the Mech: a stomp on its deck
+  ['bus', '00', '>> stop 4-1.4', '+0.5'],                               // the bike bus, kids in a line
+  ['sci', '02', '>> boss down-0.1', '+0.55'],                           // PERMIT REVOKED!
+  ['hw', '00', 'Cutscene [DOG FJORD] DOG FJORD | ...ANO+1.4', '+0.55'], // Dog Fjord: ...another lane?
+  ['hw', '01', 'Action hp 4-0.9', '+0.5'],                              // rats under the Gardiner
+  ['hw', '02', 'Cutscene THE PILLARS+1.6', '+0.55'],                    // a park in the sky
+  ['hw', '02', 'Explore+2.6', '+0.6'],                                  // the map changes
+];
+const skim = (bed) => { let t = 0; return SKIM.map((e) => { const d = parseFloat(e[3]); const o = [...e, { audio: [bed[0], bed[1], `${bed[2]}+${t.toFixed(2)}`] }]; t += d; return o; }); };
+EDITS.hw_skim = [...skim(['hw', '02', '>> END STARTS']), ...EDITS.hw];
+
 const shotDir = (shoot, prefix) => {
   const d = readdirSync(`${RAW}/${shoot}`).find((f) => f.startsWith(prefix + '_'));
   if (!d) throw new Error(`no shot ${shoot}/${prefix}`);
@@ -97,16 +107,17 @@ const ff = (args) => execFileSync('ffmpeg', ['-v', 'error', '-y', ...args], { st
 
 export function cut(name, edits = EDITS[name]) {
   mkdirSync(TMP, { recursive: true });
-  const parts = edits.map(([shoot, prefix, a0, b0], i) => {
+  const parts = edits.map(([shoot, prefix, a0, b0, opt], i) => {
     const a = Math.max(0, at(shoot, prefix, a0)), b = at(shoot, prefix, b0, a);
     const dir = shotDir(shoot, prefix), f0 = Math.round(a * 60), n = Math.round((b - a) * 60);
+    const [adir, aT] = opt?.audio ? [shotDir(opt.audio[0], opt.audio[1]), at(opt.audio[0], opt.audio[1], opt.audio[2])] : [dir, f0 / 60];
     console.log(`  ${String(i).padStart(2)} ${shoot}/${prefix} ${a.toFixed(2)}-${b.toFixed(2)}`);
     const out = `${TMP}/${name}_${String(i).padStart(2, '0')}.mkv`;
     const last = i === edits.length - 1, first = i === 0;
     const vf = ['scale=1920:1080:flags=neighbor', first ? 'fade=in:st=0:d=0.25' : null, last ? `fade=out:st=${(n / 60 - 0.6).toFixed(2)}:d=0.6` : null].filter(Boolean).join(',');
     const af = `afade=in:st=0:d=0.04,afade=out:st=${(n / 60 - 0.04).toFixed(3)}:d=0.04${last ? `,afade=out:st=${(n / 60 - 0.8).toFixed(2)}:d=0.8` : ''}`;
     ff(['-framerate', '60', '-start_number', String(f0), '-i', `${dir}/%05d.png`,
-      '-f', 'f32le', '-ar', '48000', '-ac', '1', '-ss', (f0 / 60).toFixed(4), '-t', (n / 60).toFixed(4), '-i', `${dir}/audio.f32`,
+      '-f', 'f32le', '-ar', '48000', '-ac', '1', '-ss', aT.toFixed(4), '-t', (n / 60).toFixed(4), '-i', `${adir}/audio.f32`,
       '-frames:v', String(n), '-vf', vf, '-af', af, '-ac', '2', '-c:v', 'libx264', '-preset', 'fast', '-crf', '10', '-pix_fmt', 'yuv420p', '-c:a', 'pcm_s16le', '-shortest', out]);
     return out;
   });

@@ -1231,3 +1231,23 @@ He asked: *"It looked like the bosses couldn't even hit you. Is it possible to p
   - **Map missions:** the ON TIME! card had no band, and BIKE LANE CLEAR! could slide under the livability HUD.
   - **The bell:** a bell rung at an SUV or the clutter crew also set the pedestrians off ("MORNING!" on top of "JUST DROPPING OFF!"). A mission bell no longer gets an answer from the street.
   - **The map payoff headline** is on a dark band (THE CITY IS CHANGING... sat on a mission marker's label).
+
+## 2026-11-24: 1.0, third cut of the promo videos (Ivan's notes)
+- **Vertical videos** now turn a quarter clockwise. The rotate screen's phone icon turns counter-clockwise to match, so you turn the phone the way the icon turns.
+- **Marker shots** ride all the way in and show the zoom onto the marker. In the edit lists, `'+1.2'` meant "1.2 s long", so those shots had ended before the raccoon arrived.
+- **No mission instruction cards:** from the marker (or Dog Fjord) straight into the action.
+- **Bike Bus:** one continuous ride from the easter egg to the footbridge's plaque.
+- **Bike Lane War:** the bot plays clean now. It takes one hit in the whole video, in a real five-second Foreman fight shown whole.
+- **Death by Highway:** the CN Tower plaque is read from the plaza above the Gardiner, where the raccoon stays in view. It used to be under the deck.
+- **Save the Science:** no pause between the easter egg and the heart. The Wrecker has its own bot:
+  - it steps out of the drop's shadow
+  - it jumps the shockwave
+  - it pumps the engine while the ball is stuck
+  - it keeps clear of the swing, waiting past the cab when the arena's edge would corner it
+
+  The old bot walked into the ball and sat on its last heart through several "hits". The end take is 5 s now. Every boss's end take starts on full health.
+- **An opening skim, on trial:** `trashpanda_hw_skim.mp4` opens with seven half-second flashes from all four shoots over one continuous bit of the Highway Mech's music.
+- **More text on text, fixed in the game:**
+  - `+N LIVABILITY` floated over the HUD's BIKE NETWORK line after every mission. It's at the top centre now.
+  - The Mech's ANOTHER LANE! and the slab hint showed at once. The hint now waits.
+  - THEY'VE GOT THE EXHIBITS! landed on the AFTER THEM! band. It now comes after.
