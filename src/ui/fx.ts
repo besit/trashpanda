@@ -77,6 +77,22 @@ export function floatText(scene: Phaser.Scene, x: number, y: number, str: string
   return t;
 }
 
+/**
+ * 1.0: a boss's shout. Kept inside the camera view (as the boss rolled in from off screen it ran off the edge) and on
+ * its own dark panel (it landed on the Megamart's signs: text on text). Floats and fades like floatText.
+ */
+export function floatTextInView(scene: Phaser.Scene, x: number, y: number, str: string, font: FontKey = 'font_outline', tint = 0xffffff, hold = 0) {
+  const t = text(scene, 0, 0, str, font).setTint(tint);
+  if (str.includes('\n')) t.setCenterAlign();
+  const w = Math.ceil(t.width) + 10, h = Math.ceil(t.height) + 6;
+  const bg = scene.add.graphics().fillStyle(0x16121f, 0.72).fillRoundedRect(-w / 2, -h / 2, w, h, 3);
+  const cam = scene.cameras.main, half = w / 2 + 4;
+  const c = scene.add.container(Phaser.Math.Clamp(x, cam.scrollX + half, cam.scrollX + cam.width - half), y, [bg, t]).setDepth(9000);
+  scene.tweens.add({ targets: c, y: y - 18, alpha: 0, delay: hold, duration: 800, ease: 'Cubic.easeOut', onComplete: () => c.destroy() });
+  if (hold) scene.tweens.add({ targets: c, y: y - 6, duration: 300, ease: 'Cubic.easeOut' });
+  return c;
+}
+
 /** Small pooled pixel particles (dust, sparks). */
 export function puff(scene: Phaser.Scene, x: number, y: number, color: number, n = 6, spread = 30, depth = 5000) {
   for (let i = 0; i < n; i++) {

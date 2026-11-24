@@ -12,6 +12,9 @@ export const DISCLAIMER_LINES = [
   'THIS GAME WAS MADE WITH THE HELP OF AI: CLAUDE (ANTHROPIC), GEMINI (GOOGLE) AND QWEN-IMAGE-EDIT (ALIBABA). AI CAN MAKE MISTAKES. IF YOU SPOT ONE, PLEASE TELL US.',
 ];
 
+/** 1.0: what the play counter sends (shown under ABOUT; core/Telemetry.ts) */
+export const PRIVACY_LINE = 'NO ADS, NO COOKIES. PLAYS AND MINUTES PLAYED ARE COUNTED ANONYMOUSLY; DO NOT TRACK TURNS IT OFF.';
+
 /** M4.1 (Ivan): the alias, not the real name, and the socials (clickable under ABOUT > CREDITS) */
 export const AUTHOR_ALIAS = 'SEXWITHAWHALEINC';
 export const LINKS = {

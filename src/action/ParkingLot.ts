@@ -4,7 +4,7 @@
 //  slams into the curb at the edge and stalls (pump its tyres while it smokes). Faster when hurt.
 import Phaser from 'phaser';
 import { sfx } from '../audio/sfx';
-import { puff, floatText, shake } from '../ui/fx';
+import { puff, floatText, floatTextInView, shake } from '../ui/fx';
 import type { Hitbox } from './SidePlayer';
 
 import type { RatKind } from './Rat';
@@ -95,7 +95,7 @@ export class MonsterSuv {
   private honkCd = 0;
   constructor(private scene: Phaser.Scene, x: number, private groundY: number, private bounds: { left: number; right: number }) {
     this.img = scene.add.image(x, groundY + 4, 'world', 'monstersuv_0').setOrigin(0.5, 82 / 86).setDepth(105).setFlipX(true);
-    floatText(scene, x, groundY - 96, 'THIS IS MY PARKING SPOT!', 'font_red', 0xffffff, 1200);
+    floatTextInView(scene, x, groundY - 60, 'THIS IS MY PARKING SPOT!', 'font_red', 0xffffff, 1200); // 1.0: on screen, under the BOSS! banner (it ran off the edge)
     sfx.carHonk();
   }
   get x() { return this.img.x; }
@@ -126,7 +126,7 @@ export class MonsterSuv {
   private die() {
     this.state = 'dead';
     sfx.carHonk(); sfx.squeak(); shake(this.scene, 400, 0.012);
-    floatText(this.scene, this.img.x, this.groundY - 100, 'TOWED!', 'font_big', 0xffffff, 1400);
+    floatTextInView(this.scene, this.img.x, this.groundY - 100, 'TOWED!', 'font_big', 0xffffff, 1400); // 1.0: on a panel (it landed on the SUV DAYS sign)
     this.scene.tweens.add({ targets: this.img, y: this.groundY + 80, angle: this.dir * 10, alpha: 0, duration: 1100, ease: 'Cubic.easeIn' });
   }
   update(dtMs: number, px: number) {
@@ -144,7 +144,7 @@ export class MonsterSuv {
         if ((this.dir === 1 && this.img.x >= edge) || (this.dir === -1 && this.img.x <= edge)) {
           this.img.x = edge; this.state = 'stall'; this.t = 1.8 / this.rage;
           shake(this.scene, 200, 0.01); sfx.hit();
-          floatText(this.scene, this.img.x, this.groundY - 92, 'STALLED! PUMP THE TYRES!', 'font', 0xfff08a, 900);
+          floatTextInView(this.scene, this.img.x, this.groundY - 92, 'STALLED! PUMP THE TYRES!', 'font', 0xfff08a, 900); // 1.0: on a panel, on screen
         }
         break;
       }

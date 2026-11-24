@@ -7,7 +7,7 @@
 //  - below half health it slams faster and flings more
 import Phaser from 'phaser';
 import { sfx } from '../audio/sfx';
-import { puff, floatText, shake } from '../ui/fx';
+import { puff, floatText, floatTextInView, shake } from '../ui/fx';
 import type { Hitbox } from './SidePlayer';
 
 type State = 'intro' | 'creep' | 'raise' | 'slam' | 'stuck' | 'recover' | 'fling' | 'dead';
@@ -27,7 +27,7 @@ export class SpaDigger {
 
   constructor(private scene: Phaser.Scene, x: number, private groundY: number, private bounds: { left: number; right: number }, private onHurtPlayer: (fromX: number) => void) {
     this.img = scene.add.image(x, groundY + 4, 'world', 'digger_0').setOrigin(120 / 220, 120 / 124).setDepth(104);
-    floatText(scene, x - 30, groundY - 110, 'NO SWIMMING WITHOUT A DAY PASS!', 'font_red', 0xffffff, 1400);
+    floatTextInView(scene, x - 30, groundY - 56, 'NO SWIMMING WITHOUT\nA DAY PASS!', 'font_red', 0xffffff, 1400); // 1.0: on screen, under the BOSS! banner (it ran off the edge)
     sfx.construction();
   }
   get x() { return this.img.x; }

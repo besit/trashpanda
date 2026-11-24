@@ -5,7 +5,7 @@
 // Both get faster at 2/3 and 1/3 health; only finishers and stomps make them flinch.
 import Phaser from 'phaser';
 import { sfx } from '../audio/sfx';
-import { puff, floatText, shake } from '../ui/fx';
+import { puff, floatText, floatTextInView, shake } from '../ui/fx';
 import type { Hitbox } from './SidePlayer';
 import { Shockwave } from './Shockwave';
 
@@ -52,7 +52,7 @@ export class Boss {
     if (F === 72) (this.sprite.body as Phaser.Physics.Arcade.Body).setSize(30, 52).setOffset(20, 18);
     else (this.sprite.body as Phaser.Physics.Arcade.Body).setSize(20, 34).setOffset(12, 13);
     this.sprite.play(`${this.def.key}_walk`);
-    floatText(scene, x, groundY - 70, this.def.intro, 'font_red', 0xffffff, 900);
+    floatTextInView(scene, x, groundY - 70, this.def.intro, 'font_red', 0xffffff, 900); // 1.0: on screen, not off the right edge
     sfx.stamp();
   }
 

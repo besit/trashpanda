@@ -6,7 +6,7 @@
 //  - at 2/3 and 1/3 health it roars ANOTHER LANE and drops a concrete slab you can stand on
 import Phaser from 'phaser';
 import { sfx } from '../audio/sfx';
-import { puff, floatText, shake } from '../ui/fx';
+import { puff, floatText, floatTextInView, shake } from '../ui/fx';
 import type { Hitbox } from './SidePlayer';
 import { Shockwave } from './Shockwave';
 
@@ -26,7 +26,9 @@ export class HighwayMech {
   private cycle = 0;
   constructor(private scene: Phaser.Scene, x: number, private groundY: number, private bounds: { left: number; right: number }, private hooks: { hurt: (fromX: number) => void; lane: (x: number) => void }) {
     this.img = scene.add.image(x, groundY + 2, 'world', 'highwaymech_0').setOrigin(0.5, 162 / 164).setDepth(104);
-    floatText(scene, x - 60, groundY - 170, 'TORONTO NEEDS... ANOTHER LANE!', 'font_red', 0xffffff, 1600);
+    // 1.0: it was wider than the screen and sat on the boss bar at the top. Now two lines, on screen, under the
+    // FINAL BOSS! banner, gone before the controls hint comes in at the top
+    floatTextInView(scene, x - 60, groundY - 48, 'TORONTO NEEDS...\nANOTHER LANE!', 'font_red', 0xffffff, 1000);
     sfx.rumble();
   }
   get x() { return this.img.x; }

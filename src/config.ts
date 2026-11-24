@@ -14,3 +14,6 @@ export function viewWidthFor(w: number, h: number): number {
 export function setGameW(w: number) { GAME_W = w; }
 
 export const DEBUG = typeof location !== 'undefined' && new URLSearchParams(location.search).has('debug');
+
+/** the release shown on the title screen and sent with the anonymous play counter */
+export const VERSION = '1.0';

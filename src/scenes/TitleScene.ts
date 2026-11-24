@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
-import { GAME_W, GAME_H, DEBUG } from '../config';
+import { GAME_W, GAME_H, DEBUG, VERSION } from '../config';
 import { ScrollLayer, STREET_Y, GROUND_Y, FRONT_Y, BACKROW_Y, SKYLINE_Y } from '../ui/sideLayout';
 import { openPause } from './PauseScene';
 import { MISSIONS, missionOrder } from '../data/missions';
 import { DISTRICTS } from '../data/districts';
 import { CUTSCENES } from '../data/cutscenes';
 import { UPGRADES } from '../data/upgrades';
-import { DISCLAIMER_LINES, CREDITS_LINES, CREDIT_LINKS, LINKS } from '../data/villain';
+import { DISCLAIMER_LINES, CREDITS_LINES, CREDIT_LINKS, LINKS, PRIVACY_LINE } from '../data/villain';
 import { InputManager } from '../input/InputManager';
 import { text, iris, wrapLines } from '../ui/fx';
 import { synth } from '../audio/Synth';
@@ -26,7 +26,7 @@ export const NAME_MAX = 10;
 const NAME_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const SLOT_W = 14;
 
-export const VERSION_LABEL = 'M4.18 PREVIEW';
+export const VERSION_LABEL = `VERSION ${VERSION}`;
 
 /** M3.3 (Ivan): after a debug mission or vignette, come back to a REPLAY / BACK TO THE LIST / MAIN MENU menu */
 export interface Replay { kind: 'mission' | 'vignette'; id: string }
@@ -353,7 +353,7 @@ export class TitleScene extends Phaser.Scene {
   private showAbout(page = 0) {
     const pages: { title: string; lines: string[]; tint?: (i: number) => number; links?: readonly { label: string; url: string }[] }[] = [
       { title: 'CREDITS', lines: CREDITS_LINES, links: CREDIT_LINKS },
-      { title: 'ABOUT THIS GAME', lines: DISCLAIMER_LINES },
+      { title: 'ABOUT THIS GAME', lines: [...DISCLAIMER_LINES, '', PRIVACY_LINE] },
       ...Object.values(UPGRADES).map((u) => ({ title: 'SOURCES', lines: [u.name, '', u.blurb, '', 'SOURCE:', u.source], tint: (i: number) => (i === 0 ? 0x9bd35a : i === 4 ? 0xfff08a : 0xffffff), links: [LINKS.research] })),
     ];
     page = (page + pages.length) % pages.length;

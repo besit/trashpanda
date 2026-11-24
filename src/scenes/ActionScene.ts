@@ -23,7 +23,7 @@ import { ctx } from '../core/ctx';
 import { START_LIVES } from '../core/GameState';
 import { award, hitsPerLife, fmtScore, type ScoreKind } from '../core/Score';
 const POINTS_OF = (label: string) => Number(label.slice(1)) || 0;
-import { text, iris, shake, hitStop, puff, floatText, fitText, impactStar } from '../ui/fx';
+import { text, iris, shake, hitStop, puff, floatText, floatTextInView, fitText, impactStar } from '../ui/fx';
 import { rankByHits, rankByDelay, recordRank, rankLine, RANK_COLOR, type MissionRank } from '../core/Rank';
 import { openPause } from './PauseScene';
 import { ScrollLayer, STREET_Y, GROUND_Y, FRONT_Y, BACKROW_Y, SKYLINE_Y } from '../ui/sideLayout';
@@ -622,7 +622,8 @@ export class ActionScene extends Phaser.Scene {
     if (kind === 'bureaucrat') {
       // Dog Fjord watches from his podium on the sidewalk (Ivan: "where was Dog Fjord?")
       this.dogFjord = this.add.image(l.left + 70, STREET_Y + 10, 'chars', 'dfs_pod').setOrigin(0.5, 0.97).setDepth(20).setFlipX(true); // M4.13: the new sprite faces left; turn him to the fight
-      this.time.delayedCall(400, () => { if (this.dogFjord) { floatText(this, l.left + GAME_W / 2, this.dogFjord.y - 84, 'GET HIM, PAPERWORK!', 'font_red', 0xffffff, 1400); sfx.laugh(); this.dogFjord.setFrame('dfs_podlaugh'); this.time.delayedCall(1500, () => this.dogFjord?.setFrame('dfs_pod')); } });
+      // 1.0: after the BOSS! banner and the boss's own shout have gone (all three landed on each other), on a panel
+      this.time.delayedCall(1700, () => { if (this.dogFjord) { floatTextInView(this, this.dogFjord.x + 90, this.dogFjord.y - 84, 'GET HIM, PAPERWORK!', 'font_red', 0xffffff, 1400); sfx.laugh(); this.dogFjord.setFrame('dfs_podlaugh'); this.time.delayedCall(1500, () => this.dogFjord?.setFrame('dfs_pod')); } });
     }
     this.boss = new Boss(this, l.left + GAME_W - 90, this.groundY, {
       summon: (x) => { void x; this.spawnRat('basic', l.left + GAME_W + 10); this.time.delayedCall(400, () => this.spawnRat('basic', l.left - 10)); },

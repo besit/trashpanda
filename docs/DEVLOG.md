@@ -1176,3 +1176,27 @@ M4.15 went live (tag `m4.15`) on Ivan's go.
 - Tests: 74 browser + 22 unit pass on a fresh build.
 
 **Ivan's picks:** the first four text changes applied (the Lane Eater economics line, the island airport text + "OTTAWA SAID NO TO JETS, FOR NOW.", "HUMPS AND RAISED CROSSINGS KEEP WORKING WITHOUT TICKETS.", "1/9 THE ODDS OF INJURY"); the streetcars keep running through reds. M4.15-M4.18 pushed.
+
+## 2026-11-24: 1.0 (local): the version, an anonymous play counter, promo videos
+- **VERSION 1.0** on the title screen (Ivan: "Switch to 1.0").
+- **The play counter** (Ivan: "a counter for players, and how long each plays"). `src/core/Telemetry.ts` writes one Firestore document per visit in the leaderboard's project:
+  - a random player number kept in the browser
+  - active seconds (tab visible, input in the last 90 s)
+  - missions, phone or not, the version
+
+  It writes at 5 s, at 1/2/5/10/15/20/30/45/60 minutes, then every 30, and when the tab hides. It never runs under `?debug`, `navigator.webdriver`, DNT or GPC. Rules: only those fields; time can't grow faster than the clock; one update per 20 s; no deletes. Read it with `tools/stats.mjs`. It's disclosed on ABOUT and in the README.
+- **Found on the way:** the leaderboard rules allowed `missions <= 12`, but the game has 13 missions, so a finished game's final score was refused. The rules now take 13; until Ivan republishes them, the game retries with 12.
+- **Promo videos.**
+  - **First try:** real-time canvas capture (MediaRecorder) came out at a juddery ~40 fps in every browser mode tried: headless, GPU, headed, uncapped.
+  - **What worked:** stepping the page's clock by hand. rAF, `performance.now`, `Date.now` and the timers move exactly 1/60 s per step, and the synth renders into an OfflineAudioContext suspended at every frame, so picture and sound line up exactly. It runs at about 5 ms a frame.
+  - **The rest of the pipeline:** a small bot rides the map along waypoints and fights (it stays unhurt; bosses are worn down after ~10 s of real fighting). `tools/promo/cut.mjs` cuts the shots from an edit list, scales them 5x nearest-neighbour to 1080p and levels the loudness.
+  - **Output:** four 45–50 s videos (Bike Lane War, Great Parking Lot, Save the Science, Death by Highway).
+- **What the footage showed (text on text, fixed):**
+  - boss shouts ran off the right edge (the Highway Mech's was wider than the screen)
+  - the Monster SUV's TOWED!/STALLED! sat on the Megamart signs
+  - Dog Fjord's line landed on BOSS! and the Bureaucrat's shout
+  - the Jet Tug's shout ran into its VRRROOOM!
+
+  Boss shouts now use `floatTextInView`: kept on screen, on a dark panel, two lines when long.
+- **Post drafts** for Ivan's socials, r/TorontoBiking and r/toronto: `promo/POSTS.md` (not committed).
+- Tests: 26 unit + 77 browser pass on a fresh build (the Bike Bus test flaked once under load and passed on a rerun).

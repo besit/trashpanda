@@ -11,7 +11,7 @@
 //    suitcase at you at every refuel stop
 import Phaser from 'phaser';
 import { sfx } from '../audio/sfx';
-import { puff, floatText, shake } from '../ui/fx';
+import { puff, floatText, floatTextInView, shake } from '../ui/fx';
 import type { Hitbox } from './SidePlayer';
 
 const ROLL = 0.4;
@@ -44,7 +44,7 @@ export class JetTug {
     const b = this.platform.body as Phaser.Physics.Arcade.Body;
     b.setAllowGravity(false).setImmovable(true);
     b.checkCollision.down = false; b.checkCollision.left = false; b.checkCollision.right = false;
-    floatText(scene, bounds.right - 120, groundY - 90, 'CLEAR THE RUNWAY! VIP COMING THROUGH!', 'font_red', 0xffffff, 1400);
+    floatTextInView(scene, bounds.right - 120, groundY - 56, 'CLEAR THE RUNWAY!\nVIP COMING THROUGH!', 'font_red', 0xffffff, 700); // 1.0: on screen, under the BOSS! banner (it ran off the edge); gone before its first VRRROOOM!
     sfx.carHonk();
   }
   get x() { return this.img.x; }

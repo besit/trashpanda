@@ -5,7 +5,7 @@
 //  Wrecker: the boss (M4.4 redesign, see the class): only hittable while its ball is stuck after a drop.
 import Phaser from 'phaser';
 import { sfx } from '../audio/sfx';
-import { puff, floatText, shake } from '../ui/fx';
+import { puff, floatText, floatTextInView, shake } from '../ui/fx';
 import type { Hitbox } from './SidePlayer';
 import type { Rat } from './Rat';
 import { Shockwave } from './Shockwave';
@@ -125,7 +125,7 @@ export class Wrecker {
     this.chain = scene.add.graphics().setDepth(106);
     this.ball = scene.add.circle(0, 0, 11, 0x2a2536).setStrokeStyle(2, 0x16121f).setDepth(107);
     this.shadow = scene.add.ellipse(0, groundY + 1, 10, 3, 0x16121f, 0.5).setDepth(41).setVisible(false);
-    floatText(scene, x - 40, groundY - 118, 'DEMOLITION PERMIT: APPROVED BY ME!', 'font_red', 0xffffff, 1400);
+    floatTextInView(scene, x - 40, groundY - 56, 'DEMOLITION PERMIT:\nAPPROVED BY ME!', 'font_red', 0xffffff, 1400); // 1.0: on screen, under the BOSS! banner (it ran off the edge)
     sfx.construction();
   }
   get x() { return this.img.x; }

@@ -23,7 +23,7 @@ export const submitAllowed = () => leaderboardEnabled() && !DEBUG && !(typeof na
 export async function submitRun(s: GameState): Promise<boolean> {
   if (!submitAllowed() || s.score <= 0 || s.flags.debugRun) return false; // M4.5: nor a run once played with ?debug
   const doc = `projects/${LEADERBOARD.projectId}/databases/(default)/documents/${LEADERBOARD.collection}/${s.runId}`;
-  const body = (name: string) => ({
+  const body = (name: string, missions = s.completedMissions.length) => ({
     writes: [{
       update: {
         name: doc,
@@ -31,21 +31,24 @@ export async function submitRun(s: GameState): Promise<boolean> {
           name: { stringValue: name },
           score: { integerValue: String(Math.floor(s.score)) },
           difficulty: { stringValue: s.difficulty },
-          missions: { integerValue: String(s.completedMissions.length) },
+          missions: { integerValue: String(missions) },
         },
       },
       updateTransforms: [{ fieldPath: 'updated', setToServerValue: 'REQUEST_TIME' }],
     }],
   });
-  const post = (name: string) => fetch(`${base()}:commit?key=${LEADERBOARD.apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body(name)) });
+  const post = (name: string, missions?: number) => fetch(`${base()}:commit?key=${LEADERBOARD.apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body(name, missions)) });
   try {
     const r = await post(s.name);
     if (r.ok) return true;
     // M4.5: names grew from 3 initials to 10 characters. Until the project's rules are republished
     // (docs/LEADERBOARD.md) they only take 1-3 capital letters, so a refused long name tries its first three letters
     const short = s.name.replace(/[^A-Z]/g, '').slice(0, 3);
-    if (r.status === 403 && short && short !== s.name) return (await post(short)).ok;
-    return false;
+    // 1.0: the game has 13 missions but the first rules capped `missions` at 12, so a finished game's score was
+    // refused. Until the rules in docs/LEADERBOARD.md are republished, the retry also says 12
+    const n = s.completedMissions.length;
+    if (r.status !== 403 || ((!short || short === s.name) && n <= 12)) return false;
+    return (await post(short || s.name, Math.min(12, n))).ok;
   } catch { return false; }
 }
 

@@ -45,7 +45,7 @@ On a phone, the first tap goes fullscreen (Android, iPad); on an iPhone use **Sh
 
 Start a run with **NEW GAME**: pick EASY / NORMAL / HARD (7 / 5 / 3 hits per life, score ×1 / ×1.5 / ×2) and enter your initials. Full-scale images of every district are in [docs/maps/](docs/maps/) (regenerate with `node tools/mapshots.mjs` while the dev server runs).
 
-The city is five districts so far: **High Park ← Queen West → Downtown → East End**, with the **Waterfront** south of Downtown. Ride off the map edge along a street that continues (Queen, Dundas/Bloor, or Spadina/University/Bay down to the lake) to cross.
+The city is five districts: **High Park ← Queen West → Downtown → East End**, with the **Waterfront** south of Downtown. Ride off the map edge along a street that continues (Queen, Dundas/Bloor, or Spadina/University/Bay down to the lake) to cross.
 
 ## How the art is made
 All art is authored as code. `tools/sprites/*` paints palette-indexed grids or models characters with a tiny SDF renderer (`tools/lib/sdf.mjs`), and `npm run assets` builds the atlases. Every art iteration is kept in [`art/history/`](art/history/INDEX.md). The process is documented in [`docs/DEVLOG.md`](docs/DEVLOG.md).
@@ -54,3 +54,20 @@ All art is authored as code. `tools/sprites/*` paints palette-indexed grids or m
 [Game design](docs/GAME_DESIGN.md) · [Technical architecture](docs/TECHNICAL_ARCHITECTURE.md) · [Urban research](docs/URBAN_RESEARCH.md) · [Performance](docs/PERFORMANCE.md) · [Art bible](docs/ART_BIBLE.md) · [Dev log](docs/DEVLOG.md)
 
 No ads, no microtransactions, no login. Free to play.
+
+## Privacy
+No cookies. Since 1.0 the game counts plays and minutes played, anonymously. Each visit sends:
+- a random number made on your first visit, kept in your browser
+- the minutes actually played and the missions done
+- phone or computer, and the game version
+
+No names and nothing typed. (The world leaderboard is separate: after each mission you win it gets the name you entered, your score, the difficulty and the missions done.) Browsers with Do Not Track or Global Privacy Control on aren't counted, nor are `?debug` sessions or automated browsers. Details and the database rules: [docs/LEADERBOARD.md](docs/LEADERBOARD.md).
+
+## Promo videos
+`tools/promo/` records the trailers by playing the game in a headless browser, one 1/60 s frame at a time, with the synth's audio rendered in step. `tools/promo/cut.mjs` edits them into 1080p clips. Output goes to `promo/` (not committed):
+
+```bash
+npx vite --port 5180                       # in another terminal
+node tools/promo/missions.mjs bwl          # also: lot, sci, hw, title (the end card)
+node tools/promo/cut.mjs bwl lot sci hw
+```

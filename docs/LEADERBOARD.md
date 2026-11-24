@@ -1,4 +1,4 @@
-# Online leaderboard: Firebase setup
+# Online leaderboard and play counter: Firebase setup
 
 **Status: live** since 2026-11-13, on the Firebase project `trashpanda-trow`. Without a configured project, the game keeps only a high-score table on each device (title screen > HIGH SCORES).
 
@@ -50,13 +50,69 @@ service cloud.firestore {
           && d.name is string && d.name.matches('^[A-Z0-9]{1,10}$')
           && d.score is int && d.score >= 0 && d.score <= 200000
           && d.difficulty in ['easy', 'normal', 'hard']
-          && d.missions is int && d.missions >= 0 && d.missions <= 12
+          && d.missions is int && d.missions >= 0 && d.missions <= 13
           && d.updated == request.time;
       }
+    }
+
+    // 1.0: the anonymous play counter (src/core/Telemetry.ts), one document per visit
+    match /sessions/{id} {
+      allow read: if true;
+      allow create: if id.matches('^[a-z0-9]{8,24}$')
+        && request.resource.data.keys().hasOnly(['player', 'seconds', 'missions', 'touch', 'ver', 'started', 'updated'])
+        && request.resource.data.player is string && request.resource.data.player.matches('^[a-z0-9]{8,24}$')
+        && request.resource.data.seconds is int && request.resource.data.seconds >= 0 && request.resource.data.seconds <= 600
+        && request.resource.data.missions is int && request.resource.data.missions >= 0 && request.resource.data.missions <= 13
+        && request.resource.data.touch is bool
+        && request.resource.data.ver is string && request.resource.data.ver.size() <= 12
+        && request.resource.data.started == request.time
+        && request.resource.data.updated == request.time;
+      // only the time and the missions change; time can't grow faster than the clock; one update per 20 s
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['seconds', 'missions', 'updated'])
+        && request.resource.data.seconds is int
+        && request.resource.data.seconds >= resource.data.seconds
+        && request.resource.data.seconds - resource.data.seconds <= (request.time.toMillis() - resource.data.updated.toMillis()) / 1000 + 10
+        && request.resource.data.missions is int && request.resource.data.missions >= 0 && request.resource.data.missions <= 13
+        && request.resource.data.updated == request.time
+        && request.time > resource.data.updated + duration.value(20, 's');
+      allow delete: if false;
     }
   }
 }
 ```
+
+## Republish the rules for 1.0
+
+The rules above changed in 1.0, so paste and **Publish** them again:
+- **The play counter** (`sessions`) is new. Nothing is counted until it's published.
+- **Scores take 13 missions.** The game has 13, but the first rules capped `missions` at 12, so a finished game's final score was refused. Until you republish, the game retries a refused score with 12 (and with the name's first three letters if the long name was the problem).
+
+## The play counter (1.0)
+
+**It only starts counting once the rules above are published:** Firestore console > the `trashpanda-trow` project > Firestore Database > **Rules**, paste the whole block, **Publish**. Until then the game's writes are refused and nothing is counted (the game doesn't notice).
+
+- **What it sends:** one document per visit in `sessions`:
+  - `player`: a random number made on the first visit and kept in the browser, so a second visit counts as the same player
+  - `seconds`: time actually played. That means the tab is visible and there was input in the last 90 s, so a paused, forgotten tab doesn't count.
+  - `missions`: missions done in the current run
+  - `touch`: phone or computer
+  - `ver`: the game version
+  - `started` / `updated`: server times
+- **What it doesn't send:** names, cookies, the leaderboard name, anything typed. Firestore sees the visitor's IP address like any website request, as the leaderboard already does; the game never stores it.
+- **When it writes:**
+  - 5 s after the page opens (the visit)
+  - at 1, 2, 5, 10, 15, 20, 30, 45 and 60 minutes played, then every 30 minutes
+  - when the tab is hidden or closed
+
+  A whole game is about 10 writes; 1,000 visits a day stays inside the free 20,000.
+- **Never counted:** `?debug` sessions, automated browsers (the tests, the promo recorder), and browsers with Do Not Track or Global Privacy Control on.
+- **It's disclosed** on the ABOUT page: "NO ADS, NO COOKIES. PLAYS AND MINUTES PLAYED ARE COUNTED ANONYMOUSLY; DO NOT TRACK TURNS IT OFF.".
+- **Reading it:** `node tools/stats.mjs`, or `node tools/stats.mjs 7` for the last week. It prints:
+  - visits (phones and computers), players, returning players
+  - hours played, median minutes per visit and per player
+  - how far players got
+  - visits per day
+- **Limits:** like the leaderboard, someone determined can send made-up visits. The rules cap the time at what the clock allows and allow no deletes. Treat the numbers as a good estimate, not an audit.
 
 ## Honest limits
 

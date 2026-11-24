@@ -11,6 +11,7 @@ import { ShareScene } from './scenes/ShareScene';
 import { ctx } from './core/ctx';
 import { autoFullscreenOnFirstTap } from './core/fullscreen';
 import { wantsTouch } from './input/TouchControls';
+import { startTelemetry } from './core/Telemetry';
 
 setGameW(viewWidthFor(window.innerWidth, window.innerHeight));
 
@@ -70,4 +71,6 @@ window.addEventListener('keydown', (e) => {
 ctx.applySettings();
 // phones: the first tap goes fullscreen (M3.2, Ivan); iPhone uses the home-screen manifest instead
 autoFullscreenOnFirstTap(wantsTouch());
+// 1.0 (Ivan): count plays and play time, anonymously (core/Telemetry.ts)
+startTelemetry(() => ctx.state.completedMissions.length, wantsTouch());
 document.addEventListener('fullscreenchange', () => setTimeout(fit, 50));
