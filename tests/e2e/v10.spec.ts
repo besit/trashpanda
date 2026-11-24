@@ -74,6 +74,10 @@ test('1.0: a boss\'s shout stays on screen, on its own panel', async ({ page }) 
   expect(box!.lines).toBe(2);
   expect(box!.x - box!.half).toBeGreaterThanOrEqual(0);
   expect(box!.x + box!.half).toBeLessThanOrEqual(box!.w);
+  // Ivan: the raccoon is drawn on top of the Wrecker's truck (it got lost behind it); the ball stays in front
+  const depths = await page.evaluate(() => { const tp = (window as unknown as W).__TP as any; const w = tp.wrecker(); return { truck: w.img.depth, ball: w.ball.depth, raccoon: tp.player.sprite.depth }; });
+  expect(depths.truck).toBeLessThan(depths.raccoon);
+  expect(depths.ball).toBeGreaterThan(depths.raccoon);
   expect(errors).toEqual([]);
 });
 

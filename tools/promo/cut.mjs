@@ -62,7 +62,7 @@ export const EDITS = {
     ['hw', '00', '>> START MISSION-1.6', '>> START MISSION+0.85'],              // Lake Shore under the Gardiner, the marker
     ['hw', '00', 'Cutscene [DOG FJORD] DOG FJORD | SO I-0.3', '+4.2'], // what does Toronto need?
     ['hw', '00', 'Cutscene [DOG FJORD] DOG FJORD | ...ANO-1.4', '+4.0'], // ...ANOTHER LANE?
-    ['hw', '01', 'Action hp 4-3.0', '+5.4'],                   // rats under the Gardiner (hits taken)
+    ['hw', '01', '>> extra rats-0.2', '+4.8'],                // a crowd of rats under the Gardiner
     ['hw', '02', '>> END STARTS+3.1', '>> boss down+4.4'],     // the Highway Mech's end, in one take; THE GARDINER IS DOWN!
     ['hw', '02', 'Cutscene THE PILLARS-0.4', '+4.0'],          // the pillars stayed, the cars didn't
     ['hw', '02', 'Explore+0.4', '+6.0'],                       // the map: a park in the sky

@@ -118,7 +118,9 @@ export class Wrecker {
     if (this.state === 'dead') this.msg.setDepth(2990);
   }
   constructor(private scene: Phaser.Scene, x: number, private groundY: number, private bounds: { left: number; right: number }) {
-    this.img = scene.add.image(x, groundY + 4, 'world', 'wrecker').setOrigin(0.5, 104 / 108).setDepth(104);
+    // 1.0 (Ivan: "draw the raccoon on top of the boss, otherwise he gets lost"): the truck is behind the raccoon (100);
+    // the chain and the ball stay in front, so a dropping ball still lands on you
+    this.img = scene.add.image(x, groundY + 4, 'world', 'wrecker').setOrigin(0.5, 104 / 108).setDepth(98);
     // M4.17 (Ivan): the rope is drawn over the machine (it hung behind it), the ball over the rope
     this.chain = scene.add.graphics().setDepth(106);
     this.ball = scene.add.circle(0, 0, 11, 0x2a2536).setStrokeStyle(2, 0x16121f).setDepth(107);

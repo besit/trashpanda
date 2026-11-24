@@ -229,9 +229,10 @@ export async function brawl(r, maxS, opts = {}) {
     if (s.chase !== boosting) { boosting = s.chase; if (boosting) await page.keyboard.down('Shift'); else await page.keyboard.up('Shift'); }
     const near = s.targets.length ? s.targets.reduce((a, b) => (Math.abs(b - s.x) < Math.abs(a - s.x) ? b : a)) : null;
     const d = near == null ? 999 : near - s.x;
-    // sloppy: now and then the raccoon hesitates next to an enemy and takes the hit (never below 2 hearts)
+    // sloppy: now and then the raccoon takes a hit (never below 2 hearts)...
     if (opts.sloppy && !s.chase && hes <= 0 && near != null && Math.abs(d) < 40 && s.hp > 2 && Math.random() < opts.sloppy) hes = 40 + Math.floor(Math.random() * 30);
-    if (hes > 0) { hes -= 5; await setDir(null); await r.frames(4); continue; }
+    // ...not by standing there: it tries to ride on past the rat without swinging, and gets clipped on the way
+    if (hes > 0) { hes -= 5; await setDir(d > 0 ? 'd' : 'a'); await r.frames(4); continue; }
     if (near != null && Math.abs(d) < (opts.reach ?? 30)) {
       await setDir(d > 0 ? 'd' : 'a'); await r.frames(1); await setDir(null);
       await page.keyboard.down('e'); await r.frames(2); await page.keyboard.up('e');

@@ -1251,3 +1251,7 @@ He asked: *"It looked like the bosses couldn't even hit you. Is it possible to p
   - `+N LIVABILITY` floated over the HUD's BIKE NETWORK line after every mission. It's at the top centre now.
   - The Mech's ANOTHER LANE! and the slab hint showed at once. The hint now waits.
   - THEY'VE GOT THE EXHIBITS! landed on the AFTER THEM! band. It now comes after.
+
+## 2026-11-24: 1.0, the raccoon in front of the Wrecker; a busier Highway rat fight
+- **Game** (Ivan: "draw the raccoon on top of the boss in the science mission, otherwise he gets lost"): the Wrecker's truck is drawn behind the raccoon now (depth 98 against 100). The chain and the ball stay in front, so a dropping ball still visibly lands on you. A browser test checks the order.
+- **Promo, Death by Highway** (Ivan: "boring, bring more rats with the same timing; don't take hits by just standing"): six more rats join the first wave, so the 5-second shot has ten on screen. When the bot takes a hit now, it's riding on past a rat without swinging, never standing still.

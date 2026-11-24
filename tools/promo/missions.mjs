@@ -210,6 +210,11 @@ async function mission(name, o) {
   await r.js(SURVIVE);
   if (o.before) await o.before(r);
   r.start('action');
+  if (o.extraRats) { // a busier fight for the video: more rats join the first wave, in on both sides
+    await brawl(r, 8, { until: () => !!window.__TP.state().lock, sloppy: o.sloppy ?? 0.08 });
+    await r.js((list) => { const s = window.__TP_GAME.scene.getScene('Action'); s.spawnRats(list, s.cameras.main.scrollX); }, o.extraRats);
+    r.mark('>> extra rats');
+  }
   await brawl(r, o.actionS ?? 14, { sloppy: o.sloppy ?? 0.08 });
   r.stop();
   await skipTo(r, o.bossAt);
@@ -287,7 +292,7 @@ CFG.hw = {
   wander: [[705, 100], { heart: [720, 128] }, [700, 160], [700, 340], [880, 340], { plaque: [992, 338] }, { boost: [[1040, 372], [1200, 372], [1376, 380], [1376, 700], [1376, 960]] }, [1500, 985],
     { boost: [[1690, 985]] }, { egg: [1770, 1050] }, { wait: 0.6 }, { boost: [[1700, 990], [1700, 560]] }, [1560, 548]],
   marker: [1472, 550],
-  actionS: 14, bossAt: 2050, payoffS: 18,
+  actionS: 14, bossAt: 2050, payoffS: 18, extraRats: ['basic', 'construction', 'traffic', 'basic', 'barrier', 'basic'],
   boss: {
     play: playMech, warmS: 6, maxS: 70,
     // a few stomps from the end; the hit that takes it there drops the second slab, as in the game
