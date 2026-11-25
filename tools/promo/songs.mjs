@@ -1,5 +1,5 @@
-// Every song the shoots played, rendered on its own from its first note (1.0): the music under the cuts. cut.mjs
-// takes the songs from here, so the music runs on across the cuts instead of jumping with every clip.
+// Every song the shoots played, rendered on its own from its first note (1.0). cut.mjs lays one of them under each
+// whole video (its TRACKS), so the music runs on across the cuts instead of jumping with every clip.
 //   node tools/promo/songs.mjs        (after the shoots; PROMO_BASE: a build served by vite preview, see the README)
 // -> promo/raw/songs/<name>@<bpm>_<transpose>.f32 (48 kHz mono float), sample 0 = the song's first step
 import { readdirSync, readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs';

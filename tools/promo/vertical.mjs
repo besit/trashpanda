@@ -1,7 +1,7 @@
 // Vertical versions of the promo videos (1.0), for phone feeds (Reels, Shorts, TikTok):
 // the game's own "ROTATE YOUR DEVICE" screen first (rendered on a phone-sized page, its phone icon turning
 // counter-clockwise), then the same landscape video turned a quarter clockwise: turn the phone the way the icon
-// turns and the game is the right way up, filling the screen. The video's first song starts under the rotate screen
+// turns and the game is the right way up, filling the screen. The video's song starts under the rotate screen
 // (which lasts a whole number of its bars or beats, close to 2.6 s), so the cuts stay on the beat (cut.mjs).
 //   node tools/promo/vertical.mjs bwl bus sci hw    -> promo/trashpanda_<name>_vertical.mp4 (1080x1920, 60 fps)
 // Needs the dev server (npx vite --port 5180) or PROMO_BASE, and the landscape videos from tools/promo/cut.mjs.

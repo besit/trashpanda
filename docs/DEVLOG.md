@@ -1299,3 +1299,21 @@ Ivan: *"Do these have audio? I think no. Can we add it? And make sure the cuts w
   - Bike Bus: JUST DROPPING OFF! started floating off 0.2 s before BIKE LANE CLEAR! and rose into it. Both lines now hold and float together. The browser test samples the gap between them; it fails on the old code (8 px) and passes on the fix.
   - Save the Science: the chase's two-line hint ended at y 62, so the warehouse's SCIENCE CENTRE EXHIBITS lettering (y 56–69) showed under it. There the hint box now reaches past the sign. FIGHT! landed right under the hint; a banner now clears the hint. PERMIT REVOKED!'s panel sat on the sign with the letters showing below it; it now covers the whole sign. A browser test checks all three (the box check fails on the old code: 62 against 70).
 - **Retakes:** frames from the new takes were checked clip by clip. Two flashes moved: the chase flash went to 4.6 s (FIGHT! round the dropped exhibit), and the Dog Fjord clip in the Bike Lane War now opens on the empty skyline.
+
+## 2026-11-25: 1.0, one song per video
+Ivan heard the videos in a separate player (VS Code's preview had played them silent) and said: *"I am not in love with always changing music. Let's stick to 1 track."* I made the Highway skim two ways: one song the whole way, and one change of song tied to a moment (the boss song until THE GARDINER IS DOWN!, then the main theme). He picked: *"I feel like one song is the best. But we can use different melodies for different videos."*
+
+- **One song per video, a different one for each:**
+  - Death by Highway: the boss fights' march (another-lane-of-trouble, 172 bpm)
+  - The Bike Lane War: the rat fights' song (rat-rush, 168 bpm)
+  - Save the Science: Dog Fjord's theme (historic-investment, 108 bpm)
+  - The Bike Bus: the main theme, as on the title screen (queen-st-cruise, 150 bpm)
+- **cut.mjs got simpler:** a table of songs (`TRACKS`) replaced the rules that followed the game's song changes: jingles, quiet patches, the card's title tune pulled in early. The song starts on the first frame and every cut moves to its nearest beat (all within 8 ms).
+- **The Save the Science skim is two bars.** Dog Fjord's theme is slower, so a beat lasts about as long as two beats of the fight songs. Six flashes (the Gardiner flash from another video went), 4.4 s.
+- **Text under a banner:** in the skim's FIGHT! flash the warehouse's SCIENCE CENTRE EXHIBITS lettering read through the band (95% opaque). The band is solid now, and the shoot was recorded again. The flash also moved to 4.35 s, so it ends before the band fades. The browser test checks the band is solid; it fails on the old code.
+- **Checked:** in all 16 files the sound matches the planned song (0.92–0.99); levels are −14.1 to −14.3 LUFS, and −15.5 for Save the Science, whose theme is sparser.
+- **Tidied:** the test cuts, the Opus copies for VS Code and the old Great Parking Lot video went to `promo/archive/`, leaving the 16 videos (4 stories, with and without a skim, landscape and vertical).
+
+One frame from each flash (rows: Death by Highway, the Bike Lane War, Save the Science, the Bike Bus):
+
+![](reviews/skims/skims.png)

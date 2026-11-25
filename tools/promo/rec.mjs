@@ -4,8 +4,8 @@
 // into an OfflineAudioContext that is advanced in the same steps, so the music and sound effects stay in sync.
 // Frames are saved at the canvas's real 384x216 pixels; tools/promo/cut.mjs scales them up crisply and edits.
 // The music and the sound effects are recorded as two tracks (music.f32, sfx.f32, plus their mix in audio.f32), and
-// every song the game starts is logged in shots.json with its time in the shot, so cut.mjs can lay the music under
-// the cuts on the beat and keep each clip's own sounds.
+// every song the game starts is logged in shots.json with its time in the shot (songs.mjs renders those songs
+// clean), so cut.mjs can lay one song under a whole video and keep each clip's own sounds.
 // The page is an automated browser, so it never posts scores or play counts.
 import { chromium } from '@playwright/test';
 import { writeFileSync, mkdirSync, rmSync } from 'node:fs';

@@ -411,7 +411,7 @@ export class ActionScene extends Phaser.Scene {
     // M4.3: on its own dark band (it landed on the Megamart's signs: text on text)
     const h = this.hud.go.height * s + 8;
     this.goBand?.destroy();
-    this.goBand = this.add.graphics().setScrollFactor(0).setDepth(1999.5).fillStyle(0x16121f, 0.95).fillRect(0, this.hud.go.y - h / 2, GAME_W, h);
+    this.goBand = this.add.graphics().setScrollFactor(0).setDepth(1999.5).fillStyle(0x16121f, 1).fillRect(0, this.hud.go.y - h / 2, GAME_W, h); // 1.0: solid, the warehouse sign read through at 0.95
     this.tweens.add({ targets: this.goBand, alpha: 0, delay: 900, duration: 300 });
   }
   /** M4.3: a dark band behind a result card (head + sub lines), so it never sits on lettering in the background */

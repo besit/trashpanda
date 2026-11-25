@@ -81,7 +81,7 @@ test('1.0: a boss\'s shout stays on screen, on its own panel', async ({ page }) 
   expect(errors).toEqual([]);
 });
 
-test('1.0: SAVE THE SCIENCE: the hint box and PERMIT REVOKED! cover the warehouse sign, and a banner puts the hint away', async ({ page }) => {
+test('1.0: SAVE THE SCIENCE: the hint box and PERMIT REVOKED! cover the warehouse sign, and a solid banner puts the hint away', async ({ page }) => {
   const errors = errorsOf(page);
   await page.goto('./?debug&scene=Action&mission=save_the_science');
   await page.waitForFunction(() => typeof (window as unknown as W).__TP?.state === 'function' && !(window as unknown as W).__TP!.state().frozen, null, { timeout: 20_000 });
@@ -92,8 +92,10 @@ test('1.0: SAVE THE SCIENCE: the hint box and PERMIT REVOKED! cover the warehous
     s.say('THEY\'VE GOT THE EXHIBITS!\nCATCH THEM BEFORE THE TRUCK!', 0xfff08a, 2400);
     const t = s.sayObj; const r = { top: t.y - 4, bottom: t.y + t.height + 4 };
     s.flashGo('FIGHT!');
-    return { ...r, after: !!s.sayObj?.active };
+    const cb = s.goBand.commandBuffer, i = cb.indexOf(0x16121f); // ...FILL_STYLE, colour, alpha...: the band is solid (the sign read through at 0.95)
+    return { ...r, after: !!s.sayObj?.active, band: [cb[i], cb[i + 1]] };
   });
+  expect(hint.band).toEqual([0x16121f, 1]);
   expect(hint.top).toBeGreaterThanOrEqual(30);
   expect(hint.bottom).toBeGreaterThanOrEqual(70);
   expect(hint.after).toBe(false);
