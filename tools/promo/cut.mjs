@@ -84,19 +84,62 @@ function at(shoot, prefix, spec, from) {
   return k.t + parseFloat(m[3] ?? '0');
 }
 
-// Ivan: "a fast skim through several screens with interesting stuff at the start, to catch the eye". Half-second
-// flashes from all four shoots over one continuous bit of the Highway Mech's music, then the video.
-const SKIM = [
-  ['hw', '02', 'Action hp 4 boss 4-0.25', '+0.5'],                     // the Mech: a stomp on its deck
-  ['bus', '00', '>> stop 4-1.4', '+0.5'],                               // the bike bus, kids in a line
-  ['sci', '02', '>> boss down-0.1', '+0.55'],                           // PERMIT REVOKED!
-  ['hw', '00', 'Cutscene [DOG FJORD] DOG FJORD | ...ANO+1.4', '+0.55'], // Dog Fjord: ...another lane?
-  ['hw', '01', 'Action hp 4-0.9', '+0.5'],                              // rats under the Gardiner
-  ['hw', '02', 'Cutscene THE PILLARS+1.6', '+0.55'],                    // a park in the sky
-  ['hw', '02', 'Explore+2.6', '+0.6'],                                  // the map changes
-];
-const skim = (bed) => { let t = 0; return SKIM.map((e) => { const d = parseFloat(e[3]); const o = [...e, { audio: [bed[0], bed[1], `${bed[2]}+${t.toFixed(2)}`] }]; t += d; return o; }); };
-EDITS.hw_skim = [...skim(['hw', '02', '>> END STARTS']), ...EDITS.hw];
+// Ivan: "a fast skim through several screens with interesting stuff at the start, to catch the eye", and then
+// "make sure there is always some action in the centre of the screen". Half-second flashes over one continuous bit
+// of the video's own fight (or bike bus) music, then the video. The fights come from tools/promo/skim.mjs's takes
+// (skim_hw, skim_bwl), where the action is in the middle of the screen; the rest picks the busiest moment of a shot.
+const SKIMS = {
+  hw: {
+    bed: ['hw', '02', '>> END STARTS'],
+    flashes: [
+      ['skim_hw', '03', 0.55, '+0.95'],                                     // the Mech winds up, stomps; the raccoon jumps the dust
+      ['skim_hw', '00', 6.2, '+0.6'],                                       // into a pack of rats, mid-screen
+      ['hw', '00', 'Cutscene [DOG FJORD] DOG FJORD | ...ANO+1.4', '+0.55'], // Dog Fjord: ...another lane?
+      ['bus', '00', '>> stop 4', '+0.55'],                                  // the bike bus, kids in a line, an SUV moves
+      ['sci', '02', '>> boss down-0.1', '+0.55'],                           // PERMIT REVOKED!
+      ['hw', '02', 'Cutscene THE PILLARS+0.5', '+0.6'],                     // the streetcar through the middle, under the park
+      ['hw', '02', 'Explore+1.15', '+0.7'],                                 // the camera pans, the Gardiner goes green
+    ],
+  },
+  bwl: {
+    bed: ['bwl', '02', 'Action hp 5 boss 20'],
+    flashes: [
+      ['bwl', '02', 'Action hp 5 boss 14-0.1', '+0.6'],                    // the Foreman Rat, mid-screen
+      ['skim_bwl', '00', 1.8, '+0.6'],                                      // rats on Queen, mid-screen
+      ['bwl', '00', '>> squirrel-0.3', '+0.55'],                            // THE WHITE SQUIRREL!
+      ['skim_hw', '03', 0.6, '+0.85'],                                      // later: the Highway Mech
+      ['bwl', '02', 'Cutscene SAME STREET. | NOW A KID CAN RIDE IT.-0.2', '+0.6'], // the streetcar, kids on bikes
+      ['bwl', '02', 'Cutscene [DOG FJORD] DOG FJORD | CITIZENS+0.5', '+0.55'],     // Dog Fjord
+      ['bwl', '02', 'Explore+1.17', '+0.7'],                                // the camera pans, Queen gets its bike lanes
+    ],
+  },
+  sci: {
+    bed: ['sci', '02', '>> END STARTS'],
+    flashes: [
+      ['sci', '02', '>> END STARTS+3.4', '+0.65'],                          // the ball drops, the raccoon jumps the shockwave
+      ['sci', '01', 4.7, '+0.6'],                                           // the chase: rats round the dropped exhibit
+      ['sci', '00', '>> egg-0.3', '+0.55'],                                 // Graffiti Alley
+      ['sci', '02', '>> boss down-0.1', '+0.55'],                           // PERMIT REVOKED!
+      ['skim_hw', '00', 6.2, '+0.55'],                                      // later: rats under the Gardiner
+      ['sci', '02', 'Cutscene [DOG FJORD] DOG FJORD | ...IT+1.0', '+0.55'], // ...IT WILL TAKE A HIGHWAY. FRA-HA-HA!
+      ['sci', '02', 'Explore+1.33', '+0.7'],                                // the camera pans, the science centre opens
+    ],
+  },
+  bus: {
+    bed: ['bus', '00', '>> bus on'],
+    flashes: [
+      ['bus', '00', '>> stop 4', '+0.6'],                                   // the bike bus, kids in a line, an SUV moves
+      ['bus', '00', '>> bell 3-0.3', '+0.55'],                              // ring: OOPS! MOVING!
+      ['skim_bwl', '00', 1.8, '+0.55'],                                     // elsewhere: rats on Queen
+      ['bus', '00', '>> egg-0.2', '+0.55'],                                 // the view from the hill
+      ['bus', '00', 'Cutscene THE NEXT MORNING. THE BIKE BUS.+2.2', '+0.6'], // the bike bus down the street
+      ['bus', '00', 'Cutscene [DOG FJORD] DOG FJORD | SIX LANES+0.4', '+0.55'], // Dog Fjord: six lanes wide
+      ['bus', '00', '@last:Explore+1.25', '+0.7'],                          // the camera pans, a school street appears
+    ],
+  },
+};
+const skim = ({ bed, flashes }) => { let t = 0; return flashes.map((e) => { const d = parseFloat(e[3]); const o = [...e, { audio: [bed[0], bed[1], `${bed[2]}+${t.toFixed(2)}`] }]; t += d; return o; }); };
+for (const [k, s] of Object.entries(SKIMS)) EDITS[`${k}_skim`] = [...skim(s), ...EDITS[k]];
 
 const shotDir = (shoot, prefix) => {
   const d = readdirSync(`${RAW}/${shoot}`).find((f) => f.startsWith(prefix + '_'));

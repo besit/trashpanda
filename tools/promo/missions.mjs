@@ -348,7 +348,7 @@ SHOOTS.bus = async () => {
   await r.finish();
 };
 
-export { SHOOTS, bossFight, playMech, brawl, skipTo };
+export { SHOOTS, bossFight, playMech, brawl, skipTo, rideTo, release, isActive, actionReady };
 if (process.argv[1]?.endsWith('missions.mjs')) {
   const which = process.argv[2];
   if (!SHOOTS[which]) { console.log('which shoot?', Object.keys(SHOOTS).join(' ')); process.exit(1); }

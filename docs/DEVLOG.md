@@ -1255,3 +1255,20 @@ He asked: *"It looked like the bosses couldn't even hit you. Is it possible to p
 ## 2026-11-24: 1.0, the raccoon in front of the Wrecker; a busier Highway rat fight
 - **Game** (Ivan: "draw the raccoon on top of the boss in the science mission, otherwise he gets lost"): the Wrecker's truck is drawn behind the raccoon now (depth 98 against 100). The chain and the ball stay in front, so a dropping ball still visibly lands on you. A browser test checks the order.
 - **Promo, Death by Highway** (Ivan: "boring, bring more rats with the same timing; don't take hits by just standing"): six more rats join the first wave, so the 5-second shot has ten on screen. When the bot takes a hit now, it's riding on past a rat without swinging, never standing still.
+
+## 2026-11-25: 1.0, opening skims for every promo video, the action in the middle
+Ivan on the Highway skim: the Mech flash should show a stomp and the raccoon jumping the dust in the middle of the screen; the rat flash had nothing going on in the middle; the pillars flash should catch the streetcar crossing; THE CITY IS CHANGING should be its busy part, the camera panning while the Gardiner goes green. Then: skims for all the other videos, *"always some action in the centre"*.
+
+- **Why the fights sat at the edge:** a fight locks the camera, and the bot plays it well by backing off to the arena's left wall (away from the Mech, round the rats). Good play, poor framing.
+- **Takes made for the skims** (`tools/promo/skim.mjs`): straight into the mission (the briefing isn't filmed), then
+  - *rats:* the raccoon starts in the middle of the first arena, eight more rats come in from both sides (and the arena waits for all of them), and a bot that keeps to the middle fights them there
+  - *Mech:* the Mech a little right of centre, the raccoon a little left, five tries of the stomp; the edit takes the one where the jump clears the dust best
+- **Picking frames by eye** (`tools/promo/sheet.mjs`): a contact sheet of any stretch of a shot, every frame stamped with its time. Every flash was chosen from one: the streetcar under the park at 31.3 s, the Gardiner going green at 37.45 s, and so on.
+- **Each video's skim** is seven flashes (about 4.5 s) over one continuous bit of that video's own fight music (the bike bus's music for the bus): mostly its own best moments, plus one teaser from another video. `trashpanda_<name>_skim.mp4` and `_skim_vertical.mp4`; the versions without a skim stay as they were.
+- **Text on text the footage found (fixed in the game):** on the Bike Bus a stop and an SUV can come one right after the other, and OOPS! MOVING! landed on the still-fading ALL ABOARD! 5/9. A new word replaces the last one now. The bus video was recorded again.
+
+  The browser test first passed with or without the fix: in a test run the game's clock jumps, and the real ALL ABOARD! had already faded. It now plants a stand-in word just before the bell and checks the bell replaces it (it fails on the old code).
+
+One frame from each flash (rows: Death by Highway, the Bike Lane War, Save the Science, the Bike Bus):
+
+![](reviews/skims/skims.png)

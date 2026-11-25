@@ -31,8 +31,14 @@ test('the Bike Bus: board every stop, bell the SUVs out of the lane, reach the s
       await page.evaluate(([x, y]) => (window as unknown as W).__TP!.teleport(x - 40, y + 4), [s.x, s.y]);
       await page.waitForTimeout(400);
       expect(await page.evaluate(() => (window as unknown as W).__TP!.bus().step)).toBe(before);
+      // 1.0 (promo footage): a stop's ALL ABOARD! can still be fading when the bell rings, and OOPS! MOVING! landed on
+      // it. The bell's words replace the last ones (a stand-in word here: the real one's fade depends on frame timing)
+      await page.evaluate(() => { const b = (window as unknown as W).__TP!.bus(); b.said = [b.scene.add.bitmapText(0, 0, 'font_outline', 'ALL ABOARD!')]; });
       await page.keyboard.press('e'); await page.waitForTimeout(300);
       expect(await page.evaluate(() => (window as unknown as W).__TP!.bus().step)).toBe(before + 1);
+      expect(await page.evaluate(() => (window as unknown as W).__TP!.bus().said.map((o: { text: string; active: boolean }) => o.active && o.text))).not.toContain('ALL ABOARD!');
+      expect(await page.evaluate(() => (window as unknown as W).__TP_GAME!.scene.getScene('Explore').children.list
+        .filter((o: { active: boolean; text?: string }) => o.active && o.text === 'ALL ABOARD!').length)).toBe(0);
     } else {
       await page.evaluate(([x, y]) => (window as unknown as W).__TP!.teleport(x, y + 4), [s.x, s.y]);
     }

@@ -71,4 +71,7 @@ npx vite build --outDir promo/dist && npx vite preview --outDir promo/dist --por
 PROMO_BASE=http://localhost:5181/trashpanda/ node tools/promo/missions.mjs bwl          # also: bus, sci, hw, title (the end card)
 node tools/promo/cut.mjs bwl bus sci hw
 PROMO_BASE=http://localhost:5181/trashpanda/ node tools/promo/vertical.mjs bwl bus sci hw
+PROMO_BASE=http://localhost:5181/trashpanda/ node tools/promo/skim.mjs hw    # (and bwl) fights in mid-screen, for the opening skims
+node tools/promo/cut.mjs hw_skim bwl_skim sci_skim bus_skim                     # the videos with a 4.5 s skim of flashes first
+node tools/promo/sheet.mjs hw 02 30 36                                          # a contact sheet of a shot, to pick frames by eye
 ```

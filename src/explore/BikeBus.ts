@@ -64,10 +64,10 @@ export class BikeBus implements MapMission {
     if (this.state !== 'ride' || s?.kind !== 'block' || Phaser.Math.Distance.Between(x, y, s.x, s.y) > BELL_R) return false;
     const b = this.blocks.get(this.step)!;
     sfx.carHonk();
-    floatText(this.scene, s.x, this.belowHud(s.y - 26), Math.random() < 0.5 ? 'OOPS! MOVING!' : 'JUST DROPPING OFF!', 'font_outline', 0xffffff, 700);
+    this.say([floatText(this.scene, s.x, this.belowHud(s.y - 26), Math.random() < 0.5 ? 'OOPS! MOVING!' : 'JUST DROPPING OFF!', 'font_outline', 0xffffff, 700),
+      floatText(this.scene, s.x, this.belowHud(s.y - 26) - 14, 'BIKE LANE CLEAR!', 'font_outline', 0x9bd35a, 900)]);
     b.zone.destroy();
     this.scene.tweens.add({ targets: b.img, x: s.x + 260, alpha: 0, duration: 1600, ease: 'Quad.easeIn', onComplete: () => b.img.destroy() });
-    floatText(this.scene, s.x, this.belowHud(s.y - 26) - 14, 'BIKE LANE CLEAR!', 'font_outline', 0x9bd35a, 900);
     this.step++;
     return true;
   }
@@ -126,7 +126,7 @@ export class BikeBus implements MapMission {
     }
     this.kids += ks.length;
     sfx.bell();
-    floatText(this.scene, s.x, s.y - 30, this.kids === this.total ? 'EVERYONE\'S ON! TO SCHOOL!' : `ALL ABOARD! ${this.kids}/${this.total}`, 'font_outline', 0x9bd35a, 900);
+    this.say([floatText(this.scene, s.x, s.y - 30, this.kids === this.total ? 'EVERYONE\'S ON! TO SCHOOL!' : `ALL ABOARD! ${this.kids}/${this.total}`, 'font_outline', 0x9bd35a, 900)]);
     this.dwell = 0;
     this.step++;
   }
@@ -142,6 +142,10 @@ export class BikeBus implements MapMission {
   }
 
   route() { return this.def.steps.slice(this.step).map((s, i) => ({ x: s.x, y: s.y, kind: s.kind, next: i === 0 })); }
+  /** 1.0 (promo footage): a stop and an SUV can come one after the other, and OOPS! MOVING! landed on the still-fading
+   *  ALL ABOARD! 5/9. A new word replaces the last one instead of drawing over it */
+  private said: Phaser.GameObjects.GameObject[] = [];
+  private say(words: Phaser.GameObjects.GameObject[]) { for (const w of this.said) if (w.active) w.destroy(); this.said = words; }
   /** 1.0: a word over the street keeps below the livability HUD (BIKE LANE CLEAR! slid under it) */
   private belowHud(y: number) { return Math.max(y, this.scene.cameras.main.worldView.y + HUD_BOTTOM + 22); }
   intro(touch: boolean) { return touch ? 'STOP BESIDE THE KIDS AT EVERY STOP.\nRED (BELL) AT THE SUVS IN THE BIKE LANE.' : 'STOP BESIDE THE KIDS AT EVERY STOP.\nE (BELL) AT THE SUVS IN THE BIKE LANE.'; }
