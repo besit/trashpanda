@@ -64,7 +64,8 @@ export class BikeBus implements MapMission {
     if (this.state !== 'ride' || s?.kind !== 'block' || Phaser.Math.Distance.Between(x, y, s.x, s.y) > BELL_R) return false;
     const b = this.blocks.get(this.step)!;
     sfx.carHonk();
-    this.say([floatText(this.scene, s.x, this.belowHud(s.y - 26), Math.random() < 0.5 ? 'OOPS! MOVING!' : 'JUST DROPPING OFF!', 'font_outline', 0xffffff, 700),
+    // the two lines hold and float off together (1.0: the first one went first and rose into the second)
+    this.say([floatText(this.scene, s.x, this.belowHud(s.y - 26), Math.random() < 0.5 ? 'OOPS! MOVING!' : 'JUST DROPPING OFF!', 'font_outline', 0xffffff, 900),
       floatText(this.scene, s.x, this.belowHud(s.y - 26) - 14, 'BIKE LANE CLEAR!', 'font_outline', 0x9bd35a, 900)]);
     b.zone.destroy();
     this.scene.tweens.add({ targets: b.img, x: s.x + 260, alpha: 0, duration: 1600, ease: 'Quad.easeIn', onComplete: () => b.img.destroy() });

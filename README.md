@@ -64,14 +64,15 @@ No cookies. Since 1.0 the game counts plays and minutes played, anonymously. Eac
 No names and nothing typed. (The world leaderboard is separate: after each mission you win it gets the name you entered, your score, the difficulty and the missions done.) Browsers with Do Not Track or Global Privacy Control on aren't counted, nor are `?debug` sessions or automated browsers. Details and the database rules: [docs/LEADERBOARD.md](docs/LEADERBOARD.md).
 
 ## Promo videos
-`tools/promo/` records the trailers by playing the game in a headless browser, one 1/60 s frame at a time, with the synth's audio rendered in step. A bot wanders the map (plaques, hidden hearts, easter eggs), plays the mission and takes its hits. Every change on screen is noted in `promo/raw/<shoot>/marks.txt`. `tools/promo/cut.mjs` edits the takes into 1080p clips from those marks, and `tools/promo/vertical.mjs` makes 1080x1920 versions that open on the rotate-your-phone screen. Output goes to `promo/` (not committed):
+`tools/promo/` records the trailers by playing the game in a headless browser, one 1/60 s frame at a time, with the synth's audio rendered in step. A bot wanders the map (plaques, hidden hearts, easter eggs), plays the mission and takes its hits. Every change on screen is noted in `promo/raw/<shoot>/marks.txt`. The music and the sound effects are recorded as two tracks, with a log of the songs. `tools/promo/cut.mjs` edits the takes into 1080p clips from those marks: each clip keeps its own sound effects, and the music is laid under the whole video from clean renders of the game's songs, with every cut on the beat. `tools/promo/vertical.mjs` makes 1080x1920 versions that open on the rotate-your-phone screen. Output goes to `promo/` (not committed):
 
 ```bash
 npx vite build --outDir promo/dist && npx vite preview --outDir promo/dist --port 5181   # a build copy to record from
 PROMO_BASE=http://localhost:5181/trashpanda/ node tools/promo/missions.mjs bwl          # also: bus, sci, hw, title (the end card)
+PROMO_BASE=http://localhost:5181/trashpanda/ node tools/promo/songs.mjs              # every song the shoots played, clean (the music under the cuts)
 node tools/promo/cut.mjs bwl bus sci hw
 PROMO_BASE=http://localhost:5181/trashpanda/ node tools/promo/vertical.mjs bwl bus sci hw
 PROMO_BASE=http://localhost:5181/trashpanda/ node tools/promo/skim.mjs hw    # (and bwl) fights in mid-screen, for the opening skims
-node tools/promo/cut.mjs hw_skim bwl_skim sci_skim bus_skim                     # the videos with a 4.5 s skim of flashes first
+node tools/promo/cut.mjs hw_skim bwl_skim sci_skim bus_skim                     # the videos with a skim of flashes first (four bars)
 node tools/promo/sheet.mjs hw 02 30 36                                          # a contact sheet of a shot, to pick frames by eye
 ```

@@ -169,7 +169,7 @@ export class Wrecker {
     this.img.clearTint();
     this.shadow.setVisible(false); this.waves.forEach((w) => w.destroy()); this.waves = [];
     sfx.squeak(); shake(this.scene, 400, 0.012);
-    this.say('PERMIT REVOKED!', 'font_big', 0xffffff, 1400, 120);
+    this.say('PERMIT REVOKED!', 'font_big', 0xffffff, 1400, 107); // its panel covers the whole SCIENCE CENTRE EXHIBITS sign (its letters showed under it)
     // M4.17 (Ivan: "it shouldn't leave the ball and drive away. Just break it down like other machines"): it breaks
     // down where it stands, like the Spa Digger: pops and sparks, the ball crashes to the street on its chain, the
     // crane sags and goes grey, and the wreck keeps smoking

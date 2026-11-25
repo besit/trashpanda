@@ -81,6 +81,41 @@ test('1.0: a boss\'s shout stays on screen, on its own panel', async ({ page }) 
   expect(errors).toEqual([]);
 });
 
+test('1.0: SAVE THE SCIENCE: the hint box and PERMIT REVOKED! cover the warehouse sign, and a banner puts the hint away', async ({ page }) => {
+  const errors = errorsOf(page);
+  await page.goto('./?debug&scene=Action&mission=save_the_science');
+  await page.waitForFunction(() => typeof (window as unknown as W).__TP?.state === 'function' && !(window as unknown as W).__TP!.state().frozen, null, { timeout: 20_000 });
+  // the SCIENCE CENTRE EXHIBITS lettering is at y 56-69 on screen: the chase's two-line hint reaches down past it
+  // (its letters showed under the box), and FIGHT! clears it (it landed right under it)
+  const hint = await page.evaluate(() => {
+    const s = (window as unknown as W).__TP_GAME!.scene.getScene('Action');
+    s.say('THEY\'VE GOT THE EXHIBITS!\nCATCH THEM BEFORE THE TRUCK!', 0xfff08a, 2400);
+    const t = s.sayObj; const r = { top: t.y - 4, bottom: t.y + t.height + 4 };
+    s.flashGo('FIGHT!');
+    return { ...r, after: !!s.sayObj?.active };
+  });
+  expect(hint.top).toBeGreaterThanOrEqual(30);
+  expect(hint.bottom).toBeGreaterThanOrEqual(70);
+  expect(hint.after).toBe(false);
+  await page.evaluate(() => { const s = (window as unknown as W).__TP_GAME!.scene.getScene('Action'); if (s.lock) s.endArena(''); s.lock = null; s.patrols.forEach((pt: any) => pt.rat.takeHit({ x: 0, y: 0, w: 0, h: 0, dmg: 99, kb: 0, id: 2 }, 0)); s.chaseDone = true; s.waveIdx = 9; (window as unknown as W).__TP!.player.invulnT = 99999; (window as unknown as W).__TP!.skipTo(2400); });
+  await page.keyboard.down('d');
+  await page.waitForFunction(() => !!(window as unknown as W).__TP!.wrecker(), null, { timeout: 15_000 });
+  await page.keyboard.up('d');
+  await page.evaluate(() => { const w = (window as unknown as W).__TP!.wrecker(); w.state = 'stuck'; w.t = 9; w.hit({ x: 0, y: 0, w: 0, h: 0, dmg: 99, kb: 0, id: 781 }, 'pump'); });
+  await page.waitForTimeout(500); // past its little hop
+  const panel = await page.evaluate(() => {
+    const s = (window as unknown as W).__TP_GAME!.scene.getScene('Action');
+    const c = s.children.list.find((o: any) => o.type === 'Container' && o.list?.some((x: any) => x.text === 'PERMIT REVOKED!'));
+    if (!c) return null;
+    const t = c.list.find((x: any) => typeof x.text === 'string');
+    return { top: c.y - (t.height + 6) / 2, bottom: c.y + (t.height + 6) / 2 };
+  });
+  expect(panel).not.toBeNull();
+  expect(panel!.top).toBeLessThanOrEqual(56);
+  expect(panel!.bottom).toBeGreaterThanOrEqual(70);
+  expect(errors).toEqual([]);
+});
+
 test('1.0: a long easter-egg message ends above the E: prompt, and reading a plaque puts it away', async ({ page }) => {
   test.slow(); // the East End is the heaviest district: under a full parallel run it needs more than 90 s
   const errors = errorsOf(page);

@@ -12,6 +12,8 @@ import { ctx } from './core/ctx';
 import { autoFullscreenOnFirstTap } from './core/fullscreen';
 import { wantsTouch } from './input/TouchControls';
 import { startTelemetry } from './core/Telemetry';
+import * as SONGS from './audio/songs';
+import { music, type Song, type SongVariant } from './audio/Sequencer';
 
 setGameW(viewWidthFor(window.innerWidth, window.innerHeight));
 
@@ -55,6 +57,12 @@ game.events.once(Phaser.Core.Events.READY, fit);
 fit();
 
 (window as unknown as { __TP_GAME?: Phaser.Game }).__TP_GAME = game;
+// 1.0: the promo recorder renders each song on its own, for the music under the cuts (tools/promo/songs.mjs)
+(window as unknown as { __TP_MUSIC?: unknown }).__TP_MUSIC = (name: string, v?: SongVariant) => {
+  const s = (Object.values(SONGS) as Song[]).find((x) => x.name === name);
+  music.stop();
+  if (s) music.play(s, v);
+};
 
 // Ctrl+M: mute / unmute (M2.1). A tiny DOM toast so it works over every scene.
 const toast = document.createElement('div');

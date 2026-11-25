@@ -1272,3 +1272,30 @@ Ivan on the Highway skim: the Mech flash should show a stomp and the raccoon jum
 One frame from each flash (rows: Death by Highway, the Bike Lane War, Save the Science, the Bike Bus):
 
 ![](reviews/skims/skims.png)
+
+## 2026-11-25: 1.0, the music under the cuts
+Ivan: *"Do these have audio? I think no. Can we add it? And make sure the cuts work well with the music."* Every video had sound (AAC, about −15 dB). Some players don't play it, VS Code's video preview among them. The real problem was the cuts: each clip brought its own moment of the game's music, so the tune jumped at every cut. Over the skim's flashes the cuts didn't follow the beat at all.
+
+- **Two tracks:** the recorder now takes the music and the sound effects as separate tracks. When the recorder asks, the synth routes them to the left and right channels; normal play is unchanged. The sequencer also logs every song it starts and when. All the shoots were recorded again.
+- **Clean songs** (`tools/promo/songs.mjs`): each song the shoots played is rendered on its own from its first note. Against the game's own music track it lines up to within 128 samples (2.7 ms), the offline audio context's step.
+- **The music plan** (in `cut.mjs`): each clip keeps its own sound effects, but the music comes from the clean songs:
+  - A song runs on across cuts as long as the game plays the same song.
+  - Where the game changes song at a cut, the new one starts from its first beat. Where it starts one inside a clip (the boss song, the win jingle, the city-improves jingle on the map), it starts exactly where the game started it.
+  - A jingle plays to its end. A tune that follows it comes in on its own next beat.
+  - Where the game goes quiet after a jingle (the debrief's picture), the video's own map tune comes back.
+  - The end card's title tune starts whole bars early, in the quiet after the map's jingle.
+  - Every cut is moved to the nearest beat of the song under it. All of them now land within 8 ms of a beat, under one frame.
+- **The skims** are counted in beats now: seven flashes of 2 or 3 beats, four bars in all (5.6 s). The video starts on the next downbeat. The Mech flash got its third beat for the jump.
+- **The vertical versions:** the video's first song starts under the rotate screen, which now lasts a whole number of its bars (or beats), close to 2.6 s. Before, it was silent.
+- **Checked:**
+  - all 16 files at −14.4 to −14.7 LUFS
+  - no gap of half a second or more without sound anywhere
+
+![](reviews/skims/music_hw_skim.png)
+
+*Death by Highway with its skim: the songs (bands), the cuts (lines), the sound (waveform).*
+
+- **Text on text that the new takes showed (fixed in the game):**
+  - Bike Bus: JUST DROPPING OFF! started floating off 0.2 s before BIKE LANE CLEAR! and rose into it. Both lines now hold and float together. The browser test samples the gap between them; it fails on the old code (8 px) and passes on the fix.
+  - Save the Science: the chase's two-line hint ended at y 62, so the warehouse's SCIENCE CENTRE EXHIBITS lettering (y 56–69) showed under it. There the hint box now reaches past the sign. FIGHT! landed right under the hint; a banner now clears the hint. PERMIT REVOKED!'s panel sat on the sign with the letters showing below it; it now covers the whole sign. A browser test checks all three (the box check fails on the old code: 62 against 70).
+- **Retakes:** frames from the new takes were checked clip by clip. Two flashes moved: the chase flash went to 4.6 s (FIGHT! round the dropped exhibit), and the Dog Fjord clip in the Bike Lane War now opens on the empty skyline.

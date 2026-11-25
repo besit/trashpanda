@@ -37,6 +37,13 @@ test('the Bike Bus: board every stop, bell the SUVs out of the lane, reach the s
       await page.keyboard.press('e'); await page.waitForTimeout(300);
       expect(await page.evaluate(() => (window as unknown as W).__TP!.bus().step)).toBe(before + 1);
       expect(await page.evaluate(() => (window as unknown as W).__TP!.bus().said.map((o: { text: string; active: boolean }) => o.active && o.text))).not.toContain('ALL ABOARD!');
+      // ...and its two lines float off together: the lower one never rises into the upper one
+      let gap = 99;
+      for (let k = 0; k < 10; k++) {
+        const g = await page.evaluate(() => { const w = (window as unknown as W).__TP!.bus().said.filter((o: { active: boolean; alpha: number }) => o.active && o.alpha > 0.05); return w.length === 2 ? w[0].y - w[1].y : 99; });
+        gap = Math.min(gap, g); await page.waitForTimeout(130);
+      }
+      expect(gap).toBeGreaterThanOrEqual(12);
       expect(await page.evaluate(() => (window as unknown as W).__TP_GAME!.scene.getScene('Explore').children.list
         .filter((o: { active: boolean; text?: string }) => o.active && o.text === 'ALL ABOARD!').length)).toBe(0);
     } else {

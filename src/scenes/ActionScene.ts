@@ -371,9 +371,13 @@ export class ActionScene extends Phaser.Scene {
     if (this.finished) return; // M4.3 (review): a delayed hint must not land on the result card
     this.sayObj?.destroy(); this.sayBox?.destroy();
     const t = fitText(text(this, GAME_W / 2, 34, msg, 'font_outline').setOrigin(0.5, 0).setScrollFactor(0).setDepth(2001).setTint(tint), GAME_W - 16, true);
+    // 1.0: the science centre's warehouse has its SCIENCE CENTRE EXHIBITS lettering just under the box (y 56-69), and
+    // the letters showed below it: there the box reaches down over the whole sign
+    const top = Math.max(30, (this.mission.action.bg === 'science' ? 71 : 0) - (t.height + 8));
+    t.setY(top + 4);
     // M3.3 (Ivan: text over text): the hint sits in its own dark box, like the dialogue box without a name
     const g = this.add.graphics().setScrollFactor(0).setDepth(2000.5);
-    g.fillStyle(0x16121f, 0.94).fillRoundedRect(GAME_W / 2 - t.width / 2 - 7, 30, t.width + 14, t.height + 8, 3).lineStyle(1, 0x69657a).strokeRoundedRect(GAME_W / 2 - t.width / 2 - 7, 30, t.width + 14, t.height + 8, 3);
+    g.fillStyle(0x16121f, 0.94).fillRoundedRect(GAME_W / 2 - t.width / 2 - 7, top, t.width + 14, t.height + 8, 3).lineStyle(1, 0x69657a).strokeRoundedRect(GAME_W / 2 - t.width / 2 - 7, top, t.width + 14, t.height + 8, 3);
     this.sayObj = t; this.sayBox = g;
     this.tweens.add({ targets: [t, g], alpha: 0, delay: hold, duration: 400, onComplete: () => { t.destroy(); g.destroy(); if (this.sayObj === t) { this.sayObj = undefined; this.sayBox = undefined; } } });
   }
@@ -398,6 +402,7 @@ export class ActionScene extends Phaser.Scene {
 
   private goBand?: Phaser.GameObjects.Graphics;
   private flashGo(msg: string) {
+    this.clearSay(); // 1.0: the banner is the news now (FIGHT! landed under THEY'VE GOT THE EXHIBITS!)
     this.hud.go.setText(msg).setScale(1);
     const s = fitText(this.hud.go, GAME_W - 16);
     this.hud.go.setAlpha(1).setScale(s * 1.5);
@@ -406,7 +411,7 @@ export class ActionScene extends Phaser.Scene {
     // M4.3: on its own dark band (it landed on the Megamart's signs: text on text)
     const h = this.hud.go.height * s + 8;
     this.goBand?.destroy();
-    this.goBand = this.add.graphics().setScrollFactor(0).setDepth(1999.5).fillStyle(0x16121f, 0.9).fillRect(0, this.hud.go.y - h / 2, GAME_W, h);
+    this.goBand = this.add.graphics().setScrollFactor(0).setDepth(1999.5).fillStyle(0x16121f, 0.95).fillRect(0, this.hud.go.y - h / 2, GAME_W, h);
     this.tweens.add({ targets: this.goBand, alpha: 0, delay: 900, duration: 300 });
   }
   /** M4.3: a dark band behind a result card (head + sub lines), so it never sits on lettering in the background */

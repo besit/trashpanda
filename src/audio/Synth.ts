@@ -32,8 +32,14 @@ export class Synth {
       const comp = this.ctx.createDynamicsCompressor();
       comp.threshold.value = -14; comp.ratio.value = 3;
       this.master.connect(comp).connect(this.ctx.destination);
-      this.music = this.ctx.createGain(); this.music.gain.value = this.volumes.music; this.music.connect(this.master);
-      this.sfx = this.ctx.createGain(); this.sfx.gain.value = this.volumes.sfx; this.sfx.connect(this.master);
+      this.music = this.ctx.createGain(); this.music.gain.value = this.volumes.music;
+      this.sfx = this.ctx.createGain(); this.sfx.gain.value = this.volumes.sfx;
+      if ((window as unknown as { __recStems?: boolean }).__recStems) {
+        // 1.0: the promo recorder (tools/promo/rec.mjs) takes the music and the sound effects as two tracks, so its
+        // editor can lay the music under the cuts and keep each clip's own sounds
+        const stems = this.ctx.createChannelMerger(2);
+        this.music.connect(stems, 0, 0); this.sfx.connect(stems, 0, 1); stems.connect(this.ctx.destination);
+      } else { this.music.connect(this.master); this.sfx.connect(this.master); }
       for (const d of [0.125, 0.25, 0.5] as Duty[]) this.waves.set(d, this.pulseWave(d));
       const len = this.ctx.sampleRate * 1;
       this.noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);

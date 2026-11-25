@@ -3,6 +3,9 @@
 // a frame, so the video is a perfect 60 fps however long a frame takes to draw and save. The game's synth renders
 // into an OfflineAudioContext that is advanced in the same steps, so the music and sound effects stay in sync.
 // Frames are saved at the canvas's real 384x216 pixels; tools/promo/cut.mjs scales them up crisply and edits.
+// The music and the sound effects are recorded as two tracks (music.f32, sfx.f32, plus their mix in audio.f32), and
+// every song the game starts is logged in shots.json with its time in the shot, so cut.mjs can lay the music under
+// the cuts on the beat and keep each clip's own sounds.
 // The page is an automated browser, so it never posts scores or play counts.
 import { chromium } from '@playwright/test';
 import { writeFileSync, mkdirSync, rmSync } from 'node:fs';
@@ -38,11 +41,12 @@ const INIT = `(() => {
   };
   // --- the audio: the game's AudioContext is an OfflineAudioContext we render frame by frame ---
   const OAC = window.OfflineAudioContext;
+  window.__recStems = true; window.__recMusic = []; // the synth's two tracks, and its log of songs (src/audio)
   let ac = null, aFrames = 0, started = false;
   class RecAC extends OAC {
     constructor() {
       const big = !!window.__recArm;
-      super(1, ${RATE} * (big ? (window.__recLenS || 300) : 1), ${RATE});
+      super(2, ${RATE} * (big ? (window.__recLenS || 300) : 1), ${RATE});
       if (big && !ac) ac = this;
     }
     get state() { return 'running'; }
@@ -70,11 +74,11 @@ const INIT = `(() => {
     return aFrames;
   };
   window.__recPng = () => document.querySelector('canvas').toDataURL('image/png').split(';base64,')[1];
-  // the samples of audio frames [a, b), as base64 float32
-  window.__recAudio = async (a, b) => {
+  // the samples of audio frames [a, b) of a track (0 music, 1 sound effects), as base64 float32
+  window.__recAudio = async (a, b, ch = 0) => {
     if (!ac) return '';
     if (!window.__recBuf) { OAC.prototype.resume.call(ac); window.__recBuf = await window.__recRender; }
-    const d = window.__recBuf.getChannelData(0).slice(a * ${SPF}, b * ${SPF});
+    const d = window.__recBuf.getChannelData(ch).slice(a * ${SPF}, b * ${SPF});
     const u8 = new Uint8Array(d.buffer); let s = '';
     for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
     return btoa(s);
@@ -125,7 +129,8 @@ export class Rec {
       const w = await this.page.evaluate(SNAP).catch(() => '');
       if (w !== this.lastSnap) { this.lastSnap = w; this.mark(w); }
     }
-    if (this.shot) {
+    if (this.shot && this.shot.noFrames) { if (this.shot.frames === 0) this.shot.a0 = a; this.shot.frames++; this.shot.a1 = a + 1; }
+    else if (this.shot) {
       const png = await this.page.evaluate(() => window.__recPng());
       writeFileSync(`${this.shot.dir}/${String(this.shot.frames).padStart(5, '0')}.png`, Buffer.from(png, 'base64'));
       if (this.shot.frames === 0) this.shot.a0 = a;
@@ -151,7 +156,8 @@ export class Rec {
   async press(k, s = 0.1) { await this.page.keyboard.down(k); await this.frames(3); await this.page.keyboard.up(k); await this.sec(s); }
   js(fn, arg) { return this.page.evaluate(fn, arg); }
 
-  start(name) { const dir = `${OUT}/${this.name}/${String(this.shots.length).padStart(2, '0')}_${name}`; mkdirSync(dir, { recursive: true }); this.shot = { name, dir, frames: 0, a0: 0, a1: 0, marks: [] }; this.lastSnap = null; console.log(`  shot ${name}`); }
+  /** a shot; { frames: false } keeps only its sound (tools/promo/songs.mjs) */
+  start(name, o = {}) { const dir = `${OUT}/${this.name}/${String(this.shots.length).padStart(2, '0')}_${name}`; mkdirSync(dir, { recursive: true }); this.shot = { name, dir, frames: 0, a0: 0, a1: 0, marks: [], noFrames: o.frames === false }; this.lastSnap = null; console.log(`  shot ${name}`); }
   /** a note at this frame of the shot (what happened when: for picking the cuts) */
   mark(s) { if (!this.shot) return; this.shot.marks.push({ t: +(this.shot.frames / 60).toFixed(2), s }); }
   stop() { if (this.shot) { this.shots.push(this.shot); console.log(`    ${this.shot.frames} frames`); } this.shot = null; }
@@ -174,16 +180,23 @@ export class Rec {
   /** the shot list and every shot's marks (also written when a shoot fails, to see where) */
   writeMarks() {
     if (this.shot) { this.shots.push(this.shot); this.shot = null; }
-    writeFileSync(`${OUT}/${this.name}/shots.json`, JSON.stringify(this.shots.map(({ name, dir, frames, marks }) => ({ name, dir, frames, marks })), null, 1));
+    writeFileSync(`${OUT}/${this.name}/shots.json`, JSON.stringify(this.shots.map(({ name, dir, frames, marks, music }) => ({ name, dir, frames, marks, music })), null, 1));
     writeFileSync(`${OUT}/${this.name}/marks.txt`, this.shots.map((s) => `== ${s.name} (${(s.frames / 60).toFixed(1)} s)\n` + s.marks.map((m) => `${m.t.toFixed(2).padStart(7)}  ${m.s}`).join('\n')).join('\n'));
   }
 
   /** save the shots' audio and the shot list */
   async finish() {
     this.stop();
+    const log = (await this.page.evaluate(() => window.__recMusic).catch(() => null)) ?? [];
     for (const s of this.shots) {
-      const b64 = await this.page.evaluate(([a, b]) => window.__recAudio(a, b), [s.a0, s.a1]);
-      writeFileSync(`${s.dir}/audio.f32`, Buffer.from(b64, 'base64'));
+      const track = async (ch) => { const b = Buffer.from(await this.page.evaluate(([a, b, ch]) => window.__recAudio(a, b, ch), [s.a0, s.a1, ch]), 'base64'); return new Float32Array(new Uint8Array(b).buffer); };
+      const m = await track(0), x = await track(1), mix = new Float32Array(m.length);
+      for (let i = 0; i < m.length; i++) mix[i] = 0.5 * (m[i] + x[i]); // the game's master gain (without its compressor)
+      writeFileSync(`${s.dir}/music.f32`, m); writeFileSync(`${s.dir}/sfx.f32`, x); writeFileSync(`${s.dir}/audio.f32`, mix);
+      // the songs, in the shot's time: the one already playing when it starts (a negative time), then each change
+      const t0 = s.a0 / 60, t1 = s.a1 / 60;
+      const before = log.filter((e) => e.t <= t0).pop();
+      s.music = [...(before ? [before] : []), ...log.filter((e) => e.t > t0 && e.t < t1)].map((e) => ({ ...e, t: +(e.t - t0).toFixed(5) }));
     }
     this.writeMarks();
     await this.browser.close();

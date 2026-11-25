@@ -14,6 +14,9 @@ export interface Song { name: string; bpm: number; tracks: Track[]; loop?: boole
 /** M3.3: a song played a little differently per district (tempo, key), so five districts don't share one loop */
 export interface SongVariant { bpm?: number; transpose?: number }
 
+/** 1.0: the promo recorder (tools/promo/rec.mjs) keeps a log of the songs played and when, for its editor */
+const recLog = (e: { t: number; name: string | null; bpm?: number; transpose?: number }) => (window as unknown as { __recMusic?: unknown[] }).__recMusic?.push(e);
+
 interface Parsed { notes: { step: number; len: number; tok: string }[]; steps: number }
 
 function parse(t: Track): Parsed {
@@ -51,6 +54,7 @@ export class Sequencer {
     this.totalSteps = Math.max(...this.parsed.map((p) => p.steps));
     this.stepDur = 60 / (variant.bpm ?? song.bpm) / 4;
     this.startTime = synth.now + 0.08;
+    recLog({ t: this.startTime, name: song.name, bpm: variant.bpm ?? song.bpm, transpose: this.transpose });
     this.nextStep = 0;
     this.timer = window.setInterval(() => this.schedule(), 25);
     this.schedule();
@@ -58,8 +62,8 @@ export class Sequencer {
 
   duck(on: boolean) { synth.duck(on); }
 
-  stop() {
-    if (this.timer !== null) clearInterval(this.timer);
+  stop(at = synth.now) {
+    if (this.timer !== null) { clearInterval(this.timer); recLog({ t: at, name: null }); }
     this.timer = null;
     this.current = '';
   }
@@ -69,7 +73,7 @@ export class Sequencer {
     const ahead = synth.now + 0.15;
     while (this.startTime + this.nextStep * this.stepDur < ahead) {
       const loopStep = this.nextStep % this.totalSteps;
-      if (this.nextStep > 0 && loopStep === 0 && this.song.loop === false) { this.stop(); return; }
+      if (this.nextStep > 0 && loopStep === 0 && this.song.loop === false) { this.stop(this.startTime + this.nextStep * this.stepDur); return; }
       const t0 = this.startTime + this.nextStep * this.stepDur;
       this.song.tracks.forEach((tr, i) => {
         for (const n of this.parsed[i].notes) if (n.step === loopStep % this.parsed[i].steps) this.trigger(tr, n.tok, t0, n.len * this.stepDur);
